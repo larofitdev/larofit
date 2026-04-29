@@ -3,18 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0a0a">
-<script>
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
-  });
-}
-</script>
 <title>LaroFit — Find a Trainer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -145,6 +133,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="nav-section">Track</div>
     <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
     <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item" href="larofit-sessions.html"><span class="nav-icon">🕐</span>Workout history</a>
     <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
     <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
     <div class="nav-section">Community</div>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>{navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));});}</script>
+<title>LaroFit — Workout History</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --orange:#fb923c;--pink:#f472b6;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 20px;margin:12px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background 0.15s;font-size:13px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--volt-pale);color:var(--white);border-left-color:var(--volt);}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-avatar{width:32px;height:32px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:12px;font-weight:600;color:var(--white);}
+.s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
+.content{padding:28px 32px;flex:1;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;}
+.stat-num{font-family:var(--font-display);font-size:32px;color:var(--volt);letter-spacing:1px;}
+.stat-label{font-size:11px;color:var(--mist);font-family:var(--font-mono);margin-top:2px;}
+.filters-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-input{padding:8px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;}
+.filter-input:focus{border-color:var(--volt);}
+.filter-input::placeholder{color:var(--slate);}
+.session-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;transition:border-color 0.2s;}
+.session-card:hover{border-color:var(--steel);}
+.session-header{display:flex;align-items:center;gap:14px;padding:16px 20px;cursor:pointer;user-select:none;}
+.session-date-block{display:flex;flex-direction:column;align-items:center;justify-content:center;width:48px;height:48px;background:var(--carbon);border-radius:var(--radius-sm);flex-shrink:0;}
+.session-date-day{font-family:var(--font-display);font-size:22px;color:var(--volt);line-height:1;}
+.session-date-mon{font-size:9px;color:var(--mist);font-family:var(--font-mono);letter-spacing:0.1em;text-transform:uppercase;}
+.session-info{flex:1;min-width:0;}
+.session-name{font-size:14px;font-weight:700;color:var(--pure);}
+.session-meta{display:flex;gap:12px;margin-top:4px;flex-wrap:wrap;}
+.session-chip{font-size:11px;color:var(--mist);font-family:var(--font-mono);}
+.session-chip span{color:var(--fog);}
+.session-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.btn-icon{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;font-size:13px;cursor:pointer;color:var(--mist);transition:all 0.15s;}
+.btn-icon:hover{border-color:var(--mist);color:var(--white);}
+.btn-icon.danger:hover{border-color:var(--ember);color:var(--ember);}
+.chevron{font-size:11px;color:var(--slate);transition:transform 0.2s;flex-shrink:0;margin-left:4px;}
+.session-card.open .chevron{transform:rotate(180deg);}
+.session-body{display:none;border-top:1px solid var(--border);}
+.session-card.open .session-body{display:block;}
+.ex-section{border-bottom:1px solid var(--border);padding:14px 20px;}
+.ex-section:last-child{border-bottom:none;}
+.ex-section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ex-section-name{font-size:13px;font-weight:700;color:var(--pure);}
+.ex-type-badge{font-size:9px;font-weight:700;font-family:var(--font-mono);padding:2px 7px;border-radius:999px;background:rgba(198,241,53,0.1);color:var(--volt);}
+.sets-tbl{width:100%;border-collapse:collapse;}
+.sets-tbl th{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);}
+.sets-tbl td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:middle;font-size:13px;}
+.sets-tbl tr:last-child td{border-bottom:none;}
+.set-num-cell{font-family:var(--font-mono);font-size:11px;color:var(--slate);width:32px;}
+.warmup-cell{font-family:var(--font-mono);font-size:10px;color:var(--purple);font-weight:700;width:32px;}
+.val-display{cursor:pointer;padding:3px 7px;border-radius:5px;border:1px solid transparent;transition:all 0.15s;display:inline-block;min-width:40px;}
+.val-display:hover{border-color:var(--border);background:var(--carbon);}
+.val-display.empty{color:var(--slate);}
+.edit-input{background:var(--carbon);border:1.5px solid var(--volt);border-radius:5px;color:var(--white);font-size:13px;font-family:var(--font-body);padding:3px 7px;width:70px;outline:none;}
+.btn-del-set{background:none;border:none;color:var(--slate);cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;transition:all 0.15s;}
+.btn-del-set:hover{color:var(--ember);background:rgba(255,87,51,0.1);}
+.btn-add-set{margin-top:8px;padding:5px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;}
+.btn-add-set:hover{border-color:var(--volt);color:var(--volt);}
+.empty-state{text-align:center;padding:80px 20px;color:var(--mist);}
+.empty-icon{font-size:48px;margin-bottom:16px;}
+.empty-title{font-family:var(--font-display);font-size:28px;color:var(--fog);margin-bottom:8px;letter-spacing:1px;}
+.empty-body{font-size:13px;color:var(--slate);margin-bottom:24px;}
+.btn-volt{padding:11px 24px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);text-decoration:none;display:inline-block;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;color:var(--white);opacity:0;transition:all 0.3s;z-index:1000;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+@media(max-width:768px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}.content{padding:16px;}.stats-row{grid-template-columns:1fr 1fr;}.topbar{padding:14px 16px;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">LARO<span>FIT</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Home</div>
+    <a class="nav-item" href="larofit-dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+    <div class="nav-section">Build</div>
+    <a class="nav-item" href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
+    <a class="nav-item" href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item" href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item" href="larofit-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <a class="nav-item" href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
+    <div class="nav-section">Track</div>
+    <a class="nav-item" href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
+    <a class="nav-item" href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item active" href="larofit-sessions.html"><span class="nav-icon">🕐</span>Workout history</a>
+    <a class="nav-item" href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
+    <a class="nav-item" href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
+    <div class="nav-section">Community</div>
+    <a class="nav-item" href="larofit-group.html"><span class="nav-icon">👥</span>Group feed</a>
+    <a class="nav-item" href="larofit-find-trainer.html"><span class="nav-icon">🔍</span>Find a trainer</a>
+    <div class="nav-section">Trainer</div>
+    <a class="nav-item" href="larofit-trainer.html"><span class="nav-icon">🏋️</span>Trainer dashboard</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Trainer builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet builder</a>
+    <a class="nav-item" href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar" id="sidebar-avatar">L</div>
+    <div><div class="s-name" id="sidebar-name">Athlete</div><div class="s-plan">✦ PRO TRIAL</div></div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">WORKOUT HISTORY</div>
+  </div>
+  <div class="content">
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">Total workouts</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">Current streak</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-sets">0</div><div class="stat-label">Total sets logged</div></div>
+      <div class="stat-card"><div class="stat-num" id="stat-vol">0</div><div class="stat-label">Total volume (lbs)</div></div>
+    </div>
+    <div class="filters-bar">
+      <input class="filter-input" id="search-input" placeholder="🔍 Search exercise..." oninput="renderSessions()" style="flex:1;max-width:280px;">
+      <select class="filter-input" id="month-filter" onchange="renderSessions()">
+        <option value="">All time</option>
+      </select>
+    </div>
+    <div id="session-list"></div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+function getLogs(){ return JSON.parse(localStorage.getItem('larofit_logs')||'[]'); }
+function saveLogs(logs){ localStorage.setItem('larofit_logs', JSON.stringify(logs)); }
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  const profile = JSON.parse(localStorage.getItem('larofit_profile')||'{}');
+  const name = profile.name || localStorage.getItem('larofit_user_name') || 'Athlete';
+  document.getElementById('sidebar-name').textContent = name;
+  document.getElementById('sidebar-avatar').textContent = name.charAt(0).toUpperCase();
+  populateMonthFilter();
+  renderStats();
+  renderSessions();
+});
+
+function populateMonthFilter(){
+  const logs = getLogs();
+  const months = new Set();
+  logs.forEach(l=>{ const d=new Date(l.date); months.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`); });
+  const sel = document.getElementById('month-filter');
+  Array.from(months).sort().reverse().forEach(m=>{
+    const [y,mo]=m.split('-');
+    const label=new Date(y,mo-1).toLocaleString('default',{month:'long',year:'numeric'});
+    sel.innerHTML+=`<option value="${m}">${label}</option>`;
+  });
+}
+
+function renderStats(){
+  const logs = getLogs();
+  document.getElementById('stat-total').textContent = logs.length;
+  let streak=0;
+  const today=new Date().toISOString().split('T')[0];
+  const dates=[...new Set(logs.map(l=>l.date))].sort().reverse();
+  let check=today;
+  for(const d of dates){
+    if(d===check){ streak++; const dd=new Date(check); dd.setDate(dd.getDate()-1); check=dd.toISOString().split('T')[0]; }
+    else if(d<check) break;
+  }
+  document.getElementById('stat-streak').textContent = streak;
+  let totalSets=0, totalVol=0;
+  logs.forEach(l=>{ l.exercises?.forEach(ex=>{ ex.sets?.forEach(s=>{ if(s.logged||s.reps){ totalSets++; totalVol+=(parseFloat(s.reps)||0)*(parseFloat(s.weight)||0); }}); if(ex.warmupSet?.reps) totalSets++; }); });
+  document.getElementById('stat-sets').textContent = totalSets.toLocaleString();
+  document.getElementById('stat-vol').textContent = Math.round(totalVol).toLocaleString();
+}
+
+function renderSessions(){
+  const allLogs = getLogs();
+  const search = document.getElementById('search-input').value.toLowerCase().trim();
+  const monthFilter = document.getElementById('month-filter').value;
+
+  // Build list with original indices, newest first
+  const indexed = allLogs.map((log,i)=>({log,i})).reverse();
+
+  const filtered = indexed.filter(({log})=>{
+    if(monthFilter && log.date?.substring(0,7)!==monthFilter) return false;
+    if(search) return log.exercises?.some(ex=>ex.name.toLowerCase().includes(search));
+    return true;
+  });
+
+  const container = document.getElementById('session-list');
+  if(!filtered.length){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">🏋️</div><div class="empty-title">NO WORKOUTS YET</div><div class="empty-body">Your completed workouts will appear here.</div><a class="btn-volt" href="larofit-today.html">Start a workout →</a></div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(({log,i})=>{
+    const d=new Date(log.date+'T12:00:00');
+    const dayNum=d.getDate();
+    const month=d.toLocaleString('default',{month:'short'}).toUpperCase();
+    const weekday=d.toLocaleString('default',{weekday:'long'});
+    const exCount=log.exercises?.length||0;
+    const totalSets=log.exercises?.reduce((s,ex)=>{
+      return s+(ex.sets?.filter(st=>st.logged||st.reps).length||0)+(ex.warmupSet?.reps?1:0);
+    },0)||0;
+    const totalVol=log.exercises?.reduce((v,ex)=>v+(ex.sets?.reduce((sv,s)=>sv+(parseFloat(s.reps)||0)*(parseFloat(s.weight)||0),0)||0),0)||0;
+
+    return `<div class="session-card" id="session-${i}">
+      <div class="session-header" onclick="toggleSession(${i})">
+        <div class="session-date-block">
+          <div class="session-date-day">${dayNum}</div>
+          <div class="session-date-mon">${month}</div>
+        </div>
+        <div class="session-info">
+          <div class="session-name">${weekday}</div>
+          <div class="session-meta">
+            <span class="session-chip"><span>${exCount}</span> exercises</span>
+            <span class="session-chip"><span>${totalSets}</span> sets</span>
+            ${totalVol>0?`<span class="session-chip"><span>${Math.round(totalVol).toLocaleString()}</span> lbs</span>`:''}
+          </div>
+        </div>
+        <div class="session-actions" onclick="event.stopPropagation()">
+          <button class="btn-icon danger" onclick="deleteSession(${i})" title="Delete session">🗑</button>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="session-body" id="session-body-${i}">
+        ${renderSessionBody(log,i)}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderSessionBody(log, sessionIdx){
+  if(!log.exercises?.length) return '<div style="padding:20px;color:var(--slate);font-size:13px;">No exercises recorded.</div>';
+  return log.exercises.map((ex,exIdx)=>{
+    const isBodyweight=ex.type==='bodyweight'||ex.type==='timed_bodyweight';
+    const isCardio=ex.type==='cardio'||ex.type==='hiit';
+    const hasWarmup=ex.warmupSet?.reps;
+    const setsHtml=`<table class="sets-tbl"><thead><tr>
+      <th style="width:32px;">Set</th>
+      <th>${isCardio?'Duration':'Reps'}</th>
+      ${!isBodyweight&&!isCardio?'<th>Weight (lbs)</th>':''}
+      <th style="width:36px;"></th>
+    </tr></thead><tbody>
+      ${hasWarmup?`<tr>
+        <td class="warmup-cell">W</td>
+        <td><span class="val-display" onclick="startEdit(this,${sessionIdx},${exIdx},'warmup','reps')">${ex.warmupSet.reps||'—'}</span></td>
+        ${!isBodyweight&&!isCardio?`<td><span class="val-display" onclick="startEdit(this,${sessionIdx},${exIdx},'warmup','weight')">${ex.warmupSet.weight||'—'}</span></td>`:''}
+        <td><button class="btn-del-set" onclick="deleteSet(${sessionIdx},${exIdx},'warmup')">✕</button></td>
+      </tr>`:''}
+      ${(ex.sets||[]).map((s,sIdx)=>{
+        if(!s.reps&&!s.weight&&!s.logged) return '';
+        return `<tr>
+          <td class="set-num-cell">${sIdx+1}</td>
+          <td><span class="val-display${!s.reps?' empty':''}" onclick="startEdit(this,${sessionIdx},${exIdx},${sIdx},'reps')">${s.reps||'—'}</span></td>
+          ${!isBodyweight&&!isCardio?`<td><span class="val-display${!s.weight?' empty':''}" onclick="startEdit(this,${sessionIdx},${exIdx},${sIdx},'weight')">${s.weight||'—'}</span></td>`:''}
+          <td><button class="btn-del-set" onclick="deleteSet(${sessionIdx},${exIdx},${sIdx})">✕</button></td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>
+    <button class="btn-add-set" onclick="addSet(${sessionIdx},${exIdx})">+ Add set</button>`;
+    return `<div class="ex-section">
+      <div class="ex-section-header">
+        <div class="ex-section-name">${ex.name}</div>
+        <span class="ex-type-badge">${(ex.type||'strength').toUpperCase()}</span>
+      </div>
+      ${setsHtml}
+    </div>`;
+  }).join('');
+}
+
+function toggleSession(idx){
+  document.getElementById(`session-${idx}`)?.classList.toggle('open');
+}
+
+function deleteSession(idx){
+  if(!confirm('Delete this workout session? This cannot be undone.')) return;
+  const logs=getLogs(); logs.splice(idx,1); saveLogs(logs);
+  renderStats(); renderSessions(); showToast('Workout deleted');
+}
+
+function startEdit(el, sessionIdx, exIdx, setIdx, field){
+  const current=el.textContent==='—'?'':el.textContent;
+  const input=document.createElement('input');
+  input.className='edit-input'; input.type='text'; input.inputMode='numeric'; input.value=current;
+  el.replaceWith(input); input.focus(); input.select();
+  function commit(){
+    const val=input.value.trim();
+    saveEditedValue(sessionIdx,exIdx,setIdx,field,val);
+    const span=document.createElement('span');
+    span.className='val-display'+(val?'':' empty');
+    span.textContent=val||'—';
+    span.onclick=()=>startEdit(span,sessionIdx,exIdx,setIdx,field);
+    input.replaceWith(span);
+  }
+  input.addEventListener('blur',commit);
+  input.addEventListener('keydown',e=>{ if(e.key==='Enter') input.blur(); if(e.key==='Escape'){input.value=current;input.blur();} });
+}
+
+function saveEditedValue(sessionIdx,exIdx,setIdx,field,val){
+  const logs=getLogs();
+  const ex=logs[sessionIdx]?.exercises?.[exIdx];
+  if(!ex) return;
+  if(setIdx==='warmup'){ if(!ex.warmupSet) ex.warmupSet={}; ex.warmupSet[field]=val; }
+  else{ if(!ex.sets[setIdx]) return; ex.sets[setIdx][field]=val; if(val) ex.sets[setIdx].logged=true; }
+  saveLogs(logs); showToast('Saved');
+}
+
+function deleteSet(sessionIdx,exIdx,setIdx){
+  const logs=getLogs();
+  const ex=logs[sessionIdx]?.exercises?.[exIdx];
+  if(!ex) return;
+  if(setIdx==='warmup'){ ex.warmupSet={reps:'',weight:''}; }
+  else{ ex.sets.splice(setIdx,1); }
+  saveLogs(logs);
+  const body=document.getElementById(`session-body-${sessionIdx}`);
+  if(body) body.innerHTML=renderSessionBody(logs[sessionIdx],sessionIdx);
+  renderStats(); showToast('Set removed');
+}
+
+function addSet(sessionIdx,exIdx){
+  const logs=getLogs();
+  const ex=logs[sessionIdx]?.exercises?.[exIdx];
+  if(!ex) return;
+  if(!ex.sets) ex.sets=[];
+  ex.sets.push({reps:'',weight:'',logged:false});
+  saveLogs(logs);
+  const body=document.getElementById(`session-body-${sessionIdx}`);
+  if(body) body.innerHTML=renderSessionBody(logs[sessionIdx],sessionIdx);
+  showToast('Set added');
+}
+
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+</script>
+</body>
+</html>
