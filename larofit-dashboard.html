@@ -420,7 +420,7 @@ function loadNextWorkout(){
 
   body.innerHTML = `
     <div class="next-day-name">${nextDay.name}</div>
-    <div class="next-day-date">${dayLabel} · ${dateStr}</div>
+    <div class="next-day-date">Up next · ${dateStr}</div>
     <div class="next-ex-list">
       ${exHtml}
       ${more > 0 ? `<div class="next-ex-more">+${more} more exercise${more>1?'s':''}</div>` : ''}
