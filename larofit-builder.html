@@ -1898,7 +1898,22 @@ function renderLibrary(){
       if(!items.length) return;
       html += `<div class="lib-group">
         <div class="lib-group-title">${group}</div>
-        ${items.map(ex=>makeRow(ex, group, ex.eq, ex.defaultType, '')).join('')}
+        ${items.map(ex=>{
+          const eqLabel = EQ_LABELS[ex.eq]||ex.eq;
+          return `<div class="lib-ex-item lib-ex-clickable"
+            data-name="${ex.name.replace(/"/g,'&quot;')}"
+            data-group="${group}"
+            data-eq="${ex.eq}"
+            data-type="${ex.defaultType}"
+            onclick="addExFromLibBtn(this)"
+            title="Click to add to program">
+            <div>
+              <div class="lib-ex-name">${ex.name}</div>
+              <div class="lib-ex-meta">${group} · ${eqLabel}</div>
+            </div>
+            <span class="lib-add-hint">+ add</span>
+          </div>`;
+        }).join('')}
       </div>`;
     });
     document.getElementById('lib-list').innerHTML = html ||
