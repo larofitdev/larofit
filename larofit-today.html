@@ -835,53 +835,114 @@ function getFMW(exName, category, eq, bodyweight){
 
   const bw = bodyweight;
   const cat = (category||'').toLowerCase();
-
-  // Leg sub-category detection from exercise name
   const n = exName.toLowerCase();
-  const isLegPress   = /leg press|squat|lunge|step.?up|split squat|goblet|sumo|thruster/.test(n);
-  const isLegCurl    = /leg curl|leg extension|hamstring|hip abduct/.test(n);
-  const isLegCalf    = /calf/.test(n);
-  const isLegHip     = /hip thrust|glute bridge|romanian|rdl/.test(n);
 
-  // Multiplier table [db, mc, bb, kb]
-  const table = {
-    chest:    { db:0.20, mc:0.25, bb:0.35, kb:0.20 },
-    back:     { db:0.25, mc:0.35, bb:0.40, kb:0.25 },
-    shoulders:{ db:0.12, mc:0.15, bb:0.20, kb:0.12 },
-    biceps:   { db:0.08, mc:0.10, bb:0.12, kb:0.08 },
-    triceps:  { db:0.08, mc:0.10, bb:0.12, kb:0.08 },
-    legs:     { db:0.30, mc:0.55, bb:0.50, kb:0.25 }, // default leg
-    core:     { db:0.08, mc:0.10, bb:0.10, kb:0.08 },
-    fullbody:  { db:0.20, mc:0.25, bb:0.30, kb:0.20 },
-  };
+  // ── NSCA beginner 1RM standards (% of BW) × 60% working weight
+  // DB/KB = ~40% of BB equivalent per limb
+  // Machine = ~70% of BB equivalent (more stable)
 
-  // Override for leg sub-categories
-  let multiplier = null;
-  if(cat === 'legs'){
-    if(isLegCalf){
-      const calf = { db:0.30, mc:0.40, bb:0.35, kb:0.25 };
-      multiplier = calf[eq] || calf.db;
-    } else if(isLegCurl){
-      const curl = { db:0.15, mc:0.20, bb:0.15, kb:0.15 };
-      multiplier = curl[eq] || curl.db;
-    } else if(isLegHip){
-      const hip = { db:0.25, mc:0.35, bb:0.40, kb:0.20 };
-      multiplier = hip[eq] || hip.db;
-    } else if(isLegPress){
-      const press = { db:0.40, mc:0.60, bb:0.50, kb:0.30 };
-      multiplier = press[eq] || press.db;
+  // ── CHEST sub-categories ──
+  if(cat === 'chest'){
+    const isFly = /fly|flye|flyes|pullover|crossover|around.?the.?world|pec.?deck|svend/.test(n);
+    if(isFly){
+      const t = { db:0.048, mc:0.083, bb:0.114, kb:0.048 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
     } else {
-      multiplier = (table.legs[eq] || table.legs.db);
+      // press (bench, incline, decline, squeeze press)
+      const t = { db:0.130, mc:0.222, bb:0.323, kb:0.130 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
     }
-  } else {
-    const row = table[cat] || table.fullbody;
-    multiplier = row[eq] || row.db || null;
   }
 
-  if(!multiplier) return null;
+  // ── BACK sub-categories ──
+  if(cat === 'back'){
+    const isShrug   = /shrug/.test(n);
+    const isPullover = /pullover/.test(n);
+    if(isShrug){
+      const t = { db:0.130, mc:0.222, bb:0.343, kb:0.130 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    } else if(isPullover){
+      const t = { db:0.048, mc:0.095, bb:0.114, kb:0.048 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    } else {
+      // rows, lat pulldowns, seated rows, face pulls
+      const t = { db:0.162, mc:0.278, bb:0.390, kb:0.162 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    }
+  }
 
-  const raw = bw * multiplier;
-  return roundWeight(raw, eq);
+  // ── SHOULDERS sub-categories ──
+  if(cat === 'shoulders'){
+    const isRaise   = /lateral|front raise|rear delt|w raise|y raise|prone|behind.?the.?back|plate front/.test(n);
+    const isPress   = /press|arnold|military|push press|push jerk/.test(n);
+    if(isRaise){
+      // Adjusted up one increment from pure NSCA — 10 lb DB / 15 lb machine minimum
+      const t = { db:0.056, mc:0.083, bb:null, kb:0.056 };
+      const raw = bw * (t[eq]||t.db);
+      const inc = (eq==='db'||eq==='kb') ? 2.5 : 5;
+      return Math.max(eq==='db'||eq==='kb' ? 10 : 15, Math.round(raw/inc)*inc);
+    } else if(isPress){
+      const t = { db:0.097, mc:0.167, bb:0.243, kb:0.097 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    } else {
+      // upright row, shrug (neutral grip), face pull
+      const t = { db:0.083, mc:0.139, bb:0.222, kb:0.083 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    }
+  }
+
+  // ── BICEPS ──
+  if(cat === 'biceps'){
+    const t = { db:0.069, mc:0.111, bb:0.167, kb:0.069 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // ── TRICEPS ──
+  if(cat === 'triceps'){
+    const t = { db:0.083, mc:0.139, bb:0.222, kb:0.083 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // ── LEGS sub-categories ──
+  if(cat === 'legs'){
+    const isPress   = /leg press|hack squat|pendulum/.test(n);
+    const isCurl    = /leg curl|leg extension|hip abduct|hip adduct|seated hip/.test(n);
+    const isCalf    = /calf/.test(n);
+    const isHip     = /hip thrust|glute bridge|romanian|rdl|glute kickback|cable pull.?through/.test(n);
+    const isSquat   = /squat|lunge|step.?up|split squat|goblet|sumo/.test(n);
+
+    if(isPress){
+      const t = { db:null, mc:0.519, bb:null, kb:null };
+      return t[eq] ? roundWeight(bw * t[eq], eq) : null;
+    } else if(isCurl){
+      const t = { db:0.083, mc:0.139, bb:0.222, kb:0.083 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    } else if(isCalf){
+      const t = { db:0.181, mc:0.333, bb:0.472, kb:0.181 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    } else if(isHip){
+      const t = { db:0.208, mc:0.361, bb:0.528, kb:0.208 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    } else if(isSquat){
+      // DB/KB = per dumbbell (60 lbs total goblet at 180 lbs = reasonable)
+      const t = { db:0.167, mc:0.389, bb:0.444, kb:0.167 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    } else {
+      // fallback: general leg
+      const t = { db:0.167, mc:0.333, bb:0.444, kb:0.167 };
+      return roundWeight(bw * (t[eq]||t.db), eq);
+    }
+  }
+
+  // ── CORE ──
+  if(cat === 'core'){
+    const t = { db:0.042, mc:0.083, bb:0.111, kb:0.042 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // ── FULLBODY ──
+  const t = { db:0.125, mc:0.222, bb:0.333, kb:0.125 };
+  return roundWeight(bw * (t[eq]||t.db), eq);
 }
 
 function roundWeight(weight, eq){
@@ -2176,7 +2237,7 @@ async function saveWorkout(workoutDate){
 }
 
 function skipDay(){
-  if(!confirm("Skip today's workout? It will be marked as skipped in your history.")) return;
+  if(!confirm('Skip today's workout? It will be marked as skipped in your history.')) return;
   const today=new Date().toISOString().split('T')[0];
   const logs=JSON.parse(localStorage.getItem('larofit_logs')||'[]');
   logs.push({date:today,skipped:true,dayName:todayExercises[0]?.dayName||''});
