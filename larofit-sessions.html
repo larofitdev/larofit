@@ -95,6 +95,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .empty-title{font-family:var(--font-display);font-size:28px;color:var(--fog);margin-bottom:8px;letter-spacing:1px;}
 .empty-body{font-size:13px;color:var(--slate);margin-bottom:24px;}
 .btn-volt{padding:11px 24px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);text-decoration:none;display:inline-block;}
+.date-edit-row{display:none;align-items:center;gap:10px;padding:10px 20px;background:rgba(198,241,53,0.04);border-top:1px solid rgba(198,241,53,0.15);}
+.date-edit-row.open{display:flex;}
+.date-edit-label{font-size:11px;font-weight:600;color:var(--volt);font-family:var(--font-mono);letter-spacing:0.08em;white-space:nowrap;}
+.date-edit-input{padding:6px 10px;background:var(--carbon);border:1.5px solid var(--volt);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;color-scheme:dark;}
+.date-edit-save{padding:6px 14px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);}
+.date-edit-cancel{padding:6px 10px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--mist);cursor:pointer;font-family:var(--font-body);}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;color:var(--white);opacity:0;transition:all 0.3s;z-index:1000;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 @media(max-width:768px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}.content{padding:16px;}.stats-row{grid-template-columns:1fr 1fr;}.topbar{padding:14px 16px;}}
@@ -252,9 +258,16 @@ function renderSessions(){
           </div>
         </div>
         <div class="session-actions" onclick="event.stopPropagation()">
+          <button class="btn-icon" onclick="toggleDateEdit(${i})" title="Edit date">✏️</button>
           <button class="btn-icon danger" onclick="deleteSession(${i})" title="Delete session">🗑</button>
         </div>
         <span class="chevron">▼</span>
+      </div>
+      <div class="date-edit-row" id="date-edit-${i}">
+        <span class="date-edit-label">📅 CHANGE DATE</span>
+        <input class="date-edit-input" type="date" id="date-input-${i}" value="${log.date||''}" max="${new Date().toISOString().split('T')[0]}">
+        <button class="date-edit-save" onclick="saveSessionDate(${i})">Save</button>
+        <button class="date-edit-cancel" onclick="toggleDateEdit(${i})">Cancel</button>
       </div>
       <div class="session-body" id="session-body-${i}">
         ${renderSessionBody(log,i)}
@@ -361,6 +374,31 @@ function addSet(sessionIdx,exIdx){
   const body=document.getElementById(`session-body-${sessionIdx}`);
   if(body) body.innerHTML=renderSessionBody(logs[sessionIdx],sessionIdx);
   showToast('Set added');
+}
+
+function toggleDateEdit(idx){
+  const row = document.getElementById('date-edit-'+idx);
+  if(!row) return;
+  row.classList.toggle('open');
+  // close the session body expand so it doesn't look weird
+  if(row.classList.contains('open')){
+    document.getElementById('session-'+idx)?.classList.remove('open');
+  }
+}
+
+function saveSessionDate(idx){
+  const input = document.getElementById('date-input-'+idx);
+  if(!input || !input.value) return;
+  const newDate = input.value; // YYYY-MM-DD
+  const logs = getLogs();
+  if(!logs[idx]) return;
+  logs[idx].date = newDate;
+  saveLogs(logs);
+  // Re-render everything so date block, weekday, and month filter all update
+  populateMonthFilter();
+  renderStats();
+  renderSessions();
+  showToast('Date updated');
 }
 
 let toastTimer;
