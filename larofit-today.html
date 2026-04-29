@@ -9,7 +9,7 @@
 <style>
 :root{
   --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
-  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --slate:#6b7a8d;--mist:#b8c4d0;--fog:#e2e8f0;--white:#f4f6f8;--pure:#ffffff;
   --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
   --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
   --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
@@ -224,8 +224,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .log-set-btn{padding:6px 14px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;white-space:nowrap;}
 .log-set-btn:hover{background:var(--volt-dim);}
 .log-set-btn.logged{background:transparent;border:1px solid var(--success);color:var(--success);cursor:default;}
-.btn-del-logged{background:none;border:none;color:var(--slate);cursor:pointer;font-size:11px;padding:2px 5px;border-radius:4px;transition:all 0.15s;margin-left:4px;}
-.btn-del-logged:hover{color:var(--ember);background:rgba(255,87,51,0.1);}
 .warmup-row td{background:rgba(167,139,250,0.04);border-bottom:1px solid rgba(167,139,250,0.12);}
 .warmup-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;font-family:var(--font-mono);letter-spacing:0.06em;background:rgba(167,139,250,0.15);color:var(--purple);}
 .warmup-label{font-family:var(--font-display);font-size:16px;color:var(--purple);width:32px;}
@@ -268,7 +266,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="nav-section">Track</div>
     <a class="nav-item active" href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
     <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
-    <a class="nav-item " href="larofit-sessions.html"><span class="nav-icon">🕐</span>Workout history</a>
     <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
     <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
     <div class="nav-section">Community</div>
@@ -1445,7 +1442,7 @@ function renderExList(){
           <td><input class="set-input${ex.warmupSet?.weight?' filled':''} voice-filled" id="inp-wgt-${exIdx}--1" type="text" inputmode="decimal" pattern="[0-9.]*" placeholder="–" value="${ex.warmupSet?.weight||''}" oninput="updateWarmup(${exIdx},'weight',this.value);this.classList.toggle('filled',!!this.value)"></td>
           <td style="text-align:right;">
             <span class="warmup-badge">🔥 WARM-UP</span><br>
-            ${ex.warmupSet?.reps?`<span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;"><span class="log-set-btn logged">✓ Logged</span><button class="btn-del-logged" onclick="deleteLoggedSet(${exIdx},'warmup')" title="Delete">✕</button></span>`:`<button class="log-set-btn" style="margin-top:4px;" onclick="manualLogWarmup(${exIdx})">Log Set</button>`}
+            ${ex.warmupSet?.reps?'<span class="log-set-btn logged" style="margin-top:4px;display:inline-block;">✓ Logged</span>':`<button class="log-set-btn" style="margin-top:4px;" onclick="manualLogWarmup(${exIdx})">Log Set</button>`}
           </td>
         </tr>` : ''}
         ${ex.sets.map((set,setIdx)=>{
@@ -1457,8 +1454,8 @@ function renderExList(){
             <td><input class="set-input${set.reps?' filled':''}${isCur?' voice-filled':''}" id="inp-reps-${exIdx}-${setIdx}" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="${isCardio?'20 min':isTimed?'30':ex.params?.reps||'–'}" value="${set.reps||''}" oninput="updateSet(${exIdx},${setIdx},'reps',this.value);this.classList.toggle('filled',!!this.value)"></td>
             ${!isBodyweight&&!isCardio?`<td><input class="set-input${set.weight?' filled':''}${isCur?' voice-filled':''}" id="inp-wgt-${exIdx}-${setIdx}" type="text" inputmode="decimal" pattern="[0-9.]*" placeholder="${ex.params?.weight||'–'}" value="${set.weight||''}" oninput="updateSet(${exIdx},${setIdx},'weight',this.value);this.classList.toggle('filled',!!this.value)"></td>`:isCardio?`<td><input class="set-input" id="inp-wgt-${exIdx}-${setIdx}" type="text" placeholder="distance" value="${set.weight||''}" oninput="updateSet(${exIdx},${setIdx},'weight',this.value)"></td>`:'<td></td>'}
             <td style="text-align:right;">
-              ${set.logged?`<span style="display:inline-flex;align-items:center;gap:4px;"><span class="log-set-btn logged">✓ Logged</span><button class="btn-del-logged" onclick="deleteLoggedSet(${exIdx},${setIdx})" title="Delete">✕</button></span>`:`<button class="log-set-btn" onclick="manualLogSet(${exIdx},${setIdx})">Log Set</button>`}
-              ${isPR&&set.logged?'<span class="set-badge" style="margin-left:4px;">↑ PR</span>':lastSet&&!set.logged?`<div style="font-size:9px;color:var(--slate);font-family:var(--font-mono);margin-top:3px;">${lastSet.reps}r·${lastSet.weight}lb</div>`:''}
+              ${set.logged?'<span class="log-set-btn logged">✓ Logged</span>':`<button class="log-set-btn" onclick="manualLogSet(${exIdx},${setIdx})">Log Set</button>`}
+              ${isPR?'<span class="set-badge" style="margin-left:4px;">↑ PR</span>':lastSet&&!set.logged?`<div style="font-size:9px;color:var(--slate);font-family:var(--font-mono);margin-top:3px;">${lastSet.reps}r·${lastSet.weight}lb</div>`:''}
             </td>
           </tr>`;
         }).join('')}
@@ -1931,21 +1928,6 @@ function setHudText(text,status){
 }
 
 function formatTime(s){const m=Math.floor(s/60);return`${m}:${String(s%60).padStart(2,'0')}`;}
-function deleteLoggedSet(exIdx, setIdx){
-  if(setIdx === 'warmup'){
-    todayExercises[exIdx].warmupSet = {reps:'', weight:''};
-  } else {
-    const set = todayExercises[exIdx].sets[setIdx];
-    if(!set) return;
-    set.logged = false;
-    set.reps = '';
-    set.weight = '';
-    set.feel = null;
-  }
-  renderExList();
-  showToast('Set cleared');
-}
-
 function manualLogSet(exIdx, setIdx){
   const ex = todayExercises[exIdx];
   const ri = document.getElementById(`inp-reps-${exIdx}-${setIdx}`);
