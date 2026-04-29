@@ -3,18 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0a0a">
-<script>
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
-  });
-}
-</script>
 <title>LaroFit — Program Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -883,7 +871,7 @@ const TYPE_DEFAULTS = {
   strength:        {sets:3, reps:10,  weight:25, rest:'90s'},
   bodyweight:      {sets:3, reps:10,  rest:'60s'},
   timed_bodyweight:{sets:3, reps:1,   rest:'30s'},
-  cardio:          {duration:'20 min',distance:'',intensity:'moderate'},
+  cardio:          {sets:1, duration:'20 min',distance:'',intensity:'moderate'},
   yoga:            {holds:5, holdTime:'30s', sides:'both'},
   stretch:         {holds:3, holdTime:'30s', sides:'both'},
   hiit:            {rounds:4, workInterval:'40s', restInterval:'20s'},
