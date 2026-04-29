@@ -9,7 +9,7 @@
 <style>
 :root{
   --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
-  --slate:#6b7a8d;--mist:#b8c4d0;--fog:#e2e8f0;--white:#f4f6f8;--pure:#ffffff;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
   --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
   --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
   --orange:#fb923c;--pink:#f472b6;
@@ -375,22 +375,41 @@ function loadNextWorkout(){
     return;
   }
 
-  // Find next non-rest day starting from tomorrow
-  const now     = new Date();
-  const todayJS = now.getDay(); // 0=Sun
-  const dayMap  = [6,0,1,2,3,4,5]; // JS day → program index (Mon=0)
+  // Find next workout — always anchored to today's actual date
+  const now      = new Date();
+  const todayJS  = now.getDay(); // 0=Sun,1=Mon...6=Sat
+  const todayStr = now.toISOString().split('T')[0];
+
+  // Convert JS day to program index: Mon=0 ... Sun=6
+  function jsToProgIdx(jsDay){ return jsDay === 0 ? 6 : jsDay - 1; }
+
+  // Check if today has already been logged
+  const logs = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
+  const todayLogged = logs.some(l=>l.date===todayStr);
+
+  // Today's program day
+  const todayProgIdx = jsToProgIdx(todayJS);
+  const todayProgDay = prog.days[todayProgIdx];
+  const todayIsWorkout = todayProgDay && !todayProgDay.rest && todayProgDay.exercises.length > 0;
 
   let nextDay = null;
   let daysAhead = 0;
 
-  for(let i=1; i<=7; i++){
-    const jsDay    = (todayJS + i) % 7;
-    const progIdx  = dayMap[jsDay];
-    const day      = prog.days[progIdx];
-    if(day && !day.rest && day.exercises.length > 0){
-      nextDay   = day;
-      daysAhead = i;
-      break;
+  if(todayIsWorkout && !todayLogged){
+    // Today is a workout day and not yet done — show today
+    nextDay   = todayProgDay;
+    daysAhead = 0;
+  } else {
+    // Today is rest day or already logged — find next workout day forward
+    for(let i=1; i<=7; i++){
+      const jsDay   = (todayJS + i) % 7;
+      const progIdx = jsToProgIdx(jsDay);
+      const day     = prog.days[progIdx];
+      if(day && !day.rest && day.exercises.length > 0){
+        nextDay   = day;
+        daysAhead = i;
+        break;
+      }
     }
   }
 
@@ -400,10 +419,10 @@ function loadNextWorkout(){
     return;
   }
 
-  // Day label
+  // Day label — always relative to today's real date
   const futureDate = new Date(now);
   futureDate.setDate(now.getDate() + daysAhead);
-  const dayLabel = daysAhead === 1 ? 'Tomorrow' :
+  const dayLabel = daysAhead === 0 ? 'Today' : daysAhead === 1 ? 'Tomorrow' :
     futureDate.toLocaleDateString('en-US',{weekday:'long'});
   const dateStr = futureDate.toLocaleDateString('en-US',{month:'short',day:'numeric'});
   badge.textContent = dayLabel;

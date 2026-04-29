@@ -351,6 +351,29 @@ canvas{display:block;width:100%!important;}
       </div>
     </div>
 
+    <!-- SLEEP QUALITY CHART (full width) -->
+    <div class="dashboard-grid full" style="margin-bottom:20px;">
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <div class="chart-card-title">Sleep quality</div>
+            <div class="chart-card-sub">Last 30 days — rated after rest days (1 = Terrible, 5 = Great)</div>
+          </div>
+          <div class="chart-meta" id="sleep-meta"></div>
+        </div>
+        <div class="chart-wrap" style="height:160px;">
+          <canvas id="sleep-chart" data-h="160"></canvas>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;padding:0 4px;">
+          <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);">1 — Terrible</span>
+          <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);">2 — Poor</span>
+          <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);">3 — OK</span>
+          <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);">4 — Good</span>
+          <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);">5 — Great</span>
+        </div>
+      </div>
+    </div>
+
     <!-- ROW 4: Exercise volume chart (full width) -->
     <div class="dashboard-grid full">
       <div class="chart-card">
@@ -673,6 +696,100 @@ function renderVolumeChart(){
 }
 
 // ── BODYWEIGHT CHART ──────────────────────────────────────────────────────────
+function renderSleepChart(){
+  const raw = JSON.parse(localStorage.getItem('larofit_sleep')||'{}');
+  const LABELS = {1:'Terrible',2:'Poor',3:'OK',4:'Good',5:'Great'};
+  const COLOR = {1:'#ef4444',2:'#fb923c',3:'#facc15',4:'#60a5fa',5:'#4ade80'};
+
+  // Build last 30 days
+  const days = [];
+  for(let i=29;i>=0;i--){
+    const d = new Date(); d.setDate(d.getDate()-i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+
+  const labels = [], data = [], colors = [];
+  days.forEach(d=>{
+    if(raw[d] !== undefined){
+      labels.push(d.substring(5)); // MM-DD
+      data.push(raw[d]);
+      colors.push(COLOR[raw[d]]||'#a78bfa');
+    }
+  });
+
+  const meta = document.getElementById('sleep-meta');
+  if(!data.length){
+    if(meta) meta.textContent = 'No sleep data yet';
+    drawEmptyChart('sleep-chart');
+    return;
+  }
+
+  const avg = (data.reduce((a,b)=>a+b,0)/data.length).toFixed(1);
+  const avgLabel = LABELS[Math.round(avg)]||'';
+  if(meta) meta.textContent = `Avg: ${avg} — ${avgLabel}`;
+
+  // Draw custom bar chart for sleep (bars colored by rating)
+  const canvas = document.getElementById('sleep-chart');
+  if(!canvas) return;
+  if(charts['sleep-chart']) charts['sleep-chart'].destroy();
+
+  const parent = canvas.parentElement;
+  const W = parent ? parent.clientWidth || 500 : 500;
+  const H = 160;
+  canvas.width = W*2; canvas.height = H*2;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  const c = canvas.getContext('2d');
+  c.clearRect(0,0,canvas.width,canvas.height);
+  c.scale(2,2);
+
+  const PAD = {top:16,right:16,bottom:36,left:40};
+  const CW = W-PAD.left-PAD.right;
+  const CH = H-PAD.top-PAD.bottom;
+  const n = data.length;
+  const barW = Math.min(CW/n*0.7, 24);
+  const gap = CW/n;
+
+  // Grid lines at 1-5
+  for(let v=1;v<=5;v++){
+    const y = PAD.top + CH - (v-1)/4*CH;
+    c.strokeStyle='rgba(255,255,255,0.05)'; c.lineWidth=1;
+    c.beginPath(); c.moveTo(PAD.left,y); c.lineTo(PAD.left+CW,y); c.stroke();
+    c.fillStyle='#6b7a8d'; c.font='9px DM Mono'; c.textAlign='right';
+    c.fillText(v, PAD.left-6, y+3);
+  }
+
+  // Bars
+  data.forEach((v,i)=>{
+    const x = PAD.left + i*gap + gap/2 - barW/2;
+    const barH = (v-1)/4*CH;
+    const y = PAD.top + CH - barH;
+    c.fillStyle = colors[i];
+    c.globalAlpha = 0.85;
+    const r = 3;
+    c.beginPath();
+    c.moveTo(x+r,y); c.lineTo(x+barW-r,y);
+    c.quadraticCurveTo(x+barW,y,x+barW,y+r);
+    c.lineTo(x+barW,y+barH); c.lineTo(x,y+barH);
+    c.lineTo(x,y+r);
+    c.quadraticCurveTo(x,y,x+r,y);
+    c.closePath(); c.fill();
+    c.globalAlpha = 1;
+  });
+
+  // X labels — show every ~5th
+  const step = Math.max(1, Math.floor(n/8));
+  c.fillStyle='#6b7a8d'; c.font='9px DM Mono'; c.textAlign='center';
+  labels.forEach((l,i)=>{
+    if(i%step===0){
+      const x = PAD.left + i*gap + gap/2;
+      c.fillText(l, x, H-8);
+    }
+  });
+
+  // Store dummy to prevent double-init
+  charts['sleep-chart'] = {destroy:()=>{}};
+}
+
 function renderBWChart(){
   const cutoff = Date.now() - getPeriodDays()*86400000;
   const bwLogs = measLogs.filter(m=>m.ts>=cutoff&&m.bw);
@@ -1070,6 +1187,7 @@ function renderAll(){
   renderStats();
   renderVolumeChart();
   renderBWChart();
+  renderSleepChart();
   renderStreak();
   renderMuscleHeatmap();
   renderPRs();
@@ -1188,7 +1306,7 @@ renderAll();
 window.addEventListener('resize', ()=>{
   clearTimeout(window._resizeTimer);
   window._resizeTimer=setTimeout(()=>{
-    renderVolumeChart();renderBWChart();renderExerciseChart();
+    renderVolumeChart();renderBWChart();renderSleepChart();renderExerciseChart();
   },200);
 });
 
