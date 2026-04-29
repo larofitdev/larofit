@@ -375,57 +375,32 @@ function loadNextWorkout(){
     return;
   }
 
-  // Find next workout — always anchored to today's actual date
-  const now      = new Date();
-  const todayJS  = now.getDay(); // 0=Sun,1=Mon...6=Sat
-  const todayStr = now.toISOString().split('T')[0];
+  // Use sequence pointer — not calendar day
+  let dayIdx = localStorage.getItem('larofit_current_day_idx');
+  if(dayIdx === null){
+    const now = new Date();
+    dayIdx = now.getDay()===0 ? 6 : now.getDay()-1;
+    localStorage.setItem('larofit_current_day_idx', String(dayIdx));
+  }
+  dayIdx = parseInt(dayIdx)||0;
 
-  // Convert JS day to program index: Mon=0 ... Sun=6
-  function jsToProgIdx(jsDay){ return jsDay === 0 ? 6 : jsDay - 1; }
-
-  // Check if today has already been logged
-  const logs = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
-  const todayLogged = logs.some(l=>l.date===todayStr);
-
-  // Today's program day
-  const todayProgIdx = jsToProgIdx(todayJS);
-  const todayProgDay = prog.days[todayProgIdx];
-  const todayIsWorkout = todayProgDay && !todayProgDay.rest && todayProgDay.exercises.length > 0;
-
+  // Find next non-rest day starting from pointer
   let nextDay = null;
-  let daysAhead = 0;
-
-  if(todayIsWorkout && !todayLogged){
-    // Today is a workout day and not yet done — show today
-    nextDay   = todayProgDay;
-    daysAhead = 0;
-  } else {
-    // Today is rest day or already logged — find next workout day forward
-    for(let i=1; i<=7; i++){
-      const jsDay   = (todayJS + i) % 7;
-      const progIdx = jsToProgIdx(jsDay);
-      const day     = prog.days[progIdx];
-      if(day && !day.rest && day.exercises.length > 0){
-        nextDay   = day;
-        daysAhead = i;
-        break;
-      }
-    }
+  let checkedIdx = dayIdx;
+  for(let i=0;i<7;i++){
+    const idx=(dayIdx+i)%7;
+    const d=prog.days[idx];
+    if(d&&!d.rest&&d.exercises.length>0){ nextDay=d; checkedIdx=idx; break; }
   }
 
   if(!nextDay){
-    body.innerHTML = `<div class="no-program"><div class="no-program-icon">😴</div><div>No upcoming workouts found. Check your program has active days.</div><a href="larofit-builder.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Edit program →</a></div>`;
+    body.innerHTML = `<div class="no-program"><div class="no-program-icon">😴</div><div>No upcoming workouts found.</div><a href="larofit-builder.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Edit program →</a></div>`;
     badge.textContent = 'Not found';
     return;
   }
 
-  // Day label — always relative to today's real date
-  const futureDate = new Date(now);
-  futureDate.setDate(now.getDate() + daysAhead);
-  const dayLabel = daysAhead === 0 ? 'Today' : daysAhead === 1 ? 'Tomorrow' :
-    futureDate.toLocaleDateString('en-US',{weekday:'long'});
-  const dateStr = futureDate.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-  badge.textContent = dayLabel;
+  badge.textContent = 'Up next';
+  const dateStr = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
 
   // Show up to 5 exercises
   const shown = nextDay.exercises.slice(0,5);
