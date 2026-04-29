@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — My Group</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --orange:#fb923c;--pink:#f472b6;--teal:#2dd4bf;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 20px;margin:12px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background 0.15s;font-size:13px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--volt-pale);color:var(--white);border-left-color:var(--volt);}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-avatar{width:32px;height:32px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:12px;font-weight:600;color:var(--white);}
+.s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn-sm{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn-sm:hover{border-color:var(--mist);color:var(--white);}
+.btn-volt{padding:9px 20px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-volt:hover{background:var(--volt-dim);}
+
+/* ── SETUP SCREEN ── */
+.setup-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 65px);padding:40px;}
+.setup-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:48px;max-width:560px;width:100%;text-align:center;}
+.setup-icon{font-size:56px;margin-bottom:20px;}
+.setup-title{font-family:var(--font-display);font-size:44px;letter-spacing:2px;color:var(--pure);margin-bottom:8px;}
+.setup-sub{font-size:14px;color:var(--mist);line-height:1.7;margin-bottom:32px;}
+.setup-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+.setup-opt{padding:20px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s;text-align:left;}
+.setup-opt:hover{border-color:var(--volt);background:var(--volt-pale);}
+.setup-opt-icon{font-size:24px;margin-bottom:8px;}
+.setup-opt-title{font-size:14px;font-weight:700;color:var(--pure);margin-bottom:4px;}
+.setup-opt-desc{font-size:11px;color:var(--mist);line-height:1.5;}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--slate);font-size:12px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.invite-input-row{display:flex;gap:8px;}
+.invite-input{flex:1;padding:10px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-family:var(--font-mono);outline:none;transition:border-color 0.2s;letter-spacing:0.2em;text-transform:uppercase;}
+.invite-input:focus{border-color:var(--volt);}
+.invite-input::placeholder{letter-spacing:0;text-transform:none;}
+
+/* ── GROUP PAGE LAYOUT ── */
+.group-layout{display:grid;grid-template-columns:1fr 380px;gap:0;min-height:calc(100vh - 65px);}
+.feed-col{border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.msg-col{display:flex;flex-direction:column;background:var(--offblack);}
+
+/* ── TABS ── */
+.page-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--offblack);}
+.page-tab{padding:14px 24px;font-size:13px;font-weight:600;color:var(--mist);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body);}
+.page-tab.active{color:var(--volt);border-bottom-color:var(--volt);}
+
+/* ── MEMBER STRIP ── */
+.member-strip{padding:16px 20px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;gap:16px;overflow-x:auto;}
+.member-bubble{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;}
+.member-avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--black);font-family:var(--font-display);position:relative;border:2px solid transparent;}
+.member-avatar.online{border-color:var(--success);}
+.member-avatar.offline{border-color:var(--border);opacity:0.7;}
+.member-status-dot{position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;border:2px solid var(--carbon);}
+.member-status-dot.active{background:var(--success);}
+.member-status-dot.rest{background:var(--slate);}
+.member-name{font-size:10px;color:var(--mist);font-weight:600;white-space:nowrap;}
+.member-streak{font-size:9px;color:var(--volt);font-family:var(--font-mono);}
+.add-member-bubble{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;cursor:pointer;opacity:0.6;}
+.add-member-bubble:hover{opacity:1;}
+.add-avatar{width:48px;height:48px;border-radius:50%;border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--slate);}
+
+/* ── FEED ── */
+.feed{flex:1;overflow-y:auto;padding:0;}
+.feed-empty{padding:60px 20px;text-align:center;color:var(--mist);}
+.feed-item{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;gap:12px;transition:background 0.1s;}
+.feed-item:hover{background:rgba(255,255,255,0.01);}
+.feed-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.feed-body{flex:1;min-width:0;}
+.feed-header{display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap;}
+.feed-name{font-size:13px;font-weight:700;color:var(--pure);}
+.feed-action{font-size:13px;color:var(--mist);}
+.feed-time{font-size:10px;color:var(--slate);font-family:var(--font-mono);margin-left:auto;}
+.feed-content{font-size:13px;color:var(--fog);line-height:1.5;margin-bottom:8px;}
+.feed-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--mist);margin-bottom:8px;}
+.feed-badge.workout{border-color:rgba(198,241,53,0.2);color:var(--volt);}
+.feed-badge.measurement{border-color:rgba(96,165,250,0.2);color:var(--blue);}
+.feed-badge.milestone{border-color:rgba(74,222,128,0.2);color:var(--success);}
+.feed-img{width:100%;max-width:300px;border-radius:var(--radius-sm);margin-bottom:8px;object-fit:cover;cursor:pointer;}
+.feed-reactions{display:flex;gap:6px;flex-wrap:wrap;}
+.reaction{padding:3px 10px;border-radius:999px;border:1px solid var(--border);background:transparent;font-size:12px;cursor:pointer;transition:all 0.15s;font-family:var(--font-body);}
+.reaction:hover{border-color:var(--mist);background:rgba(255,255,255,0.03);}
+.reaction.reacted{border-color:rgba(198,241,53,0.3);background:var(--volt-pale);color:var(--volt);}
+.add-reaction{padding:3px 8px;border-radius:999px;border:1px dashed var(--border);background:transparent;font-size:12px;cursor:pointer;color:var(--slate);transition:all 0.15s;font-family:var(--font-body);}
+.add-reaction:hover{border-color:var(--mist);color:var(--mist);}
+
+/* ── VOICE NOTE BUBBLE ── */
+.voice-bubble{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--carbon);border:1px solid var(--border);border-radius:999px;max-width:220px;margin-bottom:8px;}
+.play-btn{width:28px;height:28px;border-radius:50%;background:var(--volt);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:10px;color:var(--black);}
+.voice-wave{flex:1;height:20px;display:flex;align-items:center;gap:2px;}
+.voice-bar{width:3px;border-radius:999px;background:var(--volt);opacity:0.6;}
+.voice-duration{font-size:10px;color:var(--slate);font-family:var(--font-mono);flex-shrink:0;}
+
+/* ── POST COMPOSER ── */
+.post-composer{padding:14px 20px;border-top:1px solid var(--border);background:var(--offblack);}
+.composer-row{display:flex;align-items:flex-end;gap:10px;}
+.composer-input{flex:1;padding:10px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;resize:none;min-height:40px;max-height:120px;transition:border-color 0.2s;line-height:1.5;}
+.composer-input:focus{border-color:var(--volt);}
+.composer-actions{display:flex;align-items:center;gap:6px;}
+.composer-btn{width:36px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.15s;color:var(--mist);}
+.composer-btn:hover{border-color:var(--mist);color:var(--white);}
+.composer-btn.recording{border-color:var(--ember);color:var(--ember);animation:pulse-border 1s infinite;}
+.composer-btn.send{background:var(--volt);border-color:var(--volt);color:var(--black);}
+.composer-btn.send:hover{background:var(--volt-dim);}
+@keyframes pulse-border{0%,100%{border-color:var(--ember);}50%{border-color:rgba(255,87,51,0.4);}}
+
+/* ── MESSAGES ── */
+.msg-col-header{padding:14px 16px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.msg-col-title{font-size:13px;font-weight:700;color:var(--pure);flex:1;}
+.msg-tabs{display:flex;gap:4px;}
+.msg-tab{padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--mist);background:transparent;font-family:var(--font-body);transition:all 0.15s;}
+.msg-tab.active{background:var(--volt-pale);border-color:rgba(198,241,53,0.3);color:var(--volt);}
+.contact-list{border-bottom:1px solid var(--border);}
+.contact-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid rgba(255,255,255,0.03);}
+.contact-item:hover{background:rgba(255,255,255,0.02);}
+.contact-item.active{background:var(--volt-pale);}
+.contact-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);font-family:var(--font-display);flex-shrink:0;position:relative;}
+.contact-dot{position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;border:2px solid var(--offblack);}
+.contact-dot.online{background:var(--success);}
+.contact-dot.offline{background:var(--slate);}
+.contact-info{flex:1;min-width:0;}
+.contact-name{font-size:12px;font-weight:600;color:var(--white);}
+.contact-preview{font-size:11px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.contact-time{font-size:10px;color:var(--slate);font-family:var(--font-mono);}
+.chat-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;}
+.chat-date-divider{text-align:center;font-size:10px;color:var(--slate);font-family:var(--font-mono);margin:8px 0;}
+.msg-bubble-row{display:flex;gap:8px;align-items:flex-end;}
+.msg-bubble-row.mine{flex-direction:row-reverse;}
+.msg-bubble-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.msg-bubble{max-width:240px;padding:9px 12px;border-radius:12px;font-size:13px;line-height:1.5;position:relative;}
+.msg-bubble.them{background:var(--carbon);border:1px solid var(--border);color:var(--fog);border-bottom-left-radius:4px;}
+.msg-bubble.mine{background:var(--volt);color:var(--black);font-weight:500;border-bottom-right-radius:4px;}
+.msg-time{font-size:9px;opacity:0.6;display:block;margin-top:4px;font-family:var(--font-mono);}
+.msg-voice{display:flex;align-items:center;gap:8px;}
+.msg-voice .play-btn{width:24px;height:24px;font-size:9px;}
+.msg-voice .voice-wave{height:16px;}
+.msg-img{width:180px;border-radius:var(--radius-sm);cursor:pointer;}
+.chat-input-row{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;}
+.chat-input{flex:1;padding:9px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;resize:none;min-height:38px;max-height:100px;transition:border-color 0.2s;}
+.chat-input:focus{border-color:var(--volt);}
+
+/* ── GROUP INFO PANEL ── */
+.group-info-bar{padding:12px 20px;background:rgba(198,241,53,0.04);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.group-code-badge{padding:5px 12px;background:var(--carbon);border:1px solid rgba(198,241,53,0.2);border-radius:var(--radius-sm);font-size:11px;font-family:var(--font-mono);color:var(--volt);cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
+.group-code-badge:hover{background:var(--volt-pale);}
+.privacy-pill{padding:4px 10px;border-radius:999px;font-size:10px;font-weight:600;border:1px solid var(--border);color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;}
+.privacy-pill.on{border-color:rgba(74,222,128,0.3);color:var(--success);background:rgba(74,222,128,0.06);}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:420px;width:calc(100% - 40px);position:relative;}
+.modal-title{font-family:var(--font-display);font-size:24px;letter-spacing:1px;color:var(--pure);margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--mist);line-height:1.6;margin-bottom:20px;}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;background:var(--carbon);border:1px solid var(--border);color:var(--mist);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.field label{font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.08em;text-transform:uppercase;}
+.field input,.field select,.field textarea{padding:9px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;width:100%;}
+.field input:focus,.field select:focus{border-color:var(--volt);}
+.code-display{padding:16px;background:var(--carbon);border:1.5px solid rgba(198,241,53,0.2);border-radius:var(--radius-sm);text-align:center;font-family:var(--font-mono);font-size:28px;letter-spacing:0.3em;color:var(--volt);cursor:pointer;margin-bottom:12px;}
+.code-hint{font-size:11px;color:var(--mist);text-align:center;margin-bottom:16px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--volt);border-radius:999px;padding:10px 24px;font-size:13px;color:var(--volt);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+@media(max-width:1100px){.group-layout{grid-template-columns:1fr;}.msg-col{border-top:1px solid var(--border);min-height:400px;}}
+@media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">LARO<span>FIT</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Home</div>
+    <a class="nav-item " href="larofit-dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+    <div class="nav-section">Build</div>
+    <a class="nav-item " href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
+    <a class="nav-item " href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item " href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item " href="larofit-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <a class="nav-item " href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
+    <div class="nav-section">Track</div>
+    <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
+    <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
+    <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
+    <div class="nav-section">Community</div>
+    <a class="nav-item active" href="larofit-group.html"><span class="nav-icon">👥</span>Group feed</a>
+    <a class="nav-item " href="larofit-find-trainer.html"><span class="nav-icon">🔍</span>Find a trainer</a>
+    <div class="nav-section">Trainer</div>
+    <a class="nav-item " href="larofit-trainer.html"><span class="nav-icon">🏋️</span>Trainer dashboard</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Trainer builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet builder</a>
+    <a class="nav-item " href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar" id="sidebar-avatar">?</div>
+    <div><div class="s-name" id="sidebar-name">Loading…</div><div class="s-plan">&#10022; PRO TRIAL</div></div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="group-page-title">MY GROUP</div>
+    <div class="topbar-right">
+      <button class="btn-sm" onclick="showInviteModal()" id="btn-invite" style="display:none;">➕ Invite member</button>
+      <button class="btn-sm" onclick="showPrivacyModal()" id="btn-privacy" style="display:none;">🔒 Privacy</button>
+      <button class="btn-sm" onclick="leaveGroup()" id="btn-leave" style="display:none;" style="color:var(--ember);">🚪 Leave group</button>
+    </div>
+  </div>
+
+  <!-- CONTENT injected by JS -->
+  <div id="page-content" style="flex:1;display:flex;flex-direction:column;"></div>
+</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────────────────
+let myProfile   = {};
+let myName      = '';
+let myInitial   = '';
+let group       = null; // {id, name, code, members:[{name,initial,color,status,streak,workoutsToday}]}
+let feedItems   = [];   // [{id,member,type,text,badge,img,reactions,time,voiceNote}]
+let messages    = {};   // {threadId:[{from,text,time,type,voiceNote,img}]}
+let activeThread= 'group'; // 'group' or member name
+let mediaRecorder = null;
+let isRecording   = false;
+let recordedChunks = [];
+let recordingTimer = null;
+let recordingStart = 0;
+
+// Demo member colors
+const COLORS = ['#c6f135','#60a5fa','#a78bfa','#4ade80','#fb923c','#f472b6','#2dd4bf','#fbbf24','#f87171'];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────────────────
+function init(){
+  myProfile = JSON.parse(localStorage.getItem('larofit_profile')||'{}');
+  myName    = localStorage.getItem('larofit_user_name') || myProfile.first || 'Lyndon';
+  myInitial = myName.charAt(0).toUpperCase();
+
+  document.getElementById('sidebar-name').textContent  = myName;
+  document.getElementById('sidebar-avatar').textContent = myInitial;
+
+  // Auto-seed demo group if none exists
+  const savedGroup = localStorage.getItem('larofit_group');
+  if(savedGroup){
+    group = JSON.parse(savedGroup);
+    loadFeed();
+    loadMessages();
+    renderGroupPage();
+  } else {
+    seedFullDemoGroup();
+    renderGroupPage();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SETUP
+// ─────────────────────────────────────────────────────────────────────────────
+function renderSetupScreen(){
+  document.getElementById('page-content').innerHTML = `
+    <div class="setup-screen">
+      <div class="setup-card">
+        <div class="setup-icon">👥</div>
+        <div class="setup-title">MY GROUP</div>
+        <div class="setup-sub">Train together, stay accountable. Create a private group with up to 10 people — see each other's workouts, share gym pics, and message right from the app.</div>
+        <div class="setup-options">
+          <div class="setup-opt" onclick="showCreateModal()">
+            <div class="setup-opt-icon">✨</div>
+            <div class="setup-opt-title">Create a group</div>
+            <div class="setup-opt-desc">Start a new group and invite your friends, partner, or training buddies.</div>
+          </div>
+          <div class="setup-opt" onclick="showJoinModal()">
+            <div class="setup-opt-icon">🔗</div>
+            <div class="setup-opt-title">Join a group</div>
+            <div class="setup-opt-desc">Have an invite code? Enter it here to join an existing group.</div>
+          </div>
+        </div>
+        <div class="divider">or enter an invite code directly</div>
+        <div class="invite-input-row">
+          <input class="invite-input" id="quick-code" placeholder="Enter 6-digit code" maxlength="6" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')quickJoin()">
+          <button class="btn-volt" onclick="quickJoin()">Join →</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function showCreateModal(){
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">CREATE GROUP</div>
+    <div class="modal-sub">Give your group a name. You'll get a 6-digit invite code to share with up to 9 others.</div>
+    <div class="field">
+      <label>Group name</label>
+      <input type="text" id="group-name-input" placeholder="e.g. Planet Fitness Crew, The Grind Squad…" maxlength="40">
+    </div>
+    <button class="btn-volt" style="width:100%;" onclick="createGroup()">Create group →</button>`);
+  setTimeout(()=>document.getElementById('group-name-input')?.focus(),100);
+}
+
+function showJoinModal(){
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">JOIN GROUP</div>
+    <div class="modal-sub">Enter the 6-digit invite code your group creator shared with you.</div>
+    <div class="field">
+      <label>Invite code</label>
+      <input type="text" id="join-code-input" class="invite-input" style="width:100%;font-size:20px;" placeholder="ABC123" maxlength="6" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <button class="btn-volt" style="width:100%;margin-top:8px;" onclick="joinGroup()">Join group →</button>`);
+  setTimeout(()=>document.getElementById('join-code-input')?.focus(),100);
+}
+
+function createGroup(){
+  const name = document.getElementById('group-name-input')?.value.trim();
+  if(!name){ showToast('Enter a group name first'); return; }
+  const code = Math.random().toString(36).substr(2,6).toUpperCase();
+  group = {
+    id: Date.now().toString(),
+    name,
+    code,
+    createdBy: myName,
+    members: [
+      {name:myName, initial:myInitial, color:COLORS[0], status:'active', streak:0, workoutsToday:false, isMe:true}
+    ],
+    privacy: {workouts:true, measurements:false, diet:false}
+  };
+  saveGroup();
+  seedDemoData();
+  closeModal();
+  showCodeModal(code, name);
+}
+
+function showCodeModal(code, groupName){
+  openModal(`
+    <button class="modal-close" onclick="closeModal();renderGroupPage()">✕</button>
+    <div class="modal-title">GROUP CREATED! 🎉</div>
+    <div class="modal-sub">Share this code with people you want to invite to <strong>${groupName}</strong>. They enter it in their LaroFit app to join.</div>
+    <div class="code-display" onclick="copyCode('${code}')" title="Click to copy">${code}</div>
+    <div class="code-hint">👆 Tap to copy · Valid forever · Up to 10 members</div>
+    <button class="btn-volt" style="width:100%;" onclick="closeModal();renderGroupPage()">Start using my group →</button>`);
+}
+
+function quickJoin(){
+  const code = document.getElementById('quick-code')?.value.trim().toUpperCase();
+  if(code.length !== 6){ showToast('Enter a 6-digit code'); return; }
+  joinWithCode(code);
+}
+
+function joinGroup(){
+  const code = document.getElementById('join-code-input')?.value.trim().toUpperCase();
+  if(code.length !== 6){ showToast('Enter a 6-digit code'); return; }
+  joinWithCode(code);
+}
+
+function joinWithCode(code){
+  // In production this would look up the group on the server.
+  // For prototype: create a demo group with the code
+  group = {
+    id: code,
+    name: 'Training Crew',
+    code,
+    createdBy: 'Sarah',
+    members: [
+      {name:'Sarah', initial:'S', color:COLORS[1], status:'active', streak:12, workoutsToday:true, isMe:false},
+      {name:'Mike',  initial:'M', color:COLORS[2], status:'rest',   streak:5,  workoutsToday:false, isMe:false},
+      {name:myName,  initial:myInitial, color:COLORS[0], status:'active', streak:0, workoutsToday:false, isMe:true},
+    ],
+    privacy: {workouts:true, measurements:false, diet:false}
+  };
+  saveGroup();
+  seedDemoData();
+  closeModal();
+  showToast('✅ Joined group!');
+  renderGroupPage();
+}
+
+function copyCode(code){
+  navigator.clipboard?.writeText(code).then(()=>showToast('Code copied to clipboard!'))
+    .catch(()=>showToast(`Your code: ${code}`));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEMO DATA
+// ─────────────────────────────────────────────────────────────────────────────
+function seedFullDemoGroup(){
+  const members = [
+    {name:myName,       initial:myInitial, color:COLORS[0], status:'active', streak:7,  workoutsToday:true,  isMe:true},
+    {name:'Sarah',      initial:'S',       color:COLORS[1], status:'active', streak:14, workoutsToday:true,  isMe:false},
+    {name:'Mike',       initial:'M',       color:COLORS[2], status:'rest',   streak:5,  workoutsToday:false, isMe:false},
+    {name:'Jasmine',    initial:'J',       color:COLORS[3], status:'active', streak:21, workoutsToday:true,  isMe:false},
+    {name:'Derek',      initial:'D',       color:COLORS[4], status:'rest',   streak:2,  workoutsToday:false, isMe:false},
+  ];
+
+  group = {
+    id: 'DEMO01',
+    name: 'Planet Fitness Crew',
+    code: 'PF2026',
+    createdBy: 'Sarah',
+    members,
+    privacy: {workouts:true, measurements:false, diet:false}
+  };
+
+  const me   = members[0];
+  const sarah= members[1];
+  const mike = members[2];
+  const jas  = members[3];
+  const derek= members[4];
+
+  feedItems = [
+    // Today
+    {id:'f10', member:me,    type:'workout',     text:'', badge:'Upper Body Push · 5 exercises · 48 min', reactions:{'💪':[sarah.name,jas.name],'🔥':[mike.name]}, time:ago(45),  voiceNote:null, img:null},
+    {id:'f9',  member:sarah, type:'text',        text:'Crushed leg day tonight! My quads are already crying 😭 Worth it though 💪', reactions:{'😂':[me.name,derek.name],'💪':[jas.name]}, time:ago(60), voiceNote:null, img:null},
+    {id:'f8',  member:sarah, type:'workout',     text:'', badge:'Lower Body · 6 exercises · 55 min', reactions:{'🔥':[me.name,jas.name],'💪':[mike.name]}, time:ago(62), voiceNote:null, img:null},
+    {id:'f7',  member:jas,   type:'milestone',   text:'', badge:'🎉 30 workouts logged this month — new personal record!', reactions:{'🎉':[me.name,sarah.name,mike.name,derek.name]}, time:ago(180), voiceNote:null, img:null},
+    {id:'f6',  member:jas,   type:'text',        text:'Anyone else\'s Planet Fitness getting a new cable station? Saw them setting it up today 👀', reactions:{'👏':[sarah.name],'⚡':[me.name]}, time:ago(200), voiceNote:null, img:null},
+    // Yesterday
+    {id:'f5',  member:mike,  type:'workout',     text:'', badge:'Full Body Strength · 4 exercises · 42 min', reactions:{'💪':[sarah.name]}, time:ago(1440), voiceNote:null, img:null},
+    {id:'f4',  member:derek, type:'text',        text:'Finally back after being sick all week. Took it easy but it felt good to be back in there.', reactions:{'💪':[me.name,sarah.name,jas.name],'❤️':[mike.name]}, time:ago(1500), voiceNote:null, img:null},
+    {id:'f3',  member:me,    type:'workout',     text:'', badge:'Lower Body · 5 exercises · 51 min', reactions:{'🔥':[sarah.name,jas.name]}, time:ago(1560), voiceNote:null, img:null},
+    // 2 days ago
+    {id:'f2',  member:sarah, type:'text',        text:'PSA: the Smith machine in the back is free after 7:30pm. Game changer 🙌', reactions:{'👏':[me.name,mike.name,derek.name,jas.name]}, time:ago(2880), voiceNote:null, img:null},
+    {id:'f1',  member:jas,   type:'workout',     text:'', badge:'Upper Body Pull · 5 exercises · 44 min', reactions:{'💪':[sarah.name,me.name]}, time:ago(3000), voiceNote:null, img:null},
+  ];
+
+  messages = {
+    group: [
+      {id:'gm1', from:sarah.name, fromMember:sarah, text:'Hey everyone! Welcome to the Planet Fitness Crew 👋 Let\'s keep each other accountable!', time:ago(10080), type:'text'},
+      {id:'gm2', from:jas.name,   fromMember:jas,   text:'Love this idea! I\'ve been looking for a gym crew 🙌', time:ago(10060), type:'text'},
+      {id:'gm3', from:mike.name,  fromMember:mike,  text:'Who\'s going tonight? I\'m hitting legs at 6pm', time:ago(2880), type:'text'},
+      {id:'gm4', from:me.name,    fromMember:me,    text:'I\'ll be there around 6:30. Save me a leg press machine 😂', time:ago(2870), type:'text'},
+      {id:'gm5', from:sarah.name, fromMember:sarah, text:'I\'m going at 7. Chest day for me!', time:ago(2860), type:'text'},
+      {id:'gm6', from:derek.name, fromMember:derek, text:'Just got back. That place was packed at 6 tonight', time:ago(1440), type:'text'},
+      {id:'gm7', from:jas.name,   fromMember:jas,   text:'Great session tonight everyone 💪 30 workouts done this month for me!', time:ago(180), type:'text'},
+      {id:'gm8', from:sarah.name, fromMember:sarah, text:'YESSS Jasmine!! That\'s incredible 🎉🎉', time:ago(170), type:'text'},
+      {id:'gm9', from:me.name,    fromMember:me,    text:'Crushing it Jasmine! Who\'s going tomorrow?', time:ago(40), type:'text'},
+    ],
+    [sarah.name]: [
+      {id:'dm_s1', from:sarah.name, fromMember:sarah, text:'Hey! What time are you usually at the gym?', time:ago(4320), type:'text'},
+      {id:'dm_s2', from:me.name,    fromMember:me,    text:'Usually around 6pm. You?', time:ago(4310), type:'text'},
+      {id:'dm_s3', from:sarah.name, fromMember:sarah, text:'Same! Maybe we can coordinate sometime. Misery loves company on leg day 😂', time:ago(4300), type:'text'},
+      {id:'dm_s4', from:me.name,    fromMember:me,    text:'Haha deal. I\'ll message you tomorrow before I go', time:ago(4290), type:'text'},
+      {id:'dm_s5', from:sarah.name, fromMember:sarah, text:'How\'s the carnivore diet going for you? I\'ve been curious about trying it', time:ago(1440), type:'text'},
+      {id:'dm_s6', from:me.name,    fromMember:me,    text:'Really good actually. Energy is way more consistent. No afternoon crash anymore', time:ago(1430), type:'text'},
+      {id:'dm_s7', from:sarah.name, fromMember:sarah, text:'That\'s the one thing I struggle with. Might have to try it 🤔', time:ago(1420), type:'text'},
+    ],
+    [mike.name]: [
+      {id:'dm_m1', from:mike.name, fromMember:mike, text:'Hey man, what\'s your chest routine looking like these days?', time:ago(2880), type:'text'},
+      {id:'dm_m2', from:me.name,   fromMember:me,   text:'Machine chest press, cable flys, and shoulder press mostly. All machines since Planet Fitness doesn\'t have free benches', time:ago(2870), type:'text'},
+      {id:'dm_m3', from:mike.name, fromMember:mike, text:'That\'s basically what I do too. Have you tried the Hammer Strength machines? Way better than the regular ones', time:ago(2860), type:'text'},
+      {id:'dm_m4', from:me.name,   fromMember:me,   text:'Yeah those are solid. I do 4 sets on those as my main move', time:ago(2850), type:'text'},
+    ],
+    [jas.name]: [
+      {id:'dm_j1', from:jas.name, fromMember:jas, text:'30 workouts in a month done!! So happy right now 😭🎉', time:ago(185), type:'text'},
+      {id:'dm_j2', from:me.name,  fromMember:me,  text:'That is seriously impressive. What\'s your secret?', time:ago(175), type:'text'},
+      {id:'dm_j3', from:jas.name, fromMember:jas, text:'Honestly? This group. Knowing you guys will see if I skip keeps me accountable lol', time:ago(165), type:'text'},
+      {id:'dm_j4', from:me.name,  fromMember:me,  text:'That\'s exactly why I wanted to build this feature. It works!', time:ago(155), type:'text'},
+    ],
+    [derek.name]: [
+      {id:'dm_d1', from:derek.name, fromMember:derek, text:'Good to be back at it. Being sick for a week was rough', time:ago(1500), type:'text'},
+      {id:'dm_d2', from:me.name,    fromMember:me,    text:'Welcome back man! Take it easy this week, no need to go hard right away', time:ago(1490), type:'text'},
+      {id:'dm_d3', from:derek.name, fromMember:derek, text:'Yeah just did a light full body today. Felt good to sweat it out', time:ago(1480), type:'text'},
+    ],
+  };
+
+  saveGroup();
+  localStorage.setItem('larofit_feed', JSON.stringify(feedItems));
+  localStorage.setItem('larofit_messages', JSON.stringify(messages));
+}
+
+function seedDemoData(){
+  // Legacy — only called when creating/joining with no demo data
+  const demoMembers = group.members.filter(m=>!m.isMe);
+  feedItems = [];
+  if(demoMembers.length > 0){
+    const m0 = demoMembers[0];
+    feedItems = [
+      {id:'f1', member:m0, type:'workout', text:'', badge:'Upper body push · 5 exercises · 52 min', reactions:{'💪':[m0.name]}, time:ago(2), voiceNote:null, img:null},
+      {id:'f2', member:m0, type:'text',    text:'Great session tonight! 💪', reactions:{}, time:ago(3), voiceNote:null, img:null},
+    ];
+  }
+  messages = {group:[]};
+  demoMembers.forEach(m=>{ messages[m.name]=[]; });
+  localStorage.setItem('larofit_feed', JSON.stringify(feedItems));
+  localStorage.setItem('larofit_messages', JSON.stringify(messages));
+}
+
+function ago(minutes){
+  const d = new Date(Date.now() - minutes*60*1000);
+  return d.toISOString();
+}
+
+function loadFeed(){
+  const saved = localStorage.getItem('larofit_feed');
+  if(saved) feedItems = JSON.parse(saved);
+}
+
+function loadMessages(){
+  const saved = localStorage.getItem('larofit_messages');
+  if(saved) messages = JSON.parse(saved);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GROUP PAGE
+// ─────────────────────────────────────────────────────────────────────────────
+function renderGroupPage(){
+  document.getElementById('group-page-title').textContent = group.name.toUpperCase();
+  document.getElementById('btn-invite').style.display  = 'flex';
+  document.getElementById('btn-privacy').style.display = 'flex';
+  document.getElementById('btn-leave').style.display   = 'flex';
+
+  document.getElementById('page-content').innerHTML = `
+    <div class="group-info-bar">
+      <span style="font-size:12px;font-weight:600;color:var(--mist);">${group.members.length}/10 members</span>
+      <div class="group-code-badge" onclick="copyCode('${group.code}')">
+        🔗 Invite code: <strong>${group.code}</strong> · tap to copy
+      </div>
+      <div class="privacy-pill on" id="privacy-workouts" onclick="togglePrivacy('workouts')">✓ Workouts visible</div>
+      <div class="privacy-pill${group.privacy?.measurements?' on':''}" id="privacy-meas" onclick="togglePrivacy('measurements')">📏 Measurements</div>
+    </div>
+    <div class="group-layout">
+      <!-- FEED -->
+      <div class="feed-col">
+        <div class="member-strip" id="member-strip"></div>
+        <div class="page-tabs">
+          <button class="page-tab active" id="tab-feed" onclick="switchFeedTab('feed')">📰 Group feed</button>
+          <button class="page-tab" id="tab-photos" onclick="switchFeedTab('photos')">📷 Gym pics</button>
+        </div>
+        <div class="feed" id="feed-container"></div>
+        <div class="post-composer">
+          <div style="font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">Share with your group</div>
+          <div class="composer-row">
+            <textarea class="composer-input" id="post-input" placeholder="Share a workout, thought, or gym pic…" rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();postToFeed();}"></textarea>
+            <div class="composer-actions">
+              <label class="composer-btn" title="Share a photo" style="cursor:pointer;">
+                📷<input type="file" accept="image/*" style="display:none;" onchange="handlePhotoPost(this)">
+              </label>
+              <button class="composer-btn" id="voice-post-btn" title="Record voice note" onclick="toggleVoiceRecording('post')">🎙️</button>
+              <button class="composer-btn send" onclick="postToFeed()">➤</button>
+            </div>
+          </div>
+          <div id="recording-status" style="display:none;margin-top:8px;font-size:11px;color:var(--ember);font-family:var(--font-mono);display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--ember);animation:pulse-border 1s infinite;display:inline-block;"></span>
+            <span id="recording-time">Recording… 0s</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="msg-col">
+        <div class="msg-col-header">
+          <div class="msg-col-title">💬 Messages</div>
+          <div class="msg-tabs">
+            <button class="msg-tab active" id="msgtab-group" onclick="switchMsgTab('group')">Group</button>
+            <button class="msg-tab" id="msgtab-dm" onclick="switchMsgTab('dm')">DMs</button>
+          </div>
+        </div>
+        <div id="msg-content" style="flex:1;display:flex;flex-direction:column;overflow:hidden;"></div>
+      </div>
+    </div>`;
+
+  renderMemberStrip();
+  renderFeed();
+  renderMsgPanel('group');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEMBER STRIP
+// ─────────────────────────────────────────────────────────────────────────────
+function renderMemberStrip(){
+  const strip = document.getElementById('member-strip');
+  if(!strip) return;
+  strip.innerHTML = group.members.map(m=>`
+    <div class="member-bubble" onclick="openMemberCard('${m.name}')">
+      <div class="member-avatar${m.status==='active'?' online':' offline'}" style="background:${m.color};">
+        ${m.initial}
+        <div class="member-status-dot ${m.workoutsToday?'active':'rest'}"></div>
+      </div>
+      <div class="member-name">${m.isMe?'You':m.name}</div>
+      <div class="member-streak">${m.streak>0?'🔥'+m.streak:'—'}</div>
+    </div>`).join('')+`
+    ${group.members.length<10?`<div class="add-member-bubble" onclick="showInviteModal()">
+      <div class="add-avatar">+</div>
+      <div class="member-name">Invite</div>
+    </div>`:''}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEED
+// ─────────────────────────────────────────────────────────────────────────────
+function renderFeed(){
+  const container = document.getElementById('feed-container');
+  if(!container) return;
+  if(!feedItems.length){
+    container.innerHTML = `<div class="feed-empty"><div style="font-size:36px;margin-bottom:12px;">👟</div><div>No activity yet. Complete a workout or share something with your group!</div></div>`;
+    return;
+  }
+
+  // Sort newest first
+  const sorted = [...feedItems].sort((a,b)=>new Date(b.time)-new Date(a.time));
+
+  container.innerHTML = sorted.map(item=>{
+    const isMe = item.member.isMe;
+    const reactions = Object.entries(item.reactions||{}).map(([emoji,likers])=>`
+      <button class="reaction${likers.includes(myName)?' reacted':''}" onclick="toggleReaction('${item.id}','${emoji}')">
+        ${emoji} ${likers.length>0?likers.length:''}
+      </button>`).join('');
+
+    let content = '';
+    if(item.type==='text') content = `<div class="feed-content">${item.text}</div>`;
+    if(item.type==='workout') content = `<div class="feed-badge workout">🏋️ ${item.badge}</div>`;
+    if(item.type==='measurement') content = `<div class="feed-badge measurement">📏 ${item.badge}</div>`;
+    if(item.type==='milestone') content = `<div class="feed-badge milestone">${item.badge}</div>`;
+    if(item.img) content += `<img class="feed-img" src="${item.img}" alt="Gym pic" onclick="lightbox('${item.img}')">`;
+    if(item.voiceNote) content += renderVoiceNote(item.voiceNote, item.id);
+
+    return `<div class="feed-item" id="feed-${item.id}">
+      <div class="feed-avatar" style="background:${item.member.color};">${item.member.initial}</div>
+      <div class="feed-body">
+        <div class="feed-header">
+          <span class="feed-name">${isMe?'You':item.member.name}</span>
+          <span class="feed-action">${feedActionText(item.type)}</span>
+          <span class="feed-time">${timeAgo(item.time)}</span>
+        </div>
+        ${content}
+        <div class="feed-reactions">
+          ${reactions}
+          <button class="add-reaction" onclick="addReaction('${item.id}')">+ React</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderVoiceNote(voiceNote, id){
+  const bars = Array.from({length:20},(_,i)=>{
+    const h = 4 + Math.random()*14;
+    return `<div class="voice-bar" style="height:${h}px;"></div>`;
+  }).join('');
+  return `<div class="voice-bubble">
+    <button class="play-btn" onclick="playVoiceNote('${id}')">▶</button>
+    <div class="voice-wave">${bars}</div>
+    <span class="voice-duration">${voiceNote.duration||'0:08'}</span>
+  </div>`;
+}
+
+function feedActionText(type){
+  const map = {text:'',workout:'logged a workout',measurement:'updated measurements',milestone:'',photo:'shared a photo'};
+  return map[type]||'';
+}
+
+function switchFeedTab(tab){
+  document.querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab)?.classList.add('active');
+  if(tab==='photos'){
+    const container = document.getElementById('feed-container');
+    const photos = feedItems.filter(f=>f.img);
+    if(!photos.length){
+      container.innerHTML = `<div class="feed-empty"><div style="font-size:36px;margin-bottom:12px;">📷</div><div>No gym pics yet. Share one from the feed below!</div></div>`;
+    } else {
+      container.innerHTML = `<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        ${photos.map(p=>`<img src="${p.img}" style="width:100%;border-radius:var(--radius-sm);cursor:pointer;aspect-ratio:1;object-fit:cover;" onclick="lightbox('${p.img}')">`).join('')}
+      </div>`;
+    }
+  } else {
+    renderFeed();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST TO FEED
+// ─────────────────────────────────────────────────────────────────────────────
+function postToFeed(voiceNote=null, imgSrc=null){
+  const input = document.getElementById('post-input');
+  const text  = input?.value.trim();
+  if(!text && !voiceNote && !imgSrc) return;
+
+  const me = group.members.find(m=>m.isMe);
+  const item = {
+    id: 'f'+Date.now(),
+    member: me||{name:myName,initial:myInitial,color:COLORS[0],isMe:true},
+    type: imgSrc?'photo':voiceNote?'voice':'text',
+    text: text||'',
+    badge: '',
+    reactions: {},
+    time: new Date().toISOString(),
+    voiceNote,
+    img: imgSrc
+  };
+
+  feedItems.unshift(item);
+  localStorage.setItem('larofit_feed', JSON.stringify(feedItems));
+  if(input) input.value='';
+  renderFeed();
+  showToast('Posted to group feed!');
+}
+
+function handlePhotoPost(input){
+  const file = input.files?.[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const text = document.getElementById('post-input')?.value.trim()||'';
+    const me = group.members.find(m=>m.isMe);
+    const item = {
+      id:'f'+Date.now(),
+      member:me||{name:myName,initial:myInitial,color:COLORS[0],isMe:true},
+      type:'photo',text,badge:'',reactions:{},
+      time:new Date().toISOString(),
+      voiceNote:null,
+      img:e.target.result
+    };
+    feedItems.unshift(item);
+    localStorage.setItem('larofit_feed',JSON.stringify(feedItems));
+    if(document.getElementById('post-input')) document.getElementById('post-input').value='';
+    renderFeed();
+    showToast('📷 Photo shared!');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// REACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+const EMOJI_OPTIONS = ['💪','🔥','🎉','😤','❤️','😂','👏','⚡'];
+
+function addReaction(itemId){
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">REACT</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+      ${EMOJI_OPTIONS.map(e=>`<button onclick="toggleReaction('${itemId}','${e}');closeModal();" style="font-size:28px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--volt)'" onmouseout="this.style.borderColor='var(--border)'">${e}</button>`).join('')}
+    </div>`);
+}
+
+function toggleReaction(itemId, emoji){
+  const item = feedItems.find(f=>f.id===itemId);
+  if(!item) return;
+  if(!item.reactions[emoji]) item.reactions[emoji]=[];
+  const idx = item.reactions[emoji].indexOf(myName);
+  if(idx>=0) item.reactions[emoji].splice(idx,1);
+  else item.reactions[emoji].push(myName);
+  localStorage.setItem('larofit_feed',JSON.stringify(feedItems));
+  renderFeed();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MESSAGES
+// ─────────────────────────────────────────────────────────────────────────────
+function renderMsgPanel(threadId){
+  activeThread = threadId;
+  const msgContent = document.getElementById('msg-content');
+  if(!msgContent) return;
+
+  const isGroup = threadId==='group';
+  const threadMessages = messages[threadId]||[];
+
+  if(!isGroup){
+    // DM view — show contact list + chat
+    msgContent.innerHTML = `
+      <div class="contact-list">
+        ${group.members.filter(m=>!m.isMe).map(m=>`
+          <div class="contact-item${activeThread===m.name?' active':''}" onclick="renderMsgPanel('${m.name}')">
+            <div class="contact-avatar" style="background:${m.color};">${m.initial}
+              <div class="contact-dot ${m.status==='active'?'online':'offline'}"></div>
+            </div>
+            <div class="contact-info">
+              <div class="contact-name">${m.name}</div>
+              <div class="contact-preview">${(messages[m.name]||[]).slice(-1)[0]?.text||'No messages yet'}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+      ${renderChatArea(threadId)}`;
+  } else {
+    msgContent.innerHTML = renderChatArea(threadId);
+  }
+
+  // Scroll to bottom
+  setTimeout(()=>{
+    const chatArea = document.getElementById('chat-area');
+    if(chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+  },50);
+}
+
+function renderChatArea(threadId){
+  const msgs = messages[threadId]||[];
+  const isGroup = threadId==='group';
+
+  const bubblesHtml = msgs.map((msg,i)=>{
+    const isMe = msg.from===myName;
+    const m    = isMe ? group.members.find(x=>x.isMe) : (msg.fromMember || group.members.find(x=>x.name===msg.from));
+    const color = m?.color||COLORS[1];
+    const initial = m?.initial||(msg.from?.charAt(0).toUpperCase()||'?');
+
+    let content = '';
+    if(msg.type==='voice'&&msg.voiceNote){
+      const bars = Array.from({length:12},()=>`<div class="voice-bar" style="height:${4+Math.random()*10}px;background:${isMe?'rgba(0,0,0,0.4)':'var(--volt)'}"></div>`).join('');
+      content = `<div class="msg-voice">
+        <button class="play-btn" style="${isMe?'background:rgba(0,0,0,0.3);':''}">▶</button>
+        <div class="voice-wave">${bars}</div>
+        <span style="font-size:9px;opacity:0.6;font-family:var(--font-mono);">${msg.voiceNote.duration||'0:05'}</span>
+      </div>`;
+    } else if(msg.type==='image'&&msg.img){
+      content = `<img class="msg-img" src="${msg.img}" onclick="lightbox('${msg.img}')"><br>`;
+      if(msg.text) content += msg.text;
+    } else {
+      content = msg.text;
+    }
+
+    return `<div class="msg-bubble-row${isMe?' mine':''}">
+      ${!isMe?`<div class="msg-bubble-avatar" style="background:${color};">${initial}</div>`:''}
+      <div class="msg-bubble ${isMe?'mine':'them'}">
+        ${!isMe&&isGroup?`<div style="font-size:10px;font-weight:700;color:${color};margin-bottom:4px;">${msg.from}</div>`:''}
+        ${content}
+        <span class="msg-time">${timeAgo(msg.time)}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="chat-area" id="chat-area">
+      ${msgs.length===0?`<div style="text-align:center;padding:40px 20px;color:var(--mist);font-size:13px;">${isGroup?'Start chatting with your group!':'Send a message to start a conversation.'}</div>`:''}
+      ${bubblesHtml}
+    </div>
+    <div class="chat-input-row">
+      <label class="composer-btn" title="Send photo" style="cursor:pointer;">
+        📷<input type="file" accept="image/*" style="display:none;" onchange="handleMsgPhoto(this,'${threadId}')">
+      </label>
+      <button class="composer-btn" id="voice-msg-btn-${threadId}" title="Voice note" onclick="toggleVoiceRecording('msg','${threadId}')">🎙️</button>
+      <textarea class="chat-input" id="chat-input-${threadId}" placeholder="${isGroup?'Message the group…':'Send a message…'}" rows="1" oninput="autoResize(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage('${threadId}');}"></textarea>
+      <button class="composer-btn send" onclick="sendMessage('${threadId}')">➤</button>
+    </div>`;
+}
+
+function switchMsgTab(tab){
+  document.querySelectorAll('.msg-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('msgtab-'+tab)?.classList.add('active');
+  if(tab==='group') renderMsgPanel('group');
+  else renderMsgPanel(group.members.filter(m=>!m.isMe)[0]?.name||'group');
+}
+
+function sendMessage(threadId, voiceNote=null, imgSrc=null){
+  const input = document.getElementById('chat-input-'+threadId);
+  const text  = input?.value.trim();
+  if(!text&&!voiceNote&&!imgSrc) return;
+
+  if(!messages[threadId]) messages[threadId]=[];
+  messages[threadId].push({
+    id:'msg'+Date.now(),
+    from:myName,
+    text:text||'',
+    time:new Date().toISOString(),
+    type:voiceNote?'voice':imgSrc?'image':'text',
+    voiceNote,
+    img:imgSrc
+  });
+  localStorage.setItem('larofit_messages',JSON.stringify(messages));
+  if(input) input.value='';
+  renderMsgPanel(threadId);
+}
+
+function handleMsgPhoto(input, threadId){
+  const file = input.files?.[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    if(!messages[threadId]) messages[threadId]=[];
+    messages[threadId].push({
+      id:'msg'+Date.now(),from:myName,
+      text:document.getElementById('chat-input-'+threadId)?.value.trim()||'',
+      time:new Date().toISOString(),type:'image',voiceNote:null,img:e.target.result
+    });
+    localStorage.setItem('larofit_messages',JSON.stringify(messages));
+    renderMsgPanel(threadId);
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// VOICE RECORDING
+// ─────────────────────────────────────────────────────────────────────────────
+async function toggleVoiceRecording(context, threadId=null){
+  if(isRecording){
+    stopRecording(context, threadId);
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    mediaRecorder = new MediaRecorder(stream);
+    recordedChunks = [];
+    recordingStart = Date.now();
+    isRecording = true;
+
+    mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = ()=>{
+      const blob = new Blob(recordedChunks, {type:'audio/webm'});
+      const url  = URL.createObjectURL(blob);
+      const dur  = Math.round((Date.now()-recordingStart)/1000);
+      const durStr = `${Math.floor(dur/60)}:${String(dur%60).padStart(2,'0')}`;
+      const voiceNote = {url, duration:durStr};
+
+      stream.getTracks().forEach(t=>t.stop());
+      isRecording = false;
+
+      if(context==='post') postToFeed(voiceNote);
+      else if(context==='msg'&&threadId) sendMessage(threadId, voiceNote);
+
+      // Reset UI
+      const btn = document.getElementById(context==='post'?'voice-post-btn':`voice-msg-btn-${threadId}`);
+      if(btn){ btn.classList.remove('recording'); btn.textContent='🎙️'; }
+      const status = document.getElementById('recording-status');
+      if(status) status.style.display='none';
+      clearInterval(recordingTimer);
+    };
+
+    mediaRecorder.start();
+
+    // Update button
+    const btn = document.getElementById(context==='post'?'voice-post-btn':`voice-msg-btn-${threadId}`);
+    if(btn){ btn.classList.add('recording'); btn.textContent='⏹'; }
+
+    // Show recording status (feed only)
+    if(context==='post'){
+      const status = document.getElementById('recording-status');
+      if(status) status.style.display='flex';
+      let secs = 0;
+      recordingTimer = setInterval(()=>{
+        secs++;
+        const el = document.getElementById('recording-time');
+        if(el) el.textContent=`Recording… ${secs}s`;
+        if(secs>=60) stopRecording(context, threadId); // max 60s
+      },1000);
+    }
+
+    showToast('🎙️ Recording… tap again to send');
+
+  } catch(e){
+    showToast('Microphone access denied — check browser settings');
+  }
+}
+
+function stopRecording(context, threadId){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive') mediaRecorder.stop();
+}
+
+function playVoiceNote(itemId){
+  const item = feedItems.find(f=>f.id===itemId);
+  if(item?.voiceNote?.url){
+    const audio = new Audio(item.voiceNote.url);
+    audio.play();
+  } else {
+    showToast('Voice note playback — available in the mobile app');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MEMBER CARD
+// ─────────────────────────────────────────────────────────────────────────────
+function openMemberCard(name){
+  const m = group.members.find(x=>x.name===name);
+  if(!m) return;
+  const isMe = m.isMe;
+
+  // Get their recent activity from feed
+  const theirFeed = feedItems.filter(f=>f.member.name===name).slice(0,3);
+  const activityHtml = theirFeed.map(f=>`
+    <div style="padding:8px 10px;background:var(--carbon);border-radius:var(--radius-sm);font-size:12px;color:var(--fog);margin-bottom:6px;">
+      ${feedActionText(f.type)||f.text||f.badge} <span style="color:var(--slate);font-size:10px;font-family:var(--font-mono);">${timeAgo(f.time)}</span>
+    </div>`).join('');
+
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:${m.color};display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:28px;color:var(--black);margin:0 auto 12px;">${m.initial}</div>
+      <div class="modal-title" style="font-size:28px;">${isMe?'YOU':m.name.toUpperCase()}</div>
+      <div style="font-size:12px;color:var(--mist);">${m.streak>0?`🔥 ${m.streak} day streak`:'No streak yet'} · ${m.workoutsToday?'✅ Worked out today':'Rest day'}</div>
+    </div>
+    ${activityHtml||'<div style="font-size:12px;color:var(--mist);text-align:center;padding:12px;">No recent activity</div>'}
+    ${!isMe?`<button class="btn-volt" style="width:100%;margin-top:16px;" onclick="closeModal();switchMsgTab('dm');renderMsgPanel('${m.name}')">💬 Send a message</button>`:''}
+  `);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INVITE / PRIVACY / LEAVE
+// ─────────────────────────────────────────────────────────────────────────────
+function showInviteModal(){
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">INVITE MEMBER</div>
+    <div class="modal-sub">Share this code with someone you want to add to <strong>${group.name}</strong>. They enter it in LaroFit to join.</div>
+    <div class="code-display" onclick="copyCode('${group.code}')">${group.code}</div>
+    <div class="code-hint">👆 Tap to copy · ${10-group.members.length} spots remaining</div>
+    <div style="font-size:12px;color:var(--mist);margin-top:12px;">Or share via:</div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn-sm" style="flex:1;" onclick="shareVia('sms')">📱 Text message</button>
+      <button class="btn-sm" style="flex:1;" onclick="shareVia('copy')">📋 Copy link</button>
+    </div>`);
+}
+
+function shareVia(method){
+  const msg = `Join my LaroFit training group! Use code: ${group.code} — download LaroFit and enter this code to join.`;
+  if(method==='sms'&&navigator.share){
+    navigator.share({title:'Join my LaroFit group',text:msg}).catch(()=>{});
+  } else {
+    navigator.clipboard?.writeText(msg).then(()=>showToast('Invite message copied!'));
+  }
+}
+
+function showPrivacyModal(){
+  const p = group.privacy||{workouts:true,measurements:false,diet:false};
+  openModal(`
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title">PRIVACY SETTINGS</div>
+    <div class="modal-sub">Choose what your group members can see about your activity.</div>
+    ${[
+      {key:'workouts',label:'Workout activity',desc:'When you complete a workout'},
+      {key:'measurements',label:'Measurements',desc:'Body weight and measurements'},
+      {key:'diet',label:'Diet plan',desc:'Your meal plan and nutrition'},
+      {key:'progress',label:'Progress stats',desc:'Charts and personal records'},
+    ].map(opt=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--white);">${opt.label}</div>
+          <div style="font-size:11px;color:var(--mist);">${opt.desc}</div>
+        </div>
+        <div onclick="togglePrivacySetting('${opt.key}')" id="privacy-toggle-${opt.key}"
+          style="width:44px;height:24px;border-radius:999px;background:${p[opt.key]?'var(--volt)':'var(--border)'};cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;">
+          <div style="width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:3px;${p[opt.key]?'right:3px':'left:3px'};transition:all 0.2s;"></div>
+        </div>
+      </div>`).join('')}
+    <button class="btn-volt" style="width:100%;margin-top:16px;" onclick="savePrivacy();closeModal()">Save settings</button>`);
+}
+
+function togglePrivacySetting(key){
+  if(!group.privacy) group.privacy={};
+  group.privacy[key] = !group.privacy[key];
+  const toggle = document.getElementById(`privacy-toggle-${key}`);
+  if(toggle){
+    toggle.style.background = group.privacy[key]?'var(--volt)':'var(--border)';
+    const dot = toggle.querySelector('div');
+    if(dot) dot.style[group.privacy[key]?'right':'left']='3px';
+    if(dot) dot.style[group.privacy[key]?'left':'right']='';
+  }
+}
+
+function savePrivacy(){
+  saveGroup();
+  showToast('Privacy settings saved');
+}
+
+function togglePrivacy(key){
+  if(!group.privacy) group.privacy={};
+  group.privacy[key]=!group.privacy[key];
+  saveGroup();
+  renderGroupPage();
+}
+
+function leaveGroup(){
+  if(!confirm(`Leave ${group.name}? You'll need an invite code to rejoin.`)) return;
+  localStorage.removeItem('larofit_group');
+  localStorage.removeItem('larofit_feed');
+  localStorage.removeItem('larofit_messages');
+  group=null; feedItems=[]; messages={};
+  document.getElementById('btn-invite').style.display='none';
+  document.getElementById('btn-privacy').style.display='none';
+  document.getElementById('btn-leave').style.display='none';
+  document.getElementById('group-page-title').textContent='MY GROUP';
+  renderSetupScreen();
+  showToast('Left the group');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────────────────────────────────────
+function saveGroup(){
+  localStorage.setItem('larofit_group', JSON.stringify(group));
+}
+
+function timeAgo(iso){
+  if(!iso) return '';
+  const diff = Math.floor((Date.now()-new Date(iso))/1000);
+  if(diff<60)    return 'just now';
+  if(diff<3600)  return Math.floor(diff/60)+'m ago';
+  if(diff<86400) return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+
+function autoResize(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
+}
+
+function lightbox(src){
+  openModal(`
+    <button class="modal-close" onclick="closeModal()" style="z-index:10;">✕</button>
+    <img src="${src}" style="width:100%;border-radius:var(--radius-sm);max-height:80vh;object-fit:contain;">`);
+}
+
+function openModal(html){
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+function closeModal(){
+  document.getElementById('modal-overlay').style.display='none';
+}
+
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+init();
+</script>
+</body>
+</html>

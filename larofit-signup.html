@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — Start Your Free Trial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 30%,rgba(198,241,53,0.05),transparent);pointer-events:none;}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.page{display:grid;grid-template-columns:1fr 1fr;max-width:900px;width:100%;background:var(--offblack);border:1px solid var(--border);border-radius:20px;overflow:hidden;position:relative;z-index:1;}
+.left{padding:48px 40px;background:linear-gradient(135deg,rgba(198,241,53,0.05),transparent);border-right:1px solid var(--border);}
+.logo{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);margin-bottom:32px;display:block;text-decoration:none;}
+.logo span{color:var(--volt);}
+.left-title{font-family:var(--font-display);font-size:40px;letter-spacing:1px;line-height:1.1;color:var(--pure);margin-bottom:12px;}
+.left-title span{color:var(--volt);}
+.left-sub{font-size:14px;color:var(--mist);line-height:1.7;margin-bottom:32px;}
+.perks{display:flex;flex-direction:column;gap:12px;}
+.perk{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--fog);line-height:1.4;}
+.perk-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.trial-badge{margin-top:32px;padding:14px 16px;background:var(--volt-pale);border:1px solid rgba(198,241,53,0.15);border-radius:var(--radius-sm);}
+.trial-badge-title{font-size:12px;font-weight:700;color:var(--volt);margin-bottom:2px;}
+.trial-badge-body{font-size:11px;color:var(--mist);}
+.right{padding:48px 40px;}
+.form-title{font-size:20px;font-weight:700;color:var(--pure);margin-bottom:4px;}
+.form-sub{font-size:13px;color:var(--mist);margin-bottom:28px;}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.field label{font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.08em;text-transform:uppercase;}
+.field input,.field select{padding:11px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;width:100%;}
+.field input:focus,.field select:focus{border-color:var(--volt);}
+.field input::placeholder{color:var(--slate);}
+.field select option{background:var(--carbon);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.submit-btn{width:100%;padding:14px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;transition:all 0.2s;margin-top:8px;}
+.submit-btn:hover{background:var(--volt-dim);}
+.form-note{font-size:11px;color:var(--slate);text-align:center;margin-top:10px;line-height:1.5;}
+.signin-link{font-size:12px;color:var(--mist);text-align:center;margin-top:16px;}
+.signin-link a{color:var(--volt);text-decoration:none;}
+.signin-link a:hover{text-decoration:underline;}
+.error-msg{font-size:12px;color:var(--ember);margin-top:4px;display:none;}
+@media(max-width:700px){.page{grid-template-columns:1fr;}.left{display:none;}.right{padding:32px 24px;}}
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- LEFT -->
+  <div class="left">
+    <a class="logo" href="larofit-home.html">LARO<span>FIT</span></a>
+    <div class="left-title">START YOUR<br><span>FREE TRIAL</span></div>
+    <p class="left-sub">14 days free. No credit card. Cancel anytime. Build your first program in minutes.</p>
+    <div class="perks">
+      <div class="perk"><span class="perk-icon">📋</span>Full access to the program builder and exercise library</div>
+      <div class="perk"><span class="perk-icon">🥗</span>Personalized nutrition and diet plan</div>
+      <div class="perk"><span class="perk-icon">📊</span>Progress tracking and PR detection</div>
+      <div class="perk"><span class="perk-icon">📱</span>Early access to the mobile app when it launches</div>
+      <div class="perk"><span class="perk-icon">☁️</span>Cloud sync — access your program from any device</div>
+    </div>
+    <div class="trial-badge">
+      <div class="trial-badge-title">🎉 14 days completely free</div>
+      <div class="trial-badge-body">No credit card required. You'll only be asked to subscribe after your trial ends.</div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="form-title">Create your account</div>
+    <div class="form-sub">Takes about 60 seconds.</div>
+
+    <div class="field">
+      <label>Full name</label>
+      <input type="text" id="f-name" placeholder="e.g. Lyndon Johnson" autocomplete="name">
+    </div>
+    <div class="field">
+      <label>Email address</label>
+      <input type="email" id="f-email" placeholder="you@email.com" autocomplete="email">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="f-pass" placeholder="Min. 8 characters">
+      </div>
+      <div class="field">
+        <label>Confirm password</label>
+        <input type="password" id="f-pass2" placeholder="Repeat password">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Date of birth</label>
+        <input type="date" id="f-dob">
+      </div>
+      <div class="field">
+        <label>Sex</label>
+        <select id="f-sex">
+          <option value="">Select…</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Prefer not to say</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Fitness goal</label>
+      <select id="f-goal">
+        <option value="">Select your main goal…</option>
+        <option value="strength">Strength & Power</option>
+        <option value="hypertrophy">Muscle Growth</option>
+        <option value="weightloss">Weight Loss</option>
+        <option value="endurance">Fitness & Endurance</option>
+        <option value="flexibility">Flexibility</option>
+        <option value="general">General Fitness</option>
+      </select>
+    </div>
+
+    <div id="error-msg" class="error-msg"></div>
+
+    <button class="submit-btn" onclick="handleSignup()">🚀 Create account &amp; start free trial</button>
+    <div class="form-note">By signing up you agree to our Terms of Service and Privacy Policy.</div>
+    <div class="signin-link">Already have an account? <a href="#">Sign in</a></div>
+  </div>
+</div>
+
+<script>
+function handleSignup(){
+  const name  = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const pass  = document.getElementById('f-pass').value;
+  const pass2 = document.getElementById('f-pass2').value;
+  const goal  = document.getElementById('f-goal').value;
+  const sex   = document.getElementById('f-sex').value;
+  const dob   = document.getElementById('f-dob').value;
+  const err   = document.getElementById('error-msg');
+
+  err.style.display='none';
+
+  if(!name){showError('Please enter your name.');return;}
+  if(!email||!email.includes('@')){showError('Please enter a valid email.');return;}
+  if(pass.length<8){showError('Password must be at least 8 characters.');return;}
+  if(pass!==pass2){showError('Passwords do not match.');return;}
+  if(!goal){showError('Please select a fitness goal.');return;}
+
+  // Save basics to localStorage for profile page
+  localStorage.setItem('larofit_user_name', name.split(' ')[0]);
+  localStorage.setItem('larofit_signup', JSON.stringify({name, email, goal, sex, dob}));
+
+  // In a real app: create user in Supabase auth here
+  // For now: go straight to profile setup
+  window.location.href = 'larofit-profile.html?new=1';
+}
+
+function showError(msg){
+  const err = document.getElementById('error-msg');
+  err.textContent = msg;
+  err.style.display = 'block';
+}
+</script>
+</body>
+</html>

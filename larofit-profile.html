@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — My Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 20px;margin:12px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background 0.15s;font-size:13px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--volt-pale);color:var(--white);border-left-color:var(--volt);}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-avatar{width:32px;height:32px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:12px;font-weight:600;color:var(--white);}
+.s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
+.btn-save{padding:9px 22px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-save:hover{background:var(--volt-dim);}
+.content{padding:32px;display:flex;flex-direction:column;gap:24px;max-width:900px;}
+
+/* ── PROFILE HEADER ── */
+.profile-header{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:28px;display:flex;align-items:center;gap:24px;position:relative;overflow:hidden;}
+.profile-header::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--volt),var(--blue));}
+.avatar-wrap{position:relative;flex-shrink:0;}
+.avatar-large{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--volt),var(--volt-dim));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:32px;color:var(--black);cursor:pointer;transition:opacity 0.2s;}
+.avatar-large:hover{opacity:0.85;}
+.avatar-edit{position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--carbon);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;}
+.profile-info{flex:1;}
+.profile-name{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);margin-bottom:4px;}
+.profile-meta{font-size:13px;color:var(--mist);font-family:var(--font-mono);}
+.profile-stats{display:flex;gap:24px;margin-top:12px;}
+.profile-stat{text-align:center;}
+.profile-stat-num{font-family:var(--font-display);font-size:22px;color:var(--volt);}
+.profile-stat-label{font-size:10px;color:var(--mist);}
+.trial-pill{padding:6px 14px;background:var(--volt-pale);border:1px solid rgba(198,241,53,0.2);border-radius:999px;font-size:11px;font-weight:700;color:var(--volt);font-family:var(--font-mono);}
+
+/* ── SECTION CARDS ── */
+.section-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.section-header{padding:16px 20px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.section-icon{font-size:16px;}
+.section-title{font-size:13px;font-weight:700;color:var(--pure);}
+.section-body{padding:20px;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.field-grid.three{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;}
+.field input,.field select,.field textarea{padding:9px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--volt);}
+.field input::placeholder,.field textarea::placeholder{color:var(--slate);}
+.field select option{background:var(--carbon);}
+.field textarea{resize:vertical;min-height:80px;}
+.field-hint{font-size:10px;color:var(--slate);margin-top:2px;}
+
+/* ── GOAL PILLS ── */
+.goal-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.goal-pill{padding:8px 16px;border-radius:999px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;}
+.goal-pill:hover{border-color:var(--mist);color:var(--white);}
+.goal-pill.active{border-color:var(--volt);color:var(--volt);background:var(--volt-pale);}
+
+/* ── TRAINING STYLE ── */
+.training-style-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.ts-item{padding:16px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;text-align:center;}
+.ts-item:hover{border-color:var(--mist);}
+.ts-item.active{border-color:var(--volt);background:var(--volt-pale);}
+.ts-icon{font-size:24px;margin-bottom:6px;}
+.ts-label{font-size:12px;font-weight:700;color:var(--white);margin-bottom:3px;}
+.ts-item.active .ts-label{color:var(--volt);}
+.ts-desc{font-size:10px;color:var(--slate);line-height:1.4;}
+
+/* ── NUTRITION ── */
+.macro-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;}
+.macro-card{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;}
+.macro-num{font-family:var(--font-display);font-size:28px;color:var(--volt);}
+.macro-unit{font-size:11px;color:var(--mist);}
+.macro-label{font-size:10px;font-weight:600;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-top:4px;}
+.diet-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.diet-tag{padding:6px 12px;border-radius:999px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;}
+.diet-tag:hover{border-color:var(--mist);}
+.diet-tag.active{border-color:var(--success);color:var(--success);background:rgba(74,222,128,0.08);}
+
+/* ── PROGRESS PHOTOS ── */
+.photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.photo-slot{background:var(--carbon);border:1.5px dashed var(--border);border-radius:var(--radius-sm);padding:32px 16px;text-align:center;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+.photo-slot:hover{border-color:var(--volt);background:var(--volt-pale);}
+.photo-slot-icon{font-size:28px;margin-bottom:8px;opacity:0.5;}
+.photo-slot-label{font-size:11px;font-weight:600;color:var(--mist);}
+.photo-slot-date{font-size:10px;color:var(--slate);margin-top:4px;font-family:var(--font-mono);}
+.photo-slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--volt);border-radius:999px;padding:10px 24px;font-size:13px;color:var(--volt);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+/* ── ONBOARDING BANNER ── */
+.onboard-banner{background:linear-gradient(90deg,rgba(198,241,53,0.08),rgba(96,165,250,0.06));border:1px solid rgba(198,241,53,0.2);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;gap:16px;}
+.onboard-icon{font-size:28px;flex-shrink:0;}
+.onboard-title{font-size:14px;font-weight:700;color:var(--pure);margin-bottom:4px;}
+.onboard-body{font-size:13px;color:var(--mist);}
+.onboard-btn{padding:9px 20px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);white-space:nowrap;text-decoration:none;flex-shrink:0;}
+
+@media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}.field-grid.three{grid-template-columns:1fr 1fr;}.eq-grid{grid-template-columns:repeat(3,1fr);}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">LARO<span>FIT</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Home</div>
+    <a class="nav-item " href="larofit-dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+    <div class="nav-section">Build</div>
+    <a class="nav-item active" href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
+    <a class="nav-item " href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item " href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item " href="larofit-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <a class="nav-item " href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
+    <div class="nav-section">Track</div>
+    <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
+    <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
+    <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
+    <div class="nav-section">Community</div>
+    <a class="nav-item " href="larofit-group.html"><span class="nav-icon">👥</span>Group feed</a>
+    <a class="nav-item " href="larofit-find-trainer.html"><span class="nav-icon">🔍</span>Find a trainer</a>
+    <div class="nav-section">Trainer</div>
+    <a class="nav-item " href="larofit-trainer.html"><span class="nav-icon">🏋️</span>Trainer dashboard</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Trainer builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet builder</a>
+    <a class="nav-item " href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar" id="sidebar-avatar">LJ</div>
+    <div>
+      <div class="s-name" id="sidebar-name">Lyndon J.</div>
+      <div class="s-plan">&#10022; PRO TRIAL</div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">MY PROFILE</div>
+    <button class="btn-save" onclick="saveProfile()">☁️ Save profile</button>
+  </div>
+
+  <div class="content">
+
+    <!-- ONBOARDING BANNER (shown after signup) -->
+    <div class="onboard-banner" id="onboard-banner" style="display:none;">
+      <div class="onboard-icon">🎉</div>
+      <div>
+        <div class="onboard-title">Welcome to LaroFit! Fill in your profile to get started.</div>
+        <div class="onboard-body">The more we know about you, the better your program and diet plan recommendations will be.</div>
+      </div>
+      <a class="onboard-btn" href="larofit-builder.html">Build my program →</a>
+    </div>
+
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+      <div class="avatar-wrap">
+        <div class="avatar-large" id="avatar-circle" title="Click to upload photo">LJ</div>
+        <div class="avatar-edit">✏️</div>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name" id="display-name">Lyndon J.</div>
+        <div class="profile-meta" id="display-meta">Member since 2026 · Planet Fitness</div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="profile-stat-num" id="disp-age">—</div><div class="profile-stat-label">Age</div></div>
+          <div class="profile-stat"><div class="profile-stat-num" id="disp-weight">—</div><div class="profile-stat-label">lbs</div></div>
+          <div class="profile-stat"><div class="profile-stat-num" id="disp-height">—</div><div class="profile-stat-label">height</div></div>
+        </div>
+      </div>
+      <div class="trial-pill">⭐ PRO TRIAL — 14 days</div>
+    </div>
+
+    <!-- BASIC INFO -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-icon">👤</span><span class="section-title">Personal Information</span></div>
+      <div class="section-body">
+        <div class="field-grid three">
+          <div class="field"><label>First name</label><input type="text" id="p-first" placeholder="First name" oninput="updateDisplay()"></div>
+          <div class="field"><label>Last name</label><input type="text" id="p-last" placeholder="Last name" oninput="updateDisplay()"></div>
+          <div class="field"><label>Date of birth</label><input type="date" id="p-dob" onchange="updateDisplay()"></div>
+          <div class="field"><label>Sex</label>
+            <select id="p-sex">
+              <option value="">Select…</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Prefer not to say</option>
+            </select>
+          </div>
+          <div class="field"><label>Weight (lbs)</label><input type="number" id="p-weight" placeholder="185" min="50" max="500" oninput="updateDisplay();calcNutrition()"></div>
+          <div class="field"><label>Height</label>
+            <div style="display:flex;gap:8px;">
+              <select id="p-height-ft" onchange="updateDisplay();calcBMI()" style="flex:1;padding:10px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-family:var(--font-body);outline:none;">
+                <option value="">ft</option>
+                <option value="4">4 ft</option>
+                <option value="5">5 ft</option>
+                <option value="6">6 ft</option>
+                <option value="7">7 ft</option>
+              </select>
+              <select id="p-height-in" onchange="updateDisplay();calcBMI()" style="flex:1;padding:10px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-family:var(--font-body);outline:none;">
+                <option value="">in</option>
+                <option value="0">0 in</option>
+                <option value="1">1 in</option>
+                <option value="2">2 in</option>
+                <option value="3">3 in</option>
+                <option value="4">4 in</option>
+                <option value="5">5 in</option>
+                <option value="6">6 in</option>
+                <option value="7">7 in</option>
+                <option value="8">8 in</option>
+                <option value="9">9 in</option>
+                <option value="10">10 in</option>
+                <option value="11">11 in</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Email</label><input type="email" id="p-email" placeholder="you@email.com"></div>
+          <div class="field"><label>Home gym / location</label><input type="text" id="p-gym" placeholder="e.g. Planet Fitness"></div>
+          <div class="field"><label>Experience level</label>
+            <select id="p-level">
+              <option value="">Select…</option>
+              <option value="beginner">Beginner (0–1 year)</option>
+              <option value="intermediate">Intermediate (1–3 years)</option>
+              <option value="advanced">Advanced (3+ years)</option>
+            </select>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <label>BMI <span style="font-size:9px;color:var(--slate);font-weight:400;text-transform:none;letter-spacing:0;">(auto-calculated from weight &amp; height)</span></label>
+            <div id="bmi-wrap"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FITNESS GOALS -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-icon">🎯</span><span class="section-title">Fitness Goals</span></div>
+      <div class="section-body">
+        <div style="font-size:12px;color:var(--mist);margin-bottom:12px;">Select all that apply to you.</div>
+        <div class="goal-grid" id="goal-grid">
+          <button class="goal-pill" onclick="toggleGoal(this,'strength')">💪 Strength & Power</button>
+          <button class="goal-pill" onclick="toggleGoal(this,'hypertrophy')">🏋️ Muscle Growth</button>
+          <button class="goal-pill" onclick="toggleGoal(this,'weightloss')">🔥 Weight Loss</button>
+          <button class="goal-pill" onclick="toggleGoal(this,'endurance')">🏃 Fitness & Endurance</button>
+          <button class="goal-pill" onclick="toggleGoal(this,'flexibility')">🧘 Flexibility & Mobility</button>
+          <button class="goal-pill" onclick="toggleGoal(this,'general')">⭐ General Fitness</button>
+          <button class="goal-pill" onclick="toggleGoal(this,'athletic')">🏅 Athletic Performance</button>
+          <button class="goal-pill" onclick="toggleGoal(this,'rehab')">🩹 Injury Recovery</button>
+        </div>
+        <div class="field" style="margin-top:16px;">
+          <label>Anything else you want to achieve?</label>
+          <textarea id="p-goal-notes" placeholder="e.g. I want to run a 5K by summer, or I want to feel more confident at the gym…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINING STYLE -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-icon">🎽</span><span class="section-title">How do you like to train?</span></div>
+      <div class="section-body">
+        <div style="font-size:12px;color:var(--mist);margin-bottom:16px;line-height:1.6;">This tells LaroFit which exercises and templates to show you. You can change this anytime.</div>
+        <div class="training-style-grid" id="training-style-grid">
+          <div class="ts-item" onclick="selectTrainingStyle(this,'db')" data-style="db">
+            <div class="ts-icon">🏋️</div>
+            <div class="ts-label">Dumbbells only</div>
+            <div class="ts-desc">Free weights, dumbbell-focused workouts</div>
+          </div>
+          <div class="ts-item" onclick="selectTrainingStyle(this,'mc')" data-style="mc">
+            <div class="ts-icon">⚙️</div>
+            <div class="ts-label">Machines only</div>
+            <div class="ts-desc">Cable machines, weight stack machines</div>
+          </div>
+          <div class="ts-item" onclick="selectTrainingStyle(this,'db_mc')" data-style="db_mc">
+            <div class="ts-icon">🏋️⚙️</div>
+            <div class="ts-label">Dumbbells + machines</div>
+            <div class="ts-desc">Mix of free weights and machines</div>
+          </div>
+          <div class="ts-item" onclick="selectTrainingStyle(this,'full')" data-style="full">
+            <div class="ts-icon">🪃</div>
+            <div class="ts-label">Full gym</div>
+            <div class="ts-desc">Barbells, dumbbells, all machines</div>
+          </div>
+          <div class="ts-item" onclick="selectTrainingStyle(this,'bw')" data-style="bw">
+            <div class="ts-icon">🤸</div>
+            <div class="ts-label">Bodyweight only</div>
+            <div class="ts-desc">No equipment needed</div>
+          </div>
+          <div class="ts-item" onclick="selectTrainingStyle(this,'bw_bands')" data-style="bw_bands">
+            <div class="ts-icon">🎽</div>
+            <div class="ts-label">Bodyweight + bands</div>
+            <div class="ts-desc">Minimal equipment, resistance bands</div>
+          </div>
+          <div class="ts-item" onclick="selectTrainingStyle(this,'mix')" data-style="mix">
+            <div class="ts-icon">🔀</div>
+            <div class="ts-label">Mix of everything</div>
+            <div class="ts-desc">Show me all options</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUTRITION -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-icon">🥗</span><span class="section-title">Nutrition & Diet Plan</span></div>
+      <div class="section-body">
+        <div class="field-grid">
+          <div class="field">
+            <label>Diet style</label>
+            <select id="p-diet" onchange="calcNutrition()">
+              <option value="balanced">Balanced (no restrictions)</option>
+              <option value="carnivore">Carnivore (high protein, no carbs)</option>
+              <option value="lowcarb">Low carb</option>
+              <option value="keto">Keto</option>
+              <option value="vegetarian">Vegetarian</option>
+              <option value="vegan">Vegan</option>
+              <option value="paleo">Paleo</option>
+              <option value="mediterranean">Mediterranean</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Nutrition goal</label>
+            <select id="p-nutgoal" onchange="calcNutrition()">
+              <option value="maintain">Maintain weight</option>
+              <option value="cut">Cut (lose fat)</option>
+              <option value="bulk">Bulk (gain muscle)</option>
+              <option value="recomp">Body recomposition</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Meals per day</label>
+            <select id="p-meals">
+              <option value="2">2 meals</option>
+              <option value="3" selected>3 meals</option>
+              <option value="4">4 meals</option>
+              <option value="5">5 meals</option>
+              <option value="6">6 meals</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Activity level</label>
+            <select id="p-activity" onchange="calcNutrition()">
+              <option value="sedentary">Sedentary (desk job)</option>
+              <option value="light">Lightly active (1–2 days/wk)</option>
+              <option value="moderate" selected>Moderately active (3–4 days/wk)</option>
+              <option value="active">Very active (5–6 days/wk)</option>
+              <option value="athlete">Athlete (2x daily)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin:16px 0 8px;">Dietary restrictions / allergies</div>
+        <div class="diet-tags">
+          <button class="diet-tag" onclick="toggleDiet(this,'gluten')">Gluten-free</button>
+          <button class="diet-tag" onclick="toggleDiet(this,'dairy')">Dairy-free</button>
+          <button class="diet-tag" onclick="toggleDiet(this,'nuts')">Nut allergy</button>
+          <button class="diet-tag" onclick="toggleDiet(this,'shellfish')">No shellfish</button>
+          <button class="diet-tag" onclick="toggleDiet(this,'soy')">Soy-free</button>
+          <button class="diet-tag" onclick="toggleDiet(this,'egg')">No eggs</button>
+          <button class="diet-tag" onclick="toggleDiet(this,'halal')">Halal</button>
+          <button class="diet-tag" onclick="toggleDiet(this,'kosher')">Kosher</button>
+        </div>
+
+        <div style="font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin:16px 0 4px;">Your estimated daily targets</div>
+        <div style="font-size:11px;color:var(--slate);margin-bottom:10px;">Based on your weight, goals, and activity level. Adjust as needed.</div>
+        <div class="macro-grid">
+          <div class="macro-card"><div class="macro-num" id="cal-target">—</div><div class="macro-unit">kcal/day</div><div class="macro-label">Calories</div></div>
+          <div class="macro-card"><div class="macro-num" id="prot-target">—</div><div class="macro-unit">g/day</div><div class="macro-label">Protein</div></div>
+          <div class="macro-card"><div class="macro-num" id="carb-target">—</div><div class="macro-unit">g/day</div><div class="macro-label">Carbs</div></div>
+        </div>
+
+        <div class="field" style="margin-top:14px;">
+          <label>Additional nutrition notes</label>
+          <textarea id="p-nut-notes" placeholder="e.g. I prefer meal prep on Sundays, I don't eat breakfast, I have a big appetite…"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let selectedGoals         = [];
+let selectedTrainingStyle = '';
+let selectedDiets         = [];
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function init(){
+  if(new URLSearchParams(window.location.search).get('new')==='1'){
+    document.getElementById('onboard-banner').style.display='flex';
+  }
+  const saved = localStorage.getItem('larofit_profile');
+  if(saved){
+    loadProfile(JSON.parse(saved));
+  } else {
+    const signup = localStorage.getItem('larofit_signup');
+    if(signup){
+      const s = JSON.parse(signup);
+      const parts = (s.name||'').split(' ');
+      document.getElementById('p-first').value = parts[0]||'';
+      document.getElementById('p-last').value  = parts.slice(1).join(' ')||'';
+      document.getElementById('p-email').value = s.email||'';
+      document.getElementById('p-sex').value   = s.sex||'';
+      document.getElementById('p-dob').value   = s.dob||'';
+      if(s.goal) activateGoal(s.goal);
+    }
+  }
+  const uname = localStorage.getItem('larofit_user_name');
+  if(uname){
+    document.getElementById('sidebar-name').textContent = uname;
+    document.getElementById('sidebar-avatar').textContent = uname.charAt(0).toUpperCase();
+  }
+  updateDisplay();
+  calcNutrition();
+}
+
+function loadProfile(p){
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el) el.value=val||''; };
+  set('p-first',   p.first);
+  set('p-last',    p.last);
+  set('p-dob',     p.dob);
+  set('p-sex',     p.sex);
+  set('p-weight',  p.weight);
+  // Height — populate dropdowns from saved ft/in or parse from height string
+  const ftEl = document.getElementById('p-height-ft');
+  const inEl = document.getElementById('p-height-in');
+  if(ftEl && inEl){
+    if(p.heightFt){
+      ftEl.value = p.heightFt;
+      inEl.value = p.heightIn||'0';
+    } else if(p.height){
+      // Parse legacy string format e.g. "5'10""
+      const m = p.height.match(/(\d+)['\u2019](\d+)/);
+      if(m){ ftEl.value=m[1]; inEl.value=m[2]; }
+    }
+  }
+  set('p-email',   p.email);
+  set('p-gym',     p.gym);
+  set('p-level',   p.level);
+  set('p-diet',    p.diet||'balanced');
+  set('p-nutgoal', p.nutgoal||'maintain');
+  set('p-meals',   p.meals||'3');
+  set('p-activity',p.activity||'moderate');
+  set('p-goal-notes', p.goalNotes);
+  set('p-nut-notes',  p.nutNotes);
+
+  selectedGoals         = p.goals||[];
+  selectedTrainingStyle = p.trainingStyle||'';
+  selectedDiets         = p.diets||[];
+
+  // Re-activate goal pills
+  document.querySelectorAll('.goal-pill').forEach(btn=>{
+    const m = btn.getAttribute('onclick').match(/'([^']+)'/);
+    if(m && selectedGoals.includes(m[1])) btn.classList.add('active');
+  });
+
+  // Re-activate training style
+  document.querySelectorAll('.ts-item').forEach(item=>{
+    item.classList.toggle('active', item.dataset.style === selectedTrainingStyle);
+  });
+
+  // Re-activate diet tags
+  document.querySelectorAll('.diet-tag').forEach(tag=>{
+    const m = tag.getAttribute('onclick').match(/'([^']+)'/);
+    if(m && selectedDiets.includes(m[1])) tag.classList.add('active');
+  });
+}
+
+// ── DISPLAY UPDATE ─────────────────────────────────────────────────────────────
+function updateDisplay(){
+  const first  = document.getElementById('p-first').value||'';
+  const last   = document.getElementById('p-last').value||'';
+  const dob    = document.getElementById('p-dob').value;
+  const weight = document.getElementById('p-weight').value;
+  const ft     = document.getElementById('p-height-ft')?.value;
+  const inches = document.getElementById('p-height-in')?.value;
+  const height = ft ? `${ft}'${inches||0}"` : '';
+  const gym    = document.getElementById('p-gym').value;
+
+  const fullName = [first,last].filter(Boolean).join(' ');
+  if(fullName){
+    document.getElementById('display-name').textContent = fullName;
+    const initials = [first,last].filter(Boolean).map(n=>n[0].toUpperCase()).join('');
+    document.getElementById('avatar-circle').textContent = initials||'?';
+    document.getElementById('sidebar-avatar').textContent = (first[0]||'?').toUpperCase();
+    document.getElementById('sidebar-name').textContent = first;
+    localStorage.setItem('larofit_user_name', first);
+  }
+  if(dob){
+    const age = Math.floor((Date.now()-new Date(dob))/(365.25*24*3600*1000));
+    document.getElementById('disp-age').textContent = age;
+  }
+  document.getElementById('disp-weight').textContent = weight||'—';
+  document.getElementById('disp-height').textContent = height||'—';
+  document.getElementById('display-meta').textContent = `Member since 2026${gym?' · '+gym:''}`;
+  calcBMI();
+}
+
+// ── BMI WITH VISUAL GRAPH ──────────────────────────────────────────────────────
+function calcBMI(){
+  const weight    = parseFloat(document.getElementById('p-weight').value);
+  const ft        = parseInt(document.getElementById('p-height-ft')?.value)||0;
+  const inches    = parseInt(document.getElementById('p-height-in')?.value)||0;
+  const wrap      = document.getElementById('bmi-wrap');
+  if(!wrap) return;
+
+  const heightIn = ft ? (ft * 12 + inches) : null;
+
+  if(!weight || !heightIn){
+    wrap.innerHTML = `<div style="padding:10px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--slate);">Enter weight &amp; height to calculate</div>`;
+    return;
+  }
+
+  const bmi     = (weight/(heightIn*heightIn))*703;
+  const rounded = bmi.toFixed(1);
+  let category, color, pct;
+  if(bmi < 18.5)    { category='Underweight'; color='#60a5fa'; pct=Math.max(2, (bmi/18.5)*20); }
+  else if(bmi < 25) { category='Normal weight'; color='#4ade80'; pct=20+((bmi-18.5)/6.5)*30; }
+  else if(bmi < 30) { category='Overweight'; color='#fb923c'; pct=50+((bmi-25)/5)*25; }
+  else              { category='Obese'; color='#ff5733'; pct=Math.min(96, 75+((bmi-30)/10)*21); }
+
+  wrap.innerHTML = `
+    <div style="padding:12px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);">
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:10px;">
+        <span style="font-family:var(--font-display);font-size:32px;color:${color};">${rounded}</span>
+        <span style="font-size:13px;font-weight:600;color:${color};">${category}</span>
+      </div>
+      <!-- BMI scale bar -->
+      <div style="position:relative;height:12px;border-radius:999px;overflow:hidden;display:flex;margin-bottom:6px;">
+        <div style="flex:20;background:#60a5fa;opacity:0.7;"></div>
+        <div style="flex:30;background:#4ade80;opacity:0.7;"></div>
+        <div style="flex:25;background:#fb923c;opacity:0.7;"></div>
+        <div style="flex:25;background:#ff5733;opacity:0.7;"></div>
+        <!-- marker -->
+        <div style="position:absolute;top:-2px;bottom:-2px;width:3px;border-radius:999px;background:white;box-shadow:0 0 6px rgba(0,0,0,0.6);left:${Math.min(96,Math.max(2,pct))}%;transition:left 0.4s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--slate);font-family:var(--font-mono);">
+        <span>Underweight<br>&lt;18.5</span>
+        <span style="text-align:center;">Normal<br>18.5–24.9</span>
+        <span style="text-align:center;">Overweight<br>25–29.9</span>
+        <span style="text-align:right;">Obese<br>30+</span>
+      </div>
+    </div>`;
+}
+
+// ── TOGGLES ────────────────────────────────────────────────────────────────────
+function toggleGoal(btn, goal){
+  btn.classList.toggle('active');
+  if(selectedGoals.includes(goal)) selectedGoals = selectedGoals.filter(g=>g!==goal);
+  else selectedGoals.push(goal);
+  calcNutrition();
+}
+
+function activateGoal(goal){
+  if(!selectedGoals.includes(goal)) selectedGoals.push(goal);
+  document.querySelectorAll('.goal-pill').forEach(btn=>{
+    const m = btn.getAttribute('onclick').match(/'([^']+)'/);
+    if(m && m[1]===goal) btn.classList.add('active');
+  });
+}
+
+function selectTrainingStyle(el, style){
+  selectedTrainingStyle = style;
+  document.querySelectorAll('.ts-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function toggleDiet(tag, diet){
+  tag.classList.toggle('active');
+  if(selectedDiets.includes(diet)) selectedDiets = selectedDiets.filter(d=>d!==diet);
+  else selectedDiets.push(diet);
+}
+
+// ── NUTRITION CALCULATOR ───────────────────────────────────────────────────────
+function calcNutrition(){
+  const weight   = parseFloat(document.getElementById('p-weight').value)||185;
+  const sex      = document.getElementById('p-sex').value||'male';
+  const nutgoal  = document.getElementById('p-nutgoal').value||'maintain';
+  const activity = document.getElementById('p-activity').value||'moderate';
+  const diet     = document.getElementById('p-diet').value||'balanced';
+
+  const weightKg = weight * 0.453592;
+  const bmr = sex==='female'
+    ? (10*weightKg + 6.25*170 - 5*30 - 161)
+    : (10*weightKg + 6.25*177 - 5*30 + 5);
+
+  const mult = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725,athlete:1.9};
+  let tdee = Math.round(bmr * (mult[activity]||1.55));
+  if(nutgoal==='cut')  tdee = Math.round(tdee*0.85);
+  if(nutgoal==='bulk') tdee = Math.round(tdee*1.10);
+
+  let proteinG, carbG;
+  if(diet==='carnivore')                     { proteinG=Math.round(weight*1.2); carbG=0; }
+  else if(diet==='keto')                     { proteinG=Math.round(weight*0.8); carbG=Math.round((tdee*0.05)/4); }
+  else if(diet==='lowcarb')                  { proteinG=Math.round(weight*0.8); carbG=Math.round((tdee*0.15)/4); }
+  else if(diet==='vegan'||diet==='vegetarian'){ proteinG=Math.round(weight*0.6); carbG=Math.round((tdee*0.50)/4); }
+  else if(diet==='paleo')                    { proteinG=Math.round(weight*0.85); carbG=Math.round((tdee*0.25)/4); }
+  else                                       { proteinG=Math.round(weight*0.75); carbG=Math.round((tdee*0.40)/4); }
+
+  document.getElementById('cal-target').textContent  = tdee.toLocaleString();
+  document.getElementById('prot-target').textContent = proteinG;
+  document.getElementById('carb-target').textContent = carbG;
+}
+
+// ── SAVE ───────────────────────────────────────────────────────────────────────
+function saveProfile(){
+  const g = id=>document.getElementById(id)?.value||'';
+  const ft = g('p-height-ft');
+  const inches = g('p-height-in');
+  const height = ft ? `${ft}'${inches||0}"` : '';
+  const profile = {
+    first:g('p-first'), last:g('p-last'), dob:g('p-dob'), sex:g('p-sex'),
+    weight:g('p-weight'), height, heightFt:ft, heightIn:inches, email:g('p-email'),
+    gym:g('p-gym'), level:g('p-level'),
+    goals:selectedGoals, goalNotes:g('p-goal-notes'),
+    trainingStyle:selectedTrainingStyle,
+    diet:g('p-diet'), nutgoal:g('p-nutgoal'), meals:g('p-meals'),
+    activity:g('p-activity'), diets:selectedDiets, nutNotes:g('p-nut-notes'),
+    savedAt:new Date().toISOString(),
+    bmi:document.getElementById('bmi-wrap')?.querySelector('[style*="font-display"]')?.textContent||'',
+  };
+  localStorage.setItem('larofit_profile', JSON.stringify(profile));
+  showToast('Profile saved! Taking you to build your program…');
+  setTimeout(()=>{ window.location.href='larofit-ai-coach.html'; }, 1200);
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+init();
+</script>
+</body>
+</html>

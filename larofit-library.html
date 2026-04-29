@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — Exercise Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;--c-hiit:#fb923c;
+  --font-display:'Bebas Neue',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+/* SIDEBAR */
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 20px;margin:12px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background 0.15s;font-size:13px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--volt-pale);color:var(--white);border-left-color:var(--volt);}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-avatar{width:32px;height:32px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:12px;font-weight:600;color:var(--white);}
+.s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
+/* MAIN */
+.main{display:flex;flex-direction:column;min-height:100vh;}
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;gap:16px;}
+.topbar-left{display:flex;align-items:center;gap:16px;flex:1;}
+.page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);flex-shrink:0;}
+.top-search{flex:1;max-width:340px;padding:9px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;}
+.top-search:focus{border-color:var(--volt);}
+.top-search::placeholder{color:var(--slate);}
+.topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.btn-outline{padding:9px 18px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.btn-outline:hover{border-color:var(--mist);color:var(--white);}
+.btn-volt{padding:9px 20px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;transition:all 0.2s;display:flex;align-items:center;gap:6px;}
+.btn-volt:hover{background:var(--volt-dim);}
+/* CONTENT AREA */
+.content{display:grid;grid-template-columns:220px 1fr;flex:1;overflow:hidden;}
+/* CATEGORY SIDEBAR */
+.cat-sidebar{border-right:1px solid var(--border);overflow-y:auto;background:var(--offblack);}
+.cat-header{padding:14px 16px;border-bottom:1px solid var(--border);}
+.cat-header-title{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;}
+.cat-item{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;cursor:pointer;transition:background 0.15s;border-left:3px solid transparent;}
+.cat-item:hover{background:rgba(255,255,255,0.03);}
+.cat-item.active{background:var(--volt-pale);border-left-color:var(--volt);}
+.cat-item-left{display:flex;align-items:center;gap:10px;}
+.cat-icon{font-size:16px;width:20px;text-align:center;}
+.cat-name{font-size:13px;font-weight:500;color:var(--mist);}
+.cat-item.active .cat-name{color:var(--white);font-weight:600;}
+.cat-count{font-size:10px;font-weight:600;font-family:var(--font-mono);color:var(--slate);background:rgba(255,255,255,0.05);padding:2px 7px;border-radius:999px;}
+.cat-item.active .cat-count{background:rgba(198,241,53,0.15);color:var(--volt);}
+.cat-divider{height:1px;background:var(--border);margin:6px 0;}
+/* LIBRARY TABLE AREA */
+.table-area{overflow-y:auto;padding:24px 28px;}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;}
+.toolbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-pill{padding:5px 12px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;}
+.filter-pill.active{background:var(--volt);color:var(--black);border-color:var(--volt);}
+.toolbar-right{display:flex;align-items:center;gap:8px;}
+.sort-select{padding:6px 10px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--mist);font-size:12px;font-family:var(--font-body);outline:none;-webkit-appearance:none;}
+.table-count{font-size:12px;color:var(--mist);font-family:var(--font-mono);}
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;}
+.stat-num{font-family:var(--font-display);font-size:28px;color:var(--volt);}
+.stat-label{font-size:10px;color:var(--mist);margin-top:2px;letter-spacing:0.06em;}
+/* EXERCISE TABLE */
+.ex-table{width:100%;border-collapse:collapse;}
+.ex-table th{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;}
+.ex-table th:hover{color:var(--white);}
+.ex-table th .sort-arrow{margin-left:4px;opacity:0.4;}
+.ex-table th.sorted .sort-arrow{opacity:1;color:var(--volt);}
+.ex-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle;}
+.ex-table tr:hover td{background:rgba(255,255,255,0.02);}
+.ex-table tr.selected td{background:rgba(198,241,53,0.04);}
+.ex-check{accent-color:var(--volt);cursor:pointer;width:14px;height:14px;}
+.ex-name-cell{font-size:13px;font-weight:600;color:var(--white);}
+.ex-name-cell .ex-builtin{font-size:9px;color:var(--slate);font-family:var(--font-mono);margin-left:6px;vertical-align:middle;}
+.ex-name-cell .ex-custom{font-size:9px;color:var(--volt);font-family:var(--font-mono);margin-left:6px;vertical-align:middle;}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--font-mono);margin-right:3px;}
+.tag-db{background:rgba(96,165,250,0.15);color:#60a5fa;}
+.tag-bb{background:rgba(244,114,182,0.15);color:#f472b6;}
+.tag-mc{background:rgba(167,139,250,0.15);color:#a78bfa;}
+.tag-bw{background:rgba(74,222,128,0.15);color:#4ade80;}
+.tag-cd{background:rgba(251,146,60,0.15);color:#fb923c;}
+.tag-yoga{background:rgba(167,139,250,0.15);color:#a78bfa;}
+.tag-rc{background:rgba(244,114,182,0.15);color:#f472b6;}
+.tag-kb{background:rgba(251,191,36,0.15);color:#fbbf24;}
+.tag-band{background:rgba(74,222,128,0.15);color:#4ade80;}
+.diff-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;}
+.diff-beginner{background:#4ade80;}
+.diff-intermediate{background:#fbbf24;}
+.diff-advanced{background:#f87171;}
+.diff-label{font-size:11px;color:var(--mist);}
+.video-link{font-size:11px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.video-link:hover{text-decoration:underline;}
+.no-video{font-size:11px;color:var(--slate);}
+.row-actions{display:flex;align-items:center;gap:6px;opacity:0;transition:opacity 0.15s;}
+tr:hover .row-actions{opacity:1;}
+.row-btn{padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;font-family:var(--font-body);border:none;transition:all 0.15s;}
+.row-btn-edit{background:rgba(96,165,250,0.1);color:var(--blue);}
+.row-btn-edit:hover{background:rgba(96,165,250,0.2);}
+.row-btn-del{background:rgba(255,87,51,0.1);color:var(--ember);}
+.row-btn-del:hover{background:rgba(255,87,51,0.2);}
+.row-btn-dis{opacity:0.3;cursor:not-allowed;}
+/* BULK ACTION BAR */
+.bulk-bar{position:sticky;bottom:0;background:var(--carbon);border-top:1px solid var(--volt);padding:12px 28px;display:none;align-items:center;gap:12px;}
+.bulk-bar.show{display:flex;}
+.bulk-count{font-size:13px;font-weight:600;color:var(--volt);font-family:var(--font-mono);}
+.bulk-btn{padding:7px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-body);border:1px solid var(--border);background:transparent;color:var(--mist);transition:all 0.15s;}
+.bulk-btn:hover{border-color:var(--mist);color:var(--white);}
+.bulk-btn-danger{border-color:rgba(255,87,51,0.3);color:var(--ember);}
+.bulk-btn-danger:hover{background:rgba(255,87,51,0.1);}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;}
+.overlay.open{display:flex;}
+.modal{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;width:100%;max-width:580px;margin:auto;position:relative;}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--volt),var(--blue));border-radius:16px 16px 0 0;}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:var(--font-display);font-size:24px;letter-spacing:1px;color:var(--pure);}
+.modal-close{background:none;border:none;color:var(--mist);font-size:20px;cursor:pointer;padding:4px;}
+.modal-close:hover{color:var(--white);}
+.modal-body{padding:24px;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+.form-grid{display:grid;gap:14px;}
+.form-grid.cols-2{grid-template-columns:1fr 1fr;}
+.form-grid.cols-3{grid-template-columns:1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.08em;text-transform:uppercase;}
+.field input,.field select,.field textarea{padding:10px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;-webkit-appearance:none;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--volt);}
+.field input::placeholder,.field textarea::placeholder{color:var(--slate);}
+.field select option{background:var(--carbon);}
+.field textarea{resize:vertical;min-height:72px;line-height:1.5;}
+.field-hint{font-size:11px;color:var(--slate);}
+.muscle-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;}
+.muscle-chip{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:500;border:1px solid var(--border);background:transparent;color:var(--mist);cursor:pointer;transition:all 0.15s;}
+.muscle-chip.selected{border-color:var(--volt);background:var(--volt-pale);color:var(--white);}
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--slate);}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:0.4;}
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--volt);border-radius:999px;padding:10px 24px;font-size:13px;color:var(--volt);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+/* CSV IMPORT */
+.import-drop{border:2px dashed var(--border);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;}
+.import-drop:hover,.import-drop.drag-over{border-color:var(--volt);background:var(--volt-pale);}
+.import-drop-icon{font-size:32px;margin-bottom:8px;}
+.import-drop-text{font-size:14px;color:var(--mist);}
+.import-drop-sub{font-size:11px;color:var(--slate);margin-top:4px;}
+@media(max-width:900px){
+  .shell{grid-template-columns:1fr;}.sidebar{display:none;}
+  .content{grid-template-columns:1fr;}.cat-sidebar{display:none;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .form-grid.cols-2,.form-grid.cols-3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<!-- SIDEBAR NAV -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">LARO<span>FIT</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Home</div>
+    <a class="nav-item " href="larofit-dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+    <div class="nav-section">Build</div>
+    <a class="nav-item " href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
+    <a class="nav-item " href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item " href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item active" href="larofit-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <a class="nav-item " href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
+    <div class="nav-section">Track</div>
+    <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
+    <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
+    <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
+    <div class="nav-section">Community</div>
+    <a class="nav-item " href="larofit-group.html"><span class="nav-icon">👥</span>Group feed</a>
+    <a class="nav-item " href="larofit-find-trainer.html"><span class="nav-icon">🔍</span>Find a trainer</a>
+    <div class="nav-section">Trainer</div>
+    <a class="nav-item " href="larofit-trainer.html"><span class="nav-icon">🏋️</span>Trainer dashboard</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Trainer builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet builder</a>
+    <a class="nav-item " href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar">LJ</div>
+    <div><div class="s-name">Lyndon J.</div><div class="s-plan">&#10022; PRO TRIAL</div></div>
+  </div>
+</aside>
+
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="page-title">LIBRARY</div>
+      <input class="top-search" id="top-search" placeholder="Search exercises..." oninput="renderTable()">
+    </div>
+    <div class="topbar-right">
+      <button class="btn-outline" onclick="openImport()">&#8679; Import CSV</button>
+      <button class="btn-outline" onclick="exportCSV()">&#8681; Export CSV</button>
+      <button class="btn-volt" onclick="openAddModal()">&#43; Add exercise</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- CATEGORY SIDEBAR -->
+    <div class="cat-sidebar">
+      <div class="cat-header"><div class="cat-header-title">Categories</div></div>
+      <div id="cat-list"></div>
+    </div>
+
+    <!-- TABLE AREA -->
+    <div class="table-area" id="table-area">
+      <!-- STATS -->
+      <div class="stats-row" id="stats-row"></div>
+
+      <!-- TOOLBAR -->
+      <div class="table-toolbar">
+        <div class="toolbar-left" id="filter-pills"></div>
+        <div class="toolbar-right">
+          <span class="table-count" id="table-count"></span>
+          <select class="sort-select" id="sort-select" onchange="renderTable()">
+            <option value="name">Sort: A–Z</option>
+            <option value="name-desc">Sort: Z–A</option>
+            <option value="category">Sort: Category</option>
+            <option value="difficulty">Sort: Difficulty</option>
+            <option value="custom">Sort: Custom first</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <table class="ex-table" id="ex-table">
+        <thead>
+          <tr>
+            <th style="width:32px;"><input type="checkbox" class="ex-check" id="select-all" onchange="toggleSelectAll(this.checked)"></th>
+            <th onclick="sortBy('name')">Exercise <span class="sort-arrow" id="sa-name">↕</span></th>
+            <th onclick="sortBy('category')">Category <span class="sort-arrow" id="sa-category">↕</span></th>
+            <th>Equipment</th>
+            <th>Type</th>
+            <th onclick="sortBy('difficulty')">Difficulty <span class="sort-arrow" id="sa-difficulty">↕</span></th>
+            <th>Muscles</th>
+            <th>Video</th>
+            <th style="width:100px;"></th>
+          </tr>
+        </thead>
+        <tbody id="ex-tbody"></tbody>
+      </table>
+      <div id="empty-state" class="empty-state" style="display:none;">
+        <div class="empty-icon">🔍</div>
+        <div style="font-size:16px;font-weight:600;color:var(--fog);margin-bottom:8px;">No exercises found</div>
+        <div style="font-size:13px;">Try a different search or category</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BULK ACTION BAR -->
+  <div class="bulk-bar" id="bulk-bar">
+    <span class="bulk-count" id="bulk-count">0 selected</span>
+    <button class="bulk-btn" onclick="bulkSetVideo()">&#127909; Add video URL</button>
+    <button class="bulk-btn" onclick="bulkSetCategory()">&#128193; Move category</button>
+    <button class="bulk-btn bulk-btn-danger" onclick="bulkDelete()">&#128465; Delete selected</button>
+    <button class="bulk-btn" style="margin-left:auto;" onclick="clearSelection()">&#10005; Clear</button>
+  </div>
+</div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="ex-modal" onclick="maybeClose(event,'ex-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">ADD EXERCISE</div>
+      <button class="modal-close" onclick="closeModal('ex-modal')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid cols-2" style="margin-bottom:14px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Exercise name *</label>
+          <input type="text" id="f-name" placeholder="e.g. Cable chest fly">
+        </div>
+        <div class="field">
+          <label>Category *</label>
+          <select id="f-category">
+            <option value="">Select category...</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Activity type</label>
+          <select id="f-type">
+            <option value="strength">Strength</option>
+            <option value="cardio">Cardio</option>
+            <option value="yoga">Yoga</option>
+            <option value="stretch">Stretch</option>
+            <option value="hiit">HIIT</option>
+            <option value="recovery">Recovery</option>
+            <option value="plyo">Plyometrics</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Equipment</label>
+          <select id="f-eq">
+            <option value="db">Dumbbells</option>
+            <option value="bb">Barbells</option>
+            <option value="mc">Machines / Cable</option>
+            <option value="bw">Bodyweight</option>
+            <option value="kb">Kettlebell</option>
+            <option value="band">Resistance band</option>
+            <option value="cd">Cardio machine</option>
+            <option value="yoga">Yoga mat / props</option>
+            <option value="rc">Recovery tool</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Difficulty</label>
+          <select id="f-difficulty">
+            <option value="beginner">Beginner</option>
+            <option value="intermediate" selected>Intermediate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Movement pattern</label>
+          <select id="f-pattern">
+            <option value="">Select...</option>
+            <option value="push">Push</option>
+            <option value="pull">Pull</option>
+            <option value="hinge">Hinge</option>
+            <option value="squat">Squat</option>
+            <option value="carry">Carry</option>
+            <option value="rotate">Rotation</option>
+            <option value="hold">Hold / Isometric</option>
+            <option value="flow">Flow / Sequence</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>Primary muscles worked</label>
+        <div class="muscle-chips" id="muscle-chips"></div>
+      </div>
+      <div class="form-grid cols-2" style="margin-bottom:14px;">
+        <div class="field" style="grid-column:1/-1;">
+          <label>Video URL (optional)</label>
+          <input type="text" id="f-video" placeholder="YouTube or web link">
+          <div class="field-hint">Add a demo video so users know the correct form</div>
+        </div>
+        <div class="field" style="grid-column:1/-1;">
+          <label>Coaching notes (optional)</label>
+          <textarea id="f-notes" placeholder="Form cues, common mistakes, variations..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('ex-modal')">Cancel</button>
+      <button class="btn-volt" onclick="saveExercise()">Save exercise</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT MODAL -->
+<div class="overlay" id="import-modal" onclick="maybeClose(event,'import-modal')">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">IMPORT CSV</div>
+      <button class="modal-close" onclick="closeModal('import-modal')">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div class="import-drop" id="import-drop" onclick="document.getElementById('csv-input').click()"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleCSVDrop(event)">
+        <div class="import-drop-icon">📄</div>
+        <div class="import-drop-text">Drop a CSV file here or click to browse</div>
+        <div class="import-drop-sub">Columns: name, category, equipment, type, difficulty, muscles, video, notes</div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="handleCSVFile(this.files[0])">
+      </div>
+      <div id="import-preview" style="display:none;">
+        <div style="font-size:12px;font-weight:600;color:var(--mist);margin-bottom:8px;" id="import-summary"></div>
+        <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;font-family:var(--font-mono);color:var(--fog);padding:10px;" id="import-list"></div>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:var(--carbon);border-radius:var(--radius-sm);font-size:12px;color:var(--mist);line-height:1.6;">
+        <strong style="color:var(--fog);">CSV format:</strong><br>
+        name,category,equipment,type,difficulty,muscles,video,notes<br>
+        <span style="color:var(--slate);">Cable fly,Chest,mc,strength,intermediate,"Chest,Shoulders",,</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal('import-modal')">Cancel</button>
+      <button class="btn-volt" id="import-confirm-btn" onclick="confirmImport()" disabled>Import exercises</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── FULL EXERCISE DATABASE ───────────────────────────────────────────────────
+const MUSCLES_ALL = ['Chest','Back','Shoulders','Biceps','Triceps','Legs','Glutes','Hamstrings','Quads','Calves','Core','Abs','Lower back','Hip flexors','Full body'];
+
+const CATEGORIES = [
+  {id:'all',    name:'All exercises',  icon:'📚'},
+  {id:'chest',  name:'Chest',          icon:'🏋️'},
+  {id:'back',   name:'Back',           icon:'🔙'},
+  {id:'shoulders',name:'Shoulders',    icon:'💪'},
+  {id:'biceps', name:'Biceps',         icon:'💪'},
+  {id:'triceps',name:'Triceps',        icon:'💪'},
+  {id:'legs',   name:'Legs',           icon:'🦵'},
+  {id:'core',   name:'Core',           icon:'⭕'},
+  {id:'fullbody',name:'Full body',     icon:'⚡'},
+  {id:'cardio', name:'Cardio',         icon:'🏃'},
+  {id:'yoga',   name:'Yoga',           icon:'🧘'},
+  {id:'stretching',name:'Stretching',  icon:'🤸'},
+  {id:'recovery',name:'Recovery',      icon:'💆'},
+  {id:'custom', name:'My exercises',   icon:'⭐'},
+];
+
+// Built-in exercise database
+const BUILTIN_EXERCISES = [
+  // CHEST
+  {id:'b1',  name:'Dumbbell bench press',    category:'chest',    eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps'],           video:'https://www.youtube.com/watch?v=VmB1G1K7v94', notes:'Keep shoulder blades retracted throughout the movement.'},
+  {id:'b2',  name:'Dumbbell incline press',  category:'chest',    eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Chest','Shoulders'],         video:'https://www.youtube.com/watch?v=8iPEnn-ltC8'},
+  {id:'b3',  name:'Dumbbell decline press',  category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],           video:''},
+  {id:'b4',  name:'Dumbbell flyes',          category:'chest',    eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Chest'],                     video:'https://www.youtube.com/watch?v=eozdVDA78K0'},
+  {id:'b5',  name:'Incline dumbbell flyes',  category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest','Shoulders'],         video:''},
+  {id:'b6',  name:'Dumbbell pullover',       category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest','Back'],              video:''},
+  {id:'b7',  name:'Barbell bench press',     category:'chest',    eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps','Shoulders'],video:'https://www.youtube.com/watch?v=rT7DgCr-3pg', notes:'Use a spotter for heavy sets.'},
+  {id:'b8',  name:'Barbell incline press',   category:'chest',    eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Chest','Shoulders'],         video:''},
+  {id:'b9',  name:'Machine chest press',     category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps'],           video:''},
+  {id:'b10', name:'Machine pec deck fly',    category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest'],                     video:''},
+  {id:'b11', name:'Cable chest fly',         category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                     video:''},
+  {id:'b12', name:'Cable crossover',         category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                     video:''},
+  {id:'b13', name:'Push-up',                 category:'chest',    eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps','Shoulders'],video:''},
+  {id:'b14', name:'Wide push-up',            category:'chest',    eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Chest'],                     video:''},
+  {id:'b15', name:'Decline push-up',         category:'chest',    eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],           video:''},
+  {id:'b16', name:'Diamond push-up',         category:'chest',    eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Triceps','Chest'],           video:''},
+  // BACK
+  {id:'b17', name:'Dumbbell bent-over row',  category:'back',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:'https://www.youtube.com/watch?v=roCP6wCXPqo'},
+  {id:'b18', name:'Single-arm dumbbell row', category:'back',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:'https://www.youtube.com/watch?v=pYcpY20QaE8'},
+  {id:'b19', name:'Dumbbell Romanian deadlift',category:'back',   eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Back','Hamstrings','Glutes'],video:'https://www.youtube.com/watch?v=hCDzSR6bW10'},
+  {id:'b20', name:'Dumbbell shrugs',         category:'back',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],          video:''},
+  {id:'b21', name:'Renegade row',            category:'back',     eq:'db',  type:'strength', difficulty:'advanced',    muscles:['Back','Core','Biceps'],      video:''},
+  {id:'b22', name:'Barbell deadlift',        category:'back',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Back','Legs','Glutes'],      video:'https://www.youtube.com/watch?v=op9kVnSso6Q', notes:'Hinge at the hips. Keep back flat throughout.'},
+  {id:'b23', name:'Barbell bent-over row',   category:'back',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],             video:''},
+  {id:'b24', name:'Barbell shrug',           category:'back',     eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],          video:''},
+  {id:'b25', name:'Machine lat pulldown',    category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:''},
+  {id:'b26', name:'Machine seated row',      category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:''},
+  {id:'b27', name:'Cable straight-arm pulldown',category:'back',  eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Back'],                     video:''},
+  {id:'b28', name:'Cable row',               category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:''},
+  {id:'b29', name:'Pull-up',                 category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],             video:'https://www.youtube.com/watch?v=eGo4IYlbE5g'},
+  {id:'b30', name:'Chin-up',                 category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],             video:''},
+  {id:'b31', name:'Inverted row',            category:'back',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],             video:''},
+  // SHOULDERS
+  {id:'b32', name:'Dumbbell overhead press', category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Triceps'],       video:'https://www.youtube.com/watch?v=qEwKCR5JCog'},
+  {id:'b33', name:'Dumbbell lateral raise',  category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                 video:'https://www.youtube.com/watch?v=3VcKaXpzqRo'},
+  {id:'b34', name:'Dumbbell front raise',    category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                 video:''},
+  {id:'b35', name:'Dumbbell rear delt fly',  category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],          video:''},
+  {id:'b36', name:'Arnold press',            category:'shoulders',eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Triceps'],       video:'https://www.youtube.com/watch?v=6Z15_WdXmVw'},
+  {id:'b37', name:'Dumbbell upright row',    category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],          video:''},
+  {id:'b38', name:'Barbell overhead press',  category:'shoulders',eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Triceps','Core'],video:''},
+  {id:'b39', name:'Machine shoulder press',  category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Triceps'],       video:''},
+  {id:'b40', name:'Machine lateral raise',   category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                 video:''},
+  {id:'b41', name:'Cable lateral raise',     category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                 video:''},
+  {id:'b42', name:'Cable face pull',         category:'shoulders',eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Back'],          video:''},
+  {id:'b43', name:'Pike push-up',            category:'shoulders',eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Triceps'],       video:''},
+  {id:'b44', name:'Handstand hold',          category:'shoulders',eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Shoulders','Core'],          video:''},
+  // BICEPS
+  {id:'b45', name:'Dumbbell curl',           category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:'https://www.youtube.com/watch?v=ykJmrZ5v0Oo'},
+  {id:'b46', name:'Hammer curl',             category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:'https://www.youtube.com/watch?v=TwD-YGVP4Bk'},
+  {id:'b47', name:'Incline dumbbell curl',   category:'biceps',   eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                    video:''},
+  {id:'b48', name:'Concentration curl',      category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
+  {id:'b49', name:'Zottman curl',            category:'biceps',   eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                    video:''},
+  {id:'b50', name:'Cross-body hammer curl',  category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
+  {id:'b51', name:'Barbell curl',            category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
+  {id:'b52', name:'EZ-bar curl',             category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
+  {id:'b53', name:'Machine preacher curl',   category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
+  {id:'b54', name:'Cable curl',              category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
+  {id:'b55', name:'Resistance band curl',    category:'biceps',   eq:'band',type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
+  // TRICEPS
+  {id:'b56', name:'Dumbbell overhead tricep extension',category:'triceps',eq:'db',type:'strength',difficulty:'beginner',muscles:['Triceps'],video:'https://www.youtube.com/watch?v=YbX7Wd8jQ-Q'},
+  {id:'b57', name:'Dumbbell skull crusher',  category:'triceps',  eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Triceps'],                   video:'https://www.youtube.com/watch?v=d_KZxkY_0cM'},
+  {id:'b58', name:'Dumbbell kickback',       category:'triceps',  eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                   video:''},
+  {id:'b59', name:'Close-grip dumbbell press',category:'triceps', eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Triceps','Chest'],           video:''},
+  {id:'b60', name:'Barbell skull crusher',   category:'triceps',  eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Triceps'],                   video:''},
+  {id:'b61', name:'Close-grip barbell press',category:'triceps',  eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Triceps','Chest'],           video:''},
+  {id:'b62', name:'Cable rope pushdown',     category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                   video:''},
+  {id:'b63', name:'Machine tricep pushdown', category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                   video:''},
+  {id:'b64', name:'Tricep dip',              category:'triceps',  eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Triceps','Chest'],           video:''},
+  // LEGS
+  {id:'b65', name:'Dumbbell squat',          category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:'https://www.youtube.com/watch?v=Uj5yCwVLCzg'},
+  {id:'b66', name:'Dumbbell lunge',          category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'],video:'https://www.youtube.com/watch?v=D7KaRcUTQeE'},
+  {id:'b67', name:'Dumbbell reverse lunge',  category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
+  {id:'b68', name:'Dumbbell Bulgarian split squat',category:'legs',eq:'db', type:'strength', difficulty:'advanced',    muscles:['Quads','Glutes'],            video:'https://www.youtube.com/watch?v=2C-uNgKwPLE'},
+  {id:'b69', name:'Dumbbell goblet squat',   category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Core'],     video:'https://www.youtube.com/watch?v=MeIiIdhvXT4'},
+  {id:'b70', name:'Dumbbell step-up',        category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
+  {id:'b71', name:'Dumbbell sumo squat',     category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'],video:''},
+  {id:'b72', name:'Dumbbell calf raise',     category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Calves'],                    video:''},
+  {id:'b73', name:'Dumbbell leg curl',       category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Hamstrings'],                video:''},
+  {id:'b74', name:'Barbell squat',           category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Quads','Glutes','Core'],     video:'https://www.youtube.com/watch?v=ultWZbUMPL8', notes:'Keep chest up, knees tracking over toes.'},
+  {id:'b75', name:'Barbell Romanian deadlift',category:'legs',    eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Hamstrings','Glutes','Back'],video:''},
+  {id:'b76', name:'Barbell hip thrust',      category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Glutes','Hamstrings'],       video:''},
+  {id:'b77', name:'Barbell lunge',           category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Quads','Glutes'],            video:''},
+  {id:'b78', name:'Machine leg press',       category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
+  {id:'b79', name:'Machine leg extension',   category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads'],                     video:''},
+  {id:'b80', name:'Machine leg curl',        category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Hamstrings'],                video:''},
+  {id:'b81', name:'Machine calf raise',      category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Calves'],                    video:''},
+  {id:'b82', name:'Machine hip abductor',    category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Legs'],             video:''},
+  {id:'b83', name:'Bodyweight squat',        category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
+  {id:'b84', name:'Bodyweight lunge',        category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
+  {id:'b85', name:'Glute bridge',            category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],       video:''},
+  {id:'b86', name:'Wall sit',               category:'legs',     eq:'bw',  type:'timed_bodyweight', difficulty:'beginner',    muscles:['Quads'],                     video:''},
+  {id:'b87', name:'Jump squat',              category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes'],            video:''},
+  {id:'b88', name:'Box jump',               category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Calves'],   video:''},
+  // CORE
+  {id:'b89', name:'Plank',                   category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'beginner',    muscles:['Core','Abs'],                video:''},
+  {id:'b90', name:'Side plank',              category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Abs'],                video:''},
+  {id:'b91', name:'Crunch',                  category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                       video:''},
+  {id:'b92', name:'Bicycle crunch',          category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Core'],                video:''},
+  {id:'b93', name:'Leg raise',               category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Abs','Hip flexors'],         video:''},
+  {id:'b94', name:'Mountain climber',        category:'core',     eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Core','Abs'],                video:''},
+  {id:'b95', name:'Dead bug',               category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'beginner',    muscles:['Core','Lower back'],         video:''},
+  {id:'b96', name:'Russian twist',          category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Core'],                video:''},
+  {id:'b97', name:'Dumbbell Russian twist',  category:'core',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Abs','Core'],                video:'https://www.youtube.com/watch?v=wkD8rjkodUI'},
+  {id:'b98', name:'Dumbbell side bend',      category:'core',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Core','Abs'],                video:''},
+  {id:'b99', name:'Dumbbell woodchop',       category:'core',     eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs'],                video:''},
+  {id:'b100',name:'Cable crunch',            category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                       video:''},
+  {id:'b101',name:'Ab wheel rollout',        category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Core','Abs','Lower back'],   video:''},
+  {id:'b102',name:'Hanging leg raise',       category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Abs','Hip flexors'],         video:''},
+  // FULL BODY
+  {id:'b103',name:"Farmer's carry",          category:'fullbody', eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Full body'],                 video:'https://www.youtube.com/watch?v=Fkzk_RqlYig'},
+  {id:'b104',name:'Dumbbell thruster',       category:'fullbody', eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Full body'],                 video:'https://www.youtube.com/watch?v=L219ltL15zk'},
+  {id:'b105',name:'Dumbbell clean and press',category:'fullbody', eq:'db',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                 video:''},
+  {id:'b106',name:'Dumbbell swing',          category:'fullbody', eq:'db',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
+  {id:'b107',name:'Dumbbell snatch',         category:'fullbody', eq:'db',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                 video:''},
+  {id:'b108',name:'Kettlebell swing',        category:'fullbody', eq:'kb',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Glutes'],        video:''},
+  {id:'b109',name:'Kettlebell clean',        category:'fullbody', eq:'kb',  type:'strength', difficulty:'intermediate',muscles:['Full body'],                 video:''},
+  {id:'b110',name:'Turkish get-up',          category:'fullbody', eq:'kb',  type:'strength', difficulty:'advanced',    muscles:['Full body','Core'],          video:''},
+  {id:'b111',name:'Burpee',                  category:'fullbody', eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
+  {id:'b112',name:'Barbell clean',           category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                 video:''},
+  {id:'b113',name:'Barbell thruster',        category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                 video:''},
+  // CARDIO
+  {id:'b114',name:'Treadmill walk',          category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs'],                      video:''},
+  {id:'b115',name:'Treadmill run',           category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
+  {id:'b116',name:'Treadmill incline walk',  category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes'],             video:''},
+  {id:'b117',name:'Treadmill HIIT sprints',  category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
+  {id:'b118',name:'Stationary bike',         category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs'],                      video:''},
+  {id:'b119',name:'Spin bike',               category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
+  {id:'b120',name:'Rowing machine',          category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Full body'],                 video:''},
+  {id:'b121',name:'Elliptical',              category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
+  {id:'b122',name:'Stair climber',           category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'intermediate',muscles:['Legs','Glutes'],             video:''},
+  {id:'b123',name:'Jump rope',               category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
+  {id:'b124',name:'Outdoor run',             category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
+  {id:'b125',name:'Cycling',                 category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs'],                      video:''},
+  {id:'b126',name:'Swimming',                category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Full body'],                 video:''},
+  {id:'b127',name:'HIIT circuit',            category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
+  // YOGA
+  {id:'b128',name:'Downward dog',            category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Shoulders','Hamstrings'],video:''},
+  {id:'b129',name:'Upward dog',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Chest','Back'],              video:''},
+  {id:'b130',name:'Child\'s pose',           category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Hip flexors'],        video:''},
+  {id:'b131',name:'Warrior I',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Hip flexors'],        video:''},
+  {id:'b132',name:'Warrior II',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Shoulders'],          video:''},
+  {id:'b133',name:'Warrior III',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
+  {id:'b134',name:'Triangle pose',           category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
+  {id:'b135',name:'Tree pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
+  {id:'b136',name:'Chair pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Quads','Core'],              video:''},
+  {id:'b137',name:'Cat-cow flow',            category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Core'],               video:''},
+  {id:'b138',name:'Pigeon pose',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Hip flexors','Glutes'],      video:''},
+  {id:'b139',name:'Cobra pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Chest'],              video:''},
+  {id:'b140',name:'Bridge pose',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Glutes','Back'],             video:''},
+  {id:'b141',name:'Seated forward fold',     category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hamstrings','Back'],         video:''},
+  {id:'b142',name:'Supine spinal twist',     category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Core'],               video:''},
+  {id:'b143',name:'Crow pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Core','Shoulders','Arms'],   video:''},
+  {id:'b144',name:'Headstand',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Shoulders','Core'],          video:''},
+  {id:'b145',name:'Shoulder stand',          category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Back','Core'],               video:''},
+  {id:'b146',name:'Legs up the wall',        category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Back'],               video:''},
+  {id:'b147',name:'Savasana',                category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Full body'],                 video:'', notes:'Final relaxation pose. Hold for 5-10 minutes.'},
+  {id:'b148',name:'Sun salutation A',        category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Full body'],                 video:''},
+  {id:'b149',name:'Sun salutation B',        category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
+  {id:'b150',name:'Moon salutation',         category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
+  {id:'b151',name:'Half moon pose',          category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
+  {id:'b152',name:'Eagle pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
+  {id:'b153',name:'Dancer pose',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Legs','Core','Chest'],       video:''},
+  {id:'b154',name:'Camel pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Chest','Back','Hip flexors'], video:''},
+  {id:'b155',name:'Bow pose',                category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Back','Chest'],              video:''},
+  {id:'b156',name:'Fish pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Chest','Back'],              video:''},
+  {id:'b157',name:'Lizard pose',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Hip flexors','Legs'],        video:''},
+  {id:'b158',name:'Frog pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Hip flexors','Glutes'],      video:''},
+  // STRETCHING
+  {id:'b159',name:'Standing quad stretch',   category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Quads'],                     video:''},
+  {id:'b160',name:'Standing hamstring stretch',category:'stretching',eq:'bw',type:'stretch', difficulty:'beginner',    muscles:['Hamstrings'],                video:''},
+  {id:'b161',name:'Hip flexor stretch',      category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Hip flexors'],               video:''},
+  {id:'b162',name:'Butterfly stretch',       category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Hip flexors','Legs'],        video:''},
+  {id:'b163',name:'90/90 hip stretch',       category:'stretching',eq:'bw', type:'stretch',  difficulty:'intermediate',muscles:['Hip flexors','Glutes'],      video:''},
+  {id:'b164',name:'Doorway chest stretch',   category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Chest','Shoulders'],         video:''},
+  {id:'b165',name:'Cross-body shoulder stretch',category:'stretching',eq:'bw',type:'stretch',difficulty:'beginner',   muscles:['Shoulders'],                 video:''},
+  {id:'b166',name:'Overhead tricep stretch', category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Triceps'],                   video:''},
+  {id:'b167',name:'Neck side stretch',       category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Back','Shoulders'],          video:''},
+  {id:'b168',name:'Calf stretch (wall)',     category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Calves'],                    video:''},
+  {id:'b169',name:'Figure-4 stretch',        category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Glutes','Hip flexors'],      video:''},
+  {id:'b170',name:'World greatest stretch',  category:'stretching',eq:'bw', type:'stretch',  difficulty:'intermediate',muscles:['Full body'],                 video:''},
+  {id:'b171',name:'Thoracic spine rotation', category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Back','Core'],               video:''},
+  {id:'b172',name:'Wrist and forearm stretch',category:'stretching',eq:'bw',type:'stretch',  difficulty:'beginner',    muscles:['Arms'],                      video:''},
+  // RECOVERY
+  {id:'b173',name:'Foam roller — upper back',category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Back'],                      video:''},
+  {id:'b174',name:'Foam roller — lower back',category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Lower back'],                video:''},
+  {id:'b175',name:'Foam roller — IT band',   category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Legs'],                      video:''},
+  {id:'b176',name:'Foam roller — quads',     category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Quads'],                     video:''},
+  {id:'b177',name:'Foam roller — hamstrings',category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Hamstrings'],                video:''},
+  {id:'b178',name:'Foam roller — calves',    category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Calves'],                    video:''},
+  {id:'b179',name:'Massage bed',             category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:'', notes:'10-15 minutes recommended post-workout.'},
+  {id:'b180',name:'Ice bath',                category:'recovery', eq:'rc',  type:'recovery', difficulty:'intermediate',muscles:['Full body'],                 video:'', notes:'10-15°C water. Start with 5 minutes and work up.'},
+  {id:'b181',name:'Contrast shower',         category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:''},
+  {id:'b182',name:'Sauna session',           category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:''},
+  {id:'b183',name:'Percussion gun therapy',  category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:''},
+  {id:'b184',name:'Meditation',              category:'recovery', eq:'bw',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:''},
+  {id:'b185',name:'Breathing exercise',      category:'recovery', eq:'bw',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:'', notes:'Box breathing: 4s in, 4s hold, 4s out, 4s hold.'},
+  {id:'b186',name:'Cold water immersion',    category:'recovery', eq:'rc',  type:'recovery', difficulty:'intermediate',muscles:['Full body'],                 video:''},
+
+  // ── CHEST — additional ───────────────────────────────────────────────────
+  {id:'b187',name:'Smith machine bench press',      category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps','Shoulders'], video:''},
+  {id:'b188',name:'Smith machine incline press',    category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest','Shoulders'],           video:''},
+  {id:'b189',name:'Cable chest press',              category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],             video:''},
+  {id:'b190',name:'Low cable chest fly',            category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                       video:''},
+  {id:'b191',name:'High cable chest fly',           category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                       video:''},
+  {id:'b192',name:'Dumbbell squeeze press',         category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],             video:''},
+  {id:'b193',name:'Incline cable fly',              category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest','Shoulders'],           video:''},
+  {id:'b194',name:'Dumbbell around the world',      category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                       video:''},
+  {id:'b195',name:'Chest dip',                      category:'chest',    eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],             video:''},
+  {id:'b196',name:'Svend press',                    category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest'],                       video:''},
+
+  // ── BACK — additional ────────────────────────────────────────────────────
+  {id:'b197',name:'Smith machine bent-over row',    category:'back',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],               video:''},
+  {id:'b198',name:'Cable single-arm row',           category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b199',name:'Cable face pull',                category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],            video:''},
+  {id:'b200',name:'Meadows row',                    category:'back',     eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],               video:''},
+  {id:'b201',name:'Chest-supported dumbbell row',   category:'back',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b202',name:'Seal row',                       category:'back',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],               video:''},
+  {id:'b203',name:'Machine reverse fly',            category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],            video:''},
+  {id:'b204',name:'Cable pull-over',                category:'back',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Back','Chest'],                video:''},
+  {id:'b205',name:'Wide-grip lat pulldown',         category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b206',name:'Reverse-grip lat pulldown',      category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b207',name:'Single-arm lat pulldown',        category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b208',name:'Dumbbell pullover (back focus)',  category:'back',     eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Back','Chest'],                video:''},
+  {id:'b209',name:'TRX row',                        category:'back',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b210',name:'Machine high row',               category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+
+  // ── SHOULDERS — additional ───────────────────────────────────────────────
+  {id:'b211',name:'Smith machine shoulder press',   category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Triceps'],         video:''},
+  {id:'b212',name:'Cable lateral raise',            category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                   video:''},
+  {id:'b213',name:'Cable front raise',              category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                   video:''},
+  {id:'b214',name:'Cable rear delt fly',            category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
+  {id:'b215',name:'Dumbbell W raise',               category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
+  {id:'b216',name:'Dumbbell Y raise',               category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
+  {id:'b217',name:'Prone dumbbell rear delt raise', category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
+  {id:'b218',name:'Barbell upright row',            category:'shoulders',eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Traps'],           video:''},
+  {id:'b219',name:'Dumbbell shrug (neutral grip)',  category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Traps','Shoulders'],           video:''},
+  {id:'b220',name:'Machine shrug',                  category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Traps','Shoulders'],           video:''},
+  {id:'b221',name:'Behind-the-back cable raise',    category:'shoulders',eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Shoulders'],                   video:''},
+  {id:'b222',name:'Plate front raise',              category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                   video:''},
+
+  // ── BICEPS — additional ──────────────────────────────────────────────────
+  {id:'b223',name:'Spider curl',                    category:'biceps',   eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:''},
+  {id:'b224',name:'Reverse curl',                   category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Biceps','Forearms'],           video:''},
+  {id:'b225',name:'Drag curl',                      category:'biceps',   eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:''},
+  {id:'b226',name:'Cable hammer curl',              category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Biceps','Forearms'],           video:''},
+  {id:'b227',name:'Cable reverse curl',             category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Biceps','Forearms'],           video:''},
+  {id:'b228',name:'Barbell preacher curl',          category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                      video:''},
+  {id:'b229',name:'Dumbbell preacher curl',         category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                      video:''},
+  {id:'b230',name:'21s curl',                       category:'biceps',   eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:'', notes:'7 bottom half, 7 top half, 7 full range reps.'},
+  {id:'b231',name:'Supinating dumbbell curl',       category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                      video:''},
+  {id:'b232',name:'Bayesian cable curl',            category:'biceps',   eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:''},
+  {id:'b233',name:'TRX bicep curl',                 category:'biceps',   eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:''},
+
+  // ── TRICEPS — additional ─────────────────────────────────────────────────
+  {id:'b234',name:'Cable overhead tricep extension',category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
+  {id:'b235',name:'Cable kickback',                 category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
+  {id:'b236',name:'Smith machine close-grip press', category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps','Chest'],             video:''},
+  {id:'b237',name:'JM press',                       category:'triceps',  eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Triceps'],                     video:''},
+  {id:'b238',name:'Tricep dip (bench)',              category:'triceps',  eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Triceps','Chest'],             video:''},
+  {id:'b239',name:'Band tricep pushdown',           category:'triceps',  eq:'band',type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
+  {id:'b240',name:'Dumbbell tate press',            category:'triceps',  eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Triceps'],                     video:''},
+  {id:'b241',name:'Cable rope overhead extension',  category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
+
+  // ── LEGS — additional ────────────────────────────────────────────────────
+  {id:'b242',name:'Smith machine squat',            category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Core'],       video:''},
+  {id:'b243',name:'Smith machine lunge',            category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+  {id:'b244',name:'Smith machine hip thrust',       category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
+  {id:'b245',name:'Smith machine calf raise',       category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Calves'],                      video:''},
+  {id:'b246',name:'Cable pull-through',             category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
+  {id:'b247',name:'Cable kickback (glute)',         category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes'],                      video:''},
+  {id:'b248',name:'Machine glute kickback',         category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes'],                      video:''},
+  {id:'b249',name:'Machine hip thrust',             category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
+  {id:'b250',name:'Machine seated calf raise',      category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Calves'],                      video:''},
+  {id:'b251',name:'Single-leg press',               category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+  {id:'b252',name:'Hack squat machine',             category:'legs',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Quads','Glutes'],              video:''},
+  {id:'b253',name:'Pendulum squat',                 category:'legs',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Quads','Glutes'],              video:''},
+  {id:'b254',name:'Single-leg Romanian deadlift',   category:'legs',     eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Hamstrings','Glutes'],         video:''},
+  {id:'b255',name:'Dumbbell hip thrust',            category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
+  {id:'b256',name:'Barbell hip thrust',             category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Glutes','Hamstrings'],         video:''},
+  {id:'b257',name:'Barbell front squat',            category:'legs',     eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Quads','Core','Glutes'],       video:''},
+  {id:'b258',name:'Barbell sumo deadlift',          category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Glutes','Hamstrings','Back'],  video:''},
+  {id:'b259',name:'Nordic hamstring curl',          category:'legs',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Hamstrings'],                  video:''},
+  {id:'b260',name:'Bodyweight hip thrust',          category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
+  {id:'b261',name:'Step-up (bodyweight)',           category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+  {id:'b262',name:'Sumo squat pulse',               category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'], video:''},
+  {id:'b263',name:'Lateral lunge',                  category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'], video:''},
+  {id:'b264',name:'Dumbbell lateral lunge',         category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+  {id:'b265',name:'Leg press (wide stance)',        category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings','Quads'], video:''},
+  {id:'b266',name:'Leg press (narrow stance)',      category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads'],                       video:''},
+  {id:'b267',name:'Seated hip abductor',            category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
+  {id:'b268',name:'Seated hip adductor',            category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Inner thigh','Hip adductors'], video:''},
+  {id:'b269',name:'Band hip abduction (standing)',  category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
+  {id:'b270',name:'Band glute bridge',              category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
+  {id:'b271',name:'Kettlebell goblet squat',        category:'legs',     eq:'kb',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Core'],       video:''},
+  {id:'b272',name:'Kettlebell Romanian deadlift',   category:'legs',     eq:'kb',  type:'strength', difficulty:'intermediate',muscles:['Hamstrings','Glutes'],         video:''},
+  {id:'b273',name:'Pistol squat',                   category:'legs',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Quads','Glutes'],              video:''},
+  {id:'b274',name:'Walking lunge',                  category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'], video:''},
+  {id:'b275',name:'Dumbbell walking lunge',         category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+
+  // ── CORE — additional ────────────────────────────────────────────────────
+  {id:'b276',name:'Cable crunch',                   category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                         video:''},
+  {id:'b277',name:'Pallof press',                   category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs'],                  video:''},
+  {id:'b278',name:'Cable woodchop (high to low)',   category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs','Obliques'],       video:''},
+  {id:'b279',name:'Cable woodchop (low to high)',   category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs','Obliques'],       video:''},
+  {id:'b280',name:'Decline crunch',                 category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Abs'],                         video:''},
+  {id:'b281',name:'Weighted crunch',                category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                         video:''},
+  {id:'b282',name:'V-up',                           category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Abs','Hip flexors'],           video:''},
+  {id:'b283',name:'Toe touch crunch',               category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                         video:''},
+  {id:'b284',name:'Flutter kick',                   category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:''},
+  {id:'b285',name:'Scissor kick',                   category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:''},
+  {id:'b286',name:'Plank with shoulder tap',        category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Shoulders'],            video:''},
+  {id:'b287',name:'Plank reach',                    category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Abs'],                  video:''},
+  {id:'b288',name:'Copenhagen plank',               category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'advanced',    muscles:['Core','Hip adductors'],        video:''},
+  {id:'b289',name:'Hollow body hold',               category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs'],                  video:''},
+  {id:'b290',name:'L-sit',                          category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'advanced',    muscles:['Core','Abs','Hip flexors'],    video:''},
+  {id:'b291',name:'Band pull-apart',                category:'core',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],            video:''},
+  {id:'b292',name:'Dumbbell suitcase carry',        category:'core',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Core','Obliques'],             video:''},
+  {id:'b293',name:'Barbell rollout',                category:'core',     eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Core','Abs'],                  video:''},
+
+  // ── FULL BODY / FUNCTIONAL ───────────────────────────────────────────────
+  {id:'b294',name:'Battle ropes',                   category:'fullbody', eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Arms'],            video:''},
+  {id:'b295',name:'Sled push',                      category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Legs'],            video:''},
+  {id:'b296',name:'Sled pull',                      category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Back'],            video:''},
+  {id:'b297',name:'Medicine ball slam',             category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Core'],            video:''},
+  {id:'b298',name:'Medicine ball throw',            category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Core'],            video:''},
+  {id:'b299',name:'Sandbag carry',                  category:'fullbody', eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Full body'],                   video:''},
+  {id:'b300',name:'TRX squat',                      category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+  {id:'b301',name:'TRX chest press',                category:'fullbody', eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],             video:''},
+  {id:'b302',name:'TRX pike',                       category:'fullbody', eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Core','Shoulders'],            video:''},
+  {id:'b303',name:'Assault bike',                   category:'fullbody', eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:''},
+  {id:'b304',name:'Ski erg',                        category:'fullbody', eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Back'],            video:''},
+  {id:'b305',name:'Bear crawl',                     category:'fullbody', eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Core'],            video:''},
+  {id:'b306',name:'Crab walk',                      category:'fullbody', eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Core'],            video:''},
+  {id:'b307',name:'Inchworm',                       category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Full body','Core'],            video:''},
+  {id:'b308',name:'Man maker',                      category:'fullbody', eq:'db',  type:'hiit',     difficulty:'advanced',    muscles:['Full body'],                   video:'', notes:'Row, row, push-up, stand, press — one rep.'},
+  {id:'b309',name:'Dumbbell complex',               category:'fullbody', eq:'db',  type:'hiit',     difficulty:'advanced',    muscles:['Full body'],                   video:''},
+  {id:'b310',name:'Barbell complex',                category:'fullbody', eq:'bb',  type:'hiit',     difficulty:'advanced',    muscles:['Full body'],                   video:''},
+  {id:'b311',name:'Kettlebell windmill',            category:'fullbody', eq:'kb',  type:'strength', difficulty:'advanced',    muscles:['Core','Shoulders','Hamstrings'],video:''},
+  {id:'b312',name:'Kettlebell halo',                category:'fullbody', eq:'kb',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Core'],            video:''},
+  {id:'b313',name:'Kettlebell goblet carry',        category:'fullbody', eq:'kb',  type:'strength', difficulty:'beginner',    muscles:['Core','Quads'],                video:''},
+
+  // ── CARDIO — additional ──────────────────────────────────────────────────
+  {id:'b314',name:'Treadmill walk (incline 10%+)',  category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes'],               video:'', notes:'Walking lunges at 10–15% incline builds glutes effectively.'},
+  {id:'b315',name:'Treadmill LISS run',             category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],                 video:'', notes:'Low intensity steady state — 60-70% max heart rate.'},
+  {id:'b316',name:'Treadmill hill sprints',         category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'advanced',    muscles:['Legs','Glutes','Core'],        video:''},
+  {id:'b317',name:'Stationary bike HIIT',           category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
+  {id:'b318',name:'Rowing machine HIIT',            category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:''},
+  {id:'b319',name:'Stair climber intervals',        category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Glutes'],               video:''},
+  {id:'b320',name:'Elliptical intervals',           category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'beginner',    muscles:['Legs','Core'],                 video:''},
+  {id:'b321',name:'Jacob\'s ladder',               category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:''},
+  {id:'b322',name:'VersaClimber',                  category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:''},
+
+  // ── BODYWEIGHT — additional ──────────────────────────────────────────────
+  {id:'b323',name:'Pull-up (wide grip)',            category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],               video:''},
+  {id:'b324',name:'Pull-up (neutral grip)',         category:'back',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],               video:''},
+  {id:'b325',name:'Assisted pull-up (machine)',     category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b326',name:'Assisted dip (machine)',         category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps','Chest'],             video:''},
+  {id:'b327',name:'Parallel bar dip',              category:'triceps',  eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Triceps','Chest','Shoulders'], video:''},
+  {id:'b328',name:'Ring dip',                      category:'triceps',  eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Triceps','Chest','Core'],      video:''},
+  {id:'b329',name:'Muscle-up',                     category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Chest','Triceps'],      video:''},
+  {id:'b330',name:'Archer push-up',                category:'chest',    eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Chest','Triceps','Shoulders'], video:''},
+  {id:'b331',name:'Pseudo planche push-up',        category:'chest',    eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Chest','Shoulders','Triceps'], video:''},
+  {id:'b332',name:'Hindu push-up',                 category:'chest',    eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Chest','Shoulders','Back'],    video:''},
+  {id:'b333',name:'Typewriter pull-up',            category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],               video:''},
+  {id:'b334',name:'L-sit pull-up',                 category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Core','Biceps'],        video:''},
+  {id:'b335',name:'Tuck front lever',              category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Core'],                 video:''},
+  {id:'b336',name:'Australian pull-up',            category:'back',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+
+  // ── FOREARMS / GRIP ──────────────────────────────────────────────────────
+  {id:'b337',name:'Wrist curl',                    category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Forearms'],                    video:''},
+  {id:'b338',name:'Reverse wrist curl',            category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Forearms'],                    video:''},
+  {id:'b339',name:'Dumbbell wrist curl',           category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Forearms'],                    video:''},
+  {id:'b340',name:'Plate pinch',                   category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Forearms','Grip'],             video:''},
+  {id:'b341',name:'Dead hang',                     category:'back',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Forearms','Back','Grip'],      video:'', notes:'Great for grip strength and shoulder decompression.'},
+  {id:'b342',name:'Fat bar hold',                  category:'biceps',   eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Forearms','Grip'],             video:''},
+
+  // ── NECK ─────────────────────────────────────────────────────────────────
+  {id:'b343',name:'Neck flexion',                  category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Neck'],                        video:''},
+  {id:'b344',name:'Neck extension',                category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Neck'],                        video:''},
+  {id:'b345',name:'Neck lateral flexion',          category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Neck'],                        video:''},
+
+  // ── PLYO / ATHLETIC ──────────────────────────────────────────────────────
+  {id:'b346',name:'Broad jump',                    category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Calves'],     video:''},
+  {id:'b347',name:'Lateral bound',                 category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Calves'],     video:''},
+  {id:'b348',name:'Depth jump',                    category:'legs',     eq:'bw',  type:'plyo',     difficulty:'advanced',    muscles:['Quads','Glutes','Calves'],     video:''},
+  {id:'b349',name:'Tuck jump',                     category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Core'],       video:''},
+  {id:'b350',name:'Split jump',                    category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Hamstrings'], video:''},
+  {id:'b351',name:'Power clean',                   category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                   video:''},
+  {id:'b352',name:'Hang clean',                    category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                   video:''},
+  {id:'b353',name:'Push press',                    category:'shoulders',eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Triceps','Legs'],  video:''},
+  {id:'b354',name:'Push jerk',                     category:'shoulders',eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Shoulders','Triceps','Legs'],  video:''},
+  {id:'b355',name:'Barbell snatch',                category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                   video:''},
+
+  // ── STRETCHING — additional ──────────────────────────────────────────────
+  {id:'b356',name:'Pigeon pose stretch',           category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Glutes','Hip flexors'],        video:''},
+  {id:'b357',name:'Couch stretch',                 category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Hip flexors','Quads'],         video:''},
+  {id:'b358',name:'Doorway pec stretch',           category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Chest','Shoulders'],           video:''},
+  {id:'b359',name:'Lat stretch (overhead)',        category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Back','Shoulders'],            video:''},
+  {id:'b360',name:'Spinal decompression hang',     category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Back','Spine'],                video:''},
+  {id:'b361',name:'Hip flexor lunge stretch',      category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Hip flexors','Quads'],         video:''},
+  {id:'b362',name:'Seated piriformis stretch',     category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Glutes','Hip flexors'],        video:''},
+  {id:'b363',name:'Foam roller — glutes',          category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Glutes'],                      video:''},
+  {id:'b364',name:'Foam roller — chest',           category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Chest'],                       video:''},
+  {id:'b365',name:'Foam roller — lats',            category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Back'],                        video:''},
+  {id:'b366',name:'Foam roller — peroneals',       category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Calves','Legs'],               video:''},
+
+  // ── BAND EXERCISES ───────────────────────────────────────────────────────
+  {id:'b367',name:'Band pull-apart',               category:'shoulders',eq:'band',type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
+  {id:'b368',name:'Band face pull',                category:'shoulders',eq:'band',type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
+  {id:'b369',name:'Band squat',                    category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+  {id:'b370',name:'Band deadlift',                 category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Hamstrings','Glutes','Back'],  video:''},
+  {id:'b371',name:'Band row',                      category:'back',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b372',name:'Band chest press',              category:'chest',    eq:'band',type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps'],             video:''},
+  {id:'b373',name:'Band lateral walk',             category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
+  {id:'b374',name:'Band monster walk',             category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
+  {id:'b375',name:'Band clamshell',                category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
+  {id:'b376',name:'Band overhead press',           category:'shoulders',eq:'band',type:'strength', difficulty:'beginner',    muscles:['Shoulders','Triceps'],         video:''},
+  {id:'b377',name:'Band bicep curl',               category:'biceps',   eq:'band',type:'strength', difficulty:'beginner',    muscles:['Biceps'],                      video:''},
+  {id:'b378',name:'Band tricep pushdown',          category:'triceps',  eq:'band',type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
+  {id:'b379',name:'Band good morning',             category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Hamstrings','Glutes','Back'],  video:''},
+  {id:'b380',name:'Band seated row',               category:'back',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+
+  // ── MACHINE — PLANET FITNESS SPECIFIC ───────────────────────────────────
+  {id:'b381',name:'Planet Fitness 30-min circuit', category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'beginner',    muscles:['Full body'],                   video:'', notes:'Complete all 20 stations in sequence. 1 min per station.'},
+  {id:'b382',name:'Chest press machine (bilateral)',category:'chest',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps'],             video:''},
+  {id:'b383',name:'Shoulder press machine (bilateral)',category:'shoulders',eq:'mc',type:'strength',difficulty:'beginner',   muscles:['Shoulders','Triceps'],         video:''},
+  {id:'b384',name:'Dual cable machine row',        category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b385',name:'Functional trainer cable fly',  category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                       video:''},
+  {id:'b386',name:'Functional trainer row',        category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  {id:'b387',name:'Functional trainer squat',      category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+  {id:'b388',name:'Ab crunch machine',             category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                         video:''},
+  {id:'b389',name:'Back extension machine',        category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Lower back','Glutes'],         video:''},
+  {id:'b390',name:'Rotary torso machine',          category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Obliques','Core'],             video:''},
+
+  // ── HIIT / CONDITIONING ──────────────────────────────────────────────────
+  {id:'b391',name:'Box step-up (fast)',             category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Quads','Glutes','Calves'],     video:''},
+  {id:'b392',name:'High knees',                    category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Legs','Core'],                 video:''},
+  {id:'b393',name:'Butt kicks',                    category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Hamstrings','Calves'],         video:''},
+  {id:'b394',name:'Jumping jacks',                 category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Full body'],                   video:''},
+  {id:'b395',name:'Skaters',                       category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Glutes','Legs','Core'],        video:''},
+  {id:'b396',name:'Squat jumps',                   category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Calves'],     video:''},
+  {id:'b397',name:'Explosive push-up',             category:'chest',    eq:'bw',  type:'plyo',     difficulty:'advanced',    muscles:['Chest','Triceps','Shoulders'], video:''},
+  {id:'b398',name:'Sprint (in place)',             category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
+  {id:'b399',name:'Lateral shuffle',              category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Legs','Glutes'],               video:''},
+  {id:'b400',name:'Agility ladder drill',          category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
+  {id:'b401',name:'Cone drill',                    category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
+  {id:'b402',name:'Box drill',                     category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
+  {id:'b403',name:'Tabata squat',                  category:'legs',     eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Quads','Glutes'],              video:'', notes:'20 sec on, 10 sec off x8 rounds.'},
+  {id:'b404',name:'Tabata push-up',                category:'chest',    eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Chest','Triceps'],             video:'', notes:'20 sec on, 10 sec off x8 rounds.'},
+
+  // ── YOGA — additional ────────────────────────────────────────────────────
+  {id:'b405',name:'Boat pose',                     category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Core','Hip flexors','Abs'],    video:'', notes:'Navasana. Hold for 5 breaths. Keep spine long.'},
+  {id:'b406',name:'Wheel pose',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Chest','Shoulders','Back','Hip flexors'],video:'', notes:'Chakrasana. Full backbend. Warm up spine thoroughly first.'},
+  {id:'b407',name:'Reverse warrior',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Core','Shoulders'],     video:''},
+  {id:'b408',name:'Extended side angle',           category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Core','Shoulders'],     video:''},
+  {id:'b409',name:'Garland pose',                  category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Glutes','Hip flexors','Ankles'],video:'', notes:'Malasana. Deep squat position. Great for hip mobility.'},
+  {id:'b410',name:'Low lunge',                     category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hip flexors','Quads','Glutes'],video:'', notes:'Anjaneyasana. Keep back knee down for more hip flexor stretch.'},
+  {id:'b411',name:'High lunge',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hip flexors','Quads','Glutes','Core'],video:''},
+  {id:'b412',name:'Standing forward fold',         category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hamstrings','Back','Calves'],  video:'', notes:'Uttanasana. Bend knees slightly if hamstrings are tight.'},
+  {id:'b413',name:'Ragdoll pose',                  category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hamstrings','Back','Neck'],    video:'', notes:'Forward fold with arms hanging. Great for spine decompression.'},
+  {id:'b414',name:'Puppy pose',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Chest','Shoulders','Back'],    video:'', notes:'Between child\'s pose and downward dog. Opens chest and shoulders.'},
+  {id:'b415',name:'Sphinx pose',                   category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Chest','Spine'],        video:'', notes:'Gentle backbend. Good starting point before cobra or wheel.'},
+  {id:'b416',name:'Locust pose',                   category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Glutes','Hamstrings'], video:'', notes:'Salabhasana. Strengthens the entire posterior chain.'},
+  {id:'b417',name:'Happy baby',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hip flexors','Glutes','Lower back'],video:'', notes:'Ananda Balasana. Great post-workout hip opener.'},
+  {id:'b418',name:'Reclined pigeon',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Glutes','Hip flexors'],        video:'', notes:'Supta Kapotasana. Figure-4 on your back. Easier than floor pigeon.'},
+  {id:'b419',name:'Seated spinal twist',           category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Core','Spine'],         video:'', notes:'Ardha Matsyendrasana. Hold each side for 5-8 breaths.'},
+  {id:'b420',name:'Wide-legged forward fold',      category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hamstrings','Inner thigh','Back'],video:'', notes:'Prasarita Padottanasana. Walk hands back between legs for deeper stretch.'},
+  {id:'b421',name:'Revolved triangle',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Legs','Core','Back','Spine'],  video:'', notes:'Parivrtta Trikonasana. Requires good hamstring and hip flexibility.'},
+  {id:'b422',name:'King pigeon pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Hip flexors','Chest','Back','Quads'],video:'', notes:'Eka Pada Rajakapotasana. Deep backbend + hip opener. Advanced prep required.'},
+  {id:'b423',name:'Lotus pose',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Hip flexors','Knees','Ankles'],video:'', notes:'Padmasana. Never force this pose. Requires significant hip external rotation.'},
+  {id:'b424',name:'Half lotus pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Hip flexors','Knees'],         video:'', notes:'Ardha Padmasana. One leg in lotus, one extended. Good prep for full lotus.'},
+
+  // ── CORE — additional ────────────────────────────────────────────────────
+  {id:'b425',name:'Windshield wipers',             category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Obliques','Core','Abs'],       video:'', notes:'Hanging or lying. Control the rotation — do not swing.'},
+  {id:'b426',name:'Dragon flag',                   category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Core','Abs','Lower back'],     video:'', notes:'Made famous by Bruce Lee. Full body tension required throughout.'},
+  {id:'b427',name:'Stir the pot',                  category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs','Shoulders'],      video:'', notes:'Forearms on stability ball, make small circles. Keep hips still.'},
+  {id:'b428',name:'Reverse crunch',                category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:'', notes:'Curl hips off the floor toward chest. Avoid swinging.'},
+  {id:'b429',name:'Hanging knee raise',            category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:'', notes:'Good progression before hanging leg raise.'},
+  {id:'b430',name:'Toes to bar',                   category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Abs','Hip flexors','Lats'],    video:'', notes:'Full range hanging core movement. Requires grip strength and lat engagement.'},
+  {id:'b431',name:'Seated leg tuck',               category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:''},
+  {id:'b432',name:'Kneeling ab wheel rollout',     category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs','Shoulders'],      video:'', notes:'Easier progression from standing ab wheel. Keep lower back flat.'},
+  {id:'b433',name:'Landmine rotation',             category:'core',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Obliques','Core','Shoulders'], video:'', notes:'Rotate barbell end side to side. Great for rotational power.'},
+  {id:'b434',name:'Cable oblique crunch',          category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Obliques','Core'],             video:''},
+  {id:'b435',name:'Side bend (cable)',              category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Obliques','Core'],             video:''},
+  {id:'b436',name:'Stability ball crunch',         category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs','Core'],                  video:'', notes:'Greater range of motion than floor crunch due to ball curvature.'},
+  {id:'b437',name:'Stability ball plank',          category:'core',     eq:'mc',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Abs','Shoulders'],      video:'', notes:'Forearms on ball increases instability and core demand.'},
+  {id:'b438',name:'Stability ball pike',           category:'core',     eq:'mc',  type:'strength', difficulty:'advanced',    muscles:['Core','Abs','Shoulders'],      video:''},
+  {id:'b439',name:'Stability ball pass',           category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Abs','Core','Hip flexors'],    video:'', notes:'Pass ball from hands to feet lying on back.'},
+  {id:'b440',name:'GHD sit-up',                    category:'core',     eq:'mc',  type:'strength', difficulty:'advanced',    muscles:['Abs','Hip flexors','Back'],    video:'', notes:'Glute ham developer. Full range sit-up. Use with caution — high injury risk if rushed.'},
+  {id:'b441',name:'Roman chair sit-up',            category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Abs','Hip flexors'],           video:''},
+  {id:'b442',name:'Weighted Russian twist',        category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Obliques','Core','Abs'],       video:''},
+  {id:'b443',name:'Plank hip dip',                 category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'beginner',    muscles:['Obliques','Core'],             video:''},
+  {id:'b444',name:'Spiderman plank',               category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Obliques','Hip flexors'],video:''},
+  {id:'b445',name:'Single-leg plank',              category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Glutes','Abs'],         video:''},
+  {id:'b446',name:'RKC plank',                     category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Abs'],                  video:'', notes:'Squeeze every muscle simultaneously. Much harder than standard plank.'},
+  {id:'b447',name:'Suitcase deadlift',             category:'core',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Core','Obliques','Legs'],      video:'', notes:'One dumbbell at side. Anti-lateral flexion core exercise.'},
+
+  // ── CARDIO — additional ──────────────────────────────────────────────────
+  {id:'b448',name:'12-3-30 treadmill',             category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes','Calves'],      video:'', notes:'12% incline, 3 mph, 30 minutes. Popularized on social media. Effective low-impact glute and cardio workout.'},
+  {id:'b449',name:'Recumbent bike',                category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Quads'],                video:'', notes:'Lower back supported. Good for beginners or those with back issues.'},
+  {id:'b450',name:'Upper body ergometer',          category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Arms','Shoulders','Back'],     video:'', notes:'Hand bike. Great for upper body cardio or lower body injury rehab.'},
+  {id:'b451',name:'Nordic ski machine',            category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'intermediate',muscles:['Full body','Core'],            video:'', notes:'Combines upper and lower body in skiing motion. Low impact.'},
+  {id:'b452',name:'Stepper machine',               category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes','Calves'],      video:''},
+  {id:'b453',name:'Power walking',                 category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],                 video:'', notes:'3.5-4.5 mph pace. Arms pumping actively. Underrated calorie burner.'},
+  {id:'b454',name:'Speed walking (track)',         category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core','Calves'],        video:''},
+  {id:'b455',name:'Hiking',                        category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes','Core'],        video:'', notes:'Log distance and elevation gain. Great active recovery option.'},
+  {id:'b456',name:'Kayaking',                      category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Back','Shoulders','Core','Arms'],video:''},
+  {id:'b457',name:'Dance cardio',                  category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Legs','Core'],     video:'', notes:'Zumba-style. Log by duration. High calorie burn with low perceived effort.'},
+  {id:'b458',name:'Kickboxing cardio',             category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Core','Arms'],     video:'', notes:'Punches, kicks, and combinations. Log by rounds or duration.'},
+  {id:'b459',name:'Track sprint intervals',        category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core','Glutes'],        video:'', notes:'e.g. 8x100m with 60 sec rest. Log sets as sprint repeats.'},
+  {id:'b460',name:'Fartlek run',                   category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'intermediate',muscles:['Legs','Core'],                 video:'', notes:'Swedish for speed play. Alternate fast and easy efforts freely during a run.'},
+  {id:'b461',name:'Water rowing',                  category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'intermediate',muscles:['Full body','Back','Legs'],     video:'', notes:'Water rower. More natural feel than air rower. Log distance or time.'},
+  {id:'b462',name:'Sled drag (cardio)',            category:'cardio',   eq:'mc',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Glutes','Core'],        video:''},
+  {id:'b463',name:'Versa climber intervals',       category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'advanced',    muscles:['Full body'],                   video:'', notes:'Vertical climbing machine. Extremely high calorie burn. Short intervals recommended.'},
+  {id:'b464',name:'Pool swimming (laps)',          category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Full body'],                   video:'', notes:'Log by laps or distance. Note stroke type (freestyle, backstroke, etc).'},
+  {id:'b465',name:'Open water swimming',           category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'intermediate',muscles:['Full body'],                   video:''},
+  {id:'b466',name:'Cycling (outdoor)',             category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes','Core'],        video:'', notes:'Log by distance or time. Note terrain — flat vs hills changes intensity significantly.'},
+  {id:'b467',name:'Mountain biking',              category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Glutes','Core','Arms'], video:''},
+  {id:'b468',name:'Sport (basketball)',            category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:'', notes:'Log by duration. High intensity interval nature makes it great cardio.'},
+  {id:'b469',name:'Sport (tennis)',                category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Core'],            video:''},
+  {id:'b470',name:'Sport (soccer)',                category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
+  {id:'b471',name:'Sport (pickleball)',            category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Legs','Core','Arms'],          video:'', notes:'Fast growing sport. Great cardio for all ages.'},
+];
+
+const EQ_MAP={db:'DB',bb:'BB',mc:'Machine',bw:'Bodyweight',kb:'Kettlebell',band:'Band',cd:'Cardio',yoga:'Yoga',rc:'Recovery'};
+const TYPE_COLORS={strength:'#c6f135',cardio:'#60a5fa',yoga:'#a78bfa',stretch:'#4ade80',hiit:'#fb923c',recovery:'#f472b6',plyo:'#fbbf24'};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let customExercises = [];
+let selectedCat = 'all';
+let activeEqFilter = 'all';
+let sortField = 'name';
+let sortAsc = true;
+let selected = new Set();
+let editingId = null;
+let importRows = [];
+
+function getAllExercises(){
+  return [...BUILTIN_EXERCISES, ...customExercises];
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+function init(){
+  loadCustom();
+  renderCatSidebar();
+  renderStats();
+  renderFilterPills();
+  renderTable();
+  populateCategorySelect();
+  populateMuscleChips();
+}
+
+// ── CATEGORY SIDEBAR ─────────────────────────────────────────────────────────
+function renderCatSidebar(){
+  const all = getAllExercises();
+  document.getElementById('cat-list').innerHTML = CATEGORIES.map(cat=>{
+    let count;
+    if(cat.id==='all') count = all.length;
+    else if(cat.id==='custom') count = customExercises.length;
+    else count = all.filter(e=>e.category===cat.id).length;
+    return `<div class="cat-item${selectedCat===cat.id?' active':''}" onclick="selectCat('${cat.id}')">
+      <div class="cat-item-left"><span class="cat-icon">${cat.icon}</span><span class="cat-name">${cat.name}</span></div>
+      <span class="cat-count">${count}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectCat(id){
+  selectedCat=id;activeEqFilter='all';
+  renderCatSidebar();renderFilterPills();renderTable();renderStats();
+}
+
+// ── STATS ROW ─────────────────────────────────────────────────────────────────
+function renderStats(){
+  const all = getAllExercises();
+  const filtered = selectedCat==='all'?all:selectedCat==='custom'?customExercises:all.filter(e=>e.category===selectedCat);
+  const withVideo = filtered.filter(e=>e.video).length;
+  const byDiff = {beginner:0,intermediate:0,advanced:0};
+  filtered.forEach(e=>{if(byDiff[e.difficulty]!==undefined)byDiff[e.difficulty]++;});
+  document.getElementById('stats-row').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${filtered.length}</div><div class="stat-label">Exercises</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--success);">${byDiff.beginner}</div><div class="stat-label">Beginner</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--c-hiit);">${byDiff.intermediate}</div><div class="stat-label">Intermediate</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--ember);">${byDiff.advanced}</div><div class="stat-label">Advanced</div></div>
+    <div class="stat-card"><div class="stat-num" style="color:var(--blue);">${withVideo}</div><div class="stat-label">With video</div></div>`;
+}
+
+// ── FILTER PILLS ──────────────────────────────────────────────────────────────
+function renderFilterPills(){
+  const all = getAllExercises();
+  const inCat = selectedCat==='all'?all:selectedCat==='custom'?customExercises:all.filter(e=>e.category===selectedCat);
+  const eqs = ['all',...new Set(inCat.map(e=>e.eq))];
+  document.getElementById('filter-pills').innerHTML = eqs.map(eq=>`
+    <button class="filter-pill${activeEqFilter===eq?' active':''}" onclick="setEqFilter('${eq}')">
+      ${eq==='all'?'All equipment':EQ_MAP[eq]||eq}
+    </button>`).join('');
+}
+function setEqFilter(eq){activeEqFilter=eq;renderTable();renderStats();}
+
+// ── TABLE RENDER ──────────────────────────────────────────────────────────────
+function renderTable(){
+  const search=(document.getElementById('top-search').value||'').toLowerCase();
+  let data=getAllExercises();
+  if(selectedCat==='custom') data=customExercises;
+  else if(selectedCat!=='all') data=data.filter(e=>e.category===selectedCat);
+  if(activeEqFilter!=='all') data=data.filter(e=>e.eq===activeEqFilter);
+  if(search) data=data.filter(e=>e.name.toLowerCase().includes(search)||
+    (e.muscles||[]).some(m=>m.toLowerCase().includes(search))||
+    e.category.toLowerCase().includes(search));
+  // Sort
+  data=[...data].sort((a,b)=>{
+    let av=a[sortField]||'',bv=b[sortField]||'';
+    if(sortField==='custom') return (customExercises.includes(a)?0:1)-(customExercises.includes(b)?0:1);
+    return sortAsc?av.localeCompare(bv):bv.localeCompare(av);
+  });
+  document.getElementById('table-count').textContent=data.length+' exercise'+(data.length!==1?'s':'');
+  const isCustom=e=>customExercises.some(c=>c.id===e.id);
+  const tbody=document.getElementById('ex-tbody');
+  if(!data.length){
+    tbody.innerHTML='';
+    document.getElementById('empty-state').style.display='';
+    return;
+  }
+  document.getElementById('empty-state').style.display='none';
+  tbody.innerHTML=data.map(ex=>{
+    const custom=isCustom(ex);
+    const checked=selected.has(ex.id);
+    const muscles=(ex.muscles||[]).slice(0,2).join(', ')+(ex.muscles&&ex.muscles.length>2?' +':'');
+    const typeColor=TYPE_COLORS[ex.type]||'var(--mist)';
+    return `<tr class="${checked?'selected':''}" id="row-${ex.id}">
+      <td><input type="checkbox" class="ex-check" ${checked?'checked':''} onchange="toggleSelect('${ex.id}',this.checked)"></td>
+      <td class="ex-name-cell">${ex.name}<span class="${custom?'ex-custom':'ex-builtin'}">${custom?'CUSTOM':'BUILT-IN'}</span></td>
+      <td><span style="font-size:12px;color:var(--mist);">${CATEGORIES.find(c=>c.id===ex.category)?.name||ex.category}</span></td>
+      <td><span class="tag tag-${ex.eq}">${EQ_MAP[ex.eq]||ex.eq}</span></td>
+      <td><span style="font-size:11px;font-weight:600;color:${typeColor};">${ex.type.toUpperCase()}</span></td>
+      <td><span class="diff-dot diff-${ex.difficulty}"></span><span class="diff-label">${ex.difficulty}</span></td>
+      <td style="font-size:11px;color:var(--mist);">${muscles||'—'}</td>
+      <td>${ex.video?`<a class="video-link" href="${ex.video}" target="_blank" rel="noopener">&#9654; Watch</a>`:'<span class="no-video">No video</span>'}</td>
+      <td><div class="row-actions">
+        <button class="row-btn row-btn-edit" onclick="openEditModal('${ex.id}')">Edit</button>
+        <button class="row-btn row-btn-del ${!custom?'row-btn-dis':''}" onclick="${custom?`deleteEx('${ex.id}')`:'showToast(\"Built-in exercises cannot be deleted\")'}" title="${custom?'Delete':'Built-in — cannot delete'}">Del</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── SORT ──────────────────────────────────────────────────────────────────────
+function sortBy(field){
+  if(sortField===field) sortAsc=!sortAsc; else {sortField=field;sortAsc=true;}
+  ['name','category','difficulty'].forEach(f=>{
+    const el=document.getElementById('sa-'+f);
+    if(el) el.textContent=f===field?(sortAsc?'↑':'↓'):'↕';
+    if(el) el.parentElement.classList.toggle('sorted',f===field);
+  });
+  renderTable();
+}
+
+// ── SELECTION ─────────────────────────────────────────────────────────────────
+function toggleSelect(id,checked){
+  if(checked) selected.add(id); else selected.delete(id);
+  updateBulkBar();
+  const row=document.getElementById('row-'+id);
+  if(row) row.classList.toggle('selected',checked);
+}
+function toggleSelectAll(checked){
+  const checkboxes=document.querySelectorAll('#ex-tbody .ex-check');
+  checkboxes.forEach(cb=>{
+    cb.checked=checked;
+    const row=cb.closest('tr');
+    if(row){
+      const id=row.id.replace('row-','');
+      if(checked) selected.add(id); else selected.delete(id);
+      row.classList.toggle('selected',checked);
+    }
+  });
+  updateBulkBar();
+}
+function clearSelection(){selected.clear();document.querySelectorAll('.ex-check').forEach(c=>c.checked=false);document.querySelectorAll('#ex-tbody tr').forEach(r=>r.classList.remove('selected'));updateBulkBar();}
+function updateBulkBar(){
+  const bar=document.getElementById('bulk-bar');
+  const count=selected.size;
+  bar.classList.toggle('show',count>0);
+  document.getElementById('bulk-count').textContent=count+' selected';
+}
+
+// ── BULK ACTIONS ──────────────────────────────────────────────────────────────
+function bulkSetVideo(){
+  const url=prompt('Video URL to assign to all selected exercises:','');
+  if(url===null) return;
+  getAllExercises().filter(e=>selected.has(e.id)).forEach(e=>e.video=url);
+  saveCustom();renderTable();showToast('Video updated on '+selected.size+' exercises');clearSelection();
+}
+function bulkSetCategory(){
+  const cats=CATEGORIES.filter(c=>c.id!=='all'&&c.id!=='custom').map(c=>c.name).join('\n');
+  const name=prompt('Move to category (enter exact name):\n'+cats);
+  if(!name) return;
+  const cat=CATEGORIES.find(c=>c.name.toLowerCase()===name.toLowerCase());
+  if(!cat){showToast('Category not found');return;}
+  getAllExercises().filter(e=>selected.has(e.id)&&customExercises.some(c=>c.id===e.id)).forEach(e=>e.category=cat.id);
+  saveCustom();renderTable();renderCatSidebar();showToast('Moved to '+cat.name);clearSelection();
+}
+function bulkDelete(){
+  const customSelected=Array.from(selected).filter(id=>customExercises.some(e=>e.id===id));
+  if(!customSelected.length){showToast('Only custom exercises can be deleted');return;}
+  if(!confirm('Delete '+customSelected.length+' custom exercise(s)?')) return;
+  customExercises=customExercises.filter(e=>!customSelected.includes(e.id));
+  saveCustom();selected.clear();updateBulkBar();renderAll();showToast('Deleted '+customSelected.length+' exercises');
+}
+
+// ── ADD / EDIT MODAL ──────────────────────────────────────────────────────────
+function populateCategorySelect(){
+  const sel=document.getElementById('f-category');
+  sel.innerHTML='<option value="">Select category...</option>'+
+    CATEGORIES.filter(c=>c.id!=='all'&&c.id!=='custom').map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+}
+function populateMuscleChips(){
+  document.getElementById('muscle-chips').innerHTML=MUSCLES_ALL.map(m=>
+    `<div class="muscle-chip" data-muscle="${m}" onclick="toggleMuscle(this)">${m}</div>`).join('');
+}
+function toggleMuscle(el){el.classList.toggle('selected');}
+function getSelectedMuscles(){return [...document.querySelectorAll('.muscle-chip.selected')].map(el=>el.dataset.muscle);}
+function setSelectedMuscles(muscles){
+  document.querySelectorAll('.muscle-chip').forEach(el=>{
+    el.classList.toggle('selected',(muscles||[]).includes(el.dataset.muscle));
+  });
+}
+
+function openAddModal(){
+  editingId=null;
+  document.getElementById('modal-title').textContent='ADD EXERCISE';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-category').value='';
+  document.getElementById('f-type').value='strength';
+  document.getElementById('f-eq').value='db';
+  document.getElementById('f-difficulty').value='intermediate';
+  document.getElementById('f-pattern').value='';
+  document.getElementById('f-video').value='';
+  document.getElementById('f-notes').value='';
+  setSelectedMuscles([]);
+  document.getElementById('ex-modal').classList.add('open');
+  document.getElementById('f-name').focus();
+}
+
+function openEditModal(id){
+  const ex=getAllExercises().find(e=>e.id===id);
+  if(!ex) return;
+  editingId=id;
+  document.getElementById('modal-title').textContent='EDIT EXERCISE';
+  document.getElementById('f-name').value=ex.name;
+  document.getElementById('f-category').value=ex.category;
+  document.getElementById('f-type').value=ex.type;
+  document.getElementById('f-eq').value=ex.eq;
+  document.getElementById('f-difficulty').value=ex.difficulty||'intermediate';
+  document.getElementById('f-pattern').value=ex.pattern||'';
+  document.getElementById('f-video').value=ex.video||'';
+  document.getElementById('f-notes').value=ex.notes||'';
+  setSelectedMuscles(ex.muscles||[]);
+  document.getElementById('ex-modal').classList.add('open');
+}
+
+function saveExercise(){
+  const name=document.getElementById('f-name').value.trim();
+  const category=document.getElementById('f-category').value;
+  if(!name){showToast('Please enter an exercise name');return;}
+  if(!category){showToast('Please select a category');return;}
+  const data={
+    name,category,
+    type:document.getElementById('f-type').value,
+    eq:document.getElementById('f-eq').value,
+    difficulty:document.getElementById('f-difficulty').value,
+    pattern:document.getElementById('f-pattern').value,
+    muscles:getSelectedMuscles(),
+    video:document.getElementById('f-video').value.trim(),
+    notes:document.getElementById('f-notes').value.trim(),
+  };
+  if(editingId){
+    // Edit built-in: store as override in custom list
+    const builtinIdx=BUILTIN_EXERCISES.findIndex(e=>e.id===editingId);
+    const customIdx=customExercises.findIndex(e=>e.id===editingId);
+    if(builtinIdx>=0){
+      Object.assign(BUILTIN_EXERCISES[builtinIdx],data);
+    } else if(customIdx>=0){
+      Object.assign(customExercises[customIdx],data);
+      saveCustom();
+    }
+    showToast('Exercise updated');
+  } else {
+    data.id='c'+(Date.now());
+    customExercises.push(data);
+    saveCustom();
+    showToast('Exercise added: '+name);
+  }
+  closeModal('ex-modal');
+  renderAll();
+}
+
+function deleteEx(id){
+  if(!confirm('Delete this exercise?')) return;
+  customExercises=customExercises.filter(e=>e.id!==id);
+  saveCustom();renderAll();showToast('Exercise deleted');
+}
+
+// ── CSV IMPORT / EXPORT ───────────────────────────────────────────────────────
+function openImport(){document.getElementById('import-modal').classList.add('open');importRows=[];}
+
+function handleCSVDrop(e){
+  e.preventDefault();
+  document.getElementById('import-drop').classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];
+  if(file) handleCSVFile(file);
+}
+
+function handleCSVFile(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const lines=e.target.result.split('\n').filter(l=>l.trim());
+    const headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/"/g,''));
+    importRows=lines.slice(1).map(line=>{
+      const vals=line.split(',').map(v=>v.trim().replace(/^"|"$/g,''));
+      const row={};
+      headers.forEach((h,i)=>{row[h]=vals[i]||'';});
+      return {
+        id:'c'+Date.now()+Math.random(),
+        name:row.name||'',
+        category:row.category||'chest',
+        eq:row.equipment||'bw',
+        type:row.type||'strength',
+        difficulty:row.difficulty||'intermediate',
+        muscles:(row.muscles||'').split(';').map(m=>m.trim()).filter(Boolean),
+        video:row.video||'',
+        notes:row.notes||'',
+      };
+    }).filter(r=>r.name);
+    document.getElementById('import-summary').textContent=importRows.length+' exercises found in file';
+    document.getElementById('import-list').innerHTML=importRows.map(r=>`<div>${r.name} — ${r.category} (${r.eq})</div>`).join('');
+    document.getElementById('import-preview').style.display='';
+    document.getElementById('import-confirm-btn').disabled=!importRows.length;
+  };
+  reader.readAsText(file);
+}
+
+function confirmImport(){
+  customExercises=[...customExercises,...importRows];
+  saveCustom();closeModal('import-modal');renderAll();
+  showToast('Imported '+importRows.length+' exercises');importRows=[];
+}
+
+function exportCSV(){
+  const all=getAllExercises();
+  const headers='name,category,equipment,type,difficulty,muscles,video,notes';
+  const rows=all.map(e=>[
+    `"${e.name}"`,e.category,e.eq,e.type,e.difficulty||'',
+    `"${(e.muscles||[]).join(';')}"`,
+    `"${e.video||''}"`,`"${e.notes||''}"`
+  ].join(','));
+  const csv=headers+'\n'+rows.join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='larofit-library.csv';a.click();
+  URL.revokeObjectURL(url);
+  showToast('Library exported — '+all.length+' exercises');
+}
+
+// ── STORAGE ───────────────────────────────────────────────────────────────────
+function saveCustom(){try{localStorage.setItem('larofit_custom_lib',JSON.stringify(customExercises));}catch(e){}}
+function loadCustom(){try{const d=localStorage.getItem('larofit_custom_lib');if(d)customExercises=JSON.parse(d);}catch(e){}}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function renderAll(){renderCatSidebar();renderStats();renderFilterPills();renderTable();}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function maybeClose(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+init();
+</script>
+</body>
+</html>

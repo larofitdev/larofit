@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --orange:#fb923c;--pink:#f472b6;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 20px;margin:12px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background 0.15s;font-size:13px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--volt-pale);color:var(--white);border-left-color:var(--volt);}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-avatar{width:32px;height:32px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:12px;font-weight:600;color:var(--white);}
+.s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.topbar-left{display:flex;flex-direction:column;gap:2px;}
+.page-greeting{font-size:12px;color:var(--mist);font-family:var(--font-mono);}
+.page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.trial-badge{padding:6px 14px;background:var(--volt-pale);border:1px solid rgba(198,241,53,0.2);border-radius:999px;font-size:11px;font-weight:700;color:var(--volt);font-family:var(--font-mono);}
+.cloud-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:999px;font-size:11px;font-weight:600;color:var(--success);font-family:var(--font-mono);}
+.cloud-badge.offline{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--slate);}
+
+/* ── CONTENT ── */
+.content{padding:28px 32px;display:flex;flex-direction:column;gap:20px;}
+
+/* ── MILESTONE BANNER ── */
+.milestone{background:linear-gradient(90deg,rgba(198,241,53,0.08),rgba(96,165,250,0.05));border:1px solid rgba(198,241,53,0.2);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:14px;}
+.milestone-icon{font-size:28px;flex-shrink:0;}
+.milestone-text{font-size:14px;color:var(--fog);line-height:1.5;}
+.milestone-text strong{color:var(--volt);}
+.milestone-btn{padding:8px 18px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);white-space:nowrap;text-decoration:none;flex-shrink:0;}
+
+/* ── STAT ROW ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat-card.volt::before{background:var(--volt);}
+.stat-card.blue::before{background:var(--blue);}
+.stat-card.green::before{background:var(--success);}
+.stat-card.orange::before{background:var(--orange);}
+.stat-label{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;}
+.stat-num{font-family:var(--font-display);font-size:36px;line-height:1;margin-bottom:2px;}
+.stat-sub{font-size:11px;color:var(--mist);}
+
+/* ── MAIN GRID ── */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.dash-grid.three{grid-template-columns:2fr 1fr;}
+
+/* ── NEXT WORKOUT CARD ── */
+.next-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:14px 18px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:700;color:var(--pure);}
+.card-badge{padding:3px 10px;background:var(--volt-pale);border:1px solid rgba(198,241,53,0.2);border-radius:999px;font-size:10px;font-weight:700;color:var(--volt);font-family:var(--font-mono);}
+.card-body{padding:18px;}
+.next-day-name{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);margin-bottom:4px;}
+.next-day-date{font-size:12px;color:var(--mist);font-family:var(--font-mono);margin-bottom:16px;}
+.next-ex-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.next-ex-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--carbon);border-radius:var(--radius-sm);font-size:12px;color:var(--fog);}
+.next-ex-dot{width:6px;height:6px;border-radius:50%;background:var(--volt);flex-shrink:0;}
+.next-ex-name{flex:1;font-weight:500;}
+.next-ex-params{font-size:10px;color:var(--slate);font-family:var(--font-mono);}
+.next-ex-more{font-size:11px;color:var(--mist);padding:4px 10px;}
+.card-btn{display:block;width:100%;padding:11px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);text-align:center;text-decoration:none;transition:background 0.2s;}
+.card-btn:hover{background:var(--volt-dim);}
+.card-btn.outline{background:transparent;border:1.5px solid var(--border);color:var(--mist);}
+.card-btn.outline:hover{border-color:var(--mist);color:var(--white);}
+.no-program{padding:40px 20px;text-align:center;color:var(--mist);}
+.no-program-icon{font-size:32px;margin-bottom:10px;opacity:0.4;}
+
+/* ── PROGRAM CARD ── */
+.prog-info{margin-bottom:14px;}
+.prog-name{font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--pure);margin-bottom:4px;}
+.prog-meta{font-size:12px;color:var(--mist);font-family:var(--font-mono);margin-bottom:12px;}
+.prog-week-bar{margin-bottom:14px;}
+.prog-week-label{display:flex;justify-content:space-between;font-size:11px;color:var(--mist);margin-bottom:6px;}
+.prog-week-track{height:6px;background:var(--border);border-radius:999px;overflow:hidden;}
+.prog-week-fill{height:100%;background:var(--volt);border-radius:999px;transition:width 0.4s;}
+.week-grid{display:flex;gap:4px;}
+.week-dot{flex:1;height:24px;border-radius:4px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--slate);}
+.week-dot.active{background:var(--volt-pale);border:1px solid rgba(198,241,53,0.3);color:var(--volt);}
+.week-dot.rest{opacity:0.4;}
+.week-dot.today{background:var(--volt);color:var(--black);font-weight:700;}
+
+/* ── QUICK LINKS ── */
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.quick-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);text-decoration:none;transition:border-color 0.15s,background 0.15s;cursor:pointer;}
+.quick-item:hover{border-color:var(--steel);background:rgba(255,255,255,0.02);}
+.quick-icon{font-size:18px;flex-shrink:0;}
+.quick-label{font-size:12px;font-weight:600;color:var(--white);}
+.quick-sub{font-size:10px;color:var(--mist);}
+
+/* ── RECENT ACTIVITY ── */
+.activity-list{display:flex;flex-direction:column;gap:6px;}
+.activity-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--carbon);border-radius:var(--radius-sm);}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.activity-text{font-size:12px;color:var(--fog);flex:1;}
+.activity-date{font-size:10px;color:var(--slate);font-family:var(--font-mono);}
+.empty-activity{padding:24px;text-align:center;color:var(--slate);font-size:12px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--volt);border-radius:999px;padding:10px 24px;font-size:13px;color:var(--volt);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+@media(max-width:1100px){.stat-row{grid-template-columns:1fr 1fr;}.dash-grid{grid-template-columns:1fr;}.dash-grid.three{grid-template-columns:1fr;}}
+@media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">LARO<span>FIT</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Home</div>
+    <a class="nav-item active" href="larofit-dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+    <div class="nav-section">Build</div>
+    <a class="nav-item " href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
+    <a class="nav-item " href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item " href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item " href="larofit-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <a class="nav-item " href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
+    <div class="nav-section">Track</div>
+    <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
+    <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
+    <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
+    <div class="nav-section">Community</div>
+    <a class="nav-item " href="larofit-group.html"><span class="nav-icon">👥</span>Group feed</a>
+    <a class="nav-item " href="larofit-find-trainer.html"><span class="nav-icon">🔍</span>Find a trainer</a>
+    <div class="nav-section">Trainer</div>
+    <a class="nav-item " href="larofit-trainer.html"><span class="nav-icon">🏋️</span>Trainer dashboard</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Trainer builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet builder</a>
+    <a class="nav-item " href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar" id="sidebar-avatar">LJ</div>
+    <div>
+      <div class="s-name" id="sidebar-name">Lyndon J.</div>
+      <div class="s-plan">&#10022; PRO TRIAL</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="page-greeting" id="greeting">Good morning</div>
+      <div class="page-title" id="dash-name">DASHBOARD</div>
+    </div>
+    <div class="topbar-right">
+      <span class="cloud-badge offline" id="cloud-badge">💾 Local only</span>
+      <span class="trial-badge">⭐ PRO TRIAL — 14 days</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- MILESTONE BANNER -->
+    <div class="milestone" id="milestone" style="display:none;">
+      <div class="milestone-icon" id="milestone-icon">🎉</div>
+      <div class="milestone-text" id="milestone-text"></div>
+      <a class="milestone-btn" id="milestone-btn" href="#">Let's go →</a>
+    </div>
+
+    <!-- STAT ROW -->
+    <div class="stat-row">
+      <div class="stat-card volt">
+        <div class="stat-label">Workouts logged</div>
+        <div class="stat-num" id="stat-workouts">0</div>
+        <div class="stat-sub">total sessions</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Current program</div>
+        <div class="stat-num" id="stat-prog-days" style="font-size:20px;padding-top:8px;">—</div>
+        <div class="stat-sub" id="stat-prog-name">No program yet</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Measurements</div>
+        <div class="stat-num" id="stat-meas">0</div>
+        <div class="stat-sub">entries logged</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Days until next check</div>
+        <div class="stat-num" id="stat-check">—</div>
+        <div class="stat-sub">measurement reminder</div>
+      </div>
+    </div>
+
+    <!-- MAIN GRID: NEXT WORKOUT + PROGRAM -->
+    <div class="dash-grid three">
+
+      <!-- NEXT WORKOUT -->
+      <div class="next-card">
+        <div class="card-header">
+          <div class="card-title">📅 Your next workout</div>
+          <div class="card-badge" id="next-day-badge">—</div>
+        </div>
+        <div class="card-body" id="next-workout-body">
+          <div class="no-program">
+            <div class="no-program-icon">📋</div>
+            <div>No program built yet.</div>
+            <a href="larofit-ai-coach.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Build one now →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- PROGRAM OVERVIEW -->
+        <div class="next-card">
+          <div class="card-header">
+            <div class="card-title">📋 Current program</div>
+          </div>
+          <div class="card-body" id="program-body">
+            <div class="no-program">
+              <div class="no-program-icon">📋</div>
+              <div style="font-size:12px;">No program yet.</div>
+              <a href="larofit-ai-coach.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Build one →</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- QUICK LINKS -->
+        <div class="next-card">
+          <div class="card-header"><div class="card-title">⚡ Quick access</div></div>
+          <div class="card-body">
+            <div class="quick-grid">
+              <a class="quick-item" href="larofit-builder.html">
+                <div class="quick-icon">📋</div>
+                <div><div class="quick-label">Program builder</div><div class="quick-sub">Edit your program</div></div>
+              </a>
+              <a class="quick-item" href="larofit-measurements.html">
+                <div class="quick-icon">📏</div>
+                <div><div class="quick-label">Measurements</div><div class="quick-sub">Log your stats</div></div>
+              </a>
+              <a class="quick-item" href="larofit-progress.html">
+                <div class="quick-icon">📊</div>
+                <div><div class="quick-label">Progress</div><div class="quick-sub">View your charts</div></div>
+              </a>
+              <a class="quick-item" href="larofit-profile.html">
+                <div class="quick-icon">👤</div>
+                <div><div class="quick-label">My profile</div><div class="quick-sub">Goals &amp; nutrition</div></div>
+              </a>
+              <a class="quick-item" href="larofit-library.html">
+                <div class="quick-icon">📚</div>
+                <div><div class="quick-label">Exercise library</div><div class="quick-sub">Browse exercises</div></div>
+              </a>
+              <div class="quick-item" style="opacity:0.4;cursor:default;">
+                <div class="quick-icon">🛒</div>
+                <div><div class="quick-label">Marketplace</div><div class="quick-sub">Coming soon</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RECENT ACTIVITY -->
+    <div class="next-card">
+      <div class="card-header">
+        <div class="card-title">🕐 Recent activity</div>
+      </div>
+      <div class="card-body">
+        <div class="activity-list" id="activity-list">
+          <div class="empty-activity">No activity yet — your logged workouts and measurements will appear here.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function init(){
+  // Greeting
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('greeting').textContent = greet;
+
+  // User name
+  const uname = localStorage.getItem('larofit_user_name')||'';
+  if(uname){
+    const initial = uname.charAt(0).toUpperCase();
+    document.getElementById('sidebar-name').textContent = uname;
+    document.getElementById('sidebar-avatar').textContent = initial;
+    document.getElementById('dash-name').textContent = uname.toUpperCase()+"'S DASHBOARD";
+  }
+
+  // Cloud badge
+  const hasCloud = !!(localStorage.getItem('larofit_sb_url') && localStorage.getItem('larofit_sb_key'));
+  if(hasCloud){
+    document.getElementById('cloud-badge').className = 'cloud-badge';
+    document.getElementById('cloud-badge').textContent = '☁️ Cloud on';
+  }
+
+  loadStats();
+  loadNextWorkout();
+  loadProgramOverview();
+  loadRecentActivity();
+  checkMilestone();
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function loadStats(){
+  const logs  = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
+  const meas  = JSON.parse(localStorage.getItem('larofit_measurements')||'[]');
+  const prog  = JSON.parse(localStorage.getItem('larofit_program')||'null');
+
+  document.getElementById('stat-workouts').textContent = logs.length;
+  document.getElementById('stat-meas').textContent     = meas.length;
+
+  if(prog){
+    const activeDays = prog.days.filter(d=>!d.rest).length;
+    document.getElementById('stat-prog-days').textContent = activeDays+' day split';
+    document.getElementById('stat-prog-name').textContent = prog.name||'My program';
+  }
+
+  // Days until next measurement check (every 30 workouts)
+  if(logs.length > 0 && meas.length > 0){
+    const nextCheck = 30 - (logs.length % 30);
+    document.getElementById('stat-check').textContent = nextCheck === 30 ? '✓' : nextCheck;
+  } else {
+    document.getElementById('stat-check').textContent = '—';
+  }
+}
+
+// ── NEXT WORKOUT ──────────────────────────────────────────────────────────────
+function loadNextWorkout(){
+  const prog = JSON.parse(localStorage.getItem('larofit_program')||'null');
+  const body = document.getElementById('next-workout-body');
+  const badge = document.getElementById('next-day-badge');
+
+  if(!prog || !prog.days){
+    body.innerHTML = `<div class="no-program"><div class="no-program-icon">📋</div><div>No program built yet.</div><a href="larofit-ai-coach.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Build one now →</a></div>`;
+    return;
+  }
+
+  // Find next non-rest day starting from tomorrow
+  const now     = new Date();
+  const todayJS = now.getDay(); // 0=Sun
+  const dayMap  = [6,0,1,2,3,4,5]; // JS day → program index (Mon=0)
+
+  let nextDay = null;
+  let daysAhead = 0;
+
+  for(let i=1; i<=7; i++){
+    const jsDay    = (todayJS + i) % 7;
+    const progIdx  = dayMap[jsDay];
+    const day      = prog.days[progIdx];
+    if(day && !day.rest && day.exercises.length > 0){
+      nextDay   = day;
+      daysAhead = i;
+      break;
+    }
+  }
+
+  if(!nextDay){
+    body.innerHTML = `<div class="no-program"><div class="no-program-icon">😴</div><div>No upcoming workouts found. Check your program has active days.</div><a href="larofit-builder.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Edit program →</a></div>`;
+    badge.textContent = 'Not found';
+    return;
+  }
+
+  // Day label
+  const futureDate = new Date(now);
+  futureDate.setDate(now.getDate() + daysAhead);
+  const dayLabel = daysAhead === 1 ? 'Tomorrow' :
+    futureDate.toLocaleDateString('en-US',{weekday:'long'});
+  const dateStr = futureDate.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  badge.textContent = dayLabel;
+
+  // Show up to 5 exercises
+  const shown = nextDay.exercises.slice(0,5);
+  const more  = nextDay.exercises.length - 5;
+
+  const exHtml = shown.map(ex=>{
+    const p = ex.params||{};
+    const paramStr = ex.type==='strength'||ex.type==='plyo'
+      ? `${p.sets||3}×${p.reps||10} · ${p.weight?p.weight+'lbs':'Find weight'}`
+      : ex.type==='cardio' ? (p.duration||'') : '';
+    return `<div class="next-ex-item">
+      <div class="next-ex-dot"></div>
+      <div class="next-ex-name">${ex.name}</div>
+      <div class="next-ex-params">${paramStr}</div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <div class="next-day-name">${nextDay.name}</div>
+    <div class="next-day-date">${dayLabel} · ${dateStr}</div>
+    <div class="next-ex-list">
+      ${exHtml}
+      ${more > 0 ? `<div class="next-ex-more">+${more} more exercise${more>1?'s':''}</div>` : ''}
+    </div>
+    <a class="card-btn" href="larofit-today.html">View full workout →</a>`;
+}
+
+// ── PROGRAM OVERVIEW ──────────────────────────────────────────────────────────
+function loadProgramOverview(){
+  const prog = JSON.parse(localStorage.getItem('larofit_program')||'null');
+  const body = document.getElementById('program-body');
+  if(!prog){
+    body.innerHTML = `<div class="no-program"><div class="no-program-icon">📋</div><div style="font-size:12px;">No program yet.</div><a href="larofit-ai-coach.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Build one →</a></div>`;
+    return;
+  }
+
+  const logs      = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
+  const totalEx   = prog.days.reduce((s,d)=>s+d.exercises.length,0);
+  const weeks     = prog.weeks||6;
+  const goalLabel = {strength:'Strength',hypertrophy:'Muscle Growth',weightloss:'Weight Loss',endurance:'Endurance',flexibility:'Flexibility',general:'General Fitness'}[prog.goal]||prog.goal;
+
+  // Week progress — estimate based on workouts logged
+  const workoutsPerWeek = prog.days.filter(d=>!d.rest).length;
+  const weeksIn = workoutsPerWeek > 0 ? Math.floor(logs.length / workoutsPerWeek) : 0;
+  const weekPct = weeks > 0 ? Math.min(100, Math.round((weeksIn/weeks)*100)) : 0;
+
+  // This week dots
+  const now      = new Date();
+  const todayIdx = now.getDay()===0 ? 6 : now.getDay()-1;
+  const weekDots = prog.days.map((d,i)=>`
+    <div class="week-dot${d.rest?' rest':i===todayIdx?' today':''}" title="${d.name}">
+      ${d.rest?'—':d.name.slice(0,1)}
+    </div>`).join('');
+
+  body.innerHTML = `
+    <div class="prog-info">
+      <div class="prog-name">${prog.name||'My program'}</div>
+      <div class="prog-meta">${goalLabel} · ${totalEx} exercises · ${weeks} weeks</div>
+    </div>
+    <div class="prog-week-bar">
+      <div class="prog-week-label"><span>Week progress</span><span>${weeksIn}/${weeks} weeks</span></div>
+      <div class="prog-week-track"><div class="prog-week-fill" style="width:${weekPct}%"></div></div>
+    </div>
+    <div style="font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">This week</div>
+    <div class="week-grid" style="margin-bottom:14px;">${weekDots}</div>
+    <a class="card-btn outline" href="larofit-builder.html">Edit program →</a>`;
+}
+
+// ── RECENT ACTIVITY ───────────────────────────────────────────────────────────
+function loadRecentActivity(){
+  const logs  = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
+  const meas  = JSON.parse(localStorage.getItem('larofit_measurements')||'[]');
+  const list  = document.getElementById('activity-list');
+
+  const items = [];
+
+  // Add workout logs
+  logs.slice(-5).reverse().forEach(log=>{
+    const exCount = (log.exercises||[]).length;
+    items.push({
+      date: log.date,
+      text: `Completed workout — ${exCount} exercise${exCount!==1?'s':''}`,
+      color: 'var(--volt)'
+    });
+  });
+
+  // Add measurement entries
+  meas.slice(-3).reverse().forEach(entry=>{
+    const date = new Date(entry.date).toISOString().split('T')[0];
+    items.push({
+      date,
+      text: `Logged measurements — weight ${entry.values?.weight||'—'}lbs`,
+      color: 'var(--blue)'
+    });
+  });
+
+  if(!items.length){
+    list.innerHTML = '<div class="empty-activity">No activity yet — your logged workouts and measurements will appear here.</div>';
+    return;
+  }
+
+  // Sort by date descending
+  items.sort((a,b)=>b.date.localeCompare(a.date));
+
+  list.innerHTML = items.slice(0,8).map(item=>`
+    <div class="activity-item">
+      <div class="activity-dot" style="background:${item.color}"></div>
+      <div class="activity-text">${item.text}</div>
+      <div class="activity-date">${formatDate(item.date)}</div>
+    </div>`).join('');
+}
+
+function formatDate(dateStr){
+  const d = new Date(dateStr);
+  const today = new Date();
+  const diff  = Math.floor((today-d)/(1000*60*60*24));
+  if(diff===0) return 'Today';
+  if(diff===1) return 'Yesterday';
+  if(diff<7)   return diff+' days ago';
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+// ── MILESTONE CHECK ───────────────────────────────────────────────────────────
+function checkMilestone(){
+  const logs  = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
+  const prog  = JSON.parse(localStorage.getItem('larofit_program')||'null');
+  const meas  = JSON.parse(localStorage.getItem('larofit_measurements')||'[]');
+  const banner = document.getElementById('milestone');
+  const icon   = document.getElementById('milestone-icon');
+  const text   = document.getElementById('milestone-text');
+  const btn    = document.getElementById('milestone-btn');
+
+  if(!prog){
+    // No program built yet
+    banner.style.display='flex';
+    icon.textContent='📋';
+    text.innerHTML='<strong>Ready to start?</strong> Build your first workout program and we\'ll guide you through everything.';
+    btn.href='larofit-ai-coach.html';
+    btn.textContent='Build my program →';
+    return;
+  }
+
+  if(meas.length===0){
+    banner.style.display='flex';
+    icon.textContent='📏';
+    text.innerHTML='<strong>Log your starting measurements</strong> so you can track your real progress over time.';
+    btn.href='larofit-measurements.html';
+    btn.textContent='Log measurements →';
+    return;
+  }
+
+  if(logs.length===30){
+    banner.style.display='flex';
+    icon.textContent='🎉';
+    text.innerHTML='<strong>30 workouts logged!</strong> Time to take new measurements and see how far you\'ve come.';
+    btn.href='larofit-measurements.html';
+    btn.textContent='Measure progress →';
+    return;
+  }
+
+  banner.style.display='none';
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — Program Saved!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+
+/* ── NAV ── */
+.topnav{display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(10,10,10,0.9);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);}
+.logo{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);text-decoration:none;}
+.logo span{color:var(--volt);}
+.nav-dash{padding:8px 18px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);text-decoration:none;}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:80px 24px 60px;position:relative;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 30%,rgba(198,241,53,0.07),transparent);pointer-events:none;}
+.confetti-row{font-size:36px;margin-bottom:24px;animation:bounceIn 0.6s ease;}
+@keyframes bounceIn{0%{transform:scale(0.5);opacity:0;}70%{transform:scale(1.1);}100%{transform:scale(1);opacity:1;}}
+.hero-title{font-family:var(--font-display);font-size:clamp(52px,8vw,96px);letter-spacing:2px;line-height:1;color:var(--pure);margin-bottom:8px;animation:fadeUp 0.5s 0.1s ease both;}
+.hero-title span{color:var(--volt);}
+.hero-sub{font-size:18px;color:var(--mist);margin-bottom:0;line-height:1.6;animation:fadeUp 0.5s 0.2s ease both;}
+.hero-sub strong{color:var(--white);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── CONTENT ── */
+.content{max-width:900px;margin:0 auto;padding:0 24px 80px;display:flex;flex-direction:column;gap:28px;}
+
+/* ── PROGRAM SUMMARY CARD ── */
+.program-card{background:var(--card-bg);border:1px solid rgba(198,241,53,0.2);border-radius:var(--radius);padding:28px;position:relative;overflow:hidden;animation:fadeUp 0.5s 0.3s ease both;}
+.program-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--volt),var(--success));}
+.program-name{font-family:var(--font-display);font-size:36px;letter-spacing:1px;color:var(--pure);margin-bottom:8px;}
+.program-meta{font-size:13px;color:var(--mist);margin-bottom:20px;font-family:var(--font-mono);}
+.program-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.prog-stat{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+.prog-stat-num{font-family:var(--font-display);font-size:28px;color:var(--volt);}
+.prog-stat-label{font-size:10px;color:var(--mist);margin-top:2px;text-transform:uppercase;letter-spacing:0.08em;}
+
+/* ── GET THE APP SECTION ── */
+.app-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:28px;animation:fadeUp 0.5s 0.4s ease both;}
+.section-heading{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);margin-bottom:6px;}
+.section-sub{font-size:14px;color:var(--mist);line-height:1.6;margin-bottom:24px;}
+.app-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+.app-steps{display:flex;flex-direction:column;gap:14px;}
+.app-step{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:16px;color:var(--black);flex-shrink:0;}
+.step-text{font-size:13px;color:var(--fog);line-height:1.5;}
+.step-text strong{color:var(--white);display:block;margin-bottom:2px;}
+.app-buttons{display:flex;flex-direction:column;gap:8px;margin-top:4px;}
+.app-btn{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);text-decoration:none;transition:border-color 0.2s;cursor:pointer;}
+.app-btn:hover{border-color:var(--mist);}
+.app-btn-icon{font-size:22px;flex-shrink:0;}
+.app-btn-text{font-size:11px;color:var(--mist);}
+.app-btn-name{font-size:13px;font-weight:700;color:var(--white);}
+.app-btn.coming{opacity:0.5;cursor:default;}
+.app-btn.coming:hover{border-color:var(--border);}
+.qr-section{text-align:center;}
+.qr-label{font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;}
+.qr-box{background:var(--white);padding:16px;border-radius:var(--radius-sm);display:inline-block;margin-bottom:10px;}
+.qr-box canvas, .qr-box img{display:block;}
+.qr-note{font-size:11px;color:var(--slate);line-height:1.5;}
+.export-btn{width:100%;padding:11px;background:transparent;border:1.5px solid var(--volt);border-radius:var(--radius-sm);color:var(--volt);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;margin-top:8px;}
+.export-btn:hover{background:var(--volt-pale);}
+
+/* ── WHAT'S NEXT ── */
+.next-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:28px;animation:fadeUp 0.5s 0.5s ease both;}
+.next-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:20px;}
+.next-item{display:flex;align-items:center;gap:14px;padding:18px 16px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.next-item:hover{border-color:var(--volt);background:var(--volt-pale);}
+.next-item.coming{opacity:0.5;cursor:default;}
+.next-item.coming:hover{border-color:var(--border);background:var(--carbon);}
+.next-icon{font-size:28px;flex-shrink:0;}
+.next-label{font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px;}
+.next-desc{font-size:11px;color:var(--mist);line-height:1.4;}
+.coming-tag{font-size:9px;font-weight:700;color:var(--slate);font-family:var(--font-mono);background:var(--steel);padding:2px 6px;border-radius:4px;margin-top:4px;display:inline-block;}
+
+/* ── DASHBOARD BTN ── */
+.dash-btn{display:block;width:100%;padding:16px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;transition:all 0.2s;text-align:center;text-decoration:none;animation:fadeUp 0.5s 0.6s ease both;}
+.dash-btn:hover{background:var(--volt-dim);}
+
+@media(max-width:700px){
+  .app-layout{grid-template-columns:1fr;}
+  .program-stats{grid-template-columns:1fr 1fr;}
+  .next-grid{grid-template-columns:1fr;}
+  .topnav{padding:14px 20px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <a class="logo" href="larofit-dashboard.html">LARO<span>FIT</span></a>
+  <a class="nav-dash" href="larofit-dashboard.html">Go to dashboard →</a>
+</nav>
+
+<div class="hero">
+  <div class="confetti-row">🎉🏋️🎉</div>
+  <h1 class="hero-title">PROGRAM<br><span>SAVED!</span></h1>
+  <p class="hero-sub" id="hero-sub">You just built your workout program.<br><strong>Now let's get it on your phone.</strong></p>
+</div>
+
+<div class="content">
+
+  <!-- PROGRAM SUMMARY -->
+  <div class="program-card">
+    <div class="program-name" id="prog-name-display">My program</div>
+    <div class="program-meta" id="prog-meta-display">Loading program details…</div>
+    <div class="program-stats">
+      <div class="prog-stat"><div class="prog-stat-num" id="stat-days">—</div><div class="prog-stat-label">Training days</div></div>
+      <div class="prog-stat"><div class="prog-stat-num" id="stat-exercises">—</div><div class="prog-stat-label">Exercises</div></div>
+      <div class="prog-stat"><div class="prog-stat-num" id="stat-weeks">—</div><div class="prog-stat-label">Weeks</div></div>
+      <div class="prog-stat"><div class="prog-stat-num" id="stat-sets">—</div><div class="prog-stat-label">Total sets</div></div>
+    </div>
+  </div>
+
+  <!-- GET THE APP -->
+  <div class="app-card">
+    <div class="section-heading">📱 GET IT ON YOUR PHONE</div>
+    <div class="section-sub">Your program lives on the web — but you train in the gym. Download the LaroFit app and scan the QR code to take everything with you.</div>
+    <div class="app-layout">
+      <div>
+        <div class="app-steps">
+          <div class="app-step">
+            <div class="step-num">1</div>
+            <div class="step-text"><strong>Download the LaroFit app</strong>Available on iOS and Android — free to download.</div>
+          </div>
+          <div class="app-step">
+            <div class="step-num">2</div>
+            <div class="step-text"><strong>Scan the QR code</strong>Open the app, tap "Import program," and point your camera at the code.</div>
+          </div>
+          <div class="app-step">
+            <div class="step-num">3</div>
+            <div class="step-text"><strong>Start training</strong>Your full program is on your phone — voice logging, rest timers, and coaching ready to go.</div>
+          </div>
+        </div>
+        <div class="app-buttons" style="margin-top:16px;">
+          <div class="app-btn coming">
+            <div class="app-btn-icon">🍎</div>
+            <div><div class="app-btn-text">Download on the</div><div class="app-btn-name">App Store</div></div>
+            <span class="coming-tag" style="margin-left:auto;">COMING SOON</span>
+          </div>
+          <div class="app-btn coming">
+            <div class="app-btn-icon">🤖</div>
+            <div><div class="app-btn-text">Get it on</div><div class="app-btn-name">Google Play</div></div>
+            <span class="coming-tag" style="margin-left:auto;">COMING SOON</span>
+          </div>
+        </div>
+      </div>
+      <div class="qr-section">
+        <div class="qr-label">Scan to export your program</div>
+        <div class="qr-box" id="qr-container"></div>
+        <div class="qr-note">Scan this with the LaroFit app<br>to import your full program</div>
+        <button class="export-btn" onclick="downloadJSON()">⬇ Download program file instead</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT'S NEXT -->
+  <div class="next-card">
+    <div class="section-heading">WHAT'S NEXT?</div>
+    <div class="section-sub">Your program is ready. Here are a few things to set up before your first workout.</div>
+    <div class="next-grid">
+      <a class="next-item" href="larofit-profile.html#nutrition">
+        <div class="next-icon">🥗</div>
+        <div>
+          <div class="next-label">Design your diet plan</div>
+          <div class="next-desc">Set your calorie targets, macros, and meal preferences to support your training.</div>
+        </div>
+      </a>
+      <a class="next-item" href="larofit-measurements.html">
+        <div class="next-icon">📏</div>
+        <div>
+          <div class="next-label">Log your starting measurements</div>
+          <div class="next-desc">Capture your baseline so you can track real progress over time.</div>
+        </div>
+      </a>
+      <div class="next-item coming">
+        <div class="next-icon">🛒</div>
+        <div>
+          <div class="next-label">Marketplace</div>
+          <div class="next-desc">Gear, supplements, and equipment recommended for your program.</div>
+          <span class="coming-tag">COMING SOON</span>
+        </div>
+      </div>
+      <a class="next-item" href="larofit-builder.html">
+        <div class="next-icon">📋</div>
+        <div>
+          <div class="next-label">Edit your program</div>
+          <div class="next-desc">Go back to the builder to make changes or load a different template.</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <a class="dash-btn" href="larofit-dashboard.html">🏠 Go to my dashboard →</a>
+
+</div>
+
+<script>
+// ── LOAD PROGRAM ──────────────────────────────────────────────────────────────
+function init(){
+  const saved = localStorage.getItem('larofit_program');
+  if(!saved){ window.location.href='larofit-builder.html'; return; }
+
+  const prog = JSON.parse(saved);
+  const name = prog.name || 'My program';
+  const weeks = prog.weeks || 6;
+  const goal = prog.goal || 'general';
+  const activeDays = prog.days.filter(d=>!d.rest).length;
+  const totalEx = prog.days.reduce((s,d)=>s+d.exercises.length,0);
+  const totalSets = prog.days.reduce((s,d)=>
+    s+d.exercises.reduce((ss,ex)=>ss+(ex.params?.sets||3),0),0);
+
+  const goalLabel = {
+    strength:'Strength & Power', hypertrophy:'Muscle Growth',
+    weightloss:'Weight Loss', endurance:'Fitness & Endurance',
+    flexibility:'Flexibility', general:'General Fitness'
+  }[goal]||goal;
+
+  // Update hero
+  const uname = localStorage.getItem('larofit_user_name')||'';
+  if(uname) document.getElementById('hero-sub').innerHTML =
+    `Well done, <strong>${uname}</strong>! Your program is saved.<br><strong>Now let's get it on your phone.</strong>`;
+
+  // Program card
+  document.getElementById('prog-name-display').textContent = name;
+  document.getElementById('prog-meta-display').textContent =
+    `${weeks} weeks · ${goalLabel} · starts when you're ready`;
+  document.getElementById('stat-days').textContent     = activeDays;
+  document.getElementById('stat-exercises').textContent = totalEx;
+  document.getElementById('stat-weeks').textContent     = weeks;
+  document.getElementById('stat-sets').textContent      = totalSets;
+
+  // Generate QR code
+  generateQR(prog);
+}
+
+function generateQR(prog){
+  const container = document.getElementById('qr-container');
+  container.innerHTML = '';
+  // QR encodes a compact JSON string of the program
+  const data = JSON.stringify({
+    v:1, // version
+    name: prog.name,
+    weeks: prog.weeks,
+    goal: prog.goal,
+    days: prog.days.map(d=>({
+      name: d.name,
+      rest: d.rest,
+      exercises: d.exercises.map(ex=>({
+        n: ex.name,
+        t: ex.type,
+        p: ex.params
+      }))
+    }))
+  });
+
+  // If data is too large for QR, use a shorter summary
+  const qrData = data.length < 2000 ? data :
+    JSON.stringify({v:1, name:prog.name, weeks:prog.weeks, goal:prog.goal, note:'Open LaroFit app to import full program'});
+
+  try {
+    new QRCode(container, {
+      text: qrData,
+      width: 180,
+      height: 180,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch(e){
+    container.innerHTML = '<div style="padding:20px;font-size:12px;color:#666;text-align:center;">QR generation failed.<br>Use download button instead.</div>';
+  }
+}
+
+function downloadJSON(){
+  const saved = localStorage.getItem('larofit_program');
+  if(!saved) return;
+  const prog = JSON.parse(saved);
+  const blob = new Blob([JSON.stringify(prog,null,2)],{type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = (prog.name||'program').replace(/\s+/g,'-').toLowerCase()+'.larofit.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+init();
+</script>
+</body>
+</html>

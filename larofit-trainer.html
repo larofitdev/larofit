@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — Trainer Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --orange:#fb923c;--pink:#f472b6;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:20px 22px 16px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:18px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.trainer-badge-side{padding:4px 10px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);border-radius:999px;font-size:9px;font-weight:700;color:var(--purple);font-family:var(--font-mono);margin-top:6px;display:inline-block;}
+.sidebar-nav{padding:14px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 18px;margin:10px 0 5px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;cursor:pointer;transition:background 0.15s;font-size:12px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:rgba(167,139,250,0.08);color:var(--white);border-left-color:var(--purple);}
+.nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:14px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.s-avatar{width:30px;height:30px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--white);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:11px;font-weight:600;color:var(--white);}
+.s-plan{font-size:9px;color:var(--purple);font-family:var(--font-mono);}
+
+/* MAIN */
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--font-display);font-size:24px;letter-spacing:1px;color:var(--pure);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.btn-sm{padding:7px 14px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.btn-sm:hover{border-color:var(--mist);color:var(--white);}
+.btn-purple{padding:8px 18px;background:var(--purple);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--white);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-purple:hover{background:#8b5cf6;}
+
+/* CONTENT */
+.content{padding:24px 28px;display:flex;flex-direction:column;gap:18px;}
+
+/* WELCOME BANNER */
+.welcome-banner{background:linear-gradient(135deg,rgba(167,139,250,0.12),rgba(198,241,53,0.04));border:1px solid rgba(167,139,250,0.2);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.welcome-title{font-family:var(--font-display);font-size:24px;letter-spacing:1px;color:var(--pure);}
+.welcome-sub{font-size:12px;color:var(--mist);margin-top:3px;}
+
+/* STAT ROW */
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
+.stat-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.stat-card.purple::before{background:var(--purple);}
+.stat-card.volt::before{background:var(--volt);}
+.stat-card.green::before{background:var(--success);}
+.stat-card.orange::before{background:var(--orange);}
+.stat-card.ember::before{background:var(--ember);}
+.stat-label{font-size:9px;font-weight:700;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:6px;}
+.stat-num{font-family:var(--font-display);font-size:30px;line-height:1;margin-bottom:2px;}
+.stat-sub{font-size:10px;color:var(--mist);}
+
+/* ALERTS */
+.alerts-bar{background:rgba(255,87,51,0.06);border:1px solid rgba(255,87,51,0.2);border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.alert-tag{padding:4px 10px;background:rgba(255,87,51,0.1);border:1px solid rgba(255,87,51,0.2);border-radius:999px;font-size:11px;color:var(--ember);font-family:var(--font-mono);cursor:pointer;}
+.alert-tag:hover{background:rgba(255,87,51,0.18);}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:0;}
+.tab{padding:11px 20px;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body);}
+.tab.active{color:var(--purple);border-bottom-color:var(--purple);}
+
+/* CLIENT GRID */
+.client-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:20px 0;}
+.client-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color 0.2s;}
+.client-card:hover{border-color:rgba(167,139,250,0.3);}
+.client-card.alert-card{border-color:rgba(255,87,51,0.3);}
+.cc-header{padding:14px 16px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.cc-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.cc-name{font-size:13px;font-weight:700;color:var(--pure);flex:1;}
+.cc-status{font-size:10px;font-family:var(--font-mono);}
+.cc-status.active{color:var(--success);}
+.cc-status.inactive{color:var(--ember);}
+.cc-body{padding:12px 16px;}
+.cc-stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.cc-stat{text-align:center;padding:7px 4px;background:var(--carbon);border-radius:var(--radius-sm);}
+.cc-stat-num{font-family:var(--font-display);font-size:18px;color:var(--volt);}
+.cc-stat-label{font-size:9px;color:var(--mist);text-transform:uppercase;letter-spacing:0.06em;}
+.cc-prog{font-size:11px;color:var(--mist);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.cc-prog strong{color:var(--fog);}
+.cc-prog-bar{height:4px;background:var(--border);border-radius:999px;overflow:hidden;margin-bottom:10px;}
+.cc-prog-fill{height:100%;background:var(--purple);border-radius:999px;}
+.cc-actions{display:flex;gap:6px;}
+.cc-btn{flex:1;padding:7px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:10px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;text-align:center;}
+.cc-btn:hover{border-color:var(--purple);color:var(--purple);}
+.cc-btn.primary{background:var(--purple);border-color:var(--purple);color:var(--white);}
+.cc-btn.primary:hover{background:#8b5cf6;}
+.cc-last{font-size:10px;color:var(--slate);font-family:var(--font-mono);margin-bottom:8px;}
+.cc-alert{padding:6px 10px;background:rgba(255,87,51,0.08);border:1px solid rgba(255,87,51,0.15);border-radius:var(--radius-sm);font-size:10px;color:var(--ember);margin-bottom:8px;}
+
+/* MESSAGES PANEL */
+.msg-layout{display:grid;grid-template-columns:240px 1fr;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card-bg);}
+.msg-contacts{border-right:1px solid var(--border);overflow-y:auto;max-height:500px;}
+.msg-contact{display:flex;align-items:center;gap:9px;padding:12px 14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.03);transition:background 0.15s;}
+.msg-contact:hover{background:rgba(255,255,255,0.02);}
+.msg-contact.active{background:rgba(167,139,250,0.08);border-left:2px solid var(--purple);}
+.mc-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.mc-name{font-size:12px;font-weight:600;color:var(--white);}
+.mc-preview{font-size:10px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mc-time{font-size:9px;color:var(--slate);font-family:var(--font-mono);}
+.msg-unread{width:7px;height:7px;border-radius:50%;background:var(--purple);flex-shrink:0;}
+.chat-area{display:flex;flex-direction:column;height:500px;}
+.chat-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--carbon);display:flex;align-items:center;gap:10px;}
+.chat-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.chat-date{text-align:center;font-size:10px;color:var(--slate);font-family:var(--font-mono);margin:6px 0;}
+.bubble-row{display:flex;gap:7px;align-items:flex-end;}
+.bubble-row.mine{flex-direction:row-reverse;}
+.bubble-av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.bubble{max-width:260px;padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.5;}
+.bubble.them{background:var(--carbon);border:1px solid var(--border);color:var(--fog);border-bottom-left-radius:3px;}
+.bubble.mine{background:var(--purple);color:var(--white);border-bottom-right-radius:3px;}
+.bubble-time{font-size:9px;opacity:0.6;display:block;margin-top:3px;font-family:var(--font-mono);}
+.chat-input-row{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:7px;align-items:flex-end;}
+.chat-input{flex:1;padding:8px 11px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:12px;font-family:var(--font-body);outline:none;resize:none;min-height:36px;max-height:90px;transition:border-color 0.2s;}
+.chat-input:focus{border-color:var(--purple);}
+.send-btn{width:34px;height:34px;border-radius:var(--radius-sm);border:none;background:var(--purple);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all 0.15s;color:var(--white);}
+.send-btn:hover{background:#8b5cf6;}
+.voice-btn{width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all 0.15s;color:var(--mist);}
+.voice-btn:hover{border-color:var(--purple);color:var(--purple);}
+
+/* CLIENT DETAIL MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:0;max-width:680px;width:calc(100% - 40px);position:relative;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:20px 24px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;position:sticky;top:0;}
+.modal-close{position:absolute;top:14px;right:16px;width:26px;height:26px;border-radius:50%;background:var(--border);border:none;color:var(--mist);cursor:pointer;font-size:12px;}
+.modal-body{padding:24px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;}
+.detail-stat{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+.detail-stat-num{font-family:var(--font-display);font-size:24px;}
+.detail-stat-label{font-size:10px;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;}
+.section-head{font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;margin-top:18px;}
+.prog-exercise{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--carbon);border-radius:var(--radius-sm);font-size:12px;color:var(--fog);margin-bottom:5px;}
+.prog-ex-dot{width:6px;height:6px;border-radius:50%;background:var(--purple);flex-shrink:0;}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--purple);border-radius:999px;padding:9px 22px;font-size:12px;color:var(--purple);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+@media(max-width:1100px){.stat-row{grid-template-columns:1fr 1fr 1fr;}}
+@media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">LARO<span>FIT</span></div>
+    <div class="trainer-badge-side">🎓 TRAINER PRO</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Dashboard</div>
+    <a class="nav-item active" href="larofit-trainer.html"><span class="nav-icon">📊</span>Overview</a>
+    <div class="nav-section">Clients</div>
+    <a class="nav-item" href="#" onclick="switchTab('clients')"><span class="nav-icon">👥</span>My clients</a>
+    <a class="nav-item" href="#" onclick="switchTab('messages')"><span class="nav-icon">💬</span>Messages</a>
+    <div class="nav-section">Tools</div>
+    <a class="nav-item" href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet plan builder</a>
+    <a class="nav-item" href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <div class="nav-section">My Profile</div>
+    <a class="nav-item" href="#" onclick="switchTab('profile')"><span class="nav-icon">👤</span>Trainer profile</a>
+    <a class="nav-item" href="#" onclick="switchTab('directory')"><span class="nav-icon">🔍</span>Directory listing</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar" id="sidebar-avatar">T</div>
+    <div>
+      <div class="s-name" id="sidebar-name">Trainer</div>
+      <div class="s-plan">💜 TRAINER PRO</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">TRAINER DASHBOARD</div>
+    <div class="topbar-right">
+      <button class="btn-sm" onclick="showInviteClient()">➕ Invite client</button>
+      <button class="btn-sm" onclick="switchTab('directory')">🔍 Directory settings</button>
+      <button class="btn-purple" onclick="switchTab('clients')">👥 View all clients</button>
+    </div>
+  </div>
+
+  <div class="content" id="main-content">
+    <!-- injected by JS -->
+  </div>
+</div>
+</div>
+
+<!-- CLIENT DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DEMO DATA ──────────────────────────────────────────────────────────────
+const DEMO_CLIENTS = [
+  {
+    id:'c1', name:'Marcus Webb', initial:'M', color:'#60a5fa',
+    goal:'Muscle Growth', program:'Push/Pull/Legs Split', programWeeks:8, weekOn:3,
+    workouts:18, streak:6, lastWorkout:'2h ago', lastMeasurement:'5 days ago',
+    weight:'192 lbs', bf:'18%', status:'active',
+    alert:null,
+    recentWorkouts:['Upper Body Push · 52 min','Lower Body · 48 min','Upper Body Pull · 44 min'],
+    notes:'Making great progress on chest. Needs to focus on form with heavier weights.',
+  },
+  {
+    id:'c2', name:'Angela Torres', initial:'A', color:'#f472b6',
+    goal:'Weight Loss', program:'Full Body 4x/Week', programWeeks:12, weekOn:5,
+    workouts:24, streak:12, lastWorkout:'Yesterday', lastMeasurement:'2 weeks ago',
+    weight:'158 lbs', bf:'29%', status:'active',
+    alert:null,
+    recentWorkouts:['Full Body A · 55 min','Full Body B · 51 min','Cardio + Core · 38 min'],
+    notes:'Down 8 lbs in 5 weeks. Excellent adherence to diet plan.',
+  },
+  {
+    id:'c3', name:'Robert Kim', initial:'R', color:'#4ade80',
+    goal:'Strength & Power', program:'5/3/1 Modified', programWeeks:16, weekOn:8,
+    workouts:32, streak:0, lastWorkout:'6 days ago', lastMeasurement:'3 weeks ago',
+    weight:'210 lbs', bf:'22%', status:'inactive',
+    alert:'6 days since last workout — check in needed',
+    recentWorkouts:['Lower Body · 62 min','Upper Body · 58 min'],
+    notes:'Strong guy but misses workouts when work gets busy. Needs accountability.',
+  },
+  {
+    id:'c4', name:'Priya Patel', initial:'P', color:'#fb923c',
+    goal:'General Fitness', program:'Beginner 3x/Week', programWeeks:6, weekOn:2,
+    workouts:6, streak:4, lastWorkout:'Today', lastMeasurement:'1 week ago',
+    weight:'134 lbs', bf:'26%', status:'active',
+    alert:null,
+    recentWorkouts:['Full Body A · 42 min','Full Body B · 38 min','Full Body A · 40 min'],
+    notes:'New to the gym. Nervous at first but building confidence fast.',
+  },
+  {
+    id:'c5', name:'James Okafor', initial:'J', color:'#c6f135',
+    goal:'Endurance', program:'Cardio + Strength Hybrid', programWeeks:10, weekOn:4,
+    workouts:20, streak:8, lastWorkout:'3h ago', lastMeasurement:'10 days ago',
+    weight:'178 lbs', bf:'16%', status:'active',
+    alert:null,
+    recentWorkouts:['Cardio + Upper · 65 min','Cardio + Lower · 60 min','Active Recovery · 30 min'],
+    notes:'Training for a 5K in 3 months. Cardio improving fast.',
+  },
+  {
+    id:'c6', name:'Linda Chen', initial:'L', color:'#2dd4bf',
+    goal:'Flexibility & Mobility', program:'Strength + Mobility', programWeeks:8, weekOn:1,
+    workouts:4, streak:0, lastWorkout:'5 days ago', lastMeasurement:'Never',
+    weight:'122 lbs', bf:'24%', status:'inactive',
+    alert:'No baseline measurements logged yet',
+    recentWorkouts:['Full Body + Stretch · 50 min'],
+    notes:'Recovering from a knee injury 8 months ago. Take it slow on lower body.',
+  },
+];
+
+const DEMO_MESSAGES = {
+  c1: [
+    {from:'Marcus Webb', text:'Hey! Quick question — should I increase weight on chest press this week or stay the same?', time:'2h ago', mine:false},
+    {from:'me', text:'Yes go up 5lbs. Your form looked solid last week based on your notes. How did last session feel?', time:'1.5h ago', mine:true},
+    {from:'Marcus Webb', text:'Felt strong! A little tight in the shoulder but nothing bad', time:'1h ago', mine:false},
+    {from:'me', text:'Good. Add some face pulls as a warm-up — 3x15 on the cable machine before you start. That should help the shoulder.', time:'55m ago', mine:true},
+  ],
+  c2: [
+    {from:'Angela Torres', text:'I\'ve been sticking to the carnivore plan all week! Down another 1.5 lbs 🎉', time:'Yesterday', mine:false},
+    {from:'me', text:'Amazing Angela!! That\'s 8 lbs total now. Keep it up, you\'re crushing it 💪', time:'Yesterday', mine:true},
+    {from:'Angela Torres', text:'Thank you!! Can we adjust my program? I want to add more cardio', time:'Yesterday', mine:false},
+    {from:'me', text:'Absolutely — I\'ll update your plan today. I\'ll add 20 min incline walk after your strength sessions on Mon/Wed/Fri', time:'Yesterday', mine:true},
+  ],
+  c3: [
+    {from:'me', text:'Hey Robert! Haven\'t seen a workout log from you in a few days. Everything OK?', time:'2 days ago', mine:true},
+    {from:'Robert Kim', text:'Sorry coach, work has been insane. Getting back on track tomorrow I promise', time:'1 day ago', mine:false},
+    {from:'me', text:'No worries — life happens. Even a 30-min session counts. Don\'t let perfect be the enemy of good.', time:'1 day ago', mine:true},
+  ],
+  c4: [
+    {from:'Priya Patel', text:'I actually enjoyed today! The machines are less scary than I thought 😊', time:'Today', mine:false},
+    {from:'me', text:'That\'s huge Priya!! That confidence is everything. See you Thursday!', time:'Today', mine:true},
+  ],
+  c5: [
+    {from:'James Okafor', text:'Ran 2.5 miles on the treadmill after lifting today. New personal best!', time:'3h ago', mine:false},
+    {from:'me', text:'James that\'s incredible progress from where you started! Your cardio base is building fast 🔥', time:'2.5h ago', mine:true},
+    {from:'James Okafor', text:'Feeling great. Think I might actually be ready for the 5K', time:'2h ago', mine:false},
+  ],
+  c6: [
+    {from:'me', text:'Hi Linda! Welcome to LaroFit. When you have a chance, please log your starting measurements so we have a baseline to track from.', time:'5 days ago', mine:true},
+    {from:'Linda Chen', text:'Hi! Will do this week. A bit nervous about the body fat measurement 😅', time:'4 days ago', mine:false},
+    {from:'me', text:'No need to be nervous — it\'s just a starting point. Every transformation starts somewhere!', time:'4 days ago', mine:true},
+  ],
+};
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+let activeTab    = 'overview';
+let activeClient = 'c1';
+let trainerProfile = {};
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+function init(){
+  trainerProfile = JSON.parse(localStorage.getItem('larofit_trainer_profile')||'{}');
+  // Always use trainer profile name first, fall back to user_name
+  const name = trainerProfile.first || trainerProfile.name?.split(' ')[0] || localStorage.getItem('larofit_user_name') || 'Trainer';
+  const initial = name.charAt(0).toUpperCase();
+  document.getElementById('sidebar-name').textContent = name;
+  document.getElementById('sidebar-avatar').textContent = initial;
+
+  // Inject any real connected clients from localStorage into DEMO_CLIENTS
+  const connectedClients = JSON.parse(localStorage.getItem('larofit_trainer_clients')||'[]');
+  connectedClients.forEach(c=>{
+    if(!DEMO_CLIENTS.find(d=>d.id===c.id)){
+      DEMO_CLIENTS.unshift(c);
+    }
+  });
+
+  // Welcome banner for new trainers
+  if(new URLSearchParams(window.location.search).get('new')==='1'){
+    showToast('🎉 Welcome! Your trainer account is ready.');
+  }
+
+  // Check for new client connection alert
+  const newClient = localStorage.getItem('larofit_new_client_alert');
+  if(newClient){
+    localStorage.removeItem('larofit_new_client_alert');
+    const nc = JSON.parse(newClient);
+    setTimeout(()=>showToast(`🔔 New client connected: ${nc.name}`),500);
+  }
+
+  renderOverview();
+}
+
+// ── OVERVIEW ───────────────────────────────────────────────────────────────
+function renderOverview(){
+  activeTab = 'overview';
+  document.getElementById('page-title').textContent = 'TRAINER DASHBOARD';
+
+  const alertClients = DEMO_CLIENTS.filter(c=>c.alert);
+  const activeClients = DEMO_CLIENTS.filter(c=>c.status==='active');
+  const todayWorkouts = DEMO_CLIENTS.filter(c=>c.lastWorkout.includes('h ago')||c.lastWorkout==='Today');
+  const monthlyRevenue = DEMO_CLIENTS.length * 79; // demo rate
+
+  document.getElementById('main-content').innerHTML = `
+
+    <!-- WELCOME -->
+    <div class="welcome-banner">
+      <div>
+        <div class="welcome-title">Good ${getGreeting()}, ${localStorage.getItem('larofit_user_name')||'Coach'} 👋</div>
+        <div class="welcome-sub">${DEMO_CLIENTS.length} active clients · ${alertClients.length} need attention · ${todayWorkouts.length} trained today</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-sm" onclick="switchTab('clients')">View all clients →</button>
+        <button class="btn-purple" onclick="showInviteClient()">➕ Invite new client</button>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-row">
+      <div class="stat-card purple">
+        <div class="stat-label">Total clients</div>
+        <div class="stat-num" style="color:var(--purple);">${DEMO_CLIENTS.length}<span style="font-size:14px;color:var(--mist);">/20</span></div>
+        <div class="stat-sub">${20-DEMO_CLIENTS.length} slots open</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Active today</div>
+        <div class="stat-num" style="color:var(--success);">${todayWorkouts.length}</div>
+        <div class="stat-sub">trained in last 24h</div>
+      </div>
+      <div class="stat-card volt">
+        <div class="stat-label">Total workouts</div>
+        <div class="stat-num" style="color:var(--volt);">${DEMO_CLIENTS.reduce((s,c)=>s+c.workouts,0)}</div>
+        <div class="stat-sub">across all clients</div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-label">Need attention</div>
+        <div class="stat-num" style="color:var(--orange);">${alertClients.length}</div>
+        <div class="stat-sub">clients with alerts</div>
+      </div>
+      <div class="stat-card volt">
+        <div class="stat-label">Est. monthly revenue</div>
+        <div class="stat-num" style="color:var(--volt);font-size:22px;padding-top:4px;">$${monthlyRevenue.toLocaleString()}</div>
+        <div class="stat-sub">at $79/client avg</div>
+      </div>
+    </div>
+
+    <!-- ALERTS -->
+    ${alertClients.length?`
+    <div class="alerts-bar">
+      <span style="font-size:11px;font-weight:700;color:var(--ember);">⚠️ Needs attention:</span>
+      ${alertClients.map(c=>`<div class="alert-tag" onclick="openClientDetail('${c.id}')">
+        ${c.name} — ${c.alert}
+      </div>`).join('')}
+    </div>`:''}
+
+    <!-- QUICK CLIENT GRID (first 4) -->
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div style="font-size:13px;font-weight:700;color:var(--pure);">Your clients</div>
+        <button class="btn-sm" onclick="switchTab('clients')">See all ${DEMO_CLIENTS.length} →</button>
+      </div>
+      <div class="client-grid">
+        ${DEMO_CLIENTS.map(c=>renderClientCard(c)).join('')}
+      </div>
+    </div>
+
+    <!-- RECENT MESSAGES -->
+    <div>
+      <div style="font-size:13px;font-weight:700;color:var(--pure);margin-bottom:14px;">Recent messages</div>
+      <div class="msg-layout">
+        <div class="msg-contacts">
+          ${DEMO_CLIENTS.map(c=>{
+            const msgs = DEMO_MESSAGES[c.id]||[];
+            const last = msgs[msgs.length-1];
+            return `<div class="msg-contact${c.id===activeClient?' active':''}" onclick="activeClient='${c.id}';renderOverview()">
+              <div class="mc-avatar" style="background:${c.color};">${c.initial}</div>
+              <div style="flex:1;min-width:0;">
+                <div class="mc-name">${c.name}</div>
+                <div class="mc-preview">${last?.text||'No messages'}</div>
+              </div>
+              <div>
+                <div class="mc-time">${last?.time||''}</div>
+                ${!last?.mine?'<div class="msg-unread" style="margin-top:4px;margin-left:auto;"></div>':''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="chat-area">
+          <div class="chat-header">
+            <div class="mc-avatar" style="background:${DEMO_CLIENTS.find(c=>c.id===activeClient)?.color||'#888'};">${DEMO_CLIENTS.find(c=>c.id===activeClient)?.initial||'?'}</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--pure);">${DEMO_CLIENTS.find(c=>c.id===activeClient)?.name||''}</div>
+              <div style="font-size:10px;color:var(--mist);">Last workout: ${DEMO_CLIENTS.find(c=>c.id===activeClient)?.lastWorkout||'—'}</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:6px;">
+              <button class="btn-sm" onclick="openClientDetail('${activeClient}')">📊 View profile</button>
+            </div>
+          </div>
+          <div class="chat-messages" id="chat-msgs">
+            ${(DEMO_MESSAGES[activeClient]||[]).map(msg=>`
+              <div class="bubble-row${msg.mine?' mine':''}">
+                ${!msg.mine?`<div class="bubble-av" style="background:${DEMO_CLIENTS.find(c=>c.id===activeClient)?.color||'#888'};">${DEMO_CLIENTS.find(c=>c.id===activeClient)?.initial||'?'}</div>`:''}
+                <div class="bubble ${msg.mine?'mine':'them'}">
+                  ${msg.text}
+                  <span class="bubble-time">${msg.time}</span>
+                </div>
+              </div>`).join('')}
+          </div>
+          <div class="chat-input-row">
+            <button class="voice-btn" title="Voice note">🎙️</button>
+            <textarea class="chat-input" id="msg-input" placeholder="Message your client…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+            <button class="send-btn" onclick="sendMsg()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  // Scroll chat to bottom
+  setTimeout(()=>{
+    const chat = document.getElementById('chat-msgs');
+    if(chat) chat.scrollTop = chat.scrollHeight;
+  },50);
+}
+
+function getClientProgram(clientId){
+  try{
+    const all = JSON.parse(localStorage.getItem('larofit_client_programs')||'{}');
+    const progs = all[clientId]||[];
+    return progs.length ? progs[progs.length-1] : null;
+  }catch(e){ return null; }
+}
+
+function renderClientCard(c){
+  const pct = Math.round((c.weekOn/c.programWeeks)*100);
+  const savedProg = getClientProgram(c.id);
+  return `<div class="client-card${c.alert?' alert-card':''}" id="card-${c.id}">
+    <div class="cc-header">
+      <div class="cc-avatar" style="background:${c.color};">${c.initial}</div>
+      <div style="flex:1;">
+        <div class="cc-name">${c.name}</div>
+        <div style="font-size:10px;color:var(--mist);">${c.goal}</div>
+      </div>
+      <div class="cc-status ${c.status}">${c.status==='active'?'● Active':'● Inactive'}</div>
+    </div>
+    <div class="cc-body">
+      ${c.alert?`<div class="cc-alert">⚠️ ${c.alert}</div>`:''}
+      <div class="cc-stat-row">
+        <div class="cc-stat"><div class="cc-stat-num" style="color:var(--volt);">${c.workouts}</div><div class="cc-stat-label">Workouts</div></div>
+        <div class="cc-stat"><div class="cc-stat-num" style="color:var(--success);">${c.streak}</div><div class="cc-stat-label">Streak</div></div>
+        <div class="cc-stat"><div class="cc-stat-num" style="color:var(--purple);">W${c.weekOn}</div><div class="cc-stat-label">Prog wk</div></div>
+      </div>
+      <div class="cc-last">Last workout: ${c.lastWorkout} · Meas: ${c.lastMeasurement}</div>
+      ${savedProg
+        ? `<div class="cc-prog" style="color:var(--purple);">⭐ <strong>${savedProg.name}</strong> <span style="font-size:9px;color:var(--mist);">saved ${new Date(savedProg.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span></div>`
+        : `<div class="cc-prog"><strong>${c.program}</strong></div>`
+      }
+      <div class="cc-prog-bar"><div class="cc-prog-fill" style="width:${pct}%;"></div></div>
+      <div class="cc-actions">
+        <button class="cc-btn" onclick="activeClient='${c.id}';renderOverview()">💬 Message</button>
+        ${savedProg
+          ? `<button class="cc-btn" onclick="viewClientProgram('${c.id}')">📋 View program</button>
+             <button class="cc-btn" onclick="buildForClient('${c.id}')">✏️ Edit</button>`
+          : `<button class="cc-btn" onclick="buildForClient('${c.id}')">📋 Build program</button>`
+        }
+        <button class="cc-btn primary" onclick="openClientDetail('${c.id}')">📊 View</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── CLIENT DETAIL MODAL ────────────────────────────────────────────────────
+function openClientDetail(clientId){
+  const c = DEMO_CLIENTS.find(x=>x.id===clientId);
+  if(!c) return;
+  const pct = Math.round((c.weekOn/c.programWeeks)*100);
+
+  // Build intake profile section if this is a real connected client
+  const intakeHtml = c.isNew ? `
+    <div style="background:rgba(198,241,53,0.06);border:1px solid rgba(198,241,53,0.15);border-radius:var(--radius-sm);padding:14px;margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;color:var(--volt);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;">📋 Client intake profile</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        ${[
+          ['Sex', c.sex||'—'],
+          ['Age', c.age ? c.age+' years' : '—'],
+          ['Weight', c.weight ? c.weight+' lbs' : '—'],
+          ['Height', c.height||'—'],
+          ['Experience', c.experience||'—'],
+          ['Activity level', c.activity||'—'],
+          ['Training style', c.trainingStyle||'—'],
+          ['Diet style', c.diet||'—'],
+          ['Meals/day', c.mealsPerDay||'—'],
+          ['Restrictions', (c.restrictions||[]).join(', ')||'None'],
+        ].map(([label,val])=>`
+          <div style="padding:7px 10px;background:var(--carbon);border-radius:var(--radius-sm);">
+            <div style="font-size:9px;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px;">${label}</div>
+            <div style="font-size:12px;color:var(--fog);font-weight:600;">${val}</div>
+          </div>`).join('')}
+      </div>
+      ${c.healthNotes?`<div style="margin-top:8px;padding:8px 10px;background:rgba(255,87,51,0.06);border:1px solid rgba(255,87,51,0.15);border-radius:var(--radius-sm);font-size:11px;color:var(--ember);">⚠️ Health notes: ${c.healthNotes}</div>`:''}
+      ${c.currentProgram?`<div style="margin-top:8px;padding:8px 10px;background:var(--carbon);border-radius:var(--radius-sm);font-size:11px;color:var(--mist);">📋 Has existing program: <strong style="color:var(--fog);">${c.currentProgram.name}</strong> (${c.currentProgram.exercises} exercises)</div>`:''}
+      ${c.hasDietPlan?`<div style="margin-top:6px;padding:8px 10px;background:var(--carbon);border-radius:var(--radius-sm);font-size:11px;color:var(--mist);">🥗 Has diet plan: <strong style="color:var(--fog);">${c.dietStyle||'Custom'}</strong></div>`:''}
+    </div>` : '';
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-header">
+      <div class="mc-avatar" style="width:42px;height:42px;border-radius:50%;background:${c.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--black);font-family:var(--font-display);">${c.initial}</div>
+      <div>
+        <div style="font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--pure);">${c.name.toUpperCase()}</div>
+        <div style="font-size:11px;color:var(--mist);">${c.goal} · ${c.status==='active'?'✅ Active':'⚠️ Inactive'}${c.isNew?' · 🆕 New client':''}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn-sm" onclick="buildForClient('${c.id}');closeModal()">📋 Build program</button>
+        <button class="btn-purple" onclick="activeClient='${c.id}';renderOverview();closeModal()">💬 Message</button>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      ${c.alert?`<div style="padding:10px 14px;background:rgba(255,87,51,0.08);border:1px solid rgba(255,87,51,0.2);border-radius:var(--radius-sm);font-size:12px;color:var(--ember);margin-bottom:16px;">⚠️ ${c.alert}</div>`:''}
+
+      ${intakeHtml}
+
+      <div class="detail-grid">
+        <div class="detail-stat"><div class="detail-stat-num" style="color:var(--volt);">${c.workouts}</div><div class="detail-stat-label">Workouts</div></div>
+        <div class="detail-stat"><div class="detail-stat-num" style="color:var(--success);">${c.streak}</div><div class="detail-stat-label">Streak</div></div>
+        <div class="detail-stat"><div class="detail-stat-num" style="color:var(--purple);">${c.weekOn?'W'+c.weekOn+'/'+c.programWeeks:'—'}</div><div class="detail-stat-label">Program wk</div></div>
+        <div class="detail-stat"><div class="detail-stat-num" style="color:var(--blue);font-size:16px;padding-top:4px;">${c.weight?c.weight+' lbs':'—'}</div><div class="detail-stat-label">Weight</div></div>
+        <div class="detail-stat"><div class="detail-stat-num" style="color:var(--orange);font-size:16px;padding-top:4px;">${c.bf||'—'}</div><div class="detail-stat-label">Body fat</div></div>
+        <div class="detail-stat"><div class="detail-stat-num" style="color:var(--mist);font-size:11px;padding-top:8px;">${c.lastMeasurement}</div><div class="detail-stat-label">Last measured</div></div>
+      </div>
+
+      ${c.recentWorkouts?.length?`
+      <div class="section-head">Recent workouts</div>
+      ${c.recentWorkouts.map(w=>`<div class="prog-exercise"><div class="prog-ex-dot"></div>${w}</div>`).join('')}`:''}
+
+      <div class="section-head">Trainer notes</div>
+      <textarea style="width:100%;padding:10px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--fog);font-size:12px;font-family:var(--font-body);resize:vertical;min-height:70px;outline:none;" placeholder="Add private coaching notes about this client…" onchange="saveClientNote('${c.id}',this.value)">${c.notes||''}</textarea>
+
+      <div class="section-head">Quick actions</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="btn-purple" style="padding:10px;" onclick="buildForClient('${c.id}');closeModal()">📋 Build new program</button>
+        <button class="btn-sm" style="justify-content:center;" onclick="closeModal()">🥗 Build diet plan</button>
+        <button class="btn-sm" style="justify-content:center;" onclick="closeModal()">📊 View progress</button>
+        <button class="btn-sm" style="justify-content:center;color:var(--ember);border-color:rgba(255,87,51,0.3);" onclick="sendCheckIn('${c.id}');closeModal()">📬 Send check-in</button>
+      </div>
+    </div>`;
+
+  document.getElementById('modal-overlay').style.display='flex';
+}
+
+// ── SEND MESSAGE ────────────────────────────────────────────────────────────
+function sendMsg(){
+  const input = document.getElementById('msg-input');
+  const text  = input?.value.trim();
+  if(!text) return;
+  if(!DEMO_MESSAGES[activeClient]) DEMO_MESSAGES[activeClient]=[];
+  DEMO_MESSAGES[activeClient].push({from:'me',text,time:'Just now',mine:true});
+  input.value='';
+  renderOverview();
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────
+function switchTab(tab){
+  activeTab=tab;
+  if(tab==='overview')  renderOverview();
+  else if(tab==='clients') renderClients();
+  else if(tab==='messages') renderMessages();
+  else if(tab==='profile') renderProfile();
+  else if(tab==='directory') renderDirectory();
+}
+
+function renderClients(){
+  document.getElementById('page-title').textContent='MY CLIENTS';
+  document.getElementById('main-content').innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div style="font-size:13px;color:var(--mist);">${DEMO_CLIENTS.length}/20 client slots used</div>
+      <button class="btn-purple" onclick="showInviteClient()">➕ Invite new client</button>
+    </div>
+    <div class="client-grid">${DEMO_CLIENTS.map(c=>renderClientCard(c)).join('')}</div>`;
+}
+
+function renderMessages(){
+  document.getElementById('page-title').textContent='MESSAGES';
+  document.getElementById('main-content').innerHTML=`
+    <div class="msg-layout" style="height:600px;">
+      <div class="msg-contacts">
+        ${DEMO_CLIENTS.map(c=>{
+          const msgs=DEMO_MESSAGES[c.id]||[];
+          const last=msgs[msgs.length-1];
+          return `<div class="msg-contact${c.id===activeClient?' active':''}" onclick="activeClient='${c.id}';renderMessages()">
+            <div class="mc-avatar" style="background:${c.color};">${c.initial}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="mc-name">${c.name}</div>
+              <div class="mc-preview">${last?.text||'No messages'}</div>
+            </div>
+            <div>
+              <div class="mc-time">${last?.time||''}</div>
+              ${!last?.mine?'<div class="msg-unread" style="margin-top:4px;margin-left:auto;"></div>':''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="chat-area" style="height:600px;">
+        <div class="chat-header">
+          <div class="mc-avatar" style="background:${DEMO_CLIENTS.find(c=>c.id===activeClient)?.color||'#888'};">${DEMO_CLIENTS.find(c=>c.id===activeClient)?.initial||'?'}</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--pure);">${DEMO_CLIENTS.find(c=>c.id===activeClient)?.name||''}</div>
+            <div style="font-size:10px;color:var(--mist);">Last workout: ${DEMO_CLIENTS.find(c=>c.id===activeClient)?.lastWorkout||'—'}</div>
+          </div>
+          <div style="margin-left:auto;">
+            <button class="btn-sm" onclick="openClientDetail('${activeClient}')">📊 Client profile</button>
+          </div>
+        </div>
+        <div class="chat-messages" id="chat-msgs">
+          ${(DEMO_MESSAGES[activeClient]||[]).map(msg=>`
+            <div class="bubble-row${msg.mine?' mine':''}">
+              ${!msg.mine?`<div class="bubble-av" style="background:${DEMO_CLIENTS.find(c=>c.id===activeClient)?.color||'#888'};">${DEMO_CLIENTS.find(c=>c.id===activeClient)?.initial||'?'}</div>`:''}
+              <div class="bubble ${msg.mine?'mine':'them'}">${msg.text}<span class="bubble-time">${msg.time}</span></div>
+            </div>`).join('')}
+        </div>
+        <div class="chat-input-row">
+          <button class="voice-btn">🎙️</button>
+          <textarea class="chat-input" id="msg-input" placeholder="Message your client…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+          <button class="send-btn" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>`;
+  setTimeout(()=>{const c=document.getElementById('chat-msgs');if(c)c.scrollTop=c.scrollHeight;},50);
+}
+
+function renderProfile(){
+  const tp = trainerProfile;
+  document.getElementById('page-title').textContent = 'MY PROFILE';
+  document.getElementById('main-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">
+        <div style="font-size:13px;font-weight:700;color:var(--pure);margin-bottom:16px;">Trainer profile</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:24px;color:var(--white);">${(tp.first||'T').charAt(0)}</div>
+          <div>
+            <div style="font-family:var(--font-display);font-size:22px;color:var(--pure);">${tp.name||'Your Name'}</div>
+            <div style="font-size:11px;color:var(--mist);">${tp.location||'Location'} · ${tp.certifications||'Certifications'}</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--fog);line-height:1.7;margin-bottom:16px;">${tp.bio||'Add a bio to attract clients.'}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${(tp.specialties||['Strength','Weight Loss']).map(s=>`<span style="padding:3px 10px;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);border-radius:999px;font-size:10px;color:var(--purple);">${s}</span>`).join('')}
+        </div>
+      </div>
+      <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;">
+        <div style="font-size:13px;font-weight:700;color:var(--pure);margin-bottom:16px;">Account stats</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div style="display:flex;justify-content:space-between;padding:10px;background:var(--carbon);border-radius:var(--radius-sm);">
+            <span style="font-size:12px;color:var(--mist);">Active clients</span>
+            <span style="font-size:12px;font-weight:700;color:var(--purple);">${DEMO_CLIENTS.length}/20</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:var(--carbon);border-radius:var(--radius-sm);">
+            <span style="font-size:12px;color:var(--mist);">Client rate</span>
+            <span style="font-size:12px;font-weight:700;color:var(--volt);">$${tp.rate||79}/month</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:var(--carbon);border-radius:var(--radius-sm);">
+            <span style="font-size:12px;color:var(--mist);">Subscription</span>
+            <span style="font-size:12px;font-weight:700;color:var(--success);">✅ Active — $29.95/mo</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:10px;background:var(--carbon);border-radius:var(--radius-sm);">
+            <span style="font-size:12px;color:var(--mist);">Directory listing</span>
+            <span style="font-size:12px;font-weight:700;color:var(--success);">✅ Visible to members</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderDirectory(){
+  document.getElementById('page-title').textContent='DIRECTORY LISTING';
+  document.getElementById('main-content').innerHTML=`
+    <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:560px;">
+      <div style="font-size:13px;font-weight:700;color:var(--pure);margin-bottom:6px;">Your public listing</div>
+      <div style="font-size:12px;color:var(--mist);margin-bottom:20px;line-height:1.6;">This is what members see when browsing the trainer directory. Keep your profile complete to attract more clients.</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--carbon);border-radius:var(--radius-sm);margin-bottom:10px;">
+        <span style="font-size:12px;color:var(--fog);">Visible in directory</span>
+        <div onclick="toggleDirectoryListing(this)" id="listing-toggle" style="width:44px;height:24px;border-radius:999px;background:var(--volt);cursor:pointer;position:relative;">
+          <div style="width:18px;height:18px;background:white;border-radius:50%;position:absolute;top:3px;right:3px;transition:all 0.2s;"></div>
+        </div>
+      </div>
+      <div style="padding:14px 16px;background:var(--volt-pale);border:1px solid rgba(198,241,53,0.15);border-radius:var(--radius-sm);font-size:11px;color:var(--mist);line-height:1.6;">
+        💡 Tip: Trainers with complete profiles (photo, bio, specialties, certifications) get 3x more client connections than incomplete profiles.
+      </div>
+      <button class="btn-purple" style="margin-top:16px;width:100%;padding:11px;" onclick="window.location.href='larofit-find-trainer.html'">🔍 Preview how you appear to members</button>
+    </div>`;
+}
+
+// ── INVITE CLIENT ────────────────────────────────────────────────────────────
+function showInviteClient(){
+  const code = 'TRAIN'+Math.random().toString(36).substr(2,4).toUpperCase();
+  document.getElementById('modal-body').innerHTML=`
+    <div style="padding:24px;">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div style="font-family:var(--font-display);font-size:24px;letter-spacing:1px;color:var(--pure);margin-bottom:6px;">INVITE A CLIENT</div>
+      <div style="font-size:13px;color:var(--mist);margin-bottom:20px;line-height:1.6;">Share this code with your client. They enter it in their LaroFit app under "Find a trainer" to connect with you instantly.</div>
+      <div style="padding:20px;background:var(--carbon);border:1.5px solid rgba(167,139,250,0.3);border-radius:var(--radius-sm);text-align:center;font-family:var(--font-mono);font-size:32px;letter-spacing:0.3em;color:var(--purple);cursor:pointer;margin-bottom:10px;" onclick="navigator.clipboard?.writeText('${code}').then(()=>showToast('Code copied!'))">${code}</div>
+      <div style="font-size:11px;color:var(--mist);text-align:center;margin-bottom:18px;">👆 Click to copy · ${20-DEMO_CLIENTS.length} spots remaining</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-sm" style="flex:1;justify-content:center;" onclick="navigator.clipboard?.writeText('Join my LaroFit training group! Code: ${code}').then(()=>showToast('Message copied!'))">📋 Copy invite message</button>
+        <button class="btn-purple" style="flex:1;" onclick="closeModal()">Done</button>
+      </div>
+    </div>`;
+  document.getElementById('modal-overlay').style.display='flex';
+}
+
+function saveClientNote(clientId, note){
+  const idx = DEMO_CLIENTS.findIndex(c=>c.id===clientId);
+  if(idx>=0) DEMO_CLIENTS[idx].notes = note;
+  showToast('Note saved');
+}
+
+function sendCheckIn(clientId){
+  const c = DEMO_CLIENTS.find(x=>x.id===clientId);
+  if(!c) return;
+  showToast(`📬 Check-in message sent to ${c.name.split(' ')[0]}`);
+}
+
+function viewClientProgram(clientId){
+  const c = DEMO_CLIENTS.find(x=>x.id===clientId);
+  const prog = getClientProgram(clientId);
+  if(!prog || !c) return;
+
+  const daysHtml = prog.days.map(day=>`
+    <div style="margin-bottom:8px;">
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'"
+        style="padding:10px 14px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:600;color:${day.rest?'var(--mist)':'var(--white)'};">${day.name}</span>
+        <span style="font-size:11px;color:var(--mist);">${day.rest?'REST DAY':day.exercises.length+' exercises'}</span>
+      </div>
+      <div style="display:none;padding:8px 14px;background:var(--card-bg);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-sm) var(--radius-sm);">
+        ${day.rest?'<div style="padding:8px 0;font-size:12px;color:var(--mist);">Rest &amp; recovery</div>':
+          day.exercises.map(ex=>`
+            <div style="padding:6px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+              <span style="font-size:12px;color:var(--fog);">${ex.name}</span>
+              <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);margin-left:auto;">${ex.params?.sets||3}×${ex.params?.reps||10}${ex.params?.weight?' @ '+ex.params.weight+'lbs':''}</span>
+            </div>`).join('')
+        }
+      </div>
+    </div>`).join('');
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-header">
+      <div class="mc-avatar" style="width:42px;height:42px;border-radius:50%;background:${c.color};display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--black);font-family:var(--font-display);">${c.initial}</div>
+      <div>
+        <div style="font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--pure);">${c.name.toUpperCase()}</div>
+        <div style="font-size:11px;color:var(--purple);">⭐ ${prog.name} · ${prog.weeks||6} weeks · Saved ${new Date(prog.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn-sm" onclick="buildForClient('${c.id}');closeModal()">✏️ Edit program</button>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:16px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+        <div style="padding:10px;background:var(--carbon);border-radius:var(--radius-sm);text-align:center;">
+          <div style="font-family:var(--font-display);font-size:22px;color:var(--volt);">${prog.days.filter(d=>!d.rest).length}</div>
+          <div style="font-size:10px;color:var(--mist);">Training days</div>
+        </div>
+        <div style="padding:10px;background:var(--carbon);border-radius:var(--radius-sm);text-align:center;">
+          <div style="font-family:var(--font-display);font-size:22px;color:var(--white);">${prog.days.reduce((t,d)=>t+(d.exercises?.length||0),0)}</div>
+          <div style="font-size:10px;color:var(--mist);">Total exercises</div>
+        </div>
+        <div style="padding:10px;background:var(--carbon);border-radius:var(--radius-sm);text-align:center;">
+          <div style="font-family:var(--font-display);font-size:22px;color:var(--purple);">${prog.weeks||6}</div>
+          <div style="font-size:10px;color:var(--mist);">Weeks</div>
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.12em;margin-bottom:8px;">WEEKLY SCHEDULE — click any day to expand</div>
+      ${daysHtml}
+    </div>`;
+
+  document.getElementById('modal-overlay').style.display='flex';
+}
+
+function buildForClient(clientId){
+  const c = DEMO_CLIENTS.find(x=>x.id===clientId);
+  if(!c) return;
+  localStorage.setItem('larofit_builder_client', JSON.stringify({id:c.id, name:c.name, goal:c.goal}));
+  localStorage.setItem('larofit_builder_client_active', JSON.stringify({id:c.id, name:c.name, goal:c.goal}));
+
+  // If client already has a program, set editing ID so builder loads it
+  const existingProg = getClientProgram(c.id);
+  if(existingProg){
+    localStorage.setItem('larofit_editing_program_id', existingProg.id);
+  } else {
+    localStorage.removeItem('larofit_editing_program_id');
+  }
+
+  // Show build choice modal
+  document.getElementById('build-choice-client-name').textContent = c.name.split(' ')[0];
+  document.getElementById('build-choice-modal').style.display='flex';
+}
+
+function toggleDirectoryListing(el){
+  const isOn = el.style.background===window.getComputedStyle(el).background;
+  el.style.background = el.style.background.includes('volt')?'var(--border)':'var(--volt)';
+  const dot = el.querySelector('div');
+  if(dot){ dot.style.right=el.style.background.includes('border')?'':' 3px'; dot.style.left=el.style.background.includes('border')?'3px':''; }
+  showToast(el.style.background.includes('volt')?'Listed in directory':'Removed from directory');
+}
+
+function getGreeting(){
+  const h=new Date().getHours();
+  return h<12?'morning':h<17?'afternoon':'evening';
+}
+
+function closeModal(){ document.getElementById('modal-overlay').style.display='none'; }
+
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+function buildChoice(type){
+  document.getElementById('build-choice-modal').style.display='none';
+  if(type==='ai'){
+    window.location.href='larofit-ai-coach.html?trainer=1';
+  } else if(type==='manual'){
+    window.location.href='larofit-trainer-builder.html';
+  } else {
+    window.location.href='larofit-trainer-builder.html?templates=1';
+  }
+}
+
+init();
+</script>
+<!-- BUILD CHOICE MODAL -->
+<div id="build-choice-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;align-items:center;justify-content:center;">
+  <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:32px;max-width:480px;width:90%;">
+    <div style="font-family:var(--font-display);font-size:26px;letter-spacing:1px;color:var(--pure);margin-bottom:4px;">BUILD PROGRAM</div>
+    <div style="font-size:13px;color:var(--mist);margin-bottom:24px;">For <strong id="build-choice-client-name" style="color:var(--white);"></strong> — choose how to build</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+      <button onclick="buildChoice('ai')" style="padding:16px 20px;background:var(--volt-pale);border:1.5px solid rgba(198,241,53,0.3);border-radius:var(--radius-sm);text-align:left;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--volt)'" onmouseout="this.style.borderColor='rgba(198,241,53,0.3)'">
+        <div style="font-size:14px;font-weight:700;color:var(--volt);margin-bottom:3px;">🤖 Build with AI</div>
+        <div style="font-size:12px;color:var(--mist);">AI reads client profile and builds a personalized program</div>
+      </button>
+      <button onclick="buildChoice('manual')" style="padding:16px 20px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);text-align:left;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--mist)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px;">📋 Build manually</div>
+        <div style="font-size:12px;color:var(--mist);">Full control — build a 7-day program exercise by exercise</div>
+      </button>
+      <button onclick="buildChoice('templates')" style="padding:16px 20px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);text-align:left;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--mist)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:14px;font-weight:700;color:var(--white);margin-bottom:3px;">📄 Build from template</div>
+        <div style="font-size:12px;color:var(--mist);">Start from a proven program — customize or use as-is</div>
+      </button>
+    </div>
+    <button onclick="document.getElementById('build-choice-modal').style.display='none'" style="width:100%;padding:10px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--mist);font-size:12px;cursor:pointer;font-family:var(--font-body);">Cancel</button>
+  </div>
+</div>
+</body>
+</html>

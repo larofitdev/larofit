@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — Measurements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 20px;margin:12px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background 0.15s;font-size:13px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--volt-pale);color:var(--white);border-left-color:var(--volt);}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-avatar{width:32px;height:32px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:12px;font-weight:600;color:var(--white);}
+.s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn-sm{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-sm:hover{border-color:var(--mist);color:var(--white);}
+.btn-volt{padding:9px 22px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-volt:hover{background:var(--volt-dim);}
+.content{display:grid;grid-template-columns:1fr 320px;flex:1;overflow:hidden;}
+.left-col{overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:20px;}
+.right-col{border-left:1px solid var(--border);overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:20px;background:var(--offblack);}
+
+/* ── MILESTONE BANNER ── */
+.milestone-banner{background:linear-gradient(90deg,rgba(198,241,53,0.08),rgba(96,165,250,0.06));border:1px solid rgba(198,241,53,0.2);border-radius:var(--radius);padding:18px 22px;display:flex;align-items:center;gap:16px;}
+.milestone-icon{font-size:32px;flex-shrink:0;}
+.milestone-title{font-size:14px;font-weight:700;color:var(--volt);margin-bottom:4px;}
+.milestone-body{font-size:13px;color:var(--mist);line-height:1.5;}
+
+/* ── ENTRY FORM ── */
+.entry-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.entry-header{padding:16px 20px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.entry-title{font-size:13px;font-weight:700;color:var(--pure);}
+.entry-date{font-size:11px;color:var(--mist);font-family:var(--font-mono);}
+.entry-body{padding:20px;}
+.entry-section{margin-bottom:20px;}
+.entry-section-label{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.meas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.meas-field{display:flex;flex-direction:column;gap:4px;}
+.meas-label{font-size:11px;font-weight:600;color:var(--mist);}
+.meas-input-wrap{position:relative;}
+.meas-input{width:100%;padding:9px 36px 9px 10px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-mono);outline:none;transition:border-color 0.2s;text-align:center;}
+.meas-input:focus{border-color:var(--volt);}
+.meas-input.improved{border-color:rgba(74,222,128,0.4);background:rgba(74,222,128,0.04);}
+.meas-input.regressed{border-color:rgba(255,87,51,0.3);background:rgba(255,87,51,0.03);}
+.meas-unit{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--slate);font-family:var(--font-mono);pointer-events:none;}
+.meas-delta{font-size:10px;font-family:var(--font-mono);margin-top:2px;min-height:14px;}
+.delta-good{color:var(--success);}
+.delta-bad{color:var(--ember);}
+.delta-neutral{color:var(--slate);}
+
+/* ── HISTORY TABLE ── */
+.history-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.history-header{padding:14px 20px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.history-title{font-size:13px;font-weight:700;color:var(--pure);}
+.history-table{width:100%;border-collapse:collapse;}
+.history-table th{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.08em;text-transform:uppercase;padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+.history-table td{padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);font-size:12px;color:var(--fog);font-family:var(--font-mono);white-space:nowrap;}
+.history-table tr:last-child td{border-bottom:none;}
+.history-table tr:hover td{background:rgba(255,255,255,0.02);}
+.history-date{font-weight:600;color:var(--white);}
+.entry-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:9px;font-weight:700;font-family:var(--font-mono);}
+.badge-first{background:rgba(167,139,250,0.15);color:var(--purple);}
+.badge-latest{background:rgba(198,241,53,0.15);color:var(--volt);}
+.empty-history{padding:40px;text-align:center;color:var(--slate);}
+.empty-history-icon{font-size:32px;margin-bottom:8px;opacity:0.4;}
+
+/* ── RIGHT PANEL — BEFORE/AFTER ── */
+.panel-title{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:12px;}
+.compare-card{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.compare-header{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);}
+.compare-col-head{padding:8px 12px;font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.08em;text-transform:uppercase;text-align:center;}
+.compare-col-head.first{border-right:1px solid var(--border);color:var(--purple);}
+.compare-col-head.latest{color:var(--volt);}
+.compare-row{display:grid;grid-template-columns:auto 1fr 1fr;border-bottom:1px solid rgba(255,255,255,0.03);align-items:center;}
+.compare-row:last-child{border-bottom:none;}
+.compare-label{padding:8px 10px;font-size:10px;font-weight:600;color:var(--mist);text-transform:uppercase;letter-spacing:0.06em;border-right:1px solid var(--border);white-space:nowrap;min-width:80px;}
+.compare-val{padding:8px 10px;font-size:12px;font-family:var(--font-mono);text-align:center;color:var(--fog);}
+.compare-val.first{border-right:1px solid var(--border);}
+.compare-val.changed-good{color:var(--success);}
+.compare-val.changed-bad{color:var(--ember);}
+.compare-delta{display:block;font-size:9px;margin-top:2px;}
+
+/* ── WEIGHT CHART (simple SVG bar) ── */
+.weight-chart{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;}
+.weight-chart-title{font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;}
+.chart-bars{display:flex;align-items:flex-end;gap:4px;height:80px;}
+.chart-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.chart-bar{width:100%;border-radius:3px 3px 0 0;background:var(--volt);opacity:0.7;transition:opacity 0.2s;min-height:4px;}
+.chart-bar:hover{opacity:1;}
+.chart-bar-label{font-size:8px;color:var(--slate);font-family:var(--font-mono);text-align:center;}
+
+/* ── TIPS ── */
+.tips-card{background:var(--volt-pale);border:1px solid rgba(198,241,53,0.12);border-radius:var(--radius-sm);padding:14px;}
+.tips-title{font-size:11px;font-weight:700;color:var(--volt);margin-bottom:8px;}
+.tip{font-size:11px;color:var(--mist);line-height:1.6;padding:4px 0;border-bottom:1px solid rgba(198,241,53,0.08);}
+.tip:last-child{border-bottom:none;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--volt);border-radius:999px;padding:10px 24px;font-size:13px;color:var(--volt);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+@media(max-width:1100px){.content{grid-template-columns:1fr;}.right-col{display:none;}}
+@media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}.meas-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">LARO<span>FIT</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Home</div>
+    <a class="nav-item " href="larofit-dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+    <div class="nav-section">Build</div>
+    <a class="nav-item " href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
+    <a class="nav-item " href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item " href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item " href="larofit-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <a class="nav-item " href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
+    <div class="nav-section">Track</div>
+    <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
+    <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
+    <a class="nav-item active" href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
+    <div class="nav-section">Community</div>
+    <a class="nav-item " href="larofit-group.html"><span class="nav-icon">👥</span>Group feed</a>
+    <a class="nav-item " href="larofit-find-trainer.html"><span class="nav-icon">🔍</span>Find a trainer</a>
+    <div class="nav-section">Trainer</div>
+    <a class="nav-item " href="larofit-trainer.html"><span class="nav-icon">🏋️</span>Trainer dashboard</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Trainer builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet builder</a>
+    <a class="nav-item " href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar" id="sidebar-avatar">LJ</div>
+    <div>
+      <div class="s-name" id="sidebar-name">Lyndon J.</div>
+      <div class="s-plan">&#10022; PRO TRIAL</div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">MEASUREMENTS</div>
+    <div class="topbar-right">
+      <button class="btn-sm" onclick="clearForm()">Clear form</button>
+      <button class="btn-volt" onclick="saveEntry()">📏 Save measurements</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="left-col">
+
+      <!-- MILESTONE BANNER -->
+      <div class="milestone-banner" id="milestone-banner" style="display:none;">
+        <div class="milestone-icon">🎉</div>
+        <div>
+          <div class="milestone-title" id="milestone-title">Time to check your progress!</div>
+          <div class="milestone-body" id="milestone-body">You've been putting in the work. Enter your current measurements below to see how far you've come.</div>
+        </div>
+      </div>
+
+      <!-- ENTRY FORM -->
+      <div class="entry-card">
+        <div class="entry-header">
+          <div class="entry-title">📏 New Measurement Entry</div>
+          <div class="entry-date" id="entry-date"></div>
+        </div>
+        <div class="entry-body">
+
+          <!-- BODY WEIGHT & BF -->
+          <div class="entry-section">
+            <div class="entry-section-label">⚖️ Body Weight &amp; Body Fat</div>
+            <div class="meas-grid" style="grid-template-columns:1fr 1fr 1fr;">
+              <div class="meas-field">
+                <div class="meas-label">Weight</div>
+                <div class="meas-input-wrap">
+                  <input class="meas-input" type="number" id="m-weight" placeholder="185" min="50" max="500" step="0.1" oninput="updateDeltas();calcBodyFat()">
+                  <span class="meas-unit">lbs</span>
+                </div>
+                <div class="meas-delta" id="d-weight"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Neck <span style="font-size:9px;color:var(--slate);">(for BF%)</span></div>
+                <div class="meas-input-wrap">
+                  <input class="meas-input" type="number" id="m-neck-bf" placeholder="15.5" step="0.25" oninput="updateDeltas();calcBodyFat()">
+                  <span class="meas-unit">in</span>
+                </div>
+                <div class="meas-delta" id="d-neck-bf"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Body fat % <span style="font-size:9px;color:var(--slate);">(auto)</span></div>
+                <div id="bf-result" style="padding:9px 10px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:var(--font-mono);color:var(--slate);text-align:center;">Enter waist &amp; neck</div>
+                <div class="meas-delta" id="d-bf"></div>
+              </div>
+            </div>
+            <div style="margin-top:8px;padding:8px 10px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.1);border-radius:var(--radius-sm);font-size:11px;color:var(--mist);">
+              💡 Body fat is calculated using the <strong style="color:var(--fog);">US Navy circumference method</strong> — uses your waist, neck, and height from your profile. Enter waist below to calculate.
+            </div>
+            <div id="bmi-profile-note" style="margin-top:6px;font-size:11px;color:var(--mist);font-family:var(--font-mono);"></div>
+          </div>
+
+          <!-- UPPER BODY -->
+          <div class="entry-section">
+            <div class="entry-section-label">💪 Upper Body <span style="font-size:9px;color:var(--slate);font-weight:400;text-transform:none;letter-spacing:0;">(inches)</span></div>
+            <div class="meas-grid">
+              <div class="meas-field">
+                <div class="meas-label">Chest</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-chest" placeholder="42" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-chest"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Shoulders</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-shoulders" placeholder="48" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-shoulders"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Neck</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-neck" placeholder="16" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-neck"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Left bicep</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-bicep-l" placeholder="15" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-bicep-l"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Right bicep</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-bicep-r" placeholder="15" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-bicep-r"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Left forearm</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-forearm-l" placeholder="12" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-forearm-l"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Right forearm</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-forearm-r" placeholder="12" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-forearm-r"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- CORE -->
+          <div class="entry-section">
+            <div class="entry-section-label">🔥 Core <span style="font-size:9px;color:var(--slate);font-weight:400;text-transform:none;letter-spacing:0;">(inches)</span></div>
+            <div class="meas-grid">
+              <div class="meas-field">
+                <div class="meas-label">Waist <span style="font-size:9px;color:var(--volt);">★ used for BF%</span></div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-waist" placeholder="34" step="0.25" oninput="updateDeltas();calcBodyFat()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-waist"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Hips</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-hips" placeholder="38" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-hips"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LOWER BODY -->
+          <div class="entry-section">
+            <div class="entry-section-label">🦵 Lower Body <span style="font-size:9px;color:var(--slate);font-weight:400;text-transform:none;letter-spacing:0;">(inches)</span></div>
+            <div class="meas-grid">
+              <div class="meas-field">
+                <div class="meas-label">Left thigh</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-thigh-l" placeholder="24" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-thigh-l"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Right thigh</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-thigh-r" placeholder="24" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-thigh-r"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Left calf</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-calf-l" placeholder="15" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-calf-l"></div>
+              </div>
+              <div class="meas-field">
+                <div class="meas-label">Right calf</div>
+                <div class="meas-input-wrap"><input class="meas-input" type="number" id="m-calf-r" placeholder="15" step="0.25" oninput="updateDeltas()"><span class="meas-unit">in</span></div>
+                <div class="meas-delta" id="d-calf-r"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- HISTORY TABLE -->
+      <div class="history-card">
+        <div class="history-header">
+          <div class="history-title">📋 Measurement History</div>
+          <div style="font-size:11px;color:var(--mist);font-family:var(--font-mono);" id="history-count"></div>
+        </div>
+        <div id="history-table-wrap"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-col">
+
+      <!-- WEIGHT CHART -->
+      <div>
+        <div class="panel-title">Body weight trend</div>
+        <div class="weight-chart">
+          <div class="weight-chart-title">Last 8 entries</div>
+          <div class="chart-bars" id="weight-chart"></div>
+        </div>
+      </div>
+
+      <!-- BEFORE / AFTER -->
+      <div>
+        <div class="panel-title">First vs latest</div>
+        <div class="compare-card" id="compare-card">
+          <div class="compare-header">
+            <div class="compare-col-head first">First entry</div>
+            <div class="compare-col-head latest">Latest</div>
+          </div>
+          <div id="compare-rows"></div>
+        </div>
+      </div>
+
+      <!-- TIPS -->
+      <div class="tips-card">
+        <div class="tips-title">📏 Measuring tips</div>
+        <div class="tip">Measure at the same time of day — morning before eating is best.</div>
+        <div class="tip">Use the same tape measure each time for consistency.</div>
+        <div class="tip">Measure every 4–6 weeks, not weekly — changes take time.</div>
+        <div class="tip">Waist is measured at the narrowest point, hips at the widest.</div>
+        <div class="tip">Arms and thighs should be measured flexed, at the largest point.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── FIELDS CONFIG ─────────────────────────────────────────────────────────────
+const FIELDS = [
+  {id:'weight',    label:'Weight',        unit:'lbs', lowerIsBetter:false},
+  {id:'neck-bf',   label:'Neck (BF)',     unit:'in',  lowerIsBetter:false},
+  {id:'chest',     label:'Chest',         unit:'in',  lowerIsBetter:false},
+  {id:'shoulders', label:'Shoulders',     unit:'in',  lowerIsBetter:false},
+  {id:'neck',      label:'Neck',          unit:'in',  lowerIsBetter:false},
+  {id:'bicep-l',   label:'Left bicep',    unit:'in',  lowerIsBetter:false},
+  {id:'bicep-r',   label:'Right bicep',   unit:'in',  lowerIsBetter:false},
+  {id:'forearm-l', label:'Left forearm',  unit:'in',  lowerIsBetter:false},
+  {id:'forearm-r', label:'Right forearm', unit:'in',  lowerIsBetter:false},
+  {id:'waist',     label:'Waist',         unit:'in',  lowerIsBetter:true},
+  {id:'hips',      label:'Hips',          unit:'in',  lowerIsBetter:false},
+  {id:'thigh-l',   label:'Left thigh',    unit:'in',  lowerIsBetter:false},
+  {id:'thigh-r',   label:'Right thigh',   unit:'in',  lowerIsBetter:false},
+  {id:'calf-l',    label:'Left calf',     unit:'in',  lowerIsBetter:false},
+  {id:'calf-r',    label:'Right calf',    unit:'in',  lowerIsBetter:false},
+  {id:'bf',        label:'Body fat',      unit:'%',   lowerIsBetter:true},
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let history = []; // [{date, values:{weight,chest,...}}]
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function init(){
+  document.getElementById('entry-date').textContent =
+    new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  const uname = localStorage.getItem('larofit_user_name');
+  if(uname){
+    document.getElementById('sidebar-name').textContent = uname;
+    document.getElementById('sidebar-avatar').textContent = uname.charAt(0).toUpperCase();
+  }
+
+  // Load history
+  const saved = localStorage.getItem('larofit_measurements');
+  if(saved) history = JSON.parse(saved);
+
+  // Auto-fill weight from profile if no history yet
+  const profile = JSON.parse(localStorage.getItem('larofit_profile')||'{}');
+  if(profile.weight){
+    const weightInput = document.getElementById('m-weight');
+    if(weightInput && !weightInput.value) weightInput.value = profile.weight;
+  }
+  // Show height source note
+  const bmiNote = document.getElementById('bmi-profile-note');
+  if(bmiNote){
+    const h = profile.height ? `Height from profile: ${profile.height}` : 'Add height to your profile for BF% calculation';
+    bmiNote.textContent = h;
+  }
+  calcBodyFat();
+
+  checkMilestone();
+  renderHistory();
+  renderCompare();
+  renderWeightChart();
+}
+
+// ── MILESTONE CHECK ───────────────────────────────────────────────────────────
+function checkMilestone(){
+  const logs   = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
+  const worked = logs.length;
+  const last   = history.length ? new Date(history[history.length-1].date) : null;
+  const daysSinceLast = last ? Math.floor((Date.now()-last)/(1000*60*60*24)) : 999;
+
+  const banner = document.getElementById('milestone-banner');
+
+  // Show banner if: 30+ workouts logged and no measurement in last 28 days
+  // OR first time (no measurements yet)
+  if(history.length === 0){
+    banner.style.display='flex';
+    document.getElementById('milestone-title').textContent = 'Welcome! Enter your starting measurements.';
+    document.getElementById('milestone-body').textContent  = 'This is your baseline. Every future entry will show your progress from here.';
+  } else if(worked >= 30 && daysSinceLast >= 28){
+    banner.style.display='flex';
+    document.getElementById('milestone-title').textContent = `${worked} workouts logged — time to measure your progress!`;
+    document.getElementById('milestone-body').textContent  = 'Enter your current measurements below and see how far you\'ve come since you started.';
+  } else {
+    banner.style.display='none';
+  }
+}
+
+// ── DELTA DISPLAY ─────────────────────────────────────────────────────────────
+function updateDeltas(){
+  if(!history.length) return;
+  const last = history[history.length-1].values;
+  FIELDS.forEach(f=>{
+    const input = document.getElementById('m-'+f.id);
+    const delta = document.getElementById('d-'+f.id);
+    if(!input||!delta) return;
+    const val  = parseFloat(input.value);
+    const prev = parseFloat(last[f.id]);
+    if(isNaN(val)||isNaN(prev)){ delta.textContent=''; return; }
+    const diff = val - prev;
+    if(Math.abs(diff) < 0.01){ delta.textContent='No change'; delta.className='meas-delta delta-neutral'; return; }
+    const good = f.lowerIsBetter ? diff < 0 : diff > 0;
+    delta.textContent = (diff>0?'+':'')+diff.toFixed(2)+' '+f.unit;
+    delta.className   = 'meas-delta '+(good?'delta-good':'delta-bad');
+    input.classList.toggle('improved', good && Math.abs(diff)>0);
+  });
+}
+
+// ── BODY FAT CIRCUMFERENCE CALCULATION (US Navy Method) ──────────────────────
+function calcBodyFat(){
+  const waist  = parseFloat(document.getElementById('m-waist')?.value);
+  const neck   = parseFloat(document.getElementById('m-neck-bf')?.value);
+  const el     = document.getElementById('bf-result');
+  if(!el) return;
+
+  // Get height from profile
+  const profile    = JSON.parse(localStorage.getItem('larofit_profile')||'{}');
+  const heightStr  = profile.height||'';
+  const sex        = profile.sex||'male';
+  const hips       = parseFloat(document.getElementById('m-hips')?.value);
+
+  // Parse height to inches
+  let heightIn = null;
+  const ftIn   = heightStr.match(/(\d+)['\u2019\s]+(\d+)/);
+  const ftOnly = heightStr.match(/^(\d+)['\u2019]?$/);
+  const num    = parseFloat(heightStr);
+  if(ftIn)             heightIn = parseInt(ftIn[1])*12 + parseInt(ftIn[2]);
+  else if(ftOnly)      heightIn = parseInt(ftOnly[1])*12;
+  else if(!isNaN(num)) heightIn = num > 100 ? num/2.54 : num;
+
+  if(!waist || !neck || !heightIn){
+    el.style.color = 'var(--slate)';
+    el.textContent = !heightIn ? 'Add height to profile' : 'Enter waist & neck';
+    return;
+  }
+
+  let bf;
+  if(sex==='female'){
+    if(!hips){ el.style.color='var(--slate)'; el.textContent='Enter hips too'; return; }
+    // Women: 163.205 × log10(waist+hips−neck) − 97.684 × log10(height) − 78.387
+    bf = 163.205*Math.log10(waist+hips-neck) - 97.684*Math.log10(heightIn) - 78.387;
+  } else {
+    // Men: 86.01 × log10(waist−neck) − 70.041 × log10(height) + 36.76
+    bf = 86.01*Math.log10(waist-neck) - 70.041*Math.log10(heightIn) + 36.76;
+  }
+
+  bf = Math.max(3, Math.min(60, bf)); // clamp to sane range
+  const rounded = bf.toFixed(1);
+
+  // Category
+  let category, color;
+  if(sex==='female'){
+    if(bf<14)      { category='Athletic'; color='var(--blue)'; }
+    else if(bf<21) { category='Fit';      color='var(--success)'; }
+    else if(bf<25) { category='Average';  color='#fb923c'; }
+    else           { category='High';     color='var(--ember)'; }
+  } else {
+    if(bf<6)       { category='Essential'; color='var(--blue)'; }
+    else if(bf<14) { category='Athletic';  color='var(--success)'; }
+    else if(bf<18) { category='Fit';       color='var(--success)'; }
+    else if(bf<25) { category='Average';   color='#fb923c'; }
+    else           { category='High';      color='var(--ember)'; }
+  }
+
+  el.style.color  = color;
+  el.textContent  = `${rounded}% — ${category}`;
+
+  // Store the calculated value for saving
+  window._calculatedBF = parseFloat(rounded);
+}
+function saveEntry(){
+  const values = {};
+  let hasAny = false;
+  FIELDS.forEach(f=>{
+    if(f.id==='bf') return; // calculated, not from input
+    const el = document.getElementById('m-'+f.id);
+    if(!el) return;
+    const v = parseFloat(el.value);
+    if(!isNaN(v)){ values[f.id] = v; hasAny = true; }
+  });
+  // Include calculated body fat
+  if(window._calculatedBF){ values.bf = window._calculatedBF; }
+  if(!hasAny){ showToast('Enter at least one measurement first'); return; }
+
+  history.push({ date: new Date().toISOString(), values });
+  localStorage.setItem('larofit_measurements', JSON.stringify(history));
+
+  window._calculatedBF = null;
+  clearForm();
+  renderHistory();
+  renderCompare();
+  renderWeightChart();
+  checkMilestone();
+  showToast('📏 Measurements saved!');
+}
+
+function clearForm(){
+  FIELDS.forEach(f=>{
+    if(f.id==='bf') return;
+    const el = document.getElementById('m-'+f.id);
+    if(el){ el.value=''; el.className='meas-input'; }
+    const d = document.getElementById('d-'+f.id);
+    if(d) d.textContent='';
+  });
+  const bfEl = document.getElementById('bf-result');
+  if(bfEl){ bfEl.style.color='var(--slate)'; bfEl.textContent='Enter waist & neck'; }
+  window._calculatedBF = null;
+}
+
+// ── HISTORY TABLE ─────────────────────────────────────────────────────────────
+function renderHistory(){
+  const wrap = document.getElementById('history-table-wrap');
+  document.getElementById('history-count').textContent = history.length+' entries';
+
+  if(!history.length){
+    wrap.innerHTML=`<div class="empty-history"><div class="empty-history-icon">📏</div>No measurements yet. Enter your first entry above.</div>`;
+    return;
+  }
+
+  // Show most recent first
+  const rows = [...history].reverse().map((entry, i)=>{
+    const isFirst  = i === history.length-1;
+    const isLatest = i === 0;
+    const date     = new Date(entry.date).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const w  = entry.values.weight ? entry.values.weight+'lbs' : '—';
+    const ch = entry.values.chest  ? entry.values.chest+'"'    : '—';
+    const wa = entry.values.waist  ? entry.values.waist+'"'    : '—';
+    const hi = entry.values.hips   ? entry.values.hips+'"'     : '—';
+    const al = entry.values['arm-l'] ? entry.values['arm-l']+'"' : '—';
+    return `<tr>
+      <td><span class="history-date">${date}</span>
+        ${isFirst?'<span class="entry-badge badge-first">FIRST</span>':''}
+        ${isLatest?'<span class="entry-badge badge-latest">LATEST</span>':''}
+      </td>
+      <td>${w}</td><td>${ch}</td><td>${wa}</td><td>${hi}</td><td>${al}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML=`<table class="history-table">
+    <thead><tr><th>Date</th><th>Weight</th><th>Chest</th><th>Waist</th><th>Hips</th><th>Arm</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ── COMPARE ───────────────────────────────────────────────────────────────────
+function renderCompare(){
+  const el = document.getElementById('compare-rows');
+  if(history.length < 2){ el.innerHTML='<div style="padding:20px;text-align:center;color:var(--slate);font-size:12px;">Add 2+ entries to see comparison</div>'; return; }
+
+  const first  = history[0].values;
+  const latest = history[history.length-1].values;
+
+  const compareFields = FIELDS.filter(f=>first[f.id]!==undefined||latest[f.id]!==undefined);
+
+  el.innerHTML = compareFields.map(f=>{
+    const fv = first[f.id];
+    const lv = latest[f.id];
+    if(fv===undefined&&lv===undefined) return '';
+    const diff = (fv&&lv) ? lv-fv : null;
+    const good = diff!==null ? (f.lowerIsBetter ? diff<0 : diff>0) : false;
+    const diffStr = diff!==null ? ((diff>0?'+':'')+diff.toFixed(2)) : '';
+    return `<div class="compare-row">
+      <div class="compare-label">${f.label}</div>
+      <div class="compare-val first">${fv!==undefined?fv+' '+f.unit:'—'}</div>
+      <div class="compare-val latest ${diff!==null&&Math.abs(diff)>0?(good?'changed-good':'changed-bad'):''}">
+        ${lv!==undefined?lv+' '+f.unit:'—'}
+        ${diffStr?`<span class="compare-delta">${diffStr} ${f.unit}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── WEIGHT CHART ──────────────────────────────────────────────────────────────
+function renderWeightChart(){
+  const el = document.getElementById('weight-chart');
+  const weightEntries = history.filter(e=>e.values.weight).slice(-8);
+  if(!weightEntries.length){ el.innerHTML='<div style="color:var(--slate);font-size:11px;padding:10px;">No weight data yet</div>'; return; }
+
+  const vals = weightEntries.map(e=>e.values.weight);
+  const min  = Math.min(...vals) * 0.97;
+  const max  = Math.max(...vals) * 1.01;
+
+  el.innerHTML = weightEntries.map(e=>{
+    const pct  = max===min ? 50 : ((e.values.weight-min)/(max-min))*100;
+    const date = new Date(e.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return `<div class="chart-bar-wrap">
+      <div class="chart-bar" style="height:${Math.max(pct,4)}%" title="${e.values.weight}lbs on ${date}"></div>
+      <div class="chart-bar-label">${date.split(' ')[0]}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+init();
+</script>
+</body>
+</html>

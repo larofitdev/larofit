@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — Trainer Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --purple-pale:rgba(167,139,250,0.08);--orange:#fb923c;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:20px 22px 14px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:18px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.trainer-badge-side{padding:3px 8px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);border-radius:999px;font-size:9px;font-weight:700;color:var(--purple);font-family:var(--font-mono);margin-top:5px;display:inline-block;}
+.sidebar-nav{padding:14px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 18px;margin:10px 0 5px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 18px;cursor:pointer;transition:background 0.15s;font-size:12px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--purple-pale);color:var(--white);border-left-color:var(--purple);}
+.nav-icon{font-size:14px;width:16px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:14px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:9px;}
+.s-avatar{width:30px;height:30px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--white);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:11px;font-weight:600;color:var(--white);}
+.s-plan{font-size:9px;color:var(--purple);font-family:var(--font-mono);}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--font-display);font-size:24px;letter-spacing:1px;color:var(--pure);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.btn-sm{padding:7px 14px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.btn-sm:hover{border-color:var(--mist);color:var(--white);}
+.btn-purple{padding:8px 16px;background:var(--purple);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--white);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-purple:hover{background:#8b5cf6;}
+
+/* ── LAYOUT ── */
+.library-layout{display:grid;grid-template-columns:1fr 360px;min-height:calc(100vh - 65px);}
+.lib-main{border-right:1px solid var(--border);display:flex;flex-direction:column;}
+.lib-side{display:flex;flex-direction:column;background:var(--offblack);}
+
+/* ── LIB TABS ── */
+.lib-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--offblack);}
+.lib-tab{padding:12px 20px;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body);}
+.lib-tab.active{color:var(--purple);border-bottom-color:var(--purple);}
+.lib-tab-count{display:inline-block;padding:1px 6px;background:var(--carbon);border-radius:999px;font-size:10px;margin-left:4px;color:var(--mist);}
+
+/* ── SEARCH ROW ── */
+.search-row{display:flex;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--carbon);}
+.search-input{flex:1;padding:8px 12px;background:var(--offblack);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:12px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;}
+.search-input:focus{border-color:var(--purple);}
+.filter-btn{padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:transparent;color:var(--mist);font-size:11px;cursor:pointer;font-family:var(--font-body);transition:all 0.15s;white-space:nowrap;}
+.filter-btn.active{border-color:var(--purple);color:var(--purple);background:var(--purple-pale);}
+
+/* ── EXERCISE LIST ── */
+.ex-list{flex:1;overflow-y:auto;}
+.ex-group-title{padding:8px 16px;font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.14em;text-transform:uppercase;background:var(--carbon);border-bottom:1px solid var(--border);position:sticky;top:0;}
+.ex-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.12s;}
+.ex-row:hover{background:var(--purple-pale);}
+.ex-row.selected{background:var(--purple-pale);border-left:3px solid var(--purple);}
+.ex-row.custom{border-left:3px solid var(--purple);}
+.ex-icon{width:32px;height:32px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ex-icon.standard{background:var(--carbon);border:1px solid var(--border);}
+.ex-icon.custom-icon{background:var(--purple-pale);border:1px solid rgba(167,139,250,0.2);}
+.ex-name{font-size:12px;font-weight:600;color:var(--white);flex:1;}
+.ex-meta{font-size:10px;color:var(--mist);}
+.ex-tags{display:flex;gap:4px;flex-shrink:0;}
+.ex-tag{padding:2px 7px;border-radius:999px;font-size:9px;font-weight:700;font-family:var(--font-mono);}
+.ex-tag.custom{background:var(--purple-pale);color:var(--purple);border:1px solid rgba(167,139,250,0.2);}
+.ex-tag.video{background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.2);}
+.ex-tag.notes{background:rgba(198,241,53,0.08);color:var(--volt);border:1px solid rgba(198,241,53,0.15);}
+
+/* ── DETAIL PANEL ── */
+.detail-panel{flex:1;overflow-y:auto;padding:20px;}
+.detail-empty{padding:60px 20px;text-align:center;color:var(--mist);}
+.detail-empty-icon{font-size:36px;margin-bottom:12px;opacity:0.4;}
+.detail-name{font-family:var(--font-display);font-size:26px;letter-spacing:1px;color:var(--pure);margin-bottom:4px;}
+.detail-meta{font-size:11px;color:var(--mist);font-family:var(--font-mono);margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;}
+.detail-badge{padding:3px 9px;border-radius:999px;font-size:10px;font-weight:700;font-family:var(--font-mono);}
+.detail-badge.custom{background:var(--purple-pale);color:var(--purple);border:1px solid rgba(167,139,250,0.2);}
+.detail-badge.standard{background:var(--carbon);color:var(--mist);border:1px solid var(--border);}
+
+/* ── VIDEO AREA ── */
+.video-area{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;margin-bottom:14px;position:relative;overflow:hidden;cursor:pointer;}
+.video-area video{width:100%;height:100%;object-fit:cover;border-radius:var(--radius-sm);}
+.video-placeholder{text-align:center;padding:20px;}
+.video-placeholder-icon{font-size:32px;margin-bottom:8px;opacity:0.4;}
+.video-placeholder-text{font-size:12px;color:var(--mist);}
+.video-upload-btn{position:absolute;bottom:10px;right:10px;padding:6px 12px;background:var(--purple);border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--white);cursor:pointer;font-family:var(--font-body);}
+.video-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;}
+.video-area:hover .video-overlay{opacity:1;}
+.play-circle{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;}
+
+/* ── DETAIL SECTIONS ── */
+.detail-section{margin-bottom:16px;}
+.detail-section-title{font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+.detail-desc{font-size:12px;color:var(--fog);line-height:1.7;padding:10px 12px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);}
+.detail-steps{display:flex;flex-direction:column;gap:6px;}
+.detail-step{display:flex;gap:8px;font-size:12px;color:var(--fog);line-height:1.5;}
+.step-num{width:20px;height:20px;border-radius:50%;background:var(--purple-pale);border:1px solid rgba(167,139,250,0.2);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--purple);flex-shrink:0;margin-top:1px;}
+.client-notes-area{display:flex;flex-direction:column;gap:6px;}
+.client-note{padding:8px 12px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);}
+.client-note-header{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.client-note-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.client-note-name{font-size:11px;font-weight:600;color:var(--fog);}
+.client-note-text{font-size:11px;color:var(--mist);line-height:1.5;font-style:italic;}
+.add-note-row{display:flex;gap:6px;}
+.note-input{flex:1;padding:7px 10px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:11px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;}
+.note-input:focus{border-color:var(--purple);}
+.note-client-select{padding:7px 10px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:11px;font-family:var(--font-body);outline:none;}
+.detail-actions{display:flex;gap:6px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border);}
+
+/* ── ADD EXERCISE FORM ── */
+.add-form{padding:20px;overflow-y:auto;flex:1;}
+.add-form-title{font-family:var(--font-display);font-size:20px;letter-spacing:1px;color:var(--pure);margin-bottom:4px;}
+.add-form-sub{font-size:11px;color:var(--mist);margin-bottom:18px;line-height:1.5;}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.field label{font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;}
+.field input,.field select,.field textarea{padding:8px 11px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:12px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--purple);}
+.field select option{background:var(--carbon);}
+.field textarea{resize:vertical;min-height:70px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.video-upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;position:relative;}
+.video-upload-zone:hover{border-color:var(--purple);background:var(--purple-pale);}
+.video-upload-zone.has-video{border-color:rgba(96,165,250,0.4);background:rgba(96,165,250,0.04);}
+.vuz-icon{font-size:28px;margin-bottom:8px;}
+.vuz-text{font-size:12px;color:var(--mist);line-height:1.5;}
+.vuz-text strong{color:var(--fog);}
+.vuz-input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.steps-builder{display:flex;flex-direction:column;gap:6px;margin-bottom:8px;}
+.step-row{display:flex;gap:6px;align-items:flex-start;}
+.step-num-label{width:24px;height:32px;border-radius:var(--radius-sm);background:var(--purple-pale);border:1px solid rgba(167,139,250,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--purple);flex-shrink:0;margin-top:1px;}
+.step-input{flex:1;padding:7px 10px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:11px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;resize:vertical;min-height:32px;}
+.step-input:focus{border-color:var(--purple);}
+.step-del{width:28px;height:28px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--slate);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:3px;transition:all 0.15s;}
+.step-del:hover{border-color:var(--ember);color:var(--ember);}
+.chip-grid{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;user-select:none;}
+.chip.on{border-color:var(--purple);color:var(--purple);background:var(--purple-pale);}
+.save-ex-btn{width:100%;padding:12px;background:var(--purple);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;color:var(--white);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;margin-top:4px;}
+.save-ex-btn:hover{background:#8b5cf6;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--purple);border-radius:999px;padding:9px 22px;font-size:12px;color:var(--purple);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+@media(max-width:1100px){.library-layout{grid-template-columns:1fr;}.lib-side{border-top:1px solid var(--border);}}
+@media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">LARO<span>FIT</span></div>
+    <div class="trainer-badge-side">🎓 TRAINER PRO</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Home</div>
+    <a class="nav-item " href="larofit-dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+    <div class="nav-section">Build</div>
+    <a class="nav-item " href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
+    <a class="nav-item " href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item " href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item " href="larofit-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <a class="nav-item " href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
+    <div class="nav-section">Track</div>
+    <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
+    <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
+    <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
+    <div class="nav-section">Community</div>
+    <a class="nav-item " href="larofit-group.html"><span class="nav-icon">👥</span>Group feed</a>
+    <a class="nav-item " href="larofit-find-trainer.html"><span class="nav-icon">🔍</span>Find a trainer</a>
+    <div class="nav-section">Trainer</div>
+    <a class="nav-item " href="larofit-trainer.html"><span class="nav-icon">🏋️</span>Trainer dashboard</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Trainer builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet builder</a>
+    <a class="nav-item active" href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar" id="sidebar-avatar">T</div>
+    <div>
+      <div class="s-name" id="sidebar-name">Trainer</div>
+      <div class="s-plan">💜 TRAINER PRO</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">EXERCISE LIBRARY</div>
+    <div class="topbar-right">
+      <label class="btn-sm" style="cursor:pointer;" title="Import CSV or JSON">
+        📥 Import
+        <input type="file" accept=".csv,.json" style="display:none;" onchange="importExercises(this)">
+      </label>
+      <button class="btn-sm" onclick="downloadCSVTemplate()" title="Download blank CSV template">📋 CSV template</button>
+      <button class="btn-sm" onclick="exportExercises()" title="Export your custom exercises">📤 Export</button>
+      <button class="btn-sm" onclick="switchSide('add')">➕ Add exercise</button>
+      <button class="btn-purple" onclick="window.location.href='larofit-builder.html'">📋 Open program builder</button>
+    </div>
+  </div>
+
+  <div class="library-layout">
+
+    <!-- LEFT: EXERCISE LIST -->
+    <div class="lib-main">
+      <div class="lib-tabs">
+        <button class="lib-tab active" id="tab-all" onclick="switchTab('all')">All exercises <span class="lib-tab-count" id="count-all">0</span></button>
+        <button class="lib-tab" id="tab-custom" onclick="switchTab('custom')">⭐ My exercises <span class="lib-tab-count" id="count-custom">0</span></button>
+        <button class="lib-tab" id="tab-assigned" onclick="switchTab('assigned')">👥 Assigned to clients <span class="lib-tab-count" id="count-assigned">0</span></button>
+      </div>
+      <div class="search-row">
+        <input class="search-input" id="search-input" placeholder="Search exercises…" oninput="renderList()">
+        <div id="muscle-filters" style="display:flex;gap:5px;overflow-x:auto;flex-shrink:0;"></div>
+      </div>
+      <div class="ex-list" id="ex-list"></div>
+    </div>
+
+    <!-- RIGHT: DETAIL / ADD FORM -->
+    <div class="lib-side">
+      <!-- Detail panel -->
+      <div id="side-detail" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+        <div class="detail-panel" id="detail-content">
+          <div class="detail-empty">
+            <div class="detail-empty-icon">📚</div>
+            <div style="font-size:13px;color:var(--mist);margin-bottom:8px;">Select an exercise to view details</div>
+            <div style="font-size:11px;color:var(--slate);">Or add your own custom exercises with videos and coaching notes</div>
+          </div>
+        </div>
+      </div>
+      <!-- Add form -->
+      <div id="side-add" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border);background:var(--carbon);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:12px;font-weight:700;color:var(--purple);">➕ New custom exercise</div>
+          <button class="btn-sm" onclick="switchSide('detail')" style="padding:4px 10px;">✕ Cancel</button>
+        </div>
+        <div class="add-form" id="add-form-content"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STANDARD LIBRARY (subset — same data as main library) ─────────────────
+const STANDARD = {
+  'Chest':[
+    {name:'Machine Chest Press',eq:'mc',muscle:'Chest',desc:'Primary pushing movement for chest development using the chest press machine.',steps:['Set seat height so handles align with mid-chest','Grip handles shoulder-width apart','Push forward until arms are nearly extended','Return slowly — 3-4 seconds on the way back'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Cable Chest Fly',eq:'cable',muscle:'Chest',desc:'Isolation movement for inner chest using cable pulleys.',steps:['Set both pulleys to shoulder height','Stand in center, step forward','With slight elbow bend, bring handles together in front of chest','Squeeze at peak contraction'],difficulty:'Intermediate',defaultType:'strength'},
+    {name:'Hammer Strength Chest Press',eq:'mc',muscle:'Chest',desc:'Plate-loaded chest press with independent arm movement.',steps:['Load plates evenly on both sides','Grip handles — neutral or overhand grip','Drive arms forward together','Control the return slowly'],difficulty:'Intermediate',defaultType:'strength'},
+    {name:'Pec Deck / Butterfly',eq:'mc',muscle:'Chest',desc:'Machine fly movement for chest isolation.',steps:['Sit with back flat against pad','Position arms so elbows are at shoulder height','Bring arms together in front','Hold peak contraction 1 second'],difficulty:'Beginner',defaultType:'strength'},
+  ],
+  'Back':[
+    {name:'Lat Pulldown',eq:'mc',muscle:'Back',desc:'Primary lat exercise pulling a bar down to chest level.',steps:['Adjust thigh pad to lock legs in','Grip bar wider than shoulder width','Pull bar to upper chest — lead with elbows','Slowly return — feel the stretch at top'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Seated Cable Row',eq:'cable',muscle:'Back',desc:'Horizontal rowing movement for mid-back and lats.',steps:['Sit upright, feet on platform, knees slightly bent','Grip handle, start with arms extended and back straight','Row handle to lower chest — drive elbows back','Hold squeeze 1 second, return slowly'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Machine Row',eq:'mc',muscle:'Back',desc:'Supported rowing machine for back thickness.',steps:['Adjust chest pad so arms can fully extend','Grip handles, chest against pad','Row back — squeeze shoulder blades together','Return slowly'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Cable Face Pull',eq:'cable',muscle:'Back',desc:'Rear delt and rotator cuff exercise using rope attachment.',steps:['Set cable to upper chest height, use rope attachment','Step back, pull rope toward face — elbows flare out','Externally rotate at peak — thumbs pointing back','Hold, return with control'],difficulty:'Intermediate',defaultType:'strength'},
+  ],
+  'Shoulders':[
+    {name:'Machine Shoulder Press',eq:'mc',muscle:'Shoulders',desc:'Overhead pressing movement using the shoulder press machine.',steps:['Set seat so handles start at shoulder height','Grip handles, brace core','Press overhead — avoid locking elbows fully','Lower slowly to starting position'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Lateral Raise Machine',eq:'mc',muscle:'Shoulders',desc:'Side delt isolation using the lateral raise machine.',steps:['Sit upright, adjust pads to elbow level','Brace core, raise arms out to sides to shoulder height','Hold 1 second at top','Lower slowly — 3 seconds'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Dumbbell Lateral Raise',eq:'db',muscle:'Shoulders',desc:'Free weight side delt isolation.',steps:['Stand with dumbbells at sides, slight bend in elbow','Raise arms out to sides until parallel to floor','Avoid shrugging — keep traps relaxed','Lower slowly'],difficulty:'Beginner',defaultType:'strength'},
+  ],
+  'Legs':[
+    {name:'Leg Press Machine',eq:'mc',muscle:'Legs',desc:'Primary quad exercise using the horizontal leg press.',steps:['Set seat position so knees are at 90 degrees when platform is loaded','Feet shoulder-width, mid-platform','Push platform away — do not lock knees at top','Lower slowly — 3 seconds down'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Leg Extension Machine',eq:'mc',muscle:'Legs',desc:'Quad isolation using the leg extension machine.',steps:['Adjust pad so it rests on lower shin just above ankle','Kick legs up until nearly extended','Hold at top 1 second — squeeze quads','Lower slowly'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Lying Leg Curl',eq:'mc',muscle:'Legs',desc:'Hamstring isolation using the lying leg curl machine.',steps:['Lie face down, position pad just above heel','Curl legs toward glutes as far as possible','Squeeze hamstrings at top','Lower with control'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Hip Abductor Machine',eq:'mc',muscle:'Legs',desc:'Outer hip and glute isolation.',steps:['Sit with thighs against inner pads','Drive knees apart against resistance','Hold peak 1 second','Return slowly'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Seated Calf Raise',eq:'mc',muscle:'Legs',desc:'Calf isolation using the seated calf raise machine.',steps:['Sit with knees under pad','Rise up on toes as high as possible','Hold peak contraction 2 seconds','Lower slowly — full stretch at bottom'],difficulty:'Beginner',defaultType:'strength'},
+  ],
+  'Arms':[
+    {name:'Cable Bicep Curl',eq:'cable',muscle:'Arms',desc:'Bicep curl using cable for constant tension.',steps:['Set cable to low position, use straight or EZ bar','Stand upright, elbows tucked at sides','Curl bar up — keep elbows stationary','Lower slowly — full extension at bottom'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Tricep Rope Pushdown',eq:'cable',muscle:'Arms',desc:'Tricep isolation using cable and rope attachment.',steps:['Set cable to high position, attach rope','Grip rope, elbows at sides','Push rope down and slightly out — spread rope at bottom','Control return — stop at right angle'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Dumbbell Hammer Curl',eq:'db',muscle:'Arms',desc:'Neutral grip curl for biceps and brachialis.',steps:['Hold dumbbells with neutral grip (thumbs up)','Curl with elbows staying at sides','Full range of motion up and down','Alternate arms or do both simultaneously'],difficulty:'Beginner',defaultType:'strength'},
+  ],
+  'Core':[
+    {name:'Ab Crunch Machine',eq:'mc',muscle:'Core',desc:'Machine-assisted crunch for rectus abdominis.',steps:['Select appropriate weight','Sit with elbows on pads, grip handles','Crunch forward — round lower back','Hold contraction 1 second, return slowly'],difficulty:'Beginner',defaultType:'strength'},
+    {name:'Cable Woodchop',eq:'cable',muscle:'Core',desc:'Rotational core exercise using cable.',steps:['Set cable to high position','Stand sideways, grip handle with both hands','Pull diagonally across body — rotate trunk','Control return slowly. Complete reps each side'],difficulty:'Intermediate',defaultType:'strength'},
+    {name:'Plank Hold',eq:'bw',muscle:'Core',desc:'Isometric core stability exercise.',steps:['Start in push-up position on forearms','Keep body in straight line — no sagging hips','Breathe normally, engage core throughout','Hold for target duration'],difficulty:'Beginner',defaultType:'isometric'},
+  ],
+};
+
+// ── CLIENTS (demo) ────────────────────────────────────────────────────────
+const CLIENTS = [
+  {id:'c1',name:'Marcus Webb',  initial:'M',color:'#60a5fa'},
+  {id:'c2',name:'Angela Torres',initial:'A',color:'#f472b6'},
+  {id:'c3',name:'Robert Kim',   initial:'R',color:'#4ade80'},
+  {id:'c4',name:'Priya Patel',  initial:'P',color:'#fb923c'},
+  {id:'c5',name:'James Okafor', initial:'J',color:'#c6f135'},
+  {id:'c6',name:'Linda Chen',   initial:'L',color:'#2dd4bf'},
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let customExercises = JSON.parse(localStorage.getItem('larofit_trainer_exercises')||'[]');
+let clientNotes     = JSON.parse(localStorage.getItem('larofit_exercise_notes')||'{}');
+let selectedEx      = null;
+let activeTab       = 'all';
+let activeFilter    = 'All';
+let formSteps       = [''];
+let formMuscleChips = [];
+let formVideoData   = null;
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+function init(){
+  const uname = localStorage.getItem('larofit_user_name')||'';
+  document.getElementById('sidebar-name').textContent = uname||'Trainer';
+  document.getElementById('sidebar-avatar').textContent = (uname||'T').charAt(0).toUpperCase();
+
+  renderMuscleFilters();
+  renderList();
+  updateCounts();
+}
+
+function allExercises(){
+  const standard = Object.entries(STANDARD).flatMap(([group,exs])=>
+    exs.map(e=>({...e,group,isCustom:false})));
+  const custom = customExercises.map(e=>({...e,isCustom:true}));
+  return [...standard,...custom];
+}
+
+function updateCounts(){
+  const all = allExercises();
+  document.getElementById('count-all').textContent    = all.length;
+  document.getElementById('count-custom').textContent = customExercises.length;
+  // "assigned" = exercises that appear in client notes
+  document.getElementById('count-assigned').textContent = Object.keys(clientNotes).length;
+}
+
+// ── MUSCLE GROUP FILTERS ──────────────────────────────────────────────────
+function renderMuscleFilters(){
+  const groups = ['All','Chest','Back','Shoulders','Legs','Arms','Core','Custom'];
+  document.getElementById('muscle-filters').innerHTML = groups.map(g=>`
+    <button class="filter-btn${g===activeFilter?' active':''}" onclick="activeFilter='${g}';renderMuscleFilters();renderList();">${g}</button>`
+  ).join('');
+}
+
+// ── EXERCISE LIST ─────────────────────────────────────────────────────────
+function renderList(){
+  const q   = document.getElementById('search-input').value.toLowerCase();
+  let exs   = allExercises();
+
+  // Tab filter
+  if(activeTab==='custom')   exs = exs.filter(e=>e.isCustom);
+  if(activeTab==='assigned') exs = exs.filter(e=>clientNotes[e.name]);
+
+  // Muscle filter
+  if(activeFilter==='Custom') exs = exs.filter(e=>e.isCustom);
+  else if(activeFilter!=='All') exs = exs.filter(e=>e.group===activeFilter||e.muscle===activeFilter);
+
+  // Search
+  if(q) exs = exs.filter(e=>e.name.toLowerCase().includes(q)||e.muscle?.toLowerCase().includes(q)||(e.group||'').toLowerCase().includes(q));
+
+  // Group by muscle
+  const grouped = {};
+  exs.forEach(e=>{
+    const g = e.group||e.muscle||'Other';
+    if(!grouped[g]) grouped[g]=[];
+    grouped[g].push(e);
+  });
+
+  const list = document.getElementById('ex-list');
+  if(!exs.length){
+    list.innerHTML=`<div style="padding:40px 20px;text-align:center;color:var(--mist);font-size:13px;">No exercises found.<br><button class="btn-purple" style="margin-top:12px;" onclick="switchSide('add')">➕ Add a custom exercise</button></div>`;
+    return;
+  }
+
+  list.innerHTML = Object.entries(grouped).map(([group,items])=>`
+    <div class="ex-group-title">${group} <span style="color:var(--slate);font-weight:400;">(${items.length})</span></div>
+    ${items.map(e=>{
+      const hasVideo = e.isCustom && e.videoData;
+      const hasNotes = clientNotes[e.name]?.length > 0;
+      const isSelected = selectedEx?.name===e.name;
+      return `<div class="ex-row${isSelected?' selected':''}${e.isCustom?' custom':''}" onclick="selectEx(${JSON.stringify(e).replace(/"/g,'&quot;')})">
+        <div class="ex-icon ${e.isCustom?'custom-icon':'standard'}">${e.isCustom?'⭐':'💪'}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="ex-name">${e.name}</div>
+          <div class="ex-meta">${e.muscle||e.group} · ${e.eq||''} · ${e.difficulty||'All levels'}</div>
+        </div>
+        <div class="ex-tags">
+          ${e.isCustom?'<span class="ex-tag custom">Custom</span>':''}
+          ${hasVideo?'<span class="ex-tag video">📹</span>':''}
+          ${hasNotes?'<span class="ex-tag notes">Notes</span>':''}
+        </div>
+      </div>`;
+    }).join('')}`
+  ).join('');
+}
+
+// ── SELECT EXERCISE ────────────────────────────────────────────────────────
+function selectEx(e){
+  // parse if string
+  if(typeof e==='string') e=JSON.parse(e);
+  selectedEx = e;
+  switchSide('detail');
+  renderDetail(e);
+  renderList(); // update selection highlight
+}
+
+function renderDetail(e){
+  const notes = clientNotes[e.name]||[];
+  const hasVideo = e.isCustom && e.videoData;
+
+  document.getElementById('detail-content').innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+      <div>
+        <div class="detail-name">${e.name}</div>
+        <div class="detail-meta">
+          <span>${e.muscle||e.group}</span>
+          <span>${e.eq||''}</span>
+          <span>${e.difficulty||'All levels'}</span>
+        </div>
+        <span class="detail-badge ${e.isCustom?'custom':'standard'}">${e.isCustom?'⭐ Your exercise':'Standard library'}</span>
+      </div>
+      ${e.isCustom?`<div style="display:flex;gap:6px;">
+        <button class="btn-sm" onclick="editExercise()">✏️ Edit</button>
+        <button class="btn-sm" style="color:var(--ember);border-color:rgba(255,87,51,0.3);" onclick="deleteExercise('${e.name}')">🗑</button>
+      </div>`:''}
+    </div>
+
+    <!-- VIDEO -->
+    <div class="video-area" id="video-area">
+      ${hasVideo
+        ? `<video src="${e.videoData}" controls style="width:100%;height:100%;object-fit:contain;"></video>
+           <div class="video-overlay"><div class="play-circle">▶</div></div>`
+        : `<div class="video-placeholder">
+            <div class="video-placeholder-icon">🎬</div>
+            <div class="video-placeholder-text">${e.isCustom?'No video uploaded yet<br><small>Add one to show clients proper form</small>':'Video coaching available in the mobile app'}</div>
+          </div>`
+      }
+      ${e.isCustom?`<label class="video-upload-btn" style="cursor:pointer;">
+        📹 ${hasVideo?'Replace video':'Upload video'}
+        <input type="file" accept="video/*" style="display:none;" onchange="uploadVideo(this,'${e.name}')">
+      </label>`:''}
+    </div>
+
+    <!-- DESCRIPTION -->
+    ${e.desc?`
+    <div class="detail-section">
+      <div class="detail-section-title">About this exercise</div>
+      <div class="detail-desc">${e.desc}</div>
+    </div>`:''}
+
+    <!-- STEPS -->
+    ${e.steps?.length?`
+    <div class="detail-section">
+      <div class="detail-section-title">How to perform</div>
+      <div class="detail-steps">
+        ${e.steps.map((s,i)=>`<div class="detail-step"><div class="step-num">${i+1}</div><div>${s}</div></div>`).join('')}
+      </div>
+    </div>`:''}
+
+    <!-- CLIENT NOTES -->
+    <div class="detail-section">
+      <div class="detail-section-title">Client-specific coaching notes <span style="font-weight:400;color:var(--slate);text-transform:none;letter-spacing:0;">(only visible to that client)</span></div>
+      <div class="client-notes-area" id="notes-area">
+        ${notes.length?notes.map(n=>`
+          <div class="client-note">
+            <div class="client-note-header">
+              <div class="client-note-avatar" style="background:${CLIENTS.find(c=>c.name===n.client)?.color||'#888'};">${(n.client||'?').charAt(0)}</div>
+              <div class="client-note-name">${n.client}</div>
+              <button onclick="deleteNote('${e.name}','${n.id}')" style="margin-left:auto;background:none;border:none;color:var(--slate);cursor:pointer;font-size:11px;">✕</button>
+            </div>
+            <div class="client-note-text">${n.text}</div>
+          </div>`).join('')
+          :'<div style="font-size:11px;color:var(--slate);padding:8px 0;">No client notes yet.</div>'}
+      </div>
+      <div class="add-note-row" style="margin-top:8px;">
+        <select class="note-client-select" id="note-client">
+          <option value="">Select client…</option>
+          ${CLIENTS.map(c=>`<option value="${c.name}">${c.name}</option>`).join('')}
+        </select>
+        <input class="note-input" id="note-text" placeholder="Add coaching note…" onkeydown="if(event.key==='Enter')addNote('${e.name}')">
+        <button class="btn-purple" style="padding:7px 12px;white-space:nowrap;" onclick="addNote('${e.name}')">Add</button>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="detail-actions">
+      <button class="btn-sm" onclick="addToClientProgram('${e.name}')">📋 Add to client program</button>
+      <button class="btn-purple" onclick="window.location.href='larofit-builder.html'">Open in builder →</button>
+    </div>`;
+}
+
+// ── VIDEO UPLOAD ───────────────────────────────────────────────────────────
+function uploadVideo(input, exName){
+  const file = input.files?.[0];
+  if(!file) return;
+  if(file.size > 100*1024*1024){ showToast('Video must be under 100MB'); return; }
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const idx = customExercises.findIndex(x=>x.name===exName);
+    if(idx>=0){
+      customExercises[idx].videoData = e.target.result;
+      localStorage.setItem('larofit_trainer_exercises', JSON.stringify(customExercises));
+      selectedEx = customExercises[idx];
+      renderDetail(selectedEx);
+      renderList();
+      showToast('✅ Video uploaded!');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── CLIENT NOTES ──────────────────────────────────────────────────────────
+function addNote(exName){
+  const client = document.getElementById('note-client')?.value;
+  const text   = document.getElementById('note-text')?.value.trim();
+  if(!client){ showToast('Select a client first'); return; }
+  if(!text)  { showToast('Enter a note first'); return; }
+  if(!clientNotes[exName]) clientNotes[exName]=[];
+  clientNotes[exName].push({id:Date.now().toString(), client, text});
+  localStorage.setItem('larofit_exercise_notes', JSON.stringify(clientNotes));
+  renderDetail(selectedEx);
+  updateCounts();
+  showToast(`Note added for ${client}`);
+}
+
+function deleteNote(exName, noteId){
+  if(!clientNotes[exName]) return;
+  clientNotes[exName]=clientNotes[exName].filter(n=>n.id!==noteId);
+  localStorage.setItem('larofit_exercise_notes', JSON.stringify(clientNotes));
+  renderDetail(selectedEx);
+  updateCounts();
+  showToast('Note removed');
+}
+
+// ── DELETE CUSTOM EXERCISE ─────────────────────────────────────────────────
+function deleteExercise(name){
+  if(!confirm(`Delete "${name}" from your custom exercises?`)) return;
+  customExercises = customExercises.filter(e=>e.name!==name);
+  localStorage.setItem('larofit_trainer_exercises', JSON.stringify(customExercises));
+  selectedEx=null;
+  renderDetail({});
+  renderList();
+  updateCounts();
+  document.getElementById('detail-content').innerHTML=`<div class="detail-empty"><div class="detail-empty-icon">📚</div><div style="font-size:13px;color:var(--mist);">Select an exercise to view details</div></div>`;
+  showToast('Exercise deleted');
+}
+
+function editExercise(){
+  if(!selectedEx?.isCustom) return;
+  switchSide('add');
+  renderAddForm(selectedEx);
+}
+
+function addToClientProgram(exName){
+  showToast(`Opening program builder — exercise will be pre-loaded`);
+  setTimeout(()=>window.location.href='larofit-builder.html',800);
+}
+
+// ── TAB SWITCHING ─────────────────────────────────────────────────────────
+function switchTab(tab){
+  activeTab=tab;
+  document.querySelectorAll('.lib-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab)?.classList.add('active');
+  renderList();
+}
+
+function switchSide(side){
+  document.getElementById('side-detail').style.display = side==='detail'?'flex':'none';
+  document.getElementById('side-add').style.display    = side==='add'?'flex':'none';
+  if(side==='add') renderAddForm();
+}
+
+// ── ADD EXERCISE FORM ──────────────────────────────────────────────────────
+function renderAddForm(editing=null){
+  formSteps       = editing?.steps||[''];
+  formMuscleChips = editing?.muscleGroups||[];
+  formVideoData   = editing?.videoData||null;
+
+  const muscles = ['Chest','Back','Shoulders','Legs','Arms','Core','Glutes','Cardio','Full Body'];
+  const eqOpts  = ['Bodyweight','Dumbbell','Cable','Machine','Barbell','Resistance Band','Kettlebell','Other'];
+  const diffOpts= ['Beginner','Intermediate','Advanced','All levels'];
+
+  document.getElementById('add-form-content').innerHTML = `
+    <div class="add-form-title">${editing?'EDIT EXERCISE':'ADD EXERCISE'}</div>
+    <div class="add-form-sub">${editing?`Editing "${editing.name}"`:
+      'Create a custom exercise for your clients. Add your own coaching videos and cues.'}</div>
+
+    <div class="field">
+      <label>Exercise name *</label>
+      <input type="text" id="f-name" placeholder="e.g. Modified Romanian Deadlift" value="${editing?.name||''}">
+    </div>
+
+    <div class="frow">
+      <div class="field">
+        <label>Muscle group *</label>
+        <select id="f-muscle">
+          <option value="">Select…</option>
+          ${muscles.map(m=>`<option value="${m}"${editing?.muscle===m?' selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Equipment</label>
+        <select id="f-eq">
+          ${eqOpts.map(e=>`<option value="${e}"${editing?.eq===e?' selected':''}>${e}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="frow">
+      <div class="field">
+        <label>Difficulty</label>
+        <select id="f-diff">
+          ${diffOpts.map(d=>`<option value="${d}"${editing?.difficulty===d?' selected':''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Default type</label>
+        <select id="f-type">
+          <option value="strength"${editing?.defaultType==='strength'?' selected':''}>Strength</option>
+          <option value="cardio"${editing?.defaultType==='cardio'?' selected':''}>Cardio</option>
+          <option value="isometric"${editing?.defaultType==='isometric'?' selected':''}>Isometric</option>
+          <option value="mobility"${editing?.defaultType==='mobility'?' selected':''}>Mobility</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Description</label>
+      <textarea id="f-desc" placeholder="Brief description of the exercise and its benefits…" rows="2">${editing?.desc||''}</textarea>
+    </div>
+
+    <!-- VIDEO UPLOAD -->
+    <div class="field">
+      <label>Demo video <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--slate);">(MP4, MOV — max 100MB)</span></label>
+      <div class="video-upload-zone ${formVideoData?'has-video':''}" id="video-zone">
+        <input type="file" accept="video/*" class="vuz-input" onchange="handleVideoUpload(this)">
+        ${formVideoData
+          ? `<div class="vuz-icon">✅</div><div class="vuz-text"><strong>Video uploaded</strong><br>Click to replace</div>`
+          : `<div class="vuz-icon">🎬</div><div class="vuz-text"><strong>Click to upload your demo video</strong><br>Clients will see this when viewing their program</div>`}
+      </div>
+    </div>
+
+    <!-- COACHING STEPS -->
+    <div class="field">
+      <label>How to perform <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--slate);">(step by step)</span></label>
+      <div class="steps-builder" id="steps-builder">
+        ${renderStepRows()}
+      </div>
+      <button onclick="addStep()" style="background:transparent;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:7px;color:var(--mist);cursor:pointer;font-size:11px;font-family:var(--font-body);width:100%;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">+ Add step</button>
+    </div>
+
+    <!-- TRAINER CUES -->
+    <div class="field">
+      <label>Trainer cues <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--slate);">(internal coaching notes, not shown to clients)</span></label>
+      <textarea id="f-cues" placeholder="e.g. Watch for knee cave on lower body exercises. Remind clients to brace core before each rep…" rows="2">${editing?.cues||''}</textarea>
+    </div>
+
+    <button class="save-ex-btn" onclick="saveExercise('${editing?.name||''}')">
+      ${editing?'💾 Save changes':'⭐ Save to my library'}
+    </button>`;
+}
+
+function renderStepRows(){
+  return formSteps.map((s,i)=>`
+    <div class="step-row" id="step-row-${i}">
+      <div class="step-num-label">${i+1}</div>
+      <textarea class="step-input" id="step-${i}" rows="1" placeholder="Describe step ${i+1}…" oninput="formSteps[${i}]=this.value;autoResizeTA(this)">${s}</textarea>
+      ${formSteps.length>1?`<button class="step-del" onclick="removeStep(${i})">✕</button>`:''}
+    </div>`).join('');
+}
+
+function autoResizeTA(el){
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,80)+'px';
+}
+
+function addStep(){
+  formSteps.push('');
+  document.getElementById('steps-builder').innerHTML=renderStepRows();
+}
+
+function removeStep(i){
+  formSteps.splice(i,1);
+  document.getElementById('steps-builder').innerHTML=renderStepRows();
+}
+
+function handleVideoUpload(input){
+  const file=input.files?.[0];
+  if(!file) return;
+  if(file.size>100*1024*1024){ showToast('Video must be under 100MB'); return; }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    formVideoData=e.target.result;
+    const zone=document.getElementById('video-zone');
+    if(zone) zone.innerHTML=`<input type="file" accept="video/*" class="vuz-input" onchange="handleVideoUpload(this)"><div class="vuz-icon">✅</div><div class="vuz-text"><strong>Video ready — ${file.name}</strong><br>Click to replace</div>`;
+    if(zone) zone.classList.add('has-video');
+    showToast('Video loaded — save to keep it');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── SAVE EXERCISE ──────────────────────────────────────────────────────────
+function saveExercise(editingName=''){
+  const name  = document.getElementById('f-name')?.value.trim();
+  const muscle= document.getElementById('f-muscle')?.value;
+  const eq    = document.getElementById('f-eq')?.value;
+  const diff  = document.getElementById('f-diff')?.value;
+  const type  = document.getElementById('f-type')?.value;
+  const desc  = document.getElementById('f-desc')?.value.trim();
+  const cues  = document.getElementById('f-cues')?.value.trim();
+
+  // Collect steps
+  const steps = formSteps.map((_,i)=>document.getElementById('step-'+i)?.value.trim()).filter(Boolean);
+
+  if(!name)   { showToast('Exercise name is required'); return; }
+  if(!muscle) { showToast('Select a muscle group'); return; }
+
+  const ex = {
+    name, muscle, group:muscle, eq, difficulty:diff,
+    defaultType:type, desc, steps, cues,
+    videoData: formVideoData||null,
+    isCustom:true, createdAt:new Date().toISOString()
+  };
+
+  if(editingName){
+    const idx=customExercises.findIndex(e=>e.name===editingName);
+    if(idx>=0) customExercises[idx]=ex; else customExercises.push(ex);
+  } else {
+    // Check for duplicate
+    if(customExercises.some(e=>e.name.toLowerCase()===name.toLowerCase())){
+      showToast(`"${name}" already exists in your library`); return;
+    }
+    customExercises.push(ex);
+  }
+
+  localStorage.setItem('larofit_trainer_exercises', JSON.stringify(customExercises));
+  formVideoData=null;
+  switchSide('detail');
+  selectedEx=ex;
+  renderDetail(ex);
+  renderList();
+  updateCounts();
+  switchTab('custom');
+  showToast(`✅ "${name}" saved to your library!`);
+}
+
+// ── IMPORT / EXPORT ───────────────────────────────────────────────────────────
+
+function downloadCSVTemplate(){
+  const csv = [
+    'name,muscle,equipment,type,difficulty,notes',
+    'Cable face pull,Back,cable,strength,beginner,Keep elbows high. Pull to eye level.',
+    'Banded hip abduction,Legs,band,strength,beginner,Seated or standing. Control the return.',
+    'TRX fallout,Core,bw,strength,intermediate,Keep body rigid. Arms extend overhead.',
+  ].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'larofit-exercise-template.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV template downloaded');
+}
+
+function exportExercises(){
+  if(!customExercises.length){ showToast('No custom exercises to export'); return; }
+  // Export as JSON (includes all fields including video)
+  const data = JSON.stringify(customExercises, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `larofit-exercises-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`✅ Exported ${customExercises.length} exercises`);
+}
+
+function importExercises(input){
+  const file = input.files[0];
+  if(!file) return;
+  input.value = '';
+
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const content = e.target.result;
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    try {
+      let imported = [];
+
+      if(ext === 'json'){
+        const parsed = JSON.parse(content);
+        imported = Array.isArray(parsed) ? parsed : [parsed];
+      } else if(ext === 'csv'){
+        imported = parseCSV(content);
+      }
+
+      if(!imported.length){ showToast('No exercises found in file'); return; }
+
+      // Validate and normalize
+      let added = 0, skipped = 0;
+      imported.forEach(raw=>{
+        const name = (raw.name||raw.Name||raw.exercise||'').trim();
+        if(!name){ skipped++; return; }
+        if(customExercises.some(e=>e.name.toLowerCase()===name.toLowerCase())){ skipped++; return; }
+
+        customExercises.push({
+          name,
+          muscle: raw.muscle||raw.Muscle||raw.category||raw.Category||raw.muscleGroup||'Full body',
+          group:  raw.muscle||raw.Muscle||raw.category||raw.Category||'Full body',
+          eq:     normalizeEq(raw.eq||raw.equipment||raw.Equipment||'bw'),
+          difficulty: raw.difficulty||raw.Difficulty||raw.level||'beginner',
+          defaultType: raw.type||raw.Type||raw.defaultType||'strength',
+          desc:   raw.desc||raw.description||raw.Description||'',
+          cues:   raw.cues||raw.notes||raw.Notes||raw.formCues||'',
+          steps:  raw.steps||[],
+          isCustom: true,
+          createdAt: new Date().toISOString()
+        });
+        added++;
+      });
+
+      localStorage.setItem('larofit_trainer_exercises', JSON.stringify(customExercises));
+      renderList();
+      updateCounts();
+      switchTab('custom');
+      showToast(`✅ Imported ${added} exercises${skipped?' ('+skipped+' skipped — duplicates)':''}`);
+
+    } catch(err){
+      showToast('Import failed — check file format');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCSV(text){
+  const lines = text.trim().split('\n');
+  if(lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h=>h.trim().replace(/^"|"$/g,'').toLowerCase());
+  return lines.slice(1).map(line=>{
+    const values = line.match(/(".*?"|[^,]+)(?=,|$)/g)||line.split(',');
+    const obj = {};
+    headers.forEach((h,i)=>{ obj[h] = (values[i]||'').trim().replace(/^"|"$/g,''); });
+    return obj;
+  }).filter(r=>Object.values(r).some(v=>v));
+}
+
+function normalizeEq(raw){
+  const r = (raw||'').toLowerCase();
+  if(/dumbbell|db/.test(r)) return 'db';
+  if(/barbell|bb/.test(r)) return 'bb';
+  if(/machine|cable|mc/.test(r)) return 'mc';
+  if(/kettlebell|kb/.test(r)) return 'kb';
+  if(/band|resistance/.test(r)) return 'band';
+  if(/cardio|cd/.test(r)) return 'cd';
+  return 'bw';
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ── SEED DEMO CUSTOM EXERCISES ────────────────────────────────────────────
+function seedDemoIfEmpty(){
+  if(customExercises.length>0) return;
+  customExercises=[
+    {
+      name:'Planet Fitness Chest Protocol',
+      muscle:'Chest',group:'Chest',eq:'Machine',difficulty:'Intermediate',
+      defaultType:'strength',
+      desc:'My signature chest protocol designed specifically for Planet Fitness machines. Hits chest from three angles in one session.',
+      steps:[
+        'Start with Hammer Strength chest press — 4×10, 2-second pause at peak',
+        'Move directly to pec deck machine — 3×15, focus on squeeze',
+        'Finish with cable chest fly at eye level — 3×12, full stretch at start'
+      ],
+      cues:'Watch for elbow flare on chest press. Cue clients to keep elbows at 45 degrees, not 90.',
+      videoData:null,isCustom:true
+    },
+    {
+      name:'Single Leg Cable Romanian Deadlift',
+      muscle:'Legs',group:'Legs',eq:'Cable',difficulty:'Advanced',
+      defaultType:'strength',
+      desc:'Unilateral hinge movement for hamstrings and glutes using the cable machine for constant tension.',
+      steps:[
+        'Attach ankle strap to low cable pulley',
+        'Stand on one leg, slight bend in standing knee',
+        'Hinge at hip — maintain flat back, extend cable leg behind you',
+        'Feel hamstring stretch at bottom, drive hip forward to return',
+        'Complete all reps one side before switching'
+      ],
+      cues:'This is an advanced balance exercise. Start clients with a light cable or bodyweight version. Common error: rounding the lower back.',
+      videoData:null,isCustom:true
+    },
+    {
+      name:'Cable Pull-Apart (Rear Delt)',
+      muscle:'Shoulders',group:'Shoulders',eq:'Cable',difficulty:'Beginner',
+      defaultType:'strength',
+      desc:'Often overlooked rear delt exercise using two cable handles for balanced tension.',
+      steps:[
+        'Set both cables to shoulder height',
+        'Stand in center, grab right cable with left hand and left cable with right hand (crossing over)',
+        'Pull both arms back and out — like spreading wings',
+        'Squeeze rear delts at peak, return slowly'
+      ],
+      cues:'Clients with shoulder issues respond very well to this. Start very light — rear delts are a small muscle. Emphasize the squeeze, not the weight.',
+      videoData:null,isCustom:true
+    },
+  ];
+  localStorage.setItem('larofit_trainer_exercises',JSON.stringify(customExercises));
+}
+
+seedDemoIfEmpty();
+init();
+</script>
+</body>
+</html>

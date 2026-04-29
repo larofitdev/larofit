@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — Trainer Diet Plan Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --orange:#fb923c;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 20px;margin:12px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background 0.15s;font-size:13px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--volt-pale);color:var(--white);border-left-color:var(--volt);}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-avatar{width:32px;height:32px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0;font-family:var(--font-display);}
+.s-name{font-size:12px;font-weight:600;color:var(--white);}
+.s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.btn-sm{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn-sm:hover{border-color:var(--mist);color:var(--white);}
+.btn-volt{padding:9px 20px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-volt:hover{background:var(--volt-dim);}
+.content{padding:28px 32px;display:flex;flex-direction:column;gap:24px;max-width:1100px;}
+
+/* ── INTAKE ── */
+.intake-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.card-header{padding:18px 22px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.card-title{font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--pure);}
+.card-sub{font-size:12px;color:var(--mist);margin-top:2px;}
+.intake-body{padding:24px;}
+.profile-strip{display:flex;gap:14px;flex-wrap:wrap;padding:10px 14px;background:rgba(198,241,53,0.05);border:1px solid rgba(198,241,53,0.12);border-radius:var(--radius-sm);margin-bottom:20px;}
+.profile-chip{font-size:11px;font-family:var(--font-mono);color:var(--fog);}
+.profile-chip strong{color:var(--volt);}
+.intake-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.intake-section{display:flex;flex-direction:column;gap:10px;}
+.section-label{font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:2px;}
+.chip-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.chip{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:transparent;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;user-select:none;}
+.chip:hover{border-color:var(--mist);color:var(--white);}
+.chip.selected{border-color:var(--volt);color:var(--volt);background:var(--volt-pale);}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.08em;text-transform:uppercase;}
+.field input,.field select,.field textarea{padding:9px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--volt);}
+.field select option{background:var(--carbon);}
+.field textarea{resize:vertical;min-height:64px;}
+.gen-btn{width:100%;padding:16px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;transition:all 0.2s;margin-top:20px;display:flex;align-items:center;justify-content:center;gap:10px;}
+.gen-btn:hover{background:var(--volt-dim);}
+
+/* ── PLAN ── */
+.plan-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.plan-meta{padding:14px 22px;background:rgba(198,241,53,0.04);border-bottom:1px solid var(--border);font-size:12px;color:var(--mist);font-family:var(--font-mono);display:flex;gap:20px;flex-wrap:wrap;}
+.plan-meta strong{color:var(--volt);}
+.notes-bar{padding:12px 20px;background:rgba(96,165,250,0.06);border-bottom:1px solid var(--border);}
+.notes-bar-title{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.note-item{font-size:12px;color:var(--fog);padding:2px 0;display:flex;gap:8px;}
+.prot-rotation{display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--border);}
+.prot-day{padding:4px 10px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:10px;font-family:var(--font-mono);color:var(--mist);}
+.prot-day strong{color:var(--fog);}
+.prot-day.today{border-color:rgba(198,241,53,0.3);color:var(--volt);}
+.week-tabs{display:flex;border-bottom:1px solid var(--border);}
+.week-tab{flex:1;padding:12px;font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body);letter-spacing:0.06em;}
+.week-tab.active{color:var(--volt);border-bottom-color:var(--volt);}
+.day-tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);background:var(--offblack);}
+.day-tab{padding:10px 16px;font-size:11px;font-weight:600;color:var(--mist);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body);}
+.day-tab.active{color:var(--volt);border-bottom-color:var(--volt);}
+.day-tab.rest{opacity:0.5;}
+.day-plan{padding:22px;}
+.day-hdr{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.day-name{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
+.day-badge{padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;font-family:var(--font-mono);}
+.day-protein{font-size:12px;color:var(--mist);font-family:var(--font-mono);margin-left:auto;}
+.meals-list{display:flex;flex-direction:column;gap:10px;}
+.meal-card{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;transition:border-color 0.2s;}
+.meal-hdr{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);}
+.meal-time{font-size:11px;font-weight:700;color:var(--mist);font-family:var(--font-mono);width:62px;flex-shrink:0;}
+.meal-name{font-size:13px;font-weight:700;color:var(--pure);flex:1;}
+.meal-purpose{font-size:10px;color:var(--mist);font-weight:400;}
+.meal-macros{display:flex;gap:10px;font-size:11px;font-family:var(--font-mono);}
+.mp{color:var(--volt);}
+.mc{color:var(--blue);}
+.mf{color:var(--orange);}
+.mk{color:var(--mist);}
+.swap-btn{padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:10px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;flex-shrink:0;}
+.swap-btn:hover{border-color:var(--volt);color:var(--volt);}
+.meal-body{padding:11px 14px;}
+.food-item{display:flex;align-items:baseline;gap:8px;font-size:13px;color:var(--fog);padding:2px 0;}
+.food-item::before{content:'•';color:var(--slate);flex-shrink:0;}
+.prep-note{margin-top:7px;padding:6px 10px;background:rgba(198,241,53,0.04);border:1px solid rgba(198,241,53,0.1);border-radius:6px;font-size:11px;color:var(--mist);font-style:italic;}
+.alt-note{margin-top:10px;padding:9px 12px;background:rgba(167,139,250,0.06);border:1px solid rgba(167,139,250,0.15);border-radius:var(--radius-sm);font-size:12px;color:var(--mist);}
+.alt-note strong{color:var(--purple);}
+.day-totals{margin-top:14px;padding:12px 14px;background:var(--offblack);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.totals-label{font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;}
+.totals-row{display:flex;gap:18px;}
+.total-item{text-align:center;}
+.total-num{font-family:var(--font-display);font-size:22px;}
+.total-label{font-size:9px;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;}
+
+/* ── SHOPPING LIST ── */
+.shop-body{padding:22px;display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.shop-cat{display:flex;flex-direction:column;gap:7px;}
+.shop-cat-title{font-size:11px;font-weight:700;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.shop-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--fog);}
+.shop-check{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--border);flex-shrink:0;cursor:pointer;accent-color:var(--volt);}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--volt);border-radius:999px;padding:10px 24px;font-size:13px;color:var(--volt);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+@media(max-width:1000px){.intake-grid{grid-template-columns:1fr;}.shop-body{grid-template-columns:1fr;}}
+@media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">LARO<span>FIT</span></div>
+    <div style="padding:3px 8px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.25);border-radius:999px;font-size:9px;font-weight:700;color:var(--purple);font-family:var(--font-mono);margin-top:5px;display:inline-block;">🎓 TRAINER PRO</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Dashboard</div>
+    <a class="nav-item" href="larofit-trainer.html"><span class="nav-icon">📊</span>Overview</a>
+    <div class="nav-section">Clients</div>
+    <a class="nav-item" href="larofit-trainer.html"><span class="nav-icon">👥</span>My clients</a>
+    <a class="nav-item" href="larofit-trainer.html"><span class="nav-icon">💬</span>Messages</a>
+    <div class="nav-section">Tools</div>
+    <a class="nav-item" href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item active" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet plan builder</a>
+    <a class="nav-item" href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <div class="nav-section">My Profile</div>
+    <a class="nav-item" href="larofit-trainer.html"><span class="nav-icon">👤</span>Trainer profile</a>
+    <a class="nav-item" href="larofit-trainer.html"><span class="nav-icon">🔍</span>Directory listing</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar" id="sidebar-avatar" style="background:var(--purple);color:var(--white);">T</div>
+    <div>
+      <div class="s-name" id="sidebar-name">Trainer</div>
+      <div class="s-plan" style="color:var(--purple);">💜 TRAINER PRO</div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">DIET PLAN BUILDER</div>
+    <div class="topbar-right">
+      <button class="btn-sm" id="btn-edit" onclick="showIntake()" style="display:none;">✏️ Edit preferences</button>
+      <button class="btn-sm" id="btn-shop" onclick="document.getElementById('shop-section').scrollIntoView({behavior:'smooth'})" style="display:none;">🛒 Shopping list</button>
+      <button class="btn-volt" id="btn-save" onclick="savePlan()" style="display:none;">💾 Save plan</button>
+    </div>
+  </div>
+
+  <!-- TRAINER CLIENT SELECTOR -->
+  <div style="padding:10px 28px;background:rgba(167,139,250,0.08);border-bottom:1px solid rgba(167,139,250,0.2);display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:10px;font-weight:700;color:var(--purple);letter-spacing:0.12em;text-transform:uppercase;">🎓 Building plan for:</span>
+    <select id="diet-client-selector" onchange="selectDietClient(this.value)" style="padding:6px 12px;background:var(--carbon);border:1.5px solid rgba(167,139,250,0.3);border-radius:var(--radius-sm);color:var(--white);font-size:12px;font-family:var(--font-body);outline:none;cursor:pointer;">
+      <option value="">— Select a client —</option>
+      <option value="Marcus Webb">Marcus Webb (Weight Loss · Balanced)</option>
+      <option value="Angela Torres">Angela Torres (Weight Loss · Low Carb)</option>
+      <option value="Robert Kim">Robert Kim (Strength · Balanced)</option>
+      <option value="Priya Patel">Priya Patel (General · Balanced)</option>
+      <option value="James Okafor">James Okafor (Endurance · Balanced)</option>
+      <option value="Linda Chen">Linda Chen (Flexibility · Mediterranean)</option>
+      <option value="__self">Build for myself</option>
+    </select>
+    <span id="diet-client-note" style="font-size:11px;color:var(--mist);font-family:var(--font-mono);"></span>
+  </div>
+
+  <div class="content" id="main-content">
+    <!-- INTAKE FORM -->
+    <div class="intake-card" id="intake-section">
+      <div class="card-header">
+        <div>
+          <div class="card-title">BUILD YOUR DIET PLAN</div>
+          <div class="card-sub">Confirm your preferences — we'll load your personalized 2-week meal plan instantly.</div>
+        </div>
+      </div>
+      <div class="intake-body">
+        <div class="profile-strip" id="profile-strip">Loading profile…</div>
+        <div class="intake-grid">
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div class="intake-section">
+              <div class="section-label">🥩 Proteins — check all you eat</div>
+              <div class="chip-grid" id="chips-protein">
+                <div class="chip" data-group="protein" data-val="beef">🐄 Beef</div>
+                <div class="chip" data-group="protein" data-val="chicken">🍗 Chicken</div>
+                <div class="chip" data-group="protein" data-val="salmon">🐟 Salmon</div>
+                <div class="chip" data-group="protein" data-val="tuna">🐠 Tuna / canned fish</div>
+                <div class="chip" data-group="protein" data-val="shrimp">🦐 Shrimp</div>
+                <div class="chip" data-group="protein" data-val="pork">🥓 Pork / bacon</div>
+                <div class="chip" data-group="protein" data-val="lamb">🐑 Lamb</div>
+                <div class="chip" data-group="protein" data-val="turkey">🦃 Turkey</div>
+                <div class="chip" data-group="protein" data-val="eggs">🥚 Eggs</div>
+                <div class="chip" data-group="protein" data-val="tofu">🫘 Tofu / legumes</div>
+                <div class="chip" data-group="protein" data-val="shake">🥤 Protein shakes</div>
+              </div>
+            </div>
+            <div class="intake-section">
+              <div class="section-label">🧀 Dairy</div>
+              <div class="chip-grid">
+                <div class="chip" data-group="dairy" data-val="greek_yogurt">Greek yogurt</div>
+                <div class="chip" data-group="dairy" data-val="cheese">Cheese</div>
+                <div class="chip" data-group="dairy" data-val="cottage">Cottage cheese</div>
+                <div class="chip" data-group="dairy" data-val="butter">Butter / cream</div>
+                <div class="chip" data-group="dairy" data-val="no_dairy">❌ No dairy</div>
+              </div>
+            </div>
+            <div class="intake-section">
+              <div class="section-label">👨‍🍳 Cooking style</div>
+              <div class="chip-grid">
+                <div class="chip" data-group="cooking" data-val="simple">Simple &amp; quick</div>
+                <div class="chip selected" data-group="cooking" data-val="moderate">Some prep OK</div>
+                <div class="chip" data-group="cooking" data-val="adventurous">Love cooking</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div class="intake-section" id="carb-section">
+              <div class="section-label">🍚 Carb sources</div>
+              <div class="chip-grid">
+                <div class="chip" data-group="carbs" data-val="rice">Rice</div>
+                <div class="chip" data-group="carbs" data-val="oats">Oats</div>
+                <div class="chip" data-group="carbs" data-val="sweet_potato">Sweet potato</div>
+                <div class="chip" data-group="carbs" data-val="bread">Bread / wraps</div>
+                <div class="chip" data-group="carbs" data-val="pasta">Pasta</div>
+                <div class="chip" data-group="carbs" data-val="fruit">Fruit</div>
+                <div class="chip" data-group="carbs" data-val="keto_bread">Keto bread</div>
+                <div class="chip" data-group="carbs" data-val="no_carbs">❌ No carbs</div>
+              </div>
+            </div>
+            <div class="intake-section">
+              <div class="section-label">🥦 Vegetables</div>
+              <div class="chip-grid">
+                <div class="chip" data-group="veg" data-val="love">Love vegetables</div>
+                <div class="chip" data-group="veg" data-val="tolerate">Tolerate them</div>
+                <div class="chip" data-group="veg" data-val="minimal">Minimal / none</div>
+              </div>
+            </div>
+            <div class="field">
+              <label>Workout time</label>
+              <select id="workout-time">
+                <option value="morning">Morning (6–9 AM)</option>
+                <option value="midday">Midday (11 AM–1 PM)</option>
+                <option value="afternoon">Afternoon (3–5 PM)</option>
+                <option value="evening" selected>Evening (5–8 PM)</option>
+                <option value="night">Night (8 PM+)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Shopping list for</label>
+              <select id="household">
+                <option value="1" selected>Just me</option>
+                <option value="2">2 people</option>
+                <option value="3">3 people</option>
+                <option value="4">4 people</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Foods to avoid / allergies</label>
+              <textarea id="avoid" placeholder="e.g. no mushrooms, shellfish allergy…"></textarea>
+            </div>
+            <div class="field">
+              <label>Health notes</label>
+              <textarea id="health" placeholder="e.g. low iron, diabetic, high blood pressure…"></textarea>
+            </div>
+          </div>
+        </div>
+        <button class="gen-btn" onclick="buildPlan()">🥗 Build my 2-week diet plan</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// MEAL TEMPLATE LIBRARY
+// Each template has 14 days. Each day has meals array.
+// Macros are approximate targets — scaled to user's calorie needs at render time.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const MEAL_LIBRARY = {
+
+  carnivore: {
+    name: 'Modified Carnivore',
+    color: '#ff5733',
+    notes: [
+      'Keep net carbs under 20g daily — this is non-negotiable on carnivore.',
+      'Main meal 2 hours before your workout for optimal energy.',
+      'Post-workout shake within 15–30 minutes of finishing.',
+      'Drink plenty of water and add salt — electrolytes are critical on carnivore.',
+      'Consult your physician before starting, especially regarding any medications.',
+    ],
+    protein_rotation: {Mon:'Beef / Steak',Tue:'Chicken',Wed:'Salmon',Thu:'Canned fish / Lamb',Fri:'Beef / Steak',Sat:'Chicken',Sun:'Variety'},
+    days: [
+      { // MON
+        workout:'Upper body push', protein:'Ribeye steak', cals:2070, p:219, c:19, f:128,
+        meals:[
+          {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Bacon — 4 strips','3 fried eggs','Greek yogurt — ¾ cup','Blueberries — ¼ cup'],p:50,c:10,f:28,k:550,prep:'Cook bacon until crispy. Fry eggs in bacon fat.'},
+          {time:'11:30 AM',name:'Lunch',purpose:'',foods:['Ground beef patty — 5 oz','Keto bread — 2 slices (2g carbs)','Mayo + mustard + lettuce'],p:45,c:4,f:32,k:470,prep:'Season patty with salt and garlic. Cook in tallow.'},
+          {time:'4:00 PM',name:'Main meal',purpose:'Pre-workout fuel',foods:['Ribeye steak — 10 oz','Cooked in beef tallow','Greek yogurt — ½ cup (side)'],p:80,c:3,f:52,k:720,prep:'Sear steak 4 min each side. Rest 5 min before cutting.'},
+          {time:'7:15 PM',name:'Post-workout shake',purpose:'Recovery',foods:['Isopure Zero Carb whey — 1 scoop','Unsweetened almond milk — 1 cup'],p:26,c:1,f:3,k:130,prep:'Shake immediately after training.'},
+          {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['2 hard boiled eggs','Cheddar cheese — 1 oz'],p:18,c:1,f:14,k:200,prep:''}
+        ],
+        alt:'Swap ribeye for 10 oz sirloin or NY strip cooked the same way.'
+      },
+      { // TUE
+        workout:'Lower body', protein:'Chicken thighs', cals:1750, p:189, c:20, f:105,
+        meals:[
+          {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Greek yogurt — ¾ cup','Mixed berries — ¼ cup','2 hard boiled eggs','1 beef stick'],p:38,c:10,f:18,k:390,prep:''},
+          {time:'11:30 AM',name:'Lunch',purpose:'',foods:['Chicken thighs — 5 oz grilled','Keto bread — 2 slices','Mayo + mustard + lettuce'],p:42,c:4,f:28,k:430,prep:'Grill thighs skin-side down first for crispiness.'},
+          {time:'4:00 PM',name:'Main meal',purpose:'Pre-workout fuel',foods:['Chicken thighs — 10 oz bone-in skin-on','Roasted in butter','Greek yogurt — ½ cup'],p:65,c:4,f:44,k:620,prep:'Roast at 425°F for 35 min skin-side up.'},
+          {time:'7:15 PM',name:'Post-workout shake',purpose:'Recovery',foods:['Isopure Zero Carb — 1 scoop','Unsweetened almond milk — 1 cup'],p:26,c:1,f:3,k:130,prep:''},
+          {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['2 hard boiled eggs','1 beef stick'],p:18,c:1,f:11,k:180,prep:''}
+        ],
+        alt:'Swap chicken for 10 oz turkey thighs roasted the same way.'
+      },
+      { // WED
+        workout:'Upper body pull', protein:'Salmon', cals:1850, p:215, c:17, f:115,
+        meals:[
+          {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Bacon — 4 strips','3 fried eggs','Greek yogurt — ¾ cup','Raspberries — ¼ cup'],p:50,c:9,f:28,k:550,prep:''},
+          {time:'11:30 AM',name:'Lunch',purpose:'',foods:['Canned salmon — 5 oz drained','Greek yogurt — ½ cup','2 hard boiled eggs'],p:55,c:4,f:28,k:430,prep:'Mix salmon with a spoon of mayo if desired.'},
+          {time:'4:00 PM',name:'Main meal',purpose:'Pre-workout fuel',foods:['Atlantic salmon fillet — 10 oz','Pan-seared in butter','Greek yogurt — ½ cup'],p:72,c:3,f:44,k:600,prep:'Sear 4 min skin-side down, flip and cook 3 more min.'},
+          {time:'7:15 PM',name:'Post-workout shake',purpose:'Recovery',foods:['Isopure Zero Carb — 1 scoop','Unsweetened almond milk — 1 cup'],p:26,c:1,f:3,k:130,prep:''},
+          {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['2 hard boiled eggs'],p:12,c:0,f:10,k:140,prep:''}
+        ],
+        alt:'Swap salmon for 10 oz cod or tilapia pan-fried in butter.'
+      },
+      { // THU
+        workout:'Endurance / cardio', protein:'Lamb / canned fish', cals:1780, p:200, c:19, f:112,
+        meals:[
+          {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Greek yogurt — ¾ cup','Mixed berries — ¼ cup','2 hard boiled eggs','1 beef stick'],p:38,c:10,f:18,k:390,prep:''},
+          {time:'11:30 AM',name:'Lunch',purpose:'',foods:['Canned tuna — 5 oz','Greek yogurt — ½ cup','2 hard boiled eggs'],p:50,c:4,f:22,k:380,prep:'Drain tuna well. Mix with Greek yogurt instead of mayo.'},
+          {time:'4:00 PM',name:'Main meal',purpose:'Pre-workout fuel — lighter for cardio',foods:['Lamb chops — 10 oz','Cooked in butter','Greek yogurt — ½ cup'],p:68,c:3,f:52,k:700,prep:'Season with rosemary and garlic. Sear 3–4 min per side.'},
+          {time:'7:15 PM',name:'Post-workout shake',purpose:'Recovery',foods:['Isopure Zero Carb — 1 scoop','Unsweetened almond milk — 1 cup'],p:26,c:1,f:3,k:130,prep:''},
+          {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['1 beef stick','2 hard boiled eggs'],p:18,c:1,f:11,k:180,prep:''}
+        ],
+        alt:'Swap lamb for 10 oz pork belly slow-cooked in tallow.'
+      },
+      { // FRI
+        workout:'Full body strength', protein:'Ground beef / steak', cals:1990, p:202, c:19, f:128,
+        meals:[
+          {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Bacon — 4 strips','3 fried eggs','Greek yogurt — ¾ cup','Blueberries — ¼ cup'],p:50,c:10,f:28,k:550,prep:''},
+          {time:'11:30 AM',name:'Lunch',purpose:'',foods:['Shrimp — 5 oz sautéed in butter','Keto bread — 2 slices','Mayo + lettuce'],p:38,c:4,f:24,k:380,prep:'Cook shrimp 2 min per side in garlic butter.'},
+          {time:'4:00 PM',name:'Main meal',purpose:'Pre-workout fuel',foods:['Ground beef 80/20 — 10 oz','Pan-seared in tallow','Greek yogurt — ½ cup'],p:70,c:3,f:60,k:750,prep:'Season with salt and pepper. Cook over high heat.'},
+          {time:'7:15 PM',name:'Post-workout shake',purpose:'Recovery',foods:['Isopure Zero Carb — 1 scoop','Unsweetened almond milk — 1 cup'],p:26,c:1,f:3,k:130,prep:''},
+          {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['2 hard boiled eggs','1 beef stick'],p:18,c:1,f:11,k:180,prep:''}
+        ],
+        alt:'Swap ground beef for 10 oz ribeye or NY strip.'
+      },
+      { // SAT
+        workout:'Endurance + core', protein:'Chicken thighs', cals:1710, p:187, c:19, f:115,
+        meals:[
+          {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Greek yogurt — ¾ cup','Mixed berries — ¼ cup','2 hard boiled eggs','1 beef stick'],p:38,c:10,f:18,k:390,prep:''},
+          {time:'11:30 AM',name:'Lunch',purpose:'',foods:['Sardines in olive oil — 1 can','2 hard boiled eggs','Greek yogurt — ½ cup'],p:46,c:4,f:28,k:430,prep:'Serve sardines straight from can on a plate.'},
+          {time:'4:00 PM',name:'Main meal',purpose:'Pre-workout fuel — lighter for cardio',foods:['Chicken thighs — 10 oz skin-on','Roasted in butter','Greek yogurt — ½ cup'],p:65,c:4,f:44,k:620,prep:''},
+          {time:'7:15 PM',name:'Post-workout shake',purpose:'Recovery',foods:['Isopure Zero Carb — 1 scoop','Unsweetened almond milk — 1 cup'],p:26,c:1,f:3,k:130,prep:''},
+          {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['2 hard boiled eggs'],p:12,c:0,f:10,k:140,prep:''}
+        ],
+        alt:'Swap chicken for 10 oz turkey breast roasted with butter.'
+      },
+      { // SUN
+        workout:'Rest day', protein:'Variety', cals:2510, p:208, c:18, f:148,
+        meals:[
+          {time:'8:00 AM',name:'Breakfast',purpose:'Relaxed start',foods:['Bacon — 4 strips','3 fried eggs','Greek yogurt — ¾ cup','Mixed berries — ¼ cup'],p:50,c:10,f:28,k:550,prep:''},
+          {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Pork belly — 8 oz slow-cooked','Greek yogurt — ½ cup'],p:42,c:4,f:56,k:750,prep:'Slow cook pork belly in oven at 300°F for 2 hours.'},
+          {time:'4:00 PM',name:'Main meal',purpose:'',foods:['Ground beef 80/20 — 10 oz','Pan-seared with garlic butter','Greek yogurt — ½ cup'],p:70,c:3,f:60,k:750,prep:''},
+          {time:'7:00 PM',name:'Evening snack',purpose:'',foods:['Lamb chops — 5 oz','2 hard boiled eggs'],p:46,c:1,f:30,k:460,prep:''}
+        ],
+        alt:'Rest day — enjoy a bigger meal or swap any protein with whatever sounds good.'
+      }
+    ],
+    shopping: {
+      '🥩 Proteins — Meat & Fish': [
+        'Ribeye / sirloin steaks — 4 per week (10 oz each)',
+        'Ground beef 80/20 — 3 lbs per week',
+        'Chicken thighs bone-in skin-on — 2–3 lbs per week',
+        'Atlantic salmon fillets — 2 per week',
+        'Lamb chops — 8–10 chops per 2 weeks',
+        'Pork belly — 1–1.5 lbs per 2 weeks',
+        'Bacon — 3–4 packs per 2 weeks',
+        'Shrimp raw peeled — 1 lb per week',
+      ],
+      '🐟 Canned Fish': [
+        'Canned salmon in water — 4–6 cans',
+        'Canned tuna in water — 4–6 cans',
+        'Sardines in olive oil — 4–6 cans',
+      ],
+      '🥚 Eggs': ['Large eggs — 5 to 6 dozen for 2 weeks'],
+      '🧀 Dairy': [
+        'Plain whole-milk Greek yogurt — 3–4 large containers/week',
+        'Cheddar cheese — 1 block per 2 weeks',
+        'Unsweetened almond milk — 2 cartons per week',
+      ],
+      '💊 Supplements': [
+        'Isopure Zero Carb Unflavored Whey Protein',
+        'Beef sticks (6g protein each) — 2–3 per day',
+      ],
+      '🫐 Produce': ['Blueberries, raspberries, mixed berries — fresh or frozen, 2 bags'],
+      '🛒 Pantry': [
+        'Keto bread (1g carb/slice) — 2–3 loaves per 2 weeks',
+        'Butter — 2 lbs',
+        'Beef tallow for cooking',
+        'Mayo, mustard, lettuce for sandwiches',
+        'Sugar-free Gatorade — 6–8 bottles per week (electrolytes)',
+        'Salt, garlic, rosemary, black pepper',
+      ]
+    }
+  },
+
+  keto: {
+    name: 'Ketogenic',
+    color: '#fb923c',
+    notes: [
+      'Stay under 25g net carbs daily to maintain ketosis.',
+      'Fat is your primary fuel — don\'t fear it.',
+      'Salt your food generously — keto flushes electrolytes.',
+      'Pre-workout meal 90 min before training.',
+    ],
+    protein_rotation: {Mon:'Salmon',Tue:'Chicken',Wed:'Beef',Thu:'Pork',Fri:'Salmon',Sat:'Chicken',Sun:'Beef'},
+    days: [
+      {workout:'Upper body push',protein:'Salmon',cals:1800,p:140,c:20,f:130,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3 scrambled eggs in butter','Bacon — 3 strips','Avocado — ½','Coffee with heavy cream'],p:30,c:4,f:38,k:480,prep:'Scramble eggs slowly in butter over low heat.'},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Salmon fillet — 6 oz pan-seared','Mixed greens with olive oil','Feta cheese — 1 oz'],p:42,c:3,f:32,k:460,prep:''},
+         {time:'4:00 PM',name:'Pre-workout meal',purpose:'Pre-workout fuel',foods:['Chicken thighs — 8 oz','Roasted asparagus in butter','Sour cream — 2 tbsp'],p:52,c:6,f:38,k:580,prep:''},
+         {time:'7:30 PM',name:'Post-workout',purpose:'Recovery',foods:['Whey protein shake — 1 scoop','Unsweetened almond milk — 1 cup','1 tbsp almond butter'],p:28,c:4,f:10,k:212,prep:''},
+         {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['Cheese cubes — 1.5 oz','5 olives','2 hard boiled eggs'],p:16,c:1,f:18,k:226,prep:''}
+       ],
+       alt:'Swap salmon for 6 oz cod or tilapia pan-fried in butter.'},
+      {workout:'Lower body',protein:'Chicken',cals:1750,p:138,c:18,f:128,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3 fried eggs in butter','Sausage links — 2','Sautéed spinach in garlic butter'],p:28,c:3,f:36,k:450,prep:''},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Chicken thighs — 6 oz','Caesar salad no croutons','Parmesan — 1 oz'],p:44,c:4,f:32,k:470,prep:''},
+         {time:'4:00 PM',name:'Pre-workout meal',purpose:'Pre-workout fuel',foods:['Ground beef 80/20 — 8 oz','Zucchini sautéed in butter','Sour cream'],p:52,c:6,f:40,k:580,prep:''},
+         {time:'7:30 PM',name:'Post-workout',purpose:'Recovery',foods:['Protein shake — 1 scoop','Almond milk — 1 cup'],p:26,c:2,f:6,k:162,prep:''},
+         {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['Hard boiled eggs — 2','String cheese — 1'],p:16,c:1,f:16,k:210,prep:''}
+       ],
+       alt:'Swap chicken for turkey thighs or pork chops.'},
+      {workout:'Upper body pull',protein:'Beef',cals:1820,p:145,c:19,f:132,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Keto egg muffins — 3','Bacon — 3 strips','Avocado — ½'],p:30,c:3,f:38,k:476,prep:'Bake eggs with cheese and bacon in muffin tin at 350°F 20 min.'},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Ribeye — 6 oz','Side salad with blue cheese dressing','Cucumber slices'],p:46,c:4,f:36,k:520,prep:''},
+         {time:'4:00 PM',name:'Pre-workout meal',purpose:'Pre-workout fuel',foods:['Salmon — 8 oz pan-seared','Broccoli sautéed in butter','Sour cream — 2 tbsp'],p:54,c:7,f:38,k:566,prep:''},
+         {time:'7:30 PM',name:'Post-workout',purpose:'Recovery',foods:['Protein shake — 1 scoop','Almond milk — 1 cup'],p:26,c:2,f:6,k:162,prep:''},
+         {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['Macadamia nuts — 1 oz','2 hard boiled eggs'],p:10,c:4,f:26,k:290,prep:''}
+       ],
+       alt:'Swap ribeye for sirloin or NY strip steak.'},
+      {workout:'Cardio / endurance',protein:'Pork',cals:1700,p:130,c:18,f:125,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3 scrambled eggs','Smoked salmon — 2 oz','Cream cheese — 1 tbsp','Coffee with heavy cream'],p:28,c:2,f:32,k:412,prep:''},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Pork chops — 6 oz','Cauliflower mash with butter','Green beans sautéed in butter'],p:42,c:8,f:34,k:490,prep:'Pan-fry chops 4 min per side.'},
+         {time:'4:00 PM',name:'Pre-workout meal',purpose:'Lighter for cardio',foods:['Chicken breast — 6 oz','Mixed greens with olive oil and lemon','Feta — 1 oz'],p:44,c:5,f:22,k:390,prep:''},
+         {time:'7:30 PM',name:'Post-workout',purpose:'Recovery',foods:['Protein shake — 1 scoop','Almond milk — 1 cup'],p:26,c:2,f:6,k:162,prep:''},
+         {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['Pepperoni slices — 1 oz','Mozzarella — 1 oz'],p:12,c:1,f:18,k:218,prep:''}
+       ],
+       alt:'Swap pork for lamb chops or beef short ribs.'},
+      {workout:'Full body strength',protein:'Salmon',cals:1810,p:142,c:20,f:130,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3 fried eggs','Bacon — 3 strips','Sautéed mushrooms in butter'],p:28,c:3,f:36,k:446,prep:''},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Tuna salad — 5 oz tuna, mayo, celery','Lettuce wraps — 3 large leaves','Cucumber slices'],p:38,c:4,f:22,k:366,prep:''},
+         {time:'4:00 PM',name:'Pre-workout meal',purpose:'Pre-workout fuel',foods:['Salmon — 10 oz','Asparagus roasted in olive oil','Garlic butter sauce'],p:60,c:6,f:44,k:660,prep:''},
+         {time:'7:30 PM',name:'Post-workout',purpose:'Recovery',foods:['Protein shake — 1 scoop','Almond milk — 1 cup'],p:26,c:2,f:6,k:162,prep:''},
+         {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['Brie cheese — 1.5 oz','5 olives'],p:8,c:1,f:16,k:178,prep:''}
+       ],
+       alt:'Swap salmon for shrimp sautéed in garlic butter.'},
+      {workout:'Core + endurance',protein:'Chicken',cals:1680,p:132,c:19,f:122,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['2-egg omelette with cheese and peppers','Bacon — 2 strips','Avocado — ½'],p:26,c:5,f:34,k:430,prep:''},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Chicken salad — 6 oz chicken, mayo, celery','Romaine lettuce wraps','Parmesan shavings'],p:44,c:4,f:28,k:444,prep:''},
+         {time:'4:00 PM',name:'Pre-workout meal',purpose:'Lighter for cardio',foods:['Pork sausage — 4 oz','Sautéed zucchini in butter','Sour cream'],p:28,c:5,f:30,k:406,prep:''},
+         {time:'7:30 PM',name:'Post-workout',purpose:'Recovery',foods:['Protein shake — 1 scoop','Almond milk — 1 cup'],p:26,c:2,f:6,k:162,prep:''},
+         {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['Hard boiled eggs — 2','Cheddar — 1 oz'],p:18,c:1,f:18,k:238,prep:''}
+       ],
+       alt:'Swap chicken for turkey or shrimp.'},
+      {workout:'Rest day',protein:'Beef',cals:1900,p:140,c:20,f:140,
+       meals:[
+         {time:'8:30 AM',name:'Brunch',purpose:'Relaxed morning',foods:['3 eggs any style','Smoked salmon — 3 oz','Cream cheese on lettuce leaves','Avocado — ½'],p:38,c:4,f:46,k:582,prep:''},
+         {time:'1:30 PM',name:'Lunch',purpose:'',foods:['Ribeye — 8 oz','Side of sautéed spinach in garlic butter','Sour cream'],p:56,c:5,f:48,k:668,prep:''},
+         {time:'6:30 PM',name:'Dinner',purpose:'',foods:['Lamb chops — 6 oz','Roasted cauliflower in butter','Blue cheese crumbles — 1 oz'],p:46,c:8,f:40,k:580,prep:''},
+         {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['Macadamia nuts — 1 oz','String cheese — 1'],p:8,c:3,f:22,k:242,prep:''}
+       ],
+       alt:'Rest day — enjoy a larger meal or add an extra snack.'}
+    ],
+    shopping: {
+      '🥩 Proteins': ['Ribeye / sirloin steaks — 3–4 per week','Salmon fillets — 3–4 per week','Chicken thighs — 2 lbs/week','Ground beef 80/20 — 2 lbs/week','Lamb chops — 6–8 per 2 weeks','Pork chops — 4 per week','Bacon — 2–3 packs','Smoked salmon — 4 oz packs x 2','Sausage links or Italian sausage — 1 lb','Pepperoni — 1 pack'],
+      '🥚 Eggs': ['Large eggs — 4–5 dozen per 2 weeks'],
+      '🧀 Dairy': ['Heavy cream — 1 pint','Butter — 2 lbs','Sour cream — 2 tubs','Cream cheese — 2 blocks','Cheddar cheese — 1 block','Mozzarella — 1 block','Feta — 1 pack','Parmesan — 1 block','String cheese — 2 packs'],
+      '🥑 Produce': ['Avocados — 6 per week','Spinach — 2 bags','Asparagus — 2 bunches','Broccoli — 2 heads','Cauliflower — 2 heads','Zucchini — 4','Mushrooms — 1 pack','Romaine / mixed greens — 2 bags'],
+      '🛒 Pantry': ['Olive oil — 1 bottle','Almond butter — 1 jar','Macadamia nuts — 1 bag','Olives — 1 jar','Mayo — 1 jar','Blue cheese dressing','Caesar dressing — no sugar','Garlic — 1 head','Salt, pepper, herbs']
+    }
+  },
+
+  balanced: {
+    name: 'Balanced Healthy Eating',
+    color: '#4ade80',
+    notes: [
+      'Aim for a protein source at every meal for satiety and muscle maintenance.',
+      'Pre-workout meal 1–2 hours before training.',
+      'Stay hydrated — aim for 8–10 glasses of water daily.',
+      'Meal prep on Sundays saves time and keeps you on track all week.',
+    ],
+    protein_rotation: {Mon:'Chicken',Tue:'Fish',Wed:'Beef',Thu:'Eggs / legumes',Fri:'Chicken',Sat:'Fish',Sun:'Pork / variety'},
+    days: [
+      {workout:'Upper body push',protein:'Chicken breast',cals:2000,p:160,c:200,f:60,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Oatmeal — ½ cup dry','Mixed berries — ½ cup','2 scrambled eggs','Black coffee or tea'],p:22,c:52,f:8,k:368,prep:'Cook oats with water. Top with berries.'},
+         {time:'10:30 AM',name:'Mid-morning snack',purpose:'',foods:['Greek yogurt — ¾ cup','Banana — 1 small','Almonds — 1 oz'],p:20,c:38,f:10,k:322,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Grilled chicken breast — 6 oz','Brown rice — ¾ cup cooked','Steamed broccoli — 1 cup','Olive oil drizzle'],p:52,c:48,f:10,k:490,prep:'Season chicken with lemon, garlic, herbs.'},
+         {time:'4:30 PM',name:'Pre-workout snack',purpose:'Pre-workout fuel',foods:['Whole grain wrap','Turkey slices — 3 oz','Hummus — 2 tbsp','Spinach'],p:28,c:32,f:8,k:312,prep:''},
+         {time:'7:30 PM',name:'Post-workout dinner',purpose:'Recovery',foods:['Salmon — 6 oz','Sweet potato — 1 medium','Green beans — 1 cup','Lemon butter sauce'],p:42,c:38,f:14,k:450,prep:''},
+         {time:'9:00 PM',name:'Evening snack',purpose:'',foods:['Cottage cheese — ½ cup','Cucumber slices'],p:14,c:6,f:2,k:98,prep:''}
+       ],
+       alt:'Swap chicken for turkey breast or pork loin at lunch.'},
+      {workout:'Lower body',protein:'Salmon',cals:1950,p:155,c:195,f:58,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Whole eggs — 2 + 2 whites','Whole grain toast — 2 slices','Avocado — ¼','Tomato slices'],p:28,c:36,f:12,k:364,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Apple — 1','String cheese — 1','Almonds — small handful'],p:10,c:28,f:10,k:238,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Tuna salad wrap — 5 oz tuna, light mayo','Whole grain wrap','Mixed greens','Carrot sticks'],p:42,c:46,f:10,k:442,prep:''},
+         {time:'4:30 PM',name:'Pre-workout snack',purpose:'Pre-workout fuel',foods:['Banana — 1','Peanut butter — 1 tbsp','Protein shake — ½ scoop'],p:18,c:36,f:6,k:270,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Salmon — 7 oz','Quinoa — ¾ cup cooked','Roasted asparagus','Lemon herb butter'],p:52,c:40,f:16,k:512,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Greek yogurt — ½ cup','Blueberries — ¼ cup'],p:12,c:18,f:2,k:138,prep:''}
+       ],
+       alt:'Swap salmon for cod, tilapia, or shrimp.'},
+      {workout:'Upper body pull',protein:'Lean beef',cals:2050,p:162,c:198,f:65,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Protein pancakes — 3 medium','Mixed berry compote','Greek yogurt — ½ cup'],p:30,c:52,f:8,k:400,prep:'Mix 1 scoop protein powder, 1 banana, 2 eggs. Cook on griddle.'},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Rice cakes — 2','Peanut butter — 1.5 tbsp','Banana — ½'],p:8,c:36,f:8,k:244,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Sirloin steak — 6 oz','Roasted sweet potato — 1 medium','Steamed broccoli','Olive oil'],p:52,c:42,f:16,k:524,prep:''},
+         {time:'4:30 PM',name:'Pre-workout snack',purpose:'Pre-workout fuel',foods:['Whole grain toast — 1 slice','2 hard boiled eggs','Orange — 1'],p:18,c:38,f:6,k:278,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Chicken breast — 6 oz','Brown rice — ¾ cup','Stir-fried vegetables in olive oil'],p:50,c:44,f:10,k:474,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Pineapple chunks — ¼ cup'],p:14,c:14,f:2,k:130,prep:''}
+       ],
+       alt:'Swap sirloin for extra-lean ground beef or turkey burger.'},
+      {workout:'Cardio',protein:'Eggs / plant protein',cals:1850,p:140,c:200,f:55,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Overnight oats — ½ cup oats, almond milk','Chia seeds — 1 tbsp','Strawberries — ½ cup','Honey — 1 tsp'],p:16,c:54,f:8,k:352,prep:'Prep the night before. Add fruit in the morning.'},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Hummus — 3 tbsp','Veggie sticks — carrot, celery, pepper','Whole grain crackers — 6'],p:8,c:28,f:6,k:198,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Chickpea and vegetable bowl','Brown rice — ½ cup','Roasted peppers, zucchini, onion','Tahini dressing'],p:24,c:56,f:12,k:428,prep:'Roast veggies at 400°F 20 min.'},
+         {time:'4:30 PM',name:'Pre-workout snack',purpose:'Light for cardio',foods:['Banana — 1','Almond butter — 1 tbsp'],p:4,c:32,f:8,k:212,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Grilled chicken breast — 7 oz','Quinoa — ¾ cup','Roasted vegetables','Lemon olive oil dressing'],p:58,c:44,f:10,k:490,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Greek yogurt — ¾ cup','Granola — 2 tbsp'],p:16,c:22,f:4,k:184,prep:''}
+       ],
+       alt:'Add 2 eggs to any meal for extra protein on training days.'},
+      {workout:'Full body strength',protein:'Chicken',cals:2050,p:165,c:196,f:62,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3-egg omelette with spinach and feta','Whole grain toast — 1 slice','Orange juice — small glass'],p:28,c:38,f:14,k:390,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Protein bar — 1 (low sugar)','Apple — 1'],p:20,c:38,f:6,k:282,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Grilled chicken — 6 oz','Whole grain pasta — 1 cup cooked','Marinara sauce — ½ cup','Parmesan — 1 tbsp'],p:52,c:52,f:10,k:502,prep:''},
+         {time:'4:30 PM',name:'Pre-workout snack',purpose:'Pre-workout fuel',foods:['Rice cakes — 2','Peanut butter — 1 tbsp','Banana — 1 small'],p:8,c:42,f:8,k:272,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Lean ground beef — 6 oz','Sweet potato — 1 medium','Steamed green beans','Olive oil'],p:48,c:40,f:16,k:496,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Berries — ¼ cup'],p:14,c:12,f:2,k:122,prep:''}
+       ],
+       alt:''},
+      {workout:'Core + cardio',protein:'Fish',cals:1900,p:148,c:192,f:60,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Smoothie: 1 scoop protein, 1 banana, 1 cup berries, almond milk'],p:30,c:52,f:4,k:364,prep:'Blend until smooth.'},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Almonds — 1 oz','Dried apricots — 4 pieces'],p:6,c:20,f:14,k:226,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Tuna — 5 oz','Brown rice — ¾ cup','Edamame — ½ cup','Sesame soy dressing'],p:48,c:52,f:8,k:472,prep:''},
+         {time:'4:30 PM',name:'Pre-workout snack',purpose:'Light for cardio',foods:['Banana — 1','Rice cake — 1'],p:4,c:38,f:1,k:177,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Tilapia — 7 oz','Quinoa — ¾ cup','Roasted broccoli and peppers','Lemon herb dressing'],p:54,c:44,f:10,k:478,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Greek yogurt — ½ cup','Honey — 1 tsp','Walnuts — 6'],p:14,c:18,f:10,k:218,prep:''}
+       ],
+       alt:'Swap tilapia for cod, flounder, or shrimp.'},
+      {workout:'Rest day',protein:'Pork / variety',cals:1800,p:135,c:185,f:58,
+       meals:[
+         {time:'9:00 AM',name:'Brunch',purpose:'',foods:['2 poached eggs','Whole grain toast — 2 slices','Smoked salmon — 2 oz','Sliced tomato'],p:30,c:36,f:12,k:372,prep:''},
+         {time:'1:30 PM',name:'Lunch',purpose:'',foods:['Pork tenderloin — 6 oz','Roasted sweet potato','Mixed salad with vinaigrette'],p:46,c:46,f:12,k:472,prep:''},
+         {time:'6:30 PM',name:'Dinner',purpose:'',foods:['Chicken stir-fry — 5 oz chicken','Brown rice — ¾ cup','Mixed vegetables: broccoli, bell pepper, snap peas','Low-sodium soy sauce'],p:46,c:52,f:10,k:474,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Banana — ½'],p:14,c:20,f:2,k:154,prep:''}
+       ],
+       alt:'Rest day — enjoy a bigger dessert or add a glass of red wine.'}
+    ],
+    shopping: {
+      '🥩 Proteins': ['Chicken breasts — 3–4 lbs/week','Salmon fillets — 3 per week','Sirloin steak — 2 per week','Ground beef lean — 2 lbs/week','Pork tenderloin — 1 per week','Canned tuna — 6 cans','Turkey slices — deli, 1 lb'],
+      '🥚 Eggs & Dairy': ['Large eggs — 2–3 dozen','Greek yogurt — 2 large containers','Cottage cheese — 2 tubs','String cheese — 1 pack','Feta — 1 pack','Parmesan — 1 block'],
+      '🥑 Produce': ['Avocados — 4','Broccoli — 2–3 heads','Spinach — 2 bags','Sweet potatoes — 4','Bell peppers — 4','Zucchini — 3','Asparagus — 2 bunches','Mixed berries — 2 bags','Bananas — 1 bunch','Apples — 6','Oranges — 4'],
+      '🌾 Grains & Carbs': ['Brown rice — 2 lbs','Oats — 1 large canister','Whole grain bread — 1 loaf','Whole grain wraps — 1 pack','Quinoa — 1 lb','Whole grain pasta — 1 lb','Rice cakes — 1 bag'],
+      '🥜 Pantry': ['Olive oil','Peanut butter','Almond butter','Almonds — 1 bag','Hummus — 2 tubs','Tahini','Honey','Marinara sauce — 2 jars','Low-sodium soy sauce','Protein powder — 1 container']
+    }
+  },
+
+  mediterranean: {
+    name: 'Mediterranean',
+    color: '#60a5fa',
+    notes: [
+      'Olive oil is your primary fat — use it generously on everything.',
+      'Fish at least 3–4 times per week is the cornerstone of this diet.',
+      'Red wine (1 glass) with dinner is optional and acceptable.',
+      'Herbs and spices over salt — season with oregano, basil, rosemary, garlic.',
+    ],
+    protein_rotation: {Mon:'Fish',Tue:'Chicken',Wed:'Legumes',Thu:'Fish',Fri:'Lamb',Sat:'Chicken',Sun:'Eggs / variety'},
+    days: [
+      {workout:'Upper body push',protein:'Salmon',cals:1900,p:135,c:185,f:72,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Greek yogurt — ¾ cup','Drizzle of honey','Walnuts — 1 oz','Fresh figs — 2 or mixed berries'],p:18,c:38,f:14,k:346,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['Whole grain pita — 1 small','Hummus — 3 tbsp','Cucumber and tomato'],p:8,c:28,f:6,k:198,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Mediterranean salad: mixed greens, olives, feta, cucumber, tomato','Grilled chicken — 5 oz','Olive oil and lemon dressing','Whole grain bread — 1 slice'],p:42,c:28,f:20,k:460,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Whole grain crackers — 6','Hummus — 3 tbsp','Cherry tomatoes — handful'],p:8,c:32,f:8,k:232,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Salmon — 7 oz with herbs and lemon','Roasted vegetables: zucchini, eggplant, peppers','Brown rice — ½ cup','Tzatziki — 2 tbsp'],p:52,c:42,f:18,k:530,prep:'Roast salmon and veg together at 400°F 20 min.'},
+         {time:'9:00 PM',name:'Evening',purpose:'',foods:['Small bunch of grapes','1 oz almonds'],p:4,c:24,f:8,k:180,prep:''}
+       ],
+       alt:'Swap salmon for sea bass, branzino, or cod.'},
+      {workout:'Lower body',protein:'Chicken',cals:1850,p:130,c:180,f:70,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['2 soft boiled eggs','Whole grain toast — 2 slices','Tomatoes drizzled with olive oil','Fresh mint tea'],p:20,c:36,f:14,k:350,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['Apple — 1','Manchego cheese — 1 oz'],p:7,c:22,f:9,k:195,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Chicken shawarma bowl: grilled chicken 6 oz','Couscous — ½ cup','Roasted peppers and onions','Tahini dressing','Fresh parsley'],p:48,c:44,f:18,k:530,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Dates — 3','Almonds — 1 oz','Greek yogurt — ¼ cup'],p:8,c:38,f:10,k:270,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Baked cod — 7 oz with olive oil and herbs','Orzo with roasted tomatoes','Steamed spinach with lemon'],p:52,c:44,f:16,k:524,prep:''},
+         {time:'9:00 PM',name:'Evening',purpose:'',foods:['Greek yogurt — ½ cup','Drizzle of honey'],p:9,c:16,f:2,k:118,prep:''}
+       ],
+       alt:'Swap chicken for turkey or lamb in the shawarma bowl.'},
+      {workout:'Rest',protein:'Legumes',cals:1750,p:98,c:220,f:60,
+       meals:[
+         {time:'8:00 AM',name:'Breakfast',purpose:'',foods:['Shakshuka: 3 eggs poached in spiced tomato sauce','Whole grain pita — 1','Fresh herbs on top'],p:24,c:36,f:14,k:370,prep:'Simmer tomatoes with cumin, paprika, garlic. Crack eggs in.'},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Falafel — 4 pieces','Tabbouleh — ½ cup','Hummus — 3 tbsp','Whole grain pita','Pickled vegetables'],p:18,c:58,f:16,k:450,prep:''},
+         {time:'4:00 PM',name:'Snack',purpose:'',foods:['Lentil soup — 1 cup','Whole grain bread — 1 slice'],p:14,c:40,f:4,k:250,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'',foods:['Pasta with tomatoes, olives, capers — 1.5 cups','Grilled shrimp — 4 oz on top','Fresh basil and parmesan'],p:36,c:66,f:16,k:548,prep:''},
+         {time:'9:00 PM',name:'Evening',purpose:'',foods:['Fresh fruit salad — 1 cup','Pistachios — ½ oz'],p:4,c:28,f:6,k:178,prep:''}
+       ],
+       alt:'Add 2 oz of grilled chicken or fish to any meal for more protein.'},
+      {workout:'Cardio',protein:'Fish',cals:1800,p:130,c:175,f:68,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Smoothie: Greek yogurt, banana, frozen berries, honey, flaxseed'],p:18,c:52,f:6,k:334,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['Whole grain crackers — 6','Sardines in olive oil — ½ can','Cherry tomatoes'],p:14,c:22,f:10,k:234,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Grilled sea bass — 6 oz','Quinoa with herbs — ½ cup','Roasted eggplant with tahini','Lemon wedge'],p:48,c:36,f:18,k:490,prep:''},
+         {time:'4:30 PM',name:'Pre-workout snack',purpose:'Light for cardio',foods:['Banana — 1','Handful of almonds'],p:5,c:32,f:9,k:227,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Shrimp saganaki: shrimp in tomato-feta sauce','Orzo — ½ cup','Crusty whole grain bread — 1 slice'],p:42,c:44,f:14,k:474,prep:'Simmer shrimp in seasoned tomato sauce. Top with feta.'},
+         {time:'9:00 PM',name:'Evening',purpose:'',foods:['Orange — 1','Walnuts — 6'],p:3,c:24,f:8,k:179,prep:''}
+       ],
+       alt:'Swap sea bass for salmon, cod, or tilapia.'},
+      {workout:'Full body strength',protein:'Lamb',cals:1950,p:148,c:178,f:76,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3 scrambled eggs with feta and herbs','Whole grain toast — 1 slice','Tomatoes and cucumber with olive oil'],p:26,c:28,f:18,k:374,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Dates — 3','Almonds — 1 oz','Greek yogurt — ¼ cup'],p:8,c:36,f:8,k:248,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Lamb kofta — 5 oz','Couscous with herbs — ½ cup','Greek salad','Tzatziki — 3 tbsp'],p:44,c:38,f:22,k:530,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Hummus — 3 tbsp','Whole grain pita — 1','Bell pepper strips'],p:8,c:34,f:8,k:240,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Grilled chicken — 6 oz with lemon-herb marinade','Brown rice — ¾ cup','Roasted vegetables','Olive oil'],p:52,c:48,f:14,k:522,prep:''},
+         {time:'9:00 PM',name:'Evening',purpose:'',foods:['Fresh fruit — small bowl','Pistachios — ½ oz'],p:3,c:28,f:6,k:175,prep:''}
+       ],
+       alt:'Swap lamb kofta for beef kofta or ground turkey patties.'},
+      {workout:'Core + endurance',protein:'Chicken',cals:1800,p:128,c:172,f:68,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Avocado toast — 2 slices whole grain','Poached egg — 2','Za\'atar spice','Cherry tomatoes'],p:22,c:36,f:20,k:408,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['Apple — 1','Manchego — 1 oz','Walnuts — 6'],p:7,c:24,f:12,k:227,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Niçoise salad: tuna 4 oz, boiled egg, olives, green beans','Whole grain bread — 1 slice'],p:38,c:28,f:18,k:422,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Light for cardio',foods:['Banana — 1','Rice cake — 1'],p:3,c:38,f:1,k:173,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Chicken souvlaki — 6 oz','Pita — 1 whole grain','Tzatziki — 3 tbsp','Tomato and onion salad'],p:46,c:38,f:12,k:446,prep:'Marinate chicken in lemon, garlic, oregano 1 hr.'},
+         {time:'9:00 PM',name:'Evening',purpose:'',foods:['Greek yogurt — ½ cup','Honey — 1 tsp'],p:9,c:16,f:2,k:118,prep:''}
+       ],
+       alt:'Swap chicken souvlaki for lamb souvlaki.'},
+      {workout:'Rest day',protein:'Eggs / variety',cals:1750,p:118,c:172,f:66,
+       meals:[
+         {time:'9:00 AM',name:'Brunch',purpose:'',foods:['Frittata: 3 eggs, feta, spinach, sun-dried tomatoes','Whole grain toast — 1 slice','Fresh juice or herbal tea'],p:24,c:28,f:18,k:370,prep:'Bake frittata at 375°F 15 min.'},
+         {time:'2:00 PM',name:'Lunch',purpose:'',foods:['Spanakopita — 2 pieces','Greek salad — large','Lemon vinaigrette'],p:24,c:46,f:22,k:478,prep:''},
+         {time:'7:00 PM',name:'Dinner',purpose:'',foods:['Moussaka — 1 serving (eggplant, beef, béchamel)','Crusty whole grain bread — 1 slice','Red wine — optional 1 glass'],p:36,c:52,f:20,k:532,prep:''},
+         {time:'9:00 PM',name:'Evening',purpose:'',foods:['Fresh fruit salad','Baklava — 1 small piece (treat)'],p:3,c:38,f:6,k:218,prep:''}
+       ],
+       alt:'Rest day — enjoy a larger meal or a local restaurant.'}
+    ],
+    shopping: {
+      '🐟 Fish & Seafood': ['Salmon fillets — 3 per week','Cod or sea bass — 2 per week','Shrimp — 1 lb per week','Canned sardines in olive oil — 4 cans','Canned tuna — 4 cans'],
+      '🥩 Meat & Poultry': ['Chicken breast — 2 lbs/week','Lamb shoulder or chops — 1 lb/week','Ground beef lean — 1 lb/week'],
+      '🥚 Eggs & Dairy': ['Large eggs — 2–3 dozen','Greek yogurt — 2 large containers','Feta — 2 packs','Manchego cheese — 1 block','Parmesan — 1 block'],
+      '🥑 Produce': ['Tomatoes — 6','Cucumber — 3','Bell peppers — 4','Eggplant — 2','Zucchini — 3','Spinach — 2 bags','Avocados — 4','Lemons — 6','Oranges — 4','Grapes — 1 bunch','Dates — 1 pack','Mixed berries — 2 bags','Banana — 1 bunch','Fresh herbs: parsley, mint, basil, oregano'],
+      '🌾 Grains': ['Quinoa — 1 lb','Brown rice — 1 lb','Whole grain pita — 2 packs','Whole grain bread — 1 loaf','Couscous — 1 lb','Orzo — 1 lb'],
+      '🛒 Pantry': ['Extra virgin olive oil — 1 large bottle','Tahini','Hummus — 2 tubs','Olives — kalamata jar','Capers — 1 jar','Honey','Walnuts','Almonds','Pistachios','Za\'atar spice','Cumin, paprika, oregano','Tzatziki — store bought or make fresh']
+    }
+  },
+
+  vegetarian: {
+    name: 'Vegetarian (with eggs & dairy)',
+    color: '#a78bfa',
+    notes: [
+      'Combine complementary proteins — rice + beans, eggs + whole grain toast.',
+      'B12 supplement recommended — hard to get enough from plant foods alone.',
+      'Iron absorption improves when you eat vitamin C foods alongside iron-rich foods.',
+      'Meal prep legumes in big batches on Sunday — they freeze well.',
+    ],
+    protein_rotation: {Mon:'Eggs',Tue:'Legumes',Wed:'Dairy / tofu',Thu:'Eggs',Fri:'Legumes',Sat:'Tofu',Sun:'Eggs / variety'},
+    days: [
+      {workout:'Upper body push',protein:'Eggs',cals:1900,p:100,c:240,f:60,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Veggie omelette: 3 eggs, spinach, bell pepper, mushroom','Whole grain toast — 2 slices','Fresh orange juice — 1 glass'],p:24,c:48,f:14,k:418,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Greek yogurt — ¾ cup','Mixed berries — ½ cup','Granola — 2 tbsp'],p:16,c:34,f:6,k:254,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Lentil soup — 1.5 cups','Whole grain bread — 1 slice','Side salad with olive oil'],p:20,c:52,f:8,k:364,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Banana — 1','Peanut butter — 1.5 tbsp','Whole grain rice cake — 2'],p:8,c:44,f:9,k:285,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Black bean and sweet potato burrito bowl','Brown rice — ¾ cup','Shredded cheese — 1 oz','Salsa, Greek yogurt (instead of sour cream)'],p:24,c:68,f:12,k:468,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Pineapple — ¼ cup'],p:14,c:14,f:2,k:130,prep:''}
+       ],
+       alt:'Swap lentil soup for minestrone or white bean soup.'},
+      {workout:'Lower body',protein:'Legumes',cals:1850,p:96,c:238,f:56,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Overnight oats: oats, chia seeds, almond milk, berries','Scoop of protein powder (plant-based)'],p:28,c:58,f:8,k:420,prep:'Prep night before.'},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Hummus — 3 tbsp','Veggie sticks','Whole grain crackers — 6'],p:8,c:26,f:7,k:195,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Chickpea curry — 1.5 cups','Brown rice — ¾ cup','Whole grain naan — ½ piece'],p:20,c:68,f:10,k:442,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Banana — 1','Almond butter — 1 tbsp','Rice cake — 1'],p:5,c:40,f:8,k:249,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Tofu stir-fry — 6 oz firm tofu','Brown rice — ¾ cup','Mixed vegetables in sesame soy sauce'],p:28,c:52,f:12,k:428,prep:'Press tofu 30 min. Pan-fry until golden.'},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Greek yogurt — ½ cup','Honey — 1 tsp','Walnuts — 5'],p:10,c:16,f:8,k:174,prep:''}
+       ],
+       alt:'Swap chickpea curry for red lentil dal.'},
+      {workout:'Rest',protein:'Tofu / dairy',cals:1750,p:90,c:230,f:52,
+       meals:[
+         {time:'8:00 AM',name:'Breakfast',purpose:'',foods:['Smoothie bowl: frozen banana, berries, protein powder','Topped with granola, chia seeds, sliced banana'],p:24,c:60,f:6,k:390,prep:'Blend thick. Pour in bowl and add toppings.'},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Caprese pasta salad — 1.5 cups','Fresh mozzarella — 1.5 oz','Cherry tomatoes, basil, olive oil'],p:20,c:54,f:14,k:422,prep:''},
+         {time:'4:00 PM',name:'Snack',purpose:'',foods:['Cheese quesadilla: whole grain tortilla, cheddar','Salsa — 2 tbsp'],p:16,c:32,f:12,k:300,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'',foods:['Vegetable and tofu curry','Basmati rice — ¾ cup','Mango chutney — 1 tbsp','Whole grain naan — ½'],p:22,c:62,f:12,k:438,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Fresh fruit — 1 cup','Pistachios — ½ oz'],p:4,c:30,f:6,k:186,prep:''}
+       ],
+       alt:''},
+      {workout:'Cardio',protein:'Eggs',cals:1800,p:94,c:228,f:58,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Whole grain waffles — 2','Greek yogurt — ½ cup','Maple syrup — 1 tbsp','Mixed berries'],p:20,c:58,f:6,k:366,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['Apple — 1','Peanut butter — 1.5 tbsp'],p:6,c:28,f:12,k:238,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Veggie burger — 1 patty','Whole grain bun','Avocado slices, lettuce, tomato','Sweet potato fries — small'],p:20,c:62,f:14,k:454,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Light for cardio',foods:['Banana — 1','Rice cake — 1'],p:3,c:36,f:1,k:165,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Frittata: 4 eggs, roasted vegetables, feta','Side salad with olive oil'],p:32,c:18,f:20,k:380,prep:'Roast veg first. Add eggs and bake at 375°F 15 min.'},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Blueberries — ¼ cup'],p:14,c:14,f:2,k:130,prep:''}
+       ],
+       alt:'Swap veggie burger for a black bean burger or falafel patty.'},
+      {workout:'Full body',protein:'Legumes',cals:1920,p:100,c:244,f:60,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3-egg omelette with cottage cheese and chives','Whole grain toast — 2 slices','Orange juice'],p:28,c:46,f:14,k:422,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Trail mix: almonds, walnuts, dried cranberries — 1.5 oz'],p:6,c:22,f:12,k:218,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['White bean and vegetable soup — 1.5 cups','Parmesan crostini — 2','Side green salad'],p:18,c:52,f:10,k:370,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Banana — 1','Protein bar — 1'],p:22,c:52,f:6,k:350,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Paneer tikka masala — 6 oz paneer','Basmati rice — ¾ cup','Naan — ½ piece','Cucumber raita'],p:34,c:64,f:18,k:546,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Greek yogurt — ¾ cup','Honey','Granola — 1 tbsp'],p:14,c:24,f:4,k:190,prep:''}
+       ],
+       alt:'Swap paneer for firm tofu in the tikka masala.'},
+      {workout:'Core + cardio',protein:'Tofu',cals:1780,p:92,c:228,f:54,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Acai bowl: acai blend, banana, berries','Topped with granola, chia, coconut flakes'],p:10,c:62,f:8,k:362,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['String cheese — 2','Apple — 1'],p:12,c:24,f:8,k:216,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Greek salad with extra feta and chickpeas','Whole grain pita — 1','Hummus — 2 tbsp'],p:20,c:48,f:14,k:394,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Light for cardio',foods:['Dates — 3','Almonds — small handful'],p:4,c:34,f:7,k:211,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Tofu teriyaki — 6 oz firm tofu','Brown rice — ¾ cup','Steamed edamame — ½ cup','Broccoli'],p:32,c:56,f:12,k:456,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Peach slices'],p:14,c:18,f:2,k:146,prep:''}
+       ],
+       alt:'Swap tofu teriyaki for tempeh.'},
+      {workout:'Rest day',protein:'Eggs',cals:1750,p:88,c:226,f:54,
+       meals:[
+         {time:'9:00 AM',name:'Brunch',purpose:'',foods:['Eggs benedict: 2 poached eggs, whole grain English muffin, hollandaise — light','Roasted tomatoes'],p:22,c:36,f:16,k:374,prep:''},
+         {time:'2:00 PM',name:'Lunch',purpose:'',foods:['Margherita pizza — 2 slices whole grain crust','Side salad','Balsamic vinaigrette'],p:24,c:58,f:12,k:436,prep:''},
+         {time:'7:00 PM',name:'Dinner',purpose:'',foods:['Pasta primavera: whole grain pasta, seasonal vegetables, olive oil, parmesan'],p:24,c:76,f:14,k:530,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Dark chocolate — 1 oz','Walnuts — 6','Small glass of milk'],p:10,c:20,f:14,k:242,prep:''}
+       ],
+       alt:'Rest day — enjoy a larger dessert or takeout pizza.'}
+    ],
+    shopping: {
+      '🥚 Eggs & Dairy': ['Large eggs — 4 dozen per 2 weeks','Greek yogurt — 3 large containers','Cottage cheese — 2 tubs','Feta — 2 packs','Mozzarella — 1 block','Cheddar — 1 block','Parmesan — 1 block','Paneer — 1 pack','Tofu firm — 4 packs'],
+      '🫘 Legumes & Plant Protein': ['Lentils — 1 lb dry','Chickpeas — 2 cans','Black beans — 2 cans','White beans — 2 cans','Edamame frozen — 2 bags','Plant protein powder — 1 container'],
+      '🥑 Produce': ['Spinach — 2 bags','Mixed greens — 2 bags','Bell peppers — 6','Mushrooms — 2 packs','Sweet potatoes — 4','Avocados — 4','Bananas — 2 bunches','Mixed berries — 3 bags','Apples — 6','Oranges — 4','Tomatoes — 6'],
+      '🌾 Grains': ['Brown rice — 2 lbs','Oats — 1 large canister','Whole grain bread — 1 loaf','Whole grain tortillas — 1 pack','Whole grain pasta — 1 lb','Quinoa — 1 lb','Whole grain naan — 1 pack'],
+      '🛒 Pantry': ['Olive oil','Coconut oil','Peanut butter','Almond butter','Hummus — 2 tubs','Tahini','Granola — 1 bag','Chia seeds','Honey','Maple syrup','Soy sauce low-sodium','Curry paste or powder','Various nuts and seeds']
+    }
+  },
+
+  vegan: {
+    name: 'Plant-Based Vegan',
+    color: '#4ade80',
+    notes: [
+      'Supplement B12 daily — this is non-negotiable on a vegan diet.',
+      'Combine proteins at meals: rice + beans, tofu + whole grains.',
+      'Omega-3s from flaxseed, chia, and walnuts — or algae-based supplements.',
+      'Eat plenty of iron-rich plants (lentils, spinach, tofu) with vitamin C for absorption.',
+    ],
+    protein_rotation: {Mon:'Tofu',Tue:'Lentils',Wed:'Chickpeas',Thu:'Tempeh',Fri:'Tofu',Sat:'Black beans',Sun:'Variety'},
+    days: [
+      {workout:'Upper body push',protein:'Tofu',cals:1900,p:88,c:260,f:58,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Smoothie: oat milk, banana, spinach, peanut butter, protein powder'],p:26,c:58,f:12,k:446,prep:'Blend until smooth.'},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Apple — 1','Almond butter — 1.5 tbsp','Rice cake — 1'],p:5,c:32,f:10,k:233,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Tofu scramble with turmeric, vegetables','Whole grain toast — 2 slices','Avocado slices'],p:22,c:42,f:16,k:398,prep:'Crumble tofu. Cook with turmeric and nutritional yeast.'},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Banana — 1','Dates — 2','Peanut butter — 1 tbsp'],p:5,c:46,f:8,k:269,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Tofu tikka masala (coconut milk base) — 6 oz tofu','Brown rice — ¾ cup','Roasted cauliflower','Whole grain naan — ½'],p:26,c:74,f:16,k:544,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Coconut yogurt — ½ cup','Berries','Chia seeds — 1 tsp'],p:4,c:22,f:6,k:154,prep:''}
+       ],
+       alt:'Swap tofu for tempeh — it has more protein and a firmer texture.'},
+      {workout:'Lower body',protein:'Lentils',cals:1850,p:85,c:255,f:54,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Overnight oats: oat milk, oats, chia, maple syrup, walnuts','Sliced banana on top'],p:14,c:64,f:12,k:422,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Hummus — 3 tbsp','Carrot and celery sticks','Whole grain crackers — 6'],p:7,c:26,f:7,k:191,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Red lentil soup — 1.5 cups','Crusty whole grain bread — 1 slice','Side salad with lemon tahini'],p:20,c:62,f:10,k:414,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Energy balls: oats, dates, nut butter — 2 balls','Banana — 1'],p:7,c:52,f:8,k:307,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Lentil bolognese — 1.5 cups','Whole grain pasta — 1 cup cooked','Nutritional yeast — 1 tbsp'],p:26,c:76,f:8,k:478,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Dark chocolate — 1 oz','Almonds — 1 oz'],p:5,c:18,f:16,k:231,prep:''}
+       ],
+       alt:'Swap red lentil soup for split pea soup or black bean soup.'},
+      {workout:'Rest',protein:'Chickpeas',cals:1750,p:78,c:250,f:50,
+       meals:[
+         {time:'8:00 AM',name:'Breakfast',purpose:'',foods:['Acai bowl: acai, oat milk, berries','Topped with granola, hemp seeds, fresh fruit'],p:10,c:66,f:10,k:394,prep:''},
+         {time:'12:00 PM',name:'Lunch',purpose:'',foods:['Falafel wrap: 4 falafels, whole grain wrap','Hummus, shredded lettuce, tomato, tahini'],p:18,c:62,f:12,k:430,prep:''},
+         {time:'4:00 PM',name:'Snack',purpose:'',foods:['Roasted chickpeas — ½ cup','Apple — 1'],p:9,c:36,f:4,k:213,prep:''},
+         {time:'7:00 PM',name:'Dinner',purpose:'',foods:['Chickpea and spinach curry — 1.5 cups','Basmati rice — ¾ cup','Coconut milk, tomatoes, garam masala'],p:20,c:68,f:12,k:458,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Coconut yogurt — ½ cup','Berries — ½ cup','Granola — 1 tbsp'],p:4,c:28,f:6,k:178,prep:''}
+       ],
+       alt:''},
+      {workout:'Cardio',protein:'Tempeh',cals:1800,p:90,c:248,f:52,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Protein smoothie: plant protein, oat milk, spinach, frozen mango, flaxseed'],p:28,c:52,f:8,k:392,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['Rice cake — 2','Avocado — ¼','Cherry tomatoes'],p:3,c:28,f:7,k:183,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Tempeh grain bowl: tempeh 5 oz, quinoa ¾ cup','Roasted sweet potato, avocado, tahini dressing'],p:30,c:58,f:18,k:506,prep:'Marinate tempeh in soy-ginger sauce. Pan-fry 5 min per side.'},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Light for cardio',foods:['Banana — 1','Handful of dates'],p:2,c:46,f:1,k:200,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Veggie fried rice — 1.5 cups (tofu, brown rice, peas, carrots)','Edamame — ½ cup','Sesame seeds'],p:26,c:62,f:10,k:434,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Walnuts — 1 oz','Dark chocolate — ½ oz'],p:5,c:10,f:16,k:200,prep:''}
+       ],
+       alt:'Swap tempeh for tofu or seitan.'},
+      {workout:'Full body',protein:'Tofu',cals:1920,p:92,c:258,f:56,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Peanut butter banana toast — 2 slices whole grain','Sliced banana','Chia seeds','Maple drizzle'],p:14,c:64,f:16,k:454,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Plant protein bar — 1','Orange — 1'],p:20,c:38,f:6,k:282,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Buddha bowl: tofu 5 oz, quinoa ¾ cup','Edamame, roasted beets, spinach, tahini'],p:28,c:56,f:14,k:466,prep:'Roast beets at 400°F 40 min wrapped in foil.'},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Medjool dates — 3','Almond butter — 1 tbsp','Rice cake — 1'],p:4,c:50,f:8,k:284,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Black bean tacos — 3 corn tortillas','Black beans, corn, avocado, salsa','Lime and cilantro'],p:20,c:72,f:12,k:472,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Oat milk hot chocolate','Handful of almonds'],p:6,c:24,f:10,k:206,prep:''}
+       ],
+       alt:'Swap black bean tacos for lentil tacos or chickpea tacos.'},
+      {workout:'Core + cardio',protein:'Black beans',cals:1780,p:84,c:244,f:52,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Chia pudding: oat milk, chia seeds, vanilla, maple syrup','Fresh mango and berries on top'],p:10,c:54,f:14,k:382,prep:'Mix night before. Refrigerate overnight.'},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['Hummus — 3 tbsp','Bell pepper slices','Whole grain pita — ½'],p:7,c:24,f:6,k:178,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Black bean burrito bowl','Brown rice ¾ cup, black beans, corn, avocado, salsa','Lime crema (cashew based)'],p:20,c:66,f:12,k:452,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Light for cardio',foods:['Banana — 1','Dates — 2'],p:2,c:42,f:0,k:177,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Pasta with creamy cashew sauce','Whole grain pasta 1 cup','Roasted cherry tomatoes, spinach, nutritional yeast'],p:22,c:68,f:14,k:482,prep:'Blend soaked cashews with lemon, garlic, water for sauce.'},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Coconut yogurt — ½ cup','Mixed nuts — ½ oz'],p:4,c:16,f:12,k:184,prep:''}
+       ],
+       alt:'Swap black beans for kidney beans or pinto beans.'},
+      {workout:'Rest day',protein:'Variety',cals:1750,p:80,c:240,f:56,
+       meals:[
+         {time:'9:30 AM',name:'Brunch',purpose:'',foods:['Avocado toast — 2 slices sourdough','Sliced tomato and microgreens','Everything bagel seasoning','Cashew cream cheese'],p:12,c:54,f:18,k:422,prep:''},
+         {time:'2:00 PM',name:'Lunch',purpose:'',foods:['Veggie sushi rolls — 8 pieces','Miso soup — 1 cup','Edamame — ½ cup'],p:18,c:56,f:4,k:332,prep:''},
+         {time:'7:00 PM',name:'Dinner',purpose:'',foods:['Vegetable massaman curry (potatoes, carrots, coconut milk)','Jasmine rice — ¾ cup','Toasted peanuts on top'],p:14,c:74,f:18,k:514,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Nice cream: frozen bananas blended with cocoa','Topped with crushed almonds'],p:5,c:42,f:10,k:271,prep:''}
+       ],
+       alt:'Rest day — enjoy takeout or a vegan restaurant.'}
+    ],
+    shopping: {
+      '🫘 Proteins & Legumes': ['Firm tofu — 4 packs per week','Tempeh — 2 packs','Lentils (red and green) — 1 lb each','Chickpeas — 4 cans','Black beans — 4 cans','Edamame frozen — 2 bags','Plant protein powder — 1 container','Seitan — 1 pack'],
+      '🥑 Produce': ['Spinach — 2 bags','Mixed greens — 1 bag','Avocados — 6','Bell peppers — 6','Sweet potatoes — 4','Broccoli — 2 heads','Cauliflower — 1 head','Carrots — 1 bag','Beets — 4','Bananas — 2 bunches','Mangoes — 4','Mixed berries — 3 bags','Apples — 6'],
+      '🌾 Grains': ['Brown rice — 2 lbs','Oats — 1 large canister','Quinoa — 1 lb','Whole grain bread — 1 loaf','Whole grain pasta — 1 lb','Corn tortillas — 1 pack','Rice cakes — 1 bag'],
+      '🥛 Plant-Based Dairy': ['Oat milk — 2 cartons','Coconut yogurt — 2 packs','Cashews (for cream sauces) — 1 bag','Almond milk — 1 carton'],
+      '🛒 Pantry': ['Olive oil','Coconut oil','Peanut butter','Almond butter','Tahini','Hummus — 2 tubs','Chia seeds','Flaxseed','Hemp seeds','Nutritional yeast (B12 source)','Dates — 1 pack','Maple syrup','Dark chocolate','Soy sauce low-sodium','Various nuts and seeds','B12 supplement']
+    }
+  },
+
+  lowcarb: {
+    name: 'Low Carb High Protein',
+    color: '#fb923c',
+    notes: [
+      'Keep carbs under 100g daily — focus on vegetables and fruit, not grains.',
+      'Protein at every meal — aim for 30–40g per sitting.',
+      'Pre-workout carb bump is fine — fruit or sweet potato before training.',
+      'Stay hydrated — low carb diets can be dehydrating.',
+    ],
+    protein_rotation: {Mon:'Chicken',Tue:'Fish',Wed:'Beef',Thu:'Turkey',Fri:'Salmon',Sat:'Pork',Sun:'Eggs / variety'},
+    days: [
+      {workout:'Upper body push',protein:'Chicken breast',cals:1900,p:175,c:80,f:90,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3 eggs scrambled in butter','Turkey bacon — 3 strips','Avocado — ½','Cherry tomatoes — handful'],p:32,c:6,f:28,k:412,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Greek yogurt — ¾ cup (plain)','Berries — ¼ cup','Almonds — 1 oz'],p:20,c:16,f:14,k:266,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Chicken breast — 7 oz grilled','Large salad: greens, cucumber, peppers, olive oil, lemon','Feta cheese — 1 oz'],p:58,c:8,f:18,k:422,prep:'Season chicken with paprika and garlic.'},
+         {time:'4:30 PM',name:'Pre-workout snack',purpose:'Pre-workout fuel',foods:['Apple — 1 small','String cheese — 1','Hard boiled egg — 1'],p:12,c:16,f:8,k:182,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Salmon — 7 oz','Roasted asparagus — 1 cup','Cauliflower mash with butter','Lemon butter sauce'],p:50,c:12,f:24,k:468,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Cucumber slices'],p:14,c:4,f:2,k:90,prep:''}
+       ],
+       alt:'Swap salmon for cod or tilapia.'},
+      {workout:'Lower body',protein:'Salmon',cals:1850,p:170,c:75,f:88,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['2-egg omelette with smoked salmon and cream cheese','Cucumber slices','Black coffee'],p:30,c:3,f:22,k:330,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Hard boiled eggs — 2','String cheese — 1'],p:18,c:1,f:14,k:198,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Ground turkey — 6 oz','Lettuce wraps — large romaine leaves','Salsa, avocado, jalapeño'],p:46,c:10,f:22,k:418,prep:'Brown turkey with taco seasoning (no sugar).'},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Banana — 1 small (pre-workout carb)','Protein shake — ½ scoop'],p:14,c:24,f:2,k:170,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Salmon — 8 oz','Roasted broccoli and zucchini','Olive oil and herbs'],p:58,c:12,f:26,k:510,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Greek yogurt — ½ cup','Walnuts — 6'],p:14,c:8,f:12,k:194,prep:''}
+       ],
+       alt:''},
+      {workout:'Upper body pull',protein:'Beef',cals:1920,p:178,c:78,f:92,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3 fried eggs','Bacon — 3 strips','Sautéed spinach with garlic'],p:28,c:3,f:28,k:376,prep:''},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Beef jerky — 1 oz','Almonds — 1 oz'],p:16,c:4,f:12,k:182,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Sirloin steak — 6 oz','Mixed greens with blue cheese dressing','Sweet potato — ½ medium (small carb)'],p:52,c:20,f:22,k:476,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Apple — 1','Peanut butter — 1 tbsp'],p:4,c:24,f:8,k:180,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Ground beef 90% lean — 6 oz','Zucchini noodles with marinara','Parmesan — 1 oz'],p:52,c:14,f:24,k:478,prep:'Spiralize zucchini. Toss with warmed marinara.'},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Berries — ¼ cup'],p:14,c:10,f:2,k:114,prep:''}
+       ],
+       alt:''},
+      {workout:'Cardio',protein:'Turkey',cals:1780,p:165,c:72,f:84,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Greek yogurt — ¾ cup','Berries — ½ cup','Protein powder — ½ scoop mixed in'],p:28,c:22,f:4,k:236,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['Turkey slices — 3 oz','Cucumber roll-ups with cream cheese'],p:22,c:4,f:10,k:194,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Turkey burger — 6 oz, no bun','Lettuce wrap','Avocado, tomato, mustard'],p:44,c:8,f:20,k:384,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Light for cardio',foods:['Banana — 1 small','Rice cake — 1'],p:3,c:28,f:1,k:133,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Cod — 7 oz baked with herbs','Roasted cauliflower','Side salad with olive oil'],p:54,c:14,f:16,k:410,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Hard boiled eggs — 2','Cheddar — 1 oz'],p:18,c:1,f:16,k:218,prep:''}
+       ],
+       alt:''},
+      {workout:'Full body',protein:'Salmon',cals:1940,p:180,c:80,f:94,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['Protein waffles: protein powder, egg, oat flour — 2','Greek yogurt — ¼ cup','Berries'],p:34,c:28,f:8,k:322,prep:'Mix 1 scoop protein, 1 egg, 2 tbsp oat flour, splash of milk.'},
+         {time:'10:30 AM',name:'Snack',purpose:'',foods:['Hard boiled eggs — 2','Cherry tomatoes'],p:12,c:4,f:10,k:150,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Canned salmon — 5 oz','Big salad: mixed greens, avocado, cucumber','Olive oil and apple cider vinegar'],p:40,c:8,f:22,k:388,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Pre-workout fuel',foods:['Sweet potato — ½ medium','Almond butter — 1 tbsp'],p:4,c:22,f:8,k:174,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Salmon — 8 oz','Roasted asparagus and mushrooms','Lemon herb butter'],p:60,c:10,f:28,k:534,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Greek yogurt — ½ cup','Almonds — ½ oz'],p:14,c:8,f:10,k:174,prep:''}
+       ],
+       alt:''},
+      {workout:'Core + cardio',protein:'Pork',cals:1820,p:168,c:74,f:88,
+       meals:[
+         {time:'7:00 AM',name:'Breakfast',purpose:'',foods:['3 egg breakfast scramble','Ground pork sausage — 3 oz','Peppers and onions sautéed'],p:34,c:8,f:28,k:422,prep:''},
+         {time:'11:00 AM',name:'Snack',purpose:'',foods:['String cheese — 2','Apple — 1 small'],p:12,c:14,f:10,k:192,prep:''},
+         {time:'1:00 PM',name:'Lunch',purpose:'',foods:['Pork tenderloin — 6 oz sliced','Roasted Brussels sprouts','Dijon mustard dipping sauce'],p:46,c:12,f:14,k:358,prep:''},
+         {time:'4:30 PM',name:'Pre-workout',purpose:'Light for cardio',foods:['Banana — 1 small'],p:1,c:22,f:0,k:89,prep:''},
+         {time:'7:30 PM',name:'Dinner',purpose:'Recovery',foods:['Grilled chicken — 7 oz','Zucchini and bell peppers stir-fried','Cauliflower rice — 1 cup'],p:58,c:12,f:14,k:406,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Cottage cheese — ½ cup','Walnuts — 6'],p:16,c:6,f:12,k:190,prep:''}
+       ],
+       alt:''},
+      {workout:'Rest',protein:'Eggs',cals:1750,p:155,c:70,f:84,
+       meals:[
+         {time:'9:00 AM',name:'Brunch',purpose:'',foods:['3-egg frittata with ham, peppers, feta','Side salad'],p:30,c:8,f:22,k:354,prep:''},
+         {time:'2:00 PM',name:'Lunch',purpose:'',foods:['Chicken Caesar salad — 6 oz chicken, no croutons','Parmesan shavings','Caesar dressing — 2 tbsp'],p:50,c:8,f:24,k:444,prep:''},
+         {time:'7:00 PM',name:'Dinner',purpose:'',foods:['Beef short ribs — 6 oz braised','Roasted root vegetables (carrot, turnip)','Red wine reduction sauce'],p:42,c:20,f:28,k:496,prep:''},
+         {time:'9:00 PM',name:'Snack',purpose:'',foods:['Greek yogurt — ½ cup','Berries — ¼ cup'],p:12,c:12,f:2,k:114,prep:''}
+       ],
+       alt:''}
+    ],
+    shopping: {
+      '🥩 Proteins': ['Chicken breasts — 3–4 lbs/week','Salmon fillets — 3 per week','Sirloin steak — 2 per week','Ground beef 90% lean — 2 lbs/week','Turkey breast or ground turkey — 1 lb/week','Pork tenderloin — 1 per week','Bacon — 1–2 packs','Turkey bacon — 1 pack','Beef jerky — 2 packs','Canned salmon — 4 cans','Cod fillets — 2 per week'],
+      '🥚 Eggs & Dairy': ['Large eggs — 3–4 dozen','Greek yogurt plain — 3 large containers','Cottage cheese — 2 tubs','String cheese — 2 packs','Cheddar — 1 block','Feta — 1 pack','Cream cheese — 1 block'],
+      '🥑 Produce': ['Avocados — 4–6','Spinach — 2 bags','Mixed greens — 1 bag','Broccoli — 2 heads','Zucchini — 4','Asparagus — 2 bunches','Cauliflower — 2 heads','Bell peppers — 6','Cucumber — 3','Cherry tomatoes — 2 pints','Berries — 2 bags','Apples — 6','Bananas — 1 bunch (pre-workout)','Sweet potato — 4 (pre-workout only)'],
+      '🛒 Pantry': ['Olive oil','Butter','Almond butter','Peanut butter','Almonds, walnuts — 1 bag each','Protein powder — 1 container','Beef jerky','Low-sugar marinara sauce','Apple cider vinegar','Dijon mustard','Various spices and herbs']
+    }
+  }
+};
+
+// ── WEEK 2 generator — mirrors week 1 with rotated proteins ──────────────────
+function getWeek2Days(templateKey){
+  const t = MEAL_LIBRARY[templateKey];
+  // For week 2, cycle protein rotation by 1 and keep same structure
+  // Simple approach: swap day 0↔3, 1↔4, 2↔5 for variety
+  const week2 = t.days.map((day, i) => {
+    const altIdx = (i + 3) % 7;
+    const altDay = t.days[altIdx];
+    return {
+      ...day,
+      // Swap main protein with another day's protein for variety
+      main_protein: altDay.protein !== day.protein ? altDay.protein : day.protein,
+      meals: day.meals.map((meal, mi) => ({
+        ...meal,
+        // Slightly adjust quantities/foods for week 2 variety while keeping structure
+        foods: meal.foods
+      }))
+    };
+  });
+  return week2;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// APP STATE & LOGIC
+// ─────────────────────────────────────────────────────────────────────────────
+
+let profile = {};
+let activePlan = null; // {templateKey, week1days, week2days, shopping, scaleFactor}
+let currentWeekIdx = 0;
+let currentDayIdx  = 0;
+let swapHistory = {}; // {weekIdx-dayIdx-mealIdx: mealData}
+
+function init(){
+  // Load trainer profile — not member profile
+  const tp = JSON.parse(localStorage.getItem('larofit_trainer_profile')||'{}');
+  const tname = tp.first || tp.name?.split(' ')[0] || localStorage.getItem('larofit_user_name') || 'Trainer';
+  const el = document.getElementById('sidebar-name');
+  if(el) el.textContent = tname;
+  const av = document.getElementById('sidebar-avatar');
+  if(av) av.textContent = tname.charAt(0).toUpperCase();
+
+  // Default profile for strip — start with trainer's own, switch on client select
+  profile = JSON.parse(localStorage.getItem('larofit_profile')||tp||'{}');
+
+  // Inject real connected clients into diet client selector
+  const connectedClients = JSON.parse(localStorage.getItem('larofit_trainer_clients')||'[]');
+  const sel = document.getElementById('diet-client-selector');
+  if(sel && connectedClients.length > 0){
+    const divider = document.createElement('option');
+    divider.disabled = true; divider.textContent = '── My connected clients ──';
+    sel.insertBefore(divider, sel.children[1]);
+    connectedClients.forEach((c,i)=>{
+      const opt = document.createElement('option');
+      opt.value = c.name;
+      opt.textContent = c.name+(c.isNew?' 🆕':'')+(c.diet?' · '+c.diet:'');
+      sel.insertBefore(opt, sel.children[i+2]);
+    });
+  }
+
+  buildProfileStrip();
+  applyDietDefaults();
+  document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>toggleChip(c)));
+
+  // Load saved plan
+  const saved = localStorage.getItem('larofit_active_plan');
+  if(saved){
+    try{ activePlan = JSON.parse(saved); renderPlan(); return; }catch(e){}
+  }
+}
+
+function buildProfileStrip(){
+  const w = parseFloat(profile.weight)||185;
+  const wKg = w*0.453592;
+  const bmr = profile.sex==='female'?(10*wKg+6.25*170-5*30-161):(10*wKg+6.25*177-5*30+5);
+  const mult = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725,athlete:1.9};
+  let tdee = Math.round(bmr*(mult[profile.activity||'moderate']||1.55));
+  if(profile.nutgoal==='cut') tdee=Math.round(tdee*0.85);
+  if(profile.nutgoal==='bulk') tdee=Math.round(tdee*1.1);
+
+  const items = [
+    profile.weight?`<span class="profile-chip"><strong>${profile.weight}</strong> lbs</span>`:'',
+    profile.sex?`<span class="profile-chip"><strong>${profile.sex}</strong></span>`:'',
+    profile.diet?`<span class="profile-chip">Diet: <strong>${profile.diet}</strong></span>`:'',
+    profile.nutgoal?`<span class="profile-chip">Goal: <strong>${profile.nutgoal}</strong></span>`:'',
+    `<span class="profile-chip">Target: <strong>${tdee.toLocaleString()} kcal</strong></span>`,
+    (profile.diets||[]).length?`<span class="profile-chip">Restrictions: <strong>${profile.diets.join(', ')}</strong></span>`:'',
+  ].filter(Boolean);
+
+  document.getElementById('profile-strip').innerHTML = items.join('') ||
+    '<span class="profile-chip" style="color:var(--ember);">⚠️ Complete your profile for better results</span>';
+}
+
+function applyDietDefaults(){
+  const diet = profile.diet||'balanced';
+  // Veg
+  document.querySelectorAll('[data-group="veg"]').forEach(c=>c.classList.remove('selected'));
+  if(['carnivore'].includes(diet)) document.querySelector('[data-val="minimal"]')?.classList.add('selected');
+  else if(['keto','lowcarb'].includes(diet)) document.querySelector('[data-val="tolerate"]')?.classList.add('selected');
+  else document.querySelector('[data-val="love"]')?.classList.add('selected');
+
+  // Carbs
+  document.querySelectorAll('[data-group="carbs"]').forEach(c=>c.classList.remove('selected'));
+  if(diet==='carnivore'){
+    document.querySelector('[data-val="no_carbs"]')?.classList.add('selected');
+    document.getElementById('carb-section').style.display='none';
+  } else if(diet==='keto'){
+    ['no_carbs','keto_bread'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+  } else if(diet==='lowcarb'){
+    ['sweet_potato','fruit'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+  } else if(['vegan','vegetarian'].includes(diet)){
+    ['rice','oats','sweet_potato','bread','pasta','fruit'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+  } else {
+    ['rice','sweet_potato','fruit'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+  }
+
+  // Pre-select proteins based on diet
+  if(['carnivore','keto','lowcarb'].includes(diet)){
+    ['beef','chicken','salmon','pork','eggs'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+    ['greek_yogurt','butter','cheese'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+  } else if(diet==='vegan'){
+    document.querySelector('[data-val="tofu"]')?.classList.add('selected');
+    document.querySelector('[data-val="no_dairy"]')?.classList.add('selected');
+  } else if(diet==='vegetarian'){
+    ['eggs','tofu'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+    ['greek_yogurt','cheese','butter'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+  } else {
+    ['chicken','salmon','tuna','eggs'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+    ['greek_yogurt','butter'].forEach(v=>document.querySelector(`[data-val="${v}"]`)?.classList.add('selected'));
+  }
+}
+
+function toggleChip(c){
+  const group=c.dataset.group;
+  if(['cooking','veg'].includes(group)){
+    document.querySelectorAll(`[data-group="${group}"]`).forEach(x=>x.classList.remove('selected'));
+    c.classList.add('selected');
+  } else { c.classList.toggle('selected'); }
+}
+
+// ── BUILD PLAN ────────────────────────────────────────────────────────────────
+function buildPlan(){
+  const diet = profile.diet||'balanced';
+  const keyMap = {carnivore:'carnivore',keto:'keto',lowcarb:'lowcarb',balanced:'balanced',mediterranean:'mediterranean',vegetarian:'vegetarian',vegan:'vegan',paleo:'balanced',general:'balanced'};
+  const templateKey = keyMap[diet]||'balanced';
+
+  const template = MEAL_LIBRARY[templateKey];
+  if(!template){ showToast('No template found for your diet style'); return; }
+
+  // Scale factor based on user's calorie target vs template default
+  const w = parseFloat(profile.weight)||185;
+  const wKg = w*0.453592;
+  const bmr = profile.sex==='female'?(10*wKg+6.25*170-5*30-161):(10*wKg+6.25*177-5*30+5);
+  const mult = {sedentary:1.2,light:1.375,moderate:1.55,active:1.725,athlete:1.9};
+  let tdee = Math.round(bmr*(mult[profile.activity||'moderate']||1.55));
+  if(profile.nutgoal==='cut') tdee=Math.round(tdee*0.85);
+  if(profile.nutgoal==='bulk') tdee=Math.round(tdee*1.1);
+  const templateAvgCals = template.days.reduce((s,d)=>s+d.cals,0)/template.days.length;
+  const scaleFactor = tdee/templateAvgCals;
+
+  activePlan = {
+    templateKey,
+    scaleFactor,
+    userCals: tdee,
+    week1: template.days,
+    week2: getWeek2Days(templateKey),
+    shopping: template.shopping,
+    prefs: {
+      proteins:  [...document.querySelectorAll('[data-group="protein"].selected')].map(c=>c.dataset.val),
+      workout:   document.getElementById('workout-time').value,
+      household: parseInt(document.getElementById('household').value)||1,
+      avoid:     document.getElementById('avoid').value,
+      health:    document.getElementById('health').value,
+    }
+  };
+
+  localStorage.setItem('larofit_active_plan', JSON.stringify(activePlan));
+  swapHistory = {};
+  currentWeekIdx = 0;
+  currentDayIdx  = 0;
+  renderPlan();
+}
+
+// ── RENDER PLAN ───────────────────────────────────────────────────────────────
+function renderPlan(){
+  const content = document.getElementById('main-content');
+  const template = MEAL_LIBRARY[activePlan.templateKey];
+  const sf = activePlan.scaleFactor || 1;
+
+  // Show topbar buttons
+  document.getElementById('btn-edit').style.display='flex';
+  document.getElementById('btn-shop').style.display='flex';
+  document.getElementById('btn-save').style.display='flex';
+
+  content.innerHTML = `
+    <div class="plan-card" id="plan-section">
+      <div class="card-header">
+        <div>
+          <div class="card-title">${template.name} — 2-Week Plan</div>
+          <div class="card-sub">Personalized to your profile · Tap any day to view meals</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-sm" onclick="showIntake()">✏️ Edit</button>
+        </div>
+      </div>
+      <div class="plan-meta">
+        <span>Target: <strong>${activePlan.userCals.toLocaleString()} kcal/day</strong></span>
+        <span>Diet: <strong>${template.name}</strong></span>
+        <span>Shopping for: <strong>${activePlan.prefs.household} person(s)</strong></span>
+      </div>
+      <div class="notes-bar">
+        <div class="notes-bar-title">📋 Key notes for your plan</div>
+        ${template.notes.map(n=>`<div class="note-item"><span style="color:var(--blue);">•</span>${n}</div>`).join('')}
+      </div>
+      <div style="padding:10px 20px 6px;font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;">Protein rotation</div>
+      <div class="prot-rotation">
+        ${Object.entries(template.protein_rotation).map(([d,p])=>`
+          <div class="prot-day${d===todayShort()?' today':''}"><strong>${d}</strong> ${p}</div>`).join('')}
+      </div>
+      <div class="week-tabs">
+        <button class="week-tab active" id="week-tab-0" onclick="switchWeek(0)">WEEK 1</button>
+        <button class="week-tab" id="week-tab-1" onclick="switchWeek(1)">WEEK 2</button>
+      </div>
+      <div class="day-tabs" id="day-tabs"></div>
+      <div id="day-content"></div>
+    </div>
+    <div class="plan-card" id="shop-section">
+      <div class="card-header">
+        <div class="card-title">🛒 Shopping List</div>
+        <div style="font-size:11px;color:var(--mist);font-family:var(--font-mono);">2 weeks · ${activePlan.prefs.household} person(s)</div>
+      </div>
+      <div class="shop-body" id="shop-body"></div>
+    </div>`;
+
+  renderDayTabs();
+  renderDay();
+  renderShoppingList();
+}
+
+function todayShort(){
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date().getDay()];
+}
+
+function renderDayTabs(){
+  const days = currentWeekIdx===0 ? activePlan.week1 : activePlan.week2;
+  const dayNames = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+  document.getElementById('day-tabs').innerHTML = days.map((d,i)=>`
+    <button class="day-tab${i===currentDayIdx?' active':''}${d.workout==='Rest day'?' rest':''}"
+      onclick="switchDay(${i})">${dayNames[i]} ${d.workout==='Rest day'?'😴':''}</button>`).join('');
+}
+
+function renderDay(){
+  const days = currentWeekIdx===0 ? activePlan.week1 : activePlan.week2;
+  const day  = days[currentDayIdx];
+  const sf   = activePlan.scaleFactor||1;
+  const template = MEAL_LIBRARY[activePlan.templateKey];
+  const typeColors = {'Upper body':'#c6f135','Lower body':'#4ade80','Cardio':'#60a5fa','Full body':'#fb923c','Rest':'#4a5568','Endurance':'#a78bfa','Core':'#f472b6'};
+  const badgeColor = Object.entries(typeColors).find(([k])=>day.workout.toLowerCase().includes(k.toLowerCase()))?.[1]||'#4a5568';
+
+  const scaledCals = Math.round(day.cals * sf);
+  const scaledP    = Math.round(day.p * sf);
+  const scaledC    = Math.round(day.c * sf);
+  const scaledF    = Math.round(day.f * sf);
+
+  const dayNames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  const mealsHtml = day.meals.map((meal,mi)=>{
+    const key = `${currentWeekIdx}-${currentDayIdx}-${mi}`;
+    const m   = swapHistory[key] || meal;
+    const mCals = Math.round(m.k * sf);
+    return `<div class="meal-card" id="meal-card-${key}">
+      <div class="meal-hdr">
+        <div class="meal-time">${m.time}</div>
+        <div class="meal-name">${m.name}${m.purpose?` <span class="meal-purpose">— ${m.purpose}</span>`:''}</div>
+        <div class="meal-macros">
+          <span class="mp">P:${Math.round(m.p*sf)}g</span>
+          <span class="mc">C:${Math.round(m.c*sf)}g</span>
+          <span class="mf">F:${Math.round(m.f*sf)}g</span>
+          <span class="mk">${mCals}kcal</span>
+        </div>
+        <button class="swap-btn" onclick="swapMeal(${currentWeekIdx},${currentDayIdx},${mi})">🔄 Swap</button>
+      </div>
+      <div class="meal-body">
+        ${m.foods.map(f=>`<div class="food-item">${f}</div>`).join('')}
+        ${m.prep?`<div class="prep-note">💡 ${m.prep}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('day-content').innerHTML = `
+    <div class="day-plan">
+      <div class="day-hdr">
+        <div class="day-name">${dayNames[currentDayIdx]}</div>
+        <span class="day-badge" style="background:${badgeColor}22;color:${badgeColor};border:1px solid ${badgeColor}44;">${day.workout}</span>
+        <div class="day-protein">${day.protein}</div>
+      </div>
+      <div style="text-align:center;padding:10px 16px 16px;font-size:14px;font-weight:600;color:var(--mist);letter-spacing:0.02em;border-bottom:1px solid var(--border);margin-bottom:14px;">
+        ⏰ Meal times are suggested. Eat according to your lifestyle.
+      </div>
+      <div class="meals-list">${mealsHtml}</div>
+      ${day.alt?`<div class="alt-note"><strong>💜 Alternative:</strong> ${day.alt}</div>`:''}
+      <div class="day-totals">
+        <div class="totals-label">Daily totals</div>
+        <div class="totals-row">
+          <div class="total-item"><div class="total-num" style="color:var(--volt);">${scaledP}g</div><div class="total-label">Protein</div></div>
+          <div class="total-item"><div class="total-num" style="color:var(--blue);">${scaledC}g</div><div class="total-label">Carbs</div></div>
+          <div class="total-item"><div class="total-num" style="color:var(--orange);">${scaledF}g</div><div class="total-label">Fat</div></div>
+          <div class="total-item"><div class="total-num" style="color:var(--white);">${scaledCals}</div><div class="total-label">Calories</div></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderShoppingList(){
+  const shop    = activePlan.shopping;
+  const houseN  = activePlan.prefs.household || 1;
+  document.getElementById('shop-body').innerHTML = Object.entries(shop).map(([cat,items])=>`
+    <div class="shop-cat">
+      <div class="shop-cat-title">${cat}</div>
+      ${items.map(item=>{
+        // Scale quantities if household > 1
+        const scaled = houseN > 1 ? scaleShopItem(item, houseN) : item;
+        return `<div class="shop-item">
+          <input type="checkbox" class="shop-check">
+          <span>${scaled}</span>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function scaleShopItem(item, n){
+  // Simple multiplier for obvious quantities
+  return item.replace(/(\d+(?:\.\d+)?)\s*(lb|lbs|oz|dozen|pack|bottle|can|carton)/gi, (match, num, unit)=>{
+    const scaled = Math.ceil(parseFloat(num) * n);
+    return `${scaled} ${unit}`;
+  });
+}
+
+// ── SWAP MEAL ─────────────────────────────────────────────────────────────────
+function swapMeal(weekIdx, dayIdx, mealIdx){
+  const days     = weekIdx===0 ? activePlan.week1 : activePlan.week2;
+  const day      = days[dayIdx];
+  const meal     = day.meals[mealIdx];
+  const key      = `${weekIdx}-${dayIdx}-${mealIdx}`;
+  const template = MEAL_LIBRARY[activePlan.templateKey];
+
+  // Find a different day that has a similar meal at the same position
+  const altDayIdx = (dayIdx + 1) % 7;
+  const altDay    = template.days[altDayIdx];
+  const altMeal   = altDay.meals[mealIdx] || altDay.meals[0];
+
+  if(!altMeal || altMeal.name === meal.name){
+    showToast('No alternative meal available — try editing the plan');
+    return;
+  }
+
+  swapHistory[key] = altMeal;
+  localStorage.setItem('larofit_active_plan', JSON.stringify(activePlan));
+  localStorage.setItem('larofit_swap_history', JSON.stringify(swapHistory));
+
+  const card = document.getElementById(`meal-card-${key}`);
+  if(card){ card.style.borderColor='rgba(198,241,53,0.4)'; setTimeout(()=>card.style.borderColor='',800); }
+
+  renderDay();
+  showToast(`✅ Swapped to: ${altMeal.name}`);
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function switchWeek(idx){
+  currentWeekIdx = idx;
+  currentDayIdx  = 0;
+  document.querySelectorAll('.week-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  renderDayTabs();
+  renderDay();
+}
+
+function switchDay(idx){
+  currentDayIdx = idx;
+  document.querySelectorAll('.day-tab').forEach((t,i)=>t.classList.toggle('active',i===idx));
+  renderDay();
+}
+
+function showIntake(){
+  const content = document.getElementById('main-content');
+  content.innerHTML = '';
+  const intake = document.getElementById('intake-section');
+  if(intake){ content.appendChild(intake); intake.style.display=''; }
+  else { location.reload(); }
+  document.getElementById('btn-edit').style.display='none';
+  document.getElementById('btn-shop').style.display='none';
+  document.getElementById('btn-save').style.display='none';
+}
+
+// ── SELECT DIET CLIENT ─────────────────────────────────────────────────────
+function selectDietClient(clientName){
+  const note = document.getElementById('diet-client-note');
+  if(!clientName){ if(note) note.textContent=''; return; }
+  if(clientName==='__self'){ if(note) note.textContent='Building for yourself'; return; }
+
+  // Load client's profile data to auto-fill the diet form
+  const connectedClients = JSON.parse(localStorage.getItem('larofit_trainer_clients')||'[]');
+  const client = connectedClients.find(c=>c.name===clientName);
+  if(client){
+    // Temporarily set profile to client's data so the intake form reflects them
+    profile = {
+      weight: client.weight?.replace(' lbs','')||'',
+      sex: client.sex||'male',
+      diet: client.diet||'balanced',
+      nutgoal: client.goal?.includes('loss')?'cut':client.goal?.includes('bulk')?'bulk':'maintain',
+      activity: client.activity||'moderate',
+      meals: client.mealsPerDay||3,
+      diets: client.restrictions||[],
+    };
+    buildProfileStrip();
+    applyDietDefaults();
+    if(note) note.textContent=`Diet plan will be saved to ${clientName}'s account`;
+    showToast(`Loading ${clientName}'s preferences…`);
+  } else {
+    if(note) note.textContent=`Plan will be saved to ${clientName}'s account`;
+  }
+}
+
+function savePlan(){
+  const clientSel = document.getElementById('diet-client-selector');
+  const clientName = clientSel?.value;
+  localStorage.setItem('larofit_active_plan', JSON.stringify(activePlan));
+  if(clientName && clientName!=='__self'){
+    showToast(`💾 Diet plan saved for ${clientName}! Returning to dashboard…`);
+  } else {
+    showToast('💾 Diet plan saved! Returning to dashboard…');
+  }
+  setTimeout(()=>{ window.location.href='larofit-trainer.html'; }, 1200);
+}
+
+let toastTimer;
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+init();
+</script>
+</body>
+</html>

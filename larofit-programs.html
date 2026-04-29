@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0a0a">
+<script>
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
+  });
+}
+</script>
+<title>LaroFit — My Programs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#4a5568;--mist:#8892a4;--fog:#c8d0dc;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-body);background:var(--black);color:var(--white);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:0.35;}
+.shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{background:var(--offblack);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;}
+.sidebar-logo{padding:22px 24px 18px;border-bottom:1px solid var(--border);}
+.logo-text{font-family:var(--font-display);font-size:20px;letter-spacing:2px;color:var(--pure);}
+.logo-text span{color:var(--volt);}
+.sidebar-nav{padding:16px 0;flex:1;overflow-y:auto;}
+.nav-section{font-size:10px;font-weight:600;color:var(--slate);letter-spacing:0.15em;text-transform:uppercase;padding:0 20px;margin:12px 0 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;transition:background 0.15s;font-size:13px;color:var(--mist);font-weight:500;border-left:3px solid transparent;text-decoration:none;}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:var(--white);}
+.nav-item.active{background:var(--volt-pale);color:var(--white);border-left-color:var(--volt);}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.sidebar-user{padding:16px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.s-avatar{width:32px;height:32px;border-radius:50%;background:var(--volt);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--black);flex-shrink:0;}
+.s-name{font-size:12px;font-weight:600;color:var(--white);}
+.s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
+
+/* MAIN */
+.main{display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+.page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
+.topbar-right{display:flex;gap:10px;}
+.btn-new{padding:9px 20px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-new:hover{background:var(--volt-dim);}
+
+.content{padding:28px 32px;display:flex;flex-direction:column;gap:24px;}
+
+/* ACTIVE PROGRAM BANNER */
+.active-banner{background:var(--volt-pale);border:1px solid rgba(198,241,53,0.2);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+.active-banner-left{display:flex;align-items:center;gap:14px;}
+.active-dot{width:10px;height:10px;border-radius:50%;background:var(--volt);box-shadow:0 0 8px var(--volt);flex-shrink:0;}
+.active-label{font-size:10px;font-weight:700;letter-spacing:0.12em;color:var(--volt);font-family:var(--font-mono);text-transform:uppercase;margin-bottom:3px;}
+.active-name{font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--pure);}
+.active-meta{font-size:12px;color:var(--mist);margin-top:2px;}
+.active-actions{display:flex;gap:8px;}
+.btn-sm{padding:7px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.btn-sm:hover{border-color:var(--volt);color:var(--volt);}
+
+/* PROGRAMS GRID */
+.section-title{font-family:var(--font-display);font-size:16px;letter-spacing:1px;color:var(--fog);}
+.programs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;}
+.program-card{background:var(--card-bg);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color 0.2s,transform 0.2s;animation:fadeUp 0.3s ease both;}
+.program-card:hover{border-color:var(--steel);transform:translateY(-2px);}
+.program-card.is-active{border-color:rgba(198,241,53,0.3);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.pc-header{padding:16px 18px;background:var(--carbon);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.pc-name{font-family:var(--font-display);font-size:18px;letter-spacing:1px;color:var(--pure);flex:1;}
+.pc-badge{padding:3px 8px;border-radius:4px;font-size:9px;font-weight:700;font-family:var(--font-mono);letter-spacing:0.06em;}
+.badge-active{background:var(--volt-pale);color:var(--volt);border:1px solid rgba(198,241,53,0.2);}
+.badge-ai{background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.2);}
+.badge-trainer{background:rgba(167,139,250,0.1);color:var(--purple);border:1px solid rgba(167,139,250,0.2);}
+.badge-manual{background:rgba(255,255,255,0.04);color:var(--mist);border:1px solid var(--border);}
+.pc-body{padding:16px 18px;}
+.pc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.pc-stat{text-align:center;padding:8px;background:var(--carbon);border-radius:var(--radius-sm);}
+.pc-stat-num{font-family:var(--font-display);font-size:20px;color:var(--volt);}
+.pc-stat-label{font-size:9px;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;}
+.pc-days{display:flex;gap:4px;margin-bottom:14px;}
+.pc-day{flex:1;height:4px;border-radius:2px;background:var(--border);}
+.pc-day.training{background:var(--volt);}
+.pc-day.rest{background:var(--border);}
+.pc-meta{font-size:11px;color:var(--mist);margin-bottom:14px;}
+.pc-actions{display:flex;gap:8px;border-top:1px solid var(--border);padding-top:14px;}
+.pc-btn{flex:1;padding:8px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;text-align:center;}
+.pc-btn:hover{border-color:var(--volt);color:var(--volt);}
+.pc-btn.set-active{background:var(--volt);border-color:var(--volt);color:var(--black);}
+.pc-btn.set-active:hover{background:var(--volt-dim);}
+.pc-btn.danger:hover{border-color:var(--ember);color:var(--ember);}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 40px;text-align:center;}
+.empty-icon{font-size:56px;margin-bottom:20px;opacity:0.3;}
+.empty-title{font-family:var(--font-display);font-size:32px;color:var(--white);letter-spacing:1px;margin-bottom:10px;}
+.empty-sub{font-size:14px;color:var(--mist);line-height:1.6;max-width:340px;margin-bottom:28px;}
+.btn-build{padding:13px 28px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);}
+
+/* VIEW MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--offblack);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:700px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--pure);}
+.modal-close{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;}
+.modal-close:hover{border-color:var(--ember);color:var(--ember);}
+.modal-body{padding:24px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;}
+.day-block{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.day-block-header{padding:10px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background 0.15s;}
+.day-block-header:hover{background:rgba(255,255,255,0.03);}
+.day-block.rest .day-block-header{opacity:0.5;}
+.day-name{font-family:var(--font-display);font-size:15px;letter-spacing:1px;color:var(--volt);}
+.day-block.rest .day-name{color:var(--mist);}
+.day-ex-count{font-size:11px;color:var(--mist);font-family:var(--font-mono);}
+.day-exercises{padding:0 14px 12px;display:flex;flex-direction:column;gap:6px;}
+.ex-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--card-bg);border-radius:var(--radius-sm);}
+.ex-row-name{font-size:13px;color:var(--white);}
+.ex-row-meta{font-size:11px;color:var(--mist);font-family:var(--font-mono);}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--volt);border-radius:999px;padding:10px 24px;font-size:13px;color:var(--volt);font-weight:600;font-family:var(--font-mono);z-index:600;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+@media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<aside class="sidebar">
+  <div class="sidebar-logo"><div class="logo-text">LARO<span>FIT</span></div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Home</div>
+    <a class="nav-item " href="larofit-dashboard.html"><span class="nav-icon">🏠</span>Dashboard</a>
+    <div class="nav-section">Build</div>
+    <a class="nav-item " href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
+    <a class="nav-item " href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
+    <a class="nav-item " href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
+    <a class="nav-item " href="larofit-library.html"><span class="nav-icon">📚</span>Exercise library</a>
+    <a class="nav-item " href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
+    <div class="nav-section">Track</div>
+    <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
+    <a class="nav-item active" href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
+    <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
+    <div class="nav-section">Community</div>
+    <a class="nav-item " href="larofit-group.html"><span class="nav-icon">👥</span>Group feed</a>
+    <a class="nav-item " href="larofit-find-trainer.html"><span class="nav-icon">🔍</span>Find a trainer</a>
+    <div class="nav-section">Trainer</div>
+    <a class="nav-item " href="larofit-trainer.html"><span class="nav-icon">🏋️</span>Trainer dashboard</a>
+    <a class="nav-item" href="larofit-trainer-builder.html"><span class="nav-icon">📋</span>Trainer builder</a>
+    <a class="nav-item" href="larofit-trainer-diet.html"><span class="nav-icon">🥗</span>Diet builder</a>
+    <a class="nav-item " href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
+    <div class="nav-section">Account</div>
+    <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="s-avatar">LJ</div>
+    <div>
+      <div class="s-name" id="sidebar-name">Lyndon J.</div>
+      <div class="s-plan">&#10022; PRO TRIAL</div>
+    </div>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="page-title">MY PROGRAMS</div>
+    <div class="topbar-right">
+      <button class="btn-sm" onclick="window.location.href='larofit-builder.html'">✏️ Build manually</button>
+      <button class="btn-new" onclick="window.location.href='larofit-ai-coach.html'">🤖 Build with AI</button>
+    </div>
+  </div>
+
+  <div class="content" id="content"></div>
+</div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this) closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Program Name</div>
+      <button class="modal-close" onclick="closeModal()">✕ Close</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STATE ──
+let programs = [];
+let activeId = null;
+
+// ── INIT ──
+function init() {
+  const uname = localStorage.getItem('larofit_user_name');
+  if(uname) document.getElementById('sidebar-name').textContent = uname;
+
+  loadPrograms();
+  render();
+}
+
+function loadPrograms() {
+  // Load all saved programs from localStorage
+  const raw = localStorage.getItem('larofit_programs');
+  programs = raw ? JSON.parse(raw) : [];
+  activeId = localStorage.getItem('larofit_active_program_id');
+
+  // If no programs list exists yet, check for legacy single program
+  if(!programs.length) {
+    const legacy = localStorage.getItem('larofit_program');
+    if(legacy) {
+      try {
+        const p = JSON.parse(legacy);
+        p.id = 'prog_' + Date.now();
+        p.savedAt = p.savedAt || new Date().toISOString();
+        p.aiGenerated = p.aiGenerated || false;
+        programs.push(p);
+        activeId = p.id;
+        saveAll();
+      } catch(e) {}
+    }
+  }
+}
+
+function saveAll() {
+  localStorage.setItem('larofit_programs', JSON.stringify(programs));
+  localStorage.setItem('larofit_active_program_id', activeId || '');
+
+  // Keep larofit_program in sync with active program for other pages
+  const active = programs.find(p => p.id === activeId);
+  if(active) localStorage.setItem('larofit_program', JSON.stringify(active));
+}
+
+// ── RENDER ──
+function render() {
+  const container = document.getElementById('content');
+
+  if(!programs.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📂</div>
+        <div class="empty-title">NO PROGRAMS YET</div>
+        <div class="empty-sub">Build your first program with AI or design it yourself in the program builder.</div>
+        <button class="btn-build" onclick="window.location.href='larofit-ai-coach.html'">🤖 Build with AI →</button>
+      </div>`;
+    return;
+  }
+
+  const active = programs.find(p => p.id === activeId);
+  let html = '';
+
+  // Active program banner
+  if(active) {
+    const trainingDays = active.days?.filter(d => !d.rest).length || 0;
+    const totalEx = active.days?.reduce((s,d) => s + (d.exercises?.length||0), 0) || 0;
+    html += `
+      <div class="active-banner">
+        <div class="active-banner-left">
+          <div class="active-dot"></div>
+          <div>
+            <div class="active-label">Active Program</div>
+            <div class="active-name">${active.name || 'My Program'}</div>
+            <div class="active-meta">${trainingDays} training days · ${totalEx} exercises · ${active.weeks || 6} weeks</div>
+          </div>
+        </div>
+        <div class="active-actions">
+          <button class="btn-sm" onclick="viewProgram('${active.id}')">👁 View</button>
+          <button class="btn-sm" onclick="window.location.href='larofit-builder.html'">✏️ Edit</button>
+          <button class="btn-sm" onclick="window.location.href='larofit-today.html'">▶ Start workout</button>
+          <button class="btn-sm" style="border-color:var(--ember);color:var(--ember);" onclick="deleteActiveProgram('${active.id}')">🗑 Delete</button>
+        </div>
+      </div>`;
+  }
+
+  // All programs
+  const others = programs.filter(p => p.id !== activeId);
+  if(others.length) {
+    html += `<div class="section-title">ALL PROGRAMS</div>`;
+  } else {
+    html += `<div class="section-title">ALL PROGRAMS</div>`;
+  }
+
+  html += `<div class="programs-grid">`;
+  programs.forEach((p, idx) => {
+    const isActive = p.id === activeId;
+    const trainingDays = p.days?.filter(d => !d.rest).length || 0;
+    const totalEx = p.days?.reduce((s,d) => s + (d.exercises?.length||0), 0) || 0;
+    const totalSets = p.days?.reduce((s,d) => s + d.exercises?.reduce((ss,ex) => ss + (ex.params?.sets||3), 0), 0) || 0;
+    const saved = p.savedAt ? new Date(p.savedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+    const aiGenerated = p.aiGenerated;
+
+    // Day bar
+    const dayBar = (p.days || []).map(d => `<div class="pc-day ${d.rest?'rest':'training'}"></div>`).join('');
+
+    html += `
+      <div class="program-card${isActive?' is-active':''}" style="animation-delay:${idx*0.05}s">
+        <div class="pc-header">
+          <div class="pc-name">${p.name || 'My Program'}</div>
+          ${isActive ? '<span class="pc-badge badge-active">● ACTIVE</span>' : ''}
+          ${p.source==='trainer' ? `<span class="pc-badge badge-trainer">🏋️ Trainer${p.trainerClient?' — '+p.trainerClient.split(' ')[0]:''}</span>` : aiGenerated && !isActive ? '<span class="pc-badge badge-ai">🤖 AI</span>' : !aiGenerated && !isActive ? '<span class="pc-badge badge-manual">MANUAL</span>' : ''}
+        </div>
+        <div class="pc-body">
+          <div class="pc-stats">
+            <div class="pc-stat"><div class="pc-stat-num">${trainingDays}</div><div class="pc-stat-label">Days</div></div>
+            <div class="pc-stat"><div class="pc-stat-num">${totalEx}</div><div class="pc-stat-label">Exercises</div></div>
+            <div class="pc-stat"><div class="pc-stat-num">${p.weeks||6}</div><div class="pc-stat-label">Weeks</div></div>
+          </div>
+          <div class="pc-days">${dayBar}</div>
+          <div class="pc-meta">Saved ${saved}${p.goal ? ' · ' + p.goal.replace('_',' ') : ''}</div>
+          <div class="pc-actions">
+            <button class="pc-btn" onclick="viewProgram('${p.id}')">👁 View</button>
+            <button class="pc-btn" onclick="editProgram('${p.id}')">✏️ Edit</button>
+            ${!isActive ? `<button class="pc-btn set-active" onclick="setActive('${p.id}')">▶ Set active</button>` : `<button class="pc-btn" onclick="window.location.href='larofit-today.html'">▶ Start workout</button>`}
+            ${!isActive ? `<button class="pc-btn danger" onclick="deleteProgram('${p.id}')">🗑</button>` : `<button class="pc-btn danger" onclick="deleteActiveProgram('${p.id}')">🗑 Delete</button>`}
+          </div>
+        </div>
+      </div>`;
+  });
+  html += `</div>`;
+
+  container.innerHTML = html;
+}
+
+// ── ACTIONS ──
+function setActive(id) {
+  activeId = id;
+  saveAll();
+  render();
+  showToast('✅ Program set as active');
+}
+
+function editProgram(id) {
+  // Load the program into the builder
+  const p = programs.find(x => x.id === id);
+  if(!p) return;
+  localStorage.setItem('larofit_program', JSON.stringify(p));
+  localStorage.setItem('larofit_editing_program_id', id);
+  window.location.href = 'larofit-builder.html';
+}
+
+function deleteProgram(id) {
+  if(!confirm('Delete this program? This cannot be undone.')) return;
+  programs = programs.filter(p => p.id !== id);
+  saveAll();
+  render();
+  showToast('Program deleted');
+}
+
+function deleteActiveProgram(id) {
+  if(!confirm('Delete your active program? This cannot be undone. You can build a new one anytime.')) return;
+  programs = programs.filter(p => p.id !== id);
+  activeId = programs.length ? programs[0].id : null;
+  localStorage.removeItem('larofit_program');
+  saveAll();
+  render();
+  showToast('Active program deleted');
+}
+
+function viewProgram(id) {
+  const p = programs.find(x => x.id === id);
+  if(!p) return;
+
+  document.getElementById('modal-title').textContent = p.name || 'My Program';
+
+  const daysHtml = (p.days || []).map((d, i) => {
+    if(d.rest) {
+      return `<div class="day-block rest">
+        <div class="day-block-header">
+          <div class="day-name">${d.name || 'Day '+(i+1)}</div>
+          <div class="day-ex-count">REST DAY</div>
+        </div>
+      </div>`;
+    }
+    const exHtml = (d.exercises || []).map(ex => `
+      <div class="ex-row">
+        <div class="ex-row-name">${ex.name}</div>
+        <div class="ex-row-meta">${ex.params?.sets||3} sets × ${ex.params?.reps||10} reps</div>
+      </div>`).join('');
+
+    return `<div class="day-block">
+      <div class="day-block-header" onclick="const ex=this.nextElementSibling;const open=ex.style.display==='flex';ex.style.display=open?'none':'flex';this.querySelector('.arrow').textContent=open?'▾':'▴'">
+        <div class="day-name">${d.name || 'Day '+(i+1)}</div>
+        <div class="day-ex-count">${d.exercises?.length||0} exercises <span class='arrow'>▾</span></div>
+      </div>
+      <div class="day-exercises" style="display:none;flex-direction:column;">${exHtml||'<div style="font-size:12px;color:var(--mist);padding:4px 0;">No exercises added</div>'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('modal-body').innerHTML = daysHtml;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+init();
+</script>
+</body>
+</html>
