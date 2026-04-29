@@ -381,7 +381,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="nav-section">Track</div>
     <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
     <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
-    <a class="nav-item" href="larofit-sessions.html"><span class="nav-icon">🕐</span>Workout history</a>
     <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
     <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
     <div class="nav-section">Community</div>
@@ -1857,7 +1856,8 @@ function onDrop(e, dayId){
 const LIB_GROUPS = ['All', ...Object.keys(EXERCISE_LIBRARY)];
 
 function renderLibFilters(){
-  document.getElementById('lib-filters').innerHTML = LIB_GROUPS.map(g=>
+  const groups = [...LIB_GROUPS, 'Bodyweight'];
+  document.getElementById('lib-filters').innerHTML = groups.map(g=>
     `<button class="lib-filter${g===libFilter?' active':''}" onclick="libFilter='${g}';renderLibFilters();renderLibrary()">${g}</button>`
   ).join('');
 }
@@ -1889,6 +1889,21 @@ function renderLibrary(){
         </div>`;
       }).join('')}
     </div>`;
+  }
+
+  // Bodyweight filter — show all bw exercises across all groups
+  if(libFilter==='Bodyweight'){
+    Object.keys(EXERCISE_LIBRARY).forEach(group=>{
+      const items = EXERCISE_LIBRARY[group].filter(e=>e.eq==='bw'&&(!search||e.name.toLowerCase().includes(search)));
+      if(!items.length) return;
+      html += `<div class="lib-group">
+        <div class="lib-group-title">${group}</div>
+        ${items.map(ex=>makeRow(ex, group, ex.eq, ex.defaultType, '')).join('')}
+      </div>`;
+    });
+    document.getElementById('lib-list').innerHTML = html ||
+      '<div style="padding:24px;text-align:center;color:var(--slate);font-size:13px;">No bodyweight exercises found.</div>';
+    return;
   }
 
   Object.keys(EXERCISE_LIBRARY).forEach(group=>{

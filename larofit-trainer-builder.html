@@ -129,15 +129,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .lib-filter.active{background:var(--volt);color:var(--black);border-color:var(--volt);}
 .lib-group{padding:10px 14px 4px;}
 .lib-group-title{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
-.lib-ex-item{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:9px 10px;border-radius:var(--radius-sm);margin-bottom:3px;}
+.lib-ex-item{display:flex;align-items:center;justify-content:space-between;padding:9px 10px;border-radius:var(--radius-sm);margin-bottom:3px;}
 .lib-ex-clickable{cursor:pointer;transition:background 0.12s;border:1px solid transparent;}
 .lib-ex-clickable:hover{background:rgba(198,241,53,0.07);border-color:rgba(198,241,53,0.2);}
 .lib-ex-clickable:active{background:rgba(198,241,53,0.15);}
-.lib-ex-clickable.lib-selected{background:rgba(198,241,53,0.1);border-color:rgba(198,241,53,0.35);}
-.lib-ex-cb{width:15px;height:15px;accent-color:var(--volt);cursor:pointer;flex-shrink:0;}
-.lib-add-bar{position:sticky;bottom:0;left:0;right:0;background:var(--volt);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:10;border-radius:0 0 var(--radius-sm) var(--radius-sm);}
-.lib-add-bar-btn{background:var(--black);border:none;border-radius:var(--radius-sm);padding:8px 16px;font-size:13px;font-weight:700;color:var(--volt);cursor:pointer;font-family:var(--font-body);letter-spacing:0.03em;}
-.lib-add-bar-clear{background:none;border:none;font-size:12px;color:rgba(0,0,0,0.5);cursor:pointer;font-family:var(--font-body);}
 .lib-ex-name{font-size:12px;font-weight:600;color:var(--white);}
 .lib-ex-meta{font-size:10px;color:var(--mist);margin-top:1px;}
 .lib-add-hint{font-size:10px;font-weight:700;color:var(--slate);font-family:var(--font-mono);opacity:0;transition:opacity 0.15s;flex-shrink:0;}
@@ -481,13 +476,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </div>
         <div class="lib-filters" id="lib-filters"></div>
         <div id="lib-list"></div>
-        <div id="lib-add-bar" class="lib-add-bar" style="display:none;">
-          <span style="font-size:13px;font-weight:700;color:var(--black);" id="lib-add-bar-label">0 selected</span>
-          <div style="display:flex;gap:8px;">
-            <button class="lib-add-bar-clear" onclick="clearLibSelection()">Clear</button>
-            <button class="lib-add-bar-btn" onclick="addSelectedExercises()">+ Add to program</button>
-          </div>
-        </div>
       </div>
       <div class="panel-content" id="panel-details" style="display:none;">
         <div class="detail-empty" id="detail-empty">
@@ -1594,7 +1582,8 @@ function onDrop(e, dayId){
 const LIB_GROUPS = ['All', ...Object.keys(EXERCISE_LIBRARY)];
 
 function renderLibFilters(){
-  document.getElementById('lib-filters').innerHTML = LIB_GROUPS.map(g=>
+  const groups = [...LIB_GROUPS, 'Bodyweight'];
+  document.getElementById('lib-filters').innerHTML = groups.map(g=>
     `<button class="lib-filter${g===libFilter?' active':''}" onclick="libFilter='${g}';renderLibFilters();renderLibrary()">${g}</button>`
   ).join('');
 }
@@ -1608,80 +1597,6 @@ function setLibTab(tab){
   document.getElementById('lib-tab-mine').style.borderBottomColor = tab==='mine'?'var(--purple)':'transparent';
   document.getElementById('lib-tab-mine').style.color = tab==='mine'?'var(--purple)':'var(--mist)';
   renderLibrary();
-}
-
-// Track selected exercises in library
-let libSelected = [];
-
-function toggleLibItem(el){
-  const name = el.dataset.name;
-  const cb = el.querySelector('.lib-ex-cb');
-  if(libSelected.find(e=>e.name===name)){
-    libSelected = libSelected.filter(e=>e.name!==name);
-    el.classList.remove('lib-selected');
-    if(cb) cb.checked = false;
-  } else {
-    libSelected.push({
-      name: el.dataset.name,
-      group: el.dataset.group,
-      eq: el.dataset.eq,
-      type: el.dataset.type
-    });
-    el.classList.add('lib-selected');
-    if(cb) cb.checked = true;
-  }
-  updateLibAddBar();
-}
-
-function updateLibAddBar(){
-  const bar = document.getElementById('lib-add-bar');
-  const label = document.getElementById('lib-add-bar-label');
-  if(libSelected.length > 0){
-    bar.style.display = 'flex';
-    label.textContent = libSelected.length + ' exercise' + (libSelected.length>1?'s':'') + ' selected';
-  } else {
-    bar.style.display = 'none';
-  }
-}
-
-function clearLibSelection(){
-  libSelected = [];
-  document.querySelectorAll('.lib-ex-clickable.lib-selected').forEach(el=>{
-    el.classList.remove('lib-selected');
-    const cb = el.querySelector('.lib-ex-cb');
-    if(cb) cb.checked = false;
-  });
-  updateLibAddBar();
-}
-
-function addSelectedExercises(){
-  if(!libSelected.length) return;
-  libSelected.forEach(ex=>{
-    addExFromLib(ex.name, ex.group, ex.eq, ex.type);
-  });
-  const count = libSelected.length;
-  clearLibSelection();
-  showToast(count + ' exercise' + (count>1?'s':'') + ' added');
-}
-
-function makeLibRow(ex, group, eq, type, extraStyle){
-  const eqLabel = EQ_LABELS[eq]||eq;
-  const safeName = ex.name.replace(/"/g,'&quot;');
-  const isSelected = libSelected.some(e=>e.name===ex.name);
-  return `<div class="lib-ex-item lib-ex-clickable${isSelected?' lib-selected':''}"
-    data-name="${safeName}"
-    data-group="${group}"
-    data-eq="${eq}"
-    data-type="${type}"
-    onclick="toggleLibItem(this)"
-    ${extraStyle?`style="${extraStyle}"`:''}
-    title="Select to add to program">
-    <input type="checkbox" class="lib-ex-cb" ${isSelected?'checked':''} onclick="event.stopPropagation();toggleLibItem(this.closest('.lib-ex-item'))">
-    <div style="flex:1;min-width:0;">
-      <div class="lib-ex-name">${ex.name}</div>
-      <div class="lib-ex-meta">${group} · ${eqLabel}</div>
-    </div>
-  </div>`;
 }
 
 function renderLibrary(){
@@ -1703,9 +1618,36 @@ function renderLibrary(){
     }
     html = `<div class="lib-group">
       <div class="lib-group-title" style="color:var(--purple);">⭐ My Exercises</div>
-      ${customs.map(ex=>makeLibRow(ex, ex.muscle||'Custom', ex.eq||'bw', ex.defaultType||'strength', 'border-left:2px solid rgba(167,139,250,0.4);')).join('')}
+      ${customs.map(ex=>`<div class="lib-ex-item lib-ex-clickable"
+        data-name="${ex.name.replace(/"/g,'&quot;')}"
+        data-group="${ex.muscle||'Custom'}"
+        data-eq="${ex.eq||'bw'}"
+        data-type="${ex.defaultType||'strength'}"
+        onclick="addExFromLibBtn(this)"
+        style="border-left:2px solid rgba(167,139,250,0.4);">
+        <div>
+          <div class="lib-ex-name">${ex.name}</div>
+          <div class="lib-ex-meta">${ex.muscle||'Custom'} · ${EQ_LABELS[ex.eq]||ex.eq||'BW'}</div>
+        </div>
+        <span class="lib-add-hint">+ add</span>
+      </div>`).join('')}
     </div>`;
     document.getElementById('lib-list').innerHTML = html;
+    return;
+  }
+
+  // Bodyweight filter — show all bw exercises across all groups
+  if(libFilter==='Bodyweight'){
+    Object.keys(EXERCISE_LIBRARY).forEach(group=>{
+      const items = EXERCISE_LIBRARY[group].filter(e=>e.eq==='bw'&&(!search||e.name.toLowerCase().includes(search)));
+      if(!items.length) return;
+      html += `<div class="lib-group">
+        <div class="lib-group-title">${group}</div>
+        ${items.map(ex=>makeLibRow(ex, group, ex.eq, ex.defaultType, '')).join('')}
+      </div>`;
+    });
+    document.getElementById('lib-list').innerHTML = html ||
+      '<div style="padding:24px;text-align:center;color:var(--slate);font-size:13px;">No bodyweight exercises found.</div>';
     return;
   }
 
@@ -1716,7 +1658,22 @@ function renderLibrary(){
     if(!items.length) return;
     html += `<div class="lib-group">
       <div class="lib-group-title">${group}</div>
-      ${items.map(ex=>makeLibRow(ex, group, ex.eq, ex.defaultType, '')).join('')}
+      ${items.map(ex=>{
+        const eqLabel = EQ_LABELS[ex.eq]||ex.eq;
+        return `<div class="lib-ex-item lib-ex-clickable"
+          data-name="${ex.name.replace(/"/g,'&quot;')}"
+          data-group="${group}"
+          data-eq="${ex.eq}"
+          data-type="${ex.defaultType}"
+          onclick="addExFromLibBtn(this)"
+          title="Click to add to program">
+          <div>
+            <div class="lib-ex-name">${ex.name}</div>
+            <div class="lib-ex-meta">${group} · ${eqLabel}</div>
+          </div>
+          <span class="lib-add-hint">+ add</span>
+        </div>`;
+      }).join('')}
     </div>`;
   });
   document.getElementById('lib-list').innerHTML = html ||
