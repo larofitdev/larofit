@@ -2237,7 +2237,7 @@ async function saveWorkout(workoutDate){
 }
 
 function skipDay(){
-  if(!confirm('Skip today's workout? It will be marked as skipped in your history.')) return;
+  if(!confirm("Skip today's workout? It will be marked as skipped in your history.")) return;
   const today=new Date().toISOString().split('T')[0];
   const logs=JSON.parse(localStorage.getItem('larofit_logs')||'[]');
   logs.push({date:today,skipped:true,dayName:todayExercises[0]?.dayName||''});
@@ -2275,3 +2275,4 @@ init();
 </script>
 </body>
 </html>
+
