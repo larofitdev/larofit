@@ -505,6 +505,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </div>
       </div>
 
+      <!-- ADD EXERCISE BAR -->
+      <div id="add-ex-bar" style="display:flex;align-items:center;gap:8px;padding:8px 0 10px;flex-wrap:wrap;">
+        <span style="font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;">+ Add exercise to:</span>
+        <div id="add-ex-day-pills" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+
       <!-- 7-DAY GRID -->
       <div class="days-grid" id="days-grid"></div>
     </div>
@@ -1896,6 +1902,7 @@ function openLibraryForDay(dayId){
   switchPanel('library', document.querySelectorAll('.panel-tab')[0]);
   window._targetDay = dayId;
   updateTargetDayBadge();
+  renderAddExBar();
   clearLibSelection();
   // Briefly highlight the day card
   document.querySelectorAll('.day-card').forEach(c=>c.classList.remove('drag-over'));
@@ -2345,6 +2352,24 @@ function updateMeta(){
   document.getElementById('active-day-count').textContent = active;
   syncMeta();
   updateSummary();
+  renderAddExBar();
+}
+
+function renderAddExBar(){
+  const container = document.getElementById('add-ex-day-pills');
+  if(!container) return;
+  container.innerHTML = program.days.map(day => {
+    const isTarget = window._targetDay === day.id;
+    if(day.rest) return `<span style="padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;background:var(--carbon);border:1px solid var(--border);color:var(--slate);opacity:0.5;">${day.name}</span>`;
+    return `<button onclick="openLibraryForDay(${day.id})" style="padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;
+      background:${isTarget?'var(--volt)':'var(--carbon)'};
+      border:1.5px solid ${isTarget?'var(--volt)':'var(--border)'};
+      color:${isTarget?'var(--black)':'var(--mist)'};"
+      onmouseover="if(!${isTarget})this.style.borderColor='var(--volt)',this.style.color='var(--volt)'"
+      onmouseout="if(!${isTarget})this.style.borderColor='var(--border)',this.style.color='var(--mist)'">
+      ${day.name}
+    </button>`;
+  }).join('');
 }
 
 function syncMeta(){
