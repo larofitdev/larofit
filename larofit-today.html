@@ -1569,7 +1569,7 @@ function renderExList(){
         ${ex.hasWarmup ? `<tr class="warmup-row" id="set-row-${exIdx}--1">
           <td><div class="warmup-label">W</div></td>
           <td><input class="set-input${ex.warmupSet?.reps?' filled':''}" id="inp-reps-${exIdx}--1" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="reps" value="${ex.warmupSet?.reps||''}" oninput="updateWarmup(${exIdx},'reps',this.value);this.classList.toggle('filled',!!this.value)"></td>
-          <td><input class="set-input${ex.warmupSet?.weight?' filled':''} voice-filled" id="inp-wgt-${exIdx}--1" type="text" inputmode="decimal" pattern="[0-9.]*" placeholder="–" value="${ex.warmupSet?.weight||''}" oninput="updateWarmup(${exIdx},'weight',this.value);this.classList.toggle('filled',!!this.value)"></td>
+          ${!isTimed?`<td><input class="set-input${ex.warmupSet?.weight?' filled':''} voice-filled" id="inp-wgt-${exIdx}--1" type="text" inputmode="decimal" pattern="[0-9.]*" placeholder="–" value="${ex.warmupSet?.weight||''}" oninput="updateWarmup(${exIdx},'weight',this.value);this.classList.toggle('filled',!!this.value)"></td>`:''}
           <td style="text-align:right;">
             <span class="warmup-badge">🔥 WARM-UP</span><br>
             ${ex.warmupSet?.reps?'<span class="log-set-btn logged" style="margin-top:4px;display:inline-block;">✓ Logged</span>':`<button class="log-set-btn" style="margin-top:4px;" onclick="manualLogWarmup(${exIdx})">Log Set</button>`}
@@ -1582,7 +1582,7 @@ function renderExList(){
           return `<tr id="set-row-${exIdx}-${setIdx}" style="${isCur?'background:rgba(198,241,53,0.04);':''}">
             <td><div class="set-num">${setIdx+1}</div></td>
             <td><input class="set-input${set.reps?' filled':''}${isCur?' voice-filled':''}" id="inp-reps-${exIdx}-${setIdx}" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="${isCardio?'20 min':isTimed?'30':ex.params?.reps||'–'}" value="${set.reps||''}" oninput="updateSet(${exIdx},${setIdx},'reps',this.value);this.classList.toggle('filled',!!this.value)"></td>
-            ${!isBodyweight&&!isCardio?`<td><input class="set-input${set.weight?' filled':''}${isCur?' voice-filled':''}" id="inp-wgt-${exIdx}-${setIdx}" type="text" inputmode="decimal" pattern="[0-9.]*" placeholder="${ex.params?.weight||'–'}" value="${set.weight||''}" oninput="updateSet(${exIdx},${setIdx},'weight',this.value);this.classList.toggle('filled',!!this.value)"></td>`:isCardio?`<td><input class="set-input" id="inp-wgt-${exIdx}-${setIdx}" type="text" placeholder="distance" value="${set.weight||''}" oninput="updateSet(${exIdx},${setIdx},'weight',this.value)"></td>`:'<td></td>'}
+            ${!isBodyweight&&!isCardio&&!isTimed?`<td><input class="set-input${set.weight?' filled':''}${isCur?' voice-filled':''}" id="inp-wgt-${exIdx}-${setIdx}" type="text" inputmode="decimal" pattern="[0-9.]*" placeholder="${ex.params?.weight||'–'}" value="${set.weight||''}" oninput="updateSet(${exIdx},${setIdx},'weight',this.value);this.classList.toggle('filled',!!this.value)"></td>`:isCardio?`<td><input class="set-input" id="inp-wgt-${exIdx}-${setIdx}" type="text" placeholder="distance" value="${set.weight||''}" oninput="updateSet(${exIdx},${setIdx},'weight',this.value)"></td>`:'<td></td>'}
             <td style="text-align:right;">
               ${set.logged?'<span class="log-set-btn logged">✓ Logged</span>':`<button class="log-set-btn" onclick="manualLogSet(${exIdx},${setIdx})">Log Set</button>`}
               ${isPR?'<span class="set-badge" style="margin-left:4px;">↑ PR</span>':lastSet&&!set.logged?`<div style="font-size:9px;color:var(--slate);font-family:var(--font-mono);margin-top:3px;">${lastSet.reps}r·${lastSet.weight}lb</div>`:''}
@@ -2237,7 +2237,7 @@ async function saveWorkout(workoutDate){
 }
 
 function skipDay(){
-  if(!confirm("Skip today's workout? It will be marked as skipped in your history.")) return;
+  if(!confirm('Skip today's workout? It will be marked as skipped in your history.')) return;
   const today=new Date().toISOString().split('T')[0];
   const logs=JSON.parse(localStorage.getItem('larofit_logs')||'[]');
   logs.push({date:today,skipped:true,dayName:todayExercises[0]?.dayName||''});
