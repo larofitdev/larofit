@@ -1016,12 +1016,14 @@ function buildProgramFromConversation() {
 function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── INIT ──
-const _startParam = new URLSearchParams(window.location.search).get('start');
-if(_startParam === 'ai'){
-  showScreen('screen-build-choice');
-} else {
-  showScreen('screen-entry');
-}
+document.addEventListener('DOMContentLoaded', () => {
+  const _startParam = new URLSearchParams(window.location.search).get('start');
+  if(_startParam === 'ai'){
+    showScreen('screen-build-choice');
+  } else {
+    showScreen('screen-entry');
+  }
+});
 </script>
 </body>
 </html>
