@@ -1017,7 +1017,11 @@ function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── INIT ──
 const _startParam = new URLSearchParams(window.location.search).get('start');
-showScreen(_startParam === 'ai' ? 'screen-build-choice' : 'screen-entry');
+if(_startParam === 'ai'){
+  startChat('workout');
+} else {
+  showScreen('screen-entry');
+}
 </script>
 </body>
 </html>
