@@ -2768,7 +2768,7 @@ async function loadSaved(){
 
   // Only show setup screen if keys are genuinely not saved
   if(!cloudConnected){
-    document.getElementById('setup-overlay').classList.remove('hidden');
+    document.getElementById('setup-overlay').classList.add('hidden');
   } else {
     // Keys exist — hide setup immediately, no flash
     document.getElementById('setup-overlay').classList.add('hidden');
