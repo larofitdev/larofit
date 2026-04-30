@@ -997,16 +997,18 @@ function renderDays(){
             <input type="checkbox" ${day.rest?'checked':''} onchange="toggleRest(${day.id},this.checked)">
             Rest day
           </label>
-          <span class="day-count">${day.rest?'REST':day.exercises.length+' ex'}</span>
+          <span class="day-count" onclick="event.stopPropagation();${day.rest?'':(`openLibraryForDay(${day.id})`)};" style="cursor:${day.rest?'default':'pointer'}" title="${day.rest?'':'Click to add exercises'}">${day.rest?'REST':day.exercises.length+' ex +'}</span>
         </div>
       </div>
       <div class="day-body" id="day-body-${day.id}"
+           onclick="if(event.target===this||event.target.classList.contains('day-empty')||event.target.classList.contains('day-empty-icon'))openLibraryForDay(${day.id})"
            ondragover="onExDragOverBody(event,${day.id})"
-           ondrop="onExDropBody(event,${day.id})">
+           ondrop="onExDropBody(event,${day.id})"
+           style="cursor:${day.rest?'default':'pointer'}">
         ${day.rest
           ? '<div class="day-empty"><div class="day-empty-icon">&#128564;</div>Rest &amp; recover</div>'
           : day.exercises.length === 0
-            ? '<div class="day-empty"><div class="day-empty-icon">&#10133;</div>Add exercises from the library</div>'
+            ? `<div class="day-empty"><div class="day-empty-icon">&#10133;</div>Click to add exercises</div>`
             : day.exercises.map((ex,ei) => renderExBlock(ex,day.id,ei)).join('')
         }
       </div>
