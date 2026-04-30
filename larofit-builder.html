@@ -89,8 +89,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .day-body{flex:1;padding:8px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
 .day-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:20px 8px;text-align:center;color:var(--slate);font-size:11px;line-height:1.5;}
 .day-empty-icon{font-size:20px;margin-bottom:6px;opacity:0.4;}
-.day-add-btn{margin:6px 8px 8px;padding:7px;background:transparent;border:1px dashed var(--border);border-radius:var(--radius-sm);font-size:11px;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;text-align:center;}
-.day-add-btn:hover{border-color:var(--volt);color:var(--volt);}
+
 
 /* ── EXERCISE BLOCK ── */
 .ex-block{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;cursor:grab;transition:border-color 0.15s,opacity 0.15s;position:relative;}
@@ -116,13 +115,44 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .ex-block.selected{border-color:var(--volt);background:rgba(198,241,53,0.04);}
 .ex-block-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;}
 .ex-name{font-size:12px;font-weight:600;color:var(--white);flex:1;line-height:1.3;}
+.ex-video-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.35);color:var(--blue);font-size:10px;cursor:pointer;flex-shrink:0;transition:all 0.15s;text-decoration:none;margin-top:1px;}
+.ex-video-btn:hover{background:rgba(96,165,250,0.3);border-color:var(--blue);transform:scale(1.1);}
 .ex-del{position:absolute;top:-8px;right:-8px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;background:var(--ember);border:2px solid var(--carbon);border-radius:50%;color:var(--pure);transition:all 0.15s;line-height:1;padding:0;z-index:5;}
 .ex-del:hover{background:#ff3300;transform:scale(1.15);}
 .ex-type-badge{display:inline-block;padding:2px 7px;border-radius:999px;font-size:9px;font-weight:700;font-family:var(--font-mono);letter-spacing:0.06em;margin-bottom:5px;}
 .ex-params{display:flex;flex-wrap:wrap;gap:4px;}
 .ex-param{background:rgba(255,255,255,0.06);border-radius:4px;padding:2px 6px;font-size:10px;color:var(--fog);font-family:var(--font-mono);}
 
-/* ── TYPE BADGE COLORS ── */
+/* ── PROG TYPE DROPDOWN ── */
+.prog-type-select{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:12px;font-weight:600;font-family:var(--font-body);padding:5px 10px;outline:none;cursor:pointer;transition:border-color 0.2s;}
+.prog-type-select:focus{border-color:var(--volt);}
+/* ── VIDEO BUTTON ON CARD ── */
+.ex-video-btn{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:rgba(96,165,250,0.15);border:1px solid rgba(96,165,250,0.35);color:var(--blue);font-size:9px;cursor:pointer;flex-shrink:0;transition:all 0.15s;text-decoration:none;margin-top:1px;}
+.ex-video-btn:hover{background:rgba(96,165,250,0.3);border-color:var(--blue);transform:scale(1.15);}
+/* ── SAVE NAME MODAL ── */
+.save-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:flex;align-items:center;justify-content:center;}
+.save-modal{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:360px;max-width:90%;}
+.save-modal-title{font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--pure);margin-bottom:6px;}
+.save-modal-sub{font-size:12px;color:var(--mist);margin-bottom:20px;}
+.save-modal-input{width:100%;padding:11px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-family:var(--font-body);outline:none;box-sizing:border-box;transition:border-color 0.2s;}
+.save-modal-input:focus{border-color:var(--volt);}
+.save-modal-btns{display:flex;gap:10px;margin-top:18px;}
+/* ── LIB PREVIEW IN DETAILS ── */
+.lib-preview{padding:16px;}
+.lib-preview-name{font-size:15px;font-weight:700;color:var(--pure);margin-bottom:4px;}
+.lib-preview-meta{font-size:11px;color:var(--mist);margin-bottom:14px;}
+.lib-preview-section{font-size:10px;font-weight:700;color:var(--slate);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+.lib-preview-add{width:100%;padding:11px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);margin-top:14px;transition:background 0.2s;}
+.lib-preview-add:hover{background:var(--volt-dim);}
+/* ── VIDEO UPLOAD IN DETAIL ── */
+.video-section{display:flex;flex-direction:column;gap:8px;}
+.video-tab-row{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:4px;}
+.video-tab{flex:1;padding:6px;background:transparent;border:none;font-size:11px;font-weight:600;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;}
+.video-tab.active{background:var(--carbon);color:var(--white);}
+.video-upload-label{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--carbon);border:1.5px dashed var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--mist);cursor:pointer;transition:all 0.15s;width:100%;box-sizing:border-box;justify-content:center;}
+.video-upload-label:hover{border-color:var(--volt);color:var(--volt);}
+.video-thumb{width:100%;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--carbon);margin-top:4px;}
+
 .type-strength{background:rgba(198,241,53,0.15);color:var(--c-strength);}
 .type-cardio{background:rgba(96,165,250,0.15);color:var(--c-cardio);}
 .type-yoga{background:rgba(167,139,250,0.15);color:var(--c-yoga);}
@@ -352,8 +382,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .setup-status.success{color:var(--success);}
 .setup-skip{font-size:12px;color:var(--slate);text-align:center;margin-top:12px;cursor:pointer;text-decoration:underline;}
 .setup-skip:hover{color:var(--mist);}
-.cloud-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:999px;font-size:11px;font-weight:600;color:var(--success);font-family:var(--font-mono);margin-left:10px;}
-.cloud-badge.offline{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--slate);}
+
 .save-indicator{font-size:11px;color:var(--mist);font-family:var(--font-mono);display:flex;align-items:center;gap:5px;}
 
 /* ── RESPONSIVE ── */
@@ -387,6 +416,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="nav-section">Track</div>
     <a class="nav-item " href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
     <a class="nav-item " href="larofit-programs.html"><span class="nav-icon">📂</span>My programs</a>
+    <a class="nav-item " href="larofit-sessions.html"><span class="nav-icon">🕐</span>Workout history</a>
     <a class="nav-item " href="larofit-progress.html"><span class="nav-icon">📊</span>Progress</a>
     <a class="nav-item " href="larofit-measurements.html"><span class="nav-icon">📏</span>Measurements</a>
     <div class="nav-section">Community</div>
@@ -418,12 +448,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="topbar-left">
       <div class="page-title">PROGRAM BUILDER</div>
       <input class="prog-name-input" id="prog-name" placeholder="Name your program..." value="My 6-day split" oninput="scheduleAutoSave()">
-      <span class="cloud-badge offline" id="cloud-badge">💾 Local only</span>
+      <select class="prog-type-select" id="prog-type" onchange="onProgTypeChange(this.value)">
+        <option value="build">🔨 Build My Own</option>
+        <option value="ai">🤖 AI Generated</option>
+        <option value="template">📋 Template</option>
+      </select>
     </div>
     <div class="topbar-right">
-      <button class="btn-volt-sm" onclick="openTemplateModal()" style="background:transparent;border:1px solid var(--volt);color:var(--volt);">&#128218; Use template</button>
       <button class="btn-sm-outline" style="border-color:rgba(251,191,36,0.4);color:#fbbf24;" onclick="maybeShowDeload()" title="Simulate app-open deload check">&#9889; Deload check</button>
-      <button class="btn-export" onclick="exportProgram()">&#8681; Export to phone</button>
     </div>
   </div>
 
@@ -551,6 +583,19 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div style="display:flex;gap:10px;margin-top:20px;">
       <button onclick="closeCustomExModal()" style="flex:1;padding:11px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--mist);cursor:pointer;font-family:var(--font-body);">Cancel</button>
       <button onclick="saveCustomEx()" style="flex:1;padding:11px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);">Save exercise</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE NAME MODAL -->
+<div class="save-modal-overlay" id="save-name-modal" style="display:none;" onclick="if(event.target===this)closeSaveModal()">
+  <div class="save-modal">
+    <div class="save-modal-title">SAVE PROGRAM</div>
+    <div class="save-modal-sub">Give your program a name before saving.</div>
+    <input class="save-modal-input" id="save-modal-name-input" type="text" placeholder="e.g. My Push Pull Legs Split" maxlength="60">
+    <div class="save-modal-btns">
+      <button style="flex:1;padding:11px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--mist);cursor:pointer;font-family:var(--font-body);" onclick="closeSaveModal()">Cancel</button>
+      <button style="flex:1;padding:11px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);" onclick="confirmSaveName()">&#128190; Save</button>
     </div>
   </div>
 </div>
@@ -965,7 +1010,6 @@ function renderDays(){
             : day.exercises.map((ex,ei) => renderExBlock(ex,day.id,ei)).join('')
         }
       </div>
-      ${!day.rest?`<button class="day-add-btn" onclick="openLibraryForDay(${day.id})">+ Add exercise</button>`:''}
     </div>
   `).join('');
   updateMeta();
@@ -999,6 +1043,7 @@ function renderExBlock(ex, dayId, exIdx){
     <div class="ex-block-header">
       <span class="ex-name">${ex.name}</span>
       ${isSuperset ? '<span style="font-size:10px;color:var(--purple);font-family:var(--font-mono);font-weight:700;">⛓ SS</span>' : ''}
+      ${ex.video ? `<a class="ex-video-btn" href="${ex.video}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Watch video">▶</a>` : ''}
     </div>
     <span class="ex-type-badge type-${ex.type||'strength'}">${TYPE_LABELS[ex.type||'strength']}</span>
     <div class="ex-params">${params}</div>
@@ -1068,6 +1113,7 @@ function addExToDay(dayId, exData){
     notes:'', video:''
   };
   day.exercises.push(ex);
+  markBuildMyOwn();
   renderDays();
   updateMeta();
   showToast('Added: '+ex.name);
@@ -1090,6 +1136,7 @@ function deleteEx(dayId, exIdx){
 
   day.exercises.splice(exIdx,1);
   if(selectedEx && selectedEx.dayId===dayId && selectedEx.exIdx===exIdx) selectedEx=null;
+  markBuildMyOwn();
   renderDays();
   renderDetailForm();
   updateMeta();
@@ -1305,10 +1352,25 @@ function renderDetailForm(){
         ${paramFields}
       </div>
       <div class="detail-section">
-        <div class="detail-section-title">Video URL (optional)</div>
-        <input class="detail-video" placeholder="YouTube or web link" value="${videoUrl}"
-               oninput="setExVideo(this.value)">
-        ${videoUrl?`<div class="video-preview"><a href="${videoUrl}" target="_blank" rel="noopener">&#9654; Watch video</a></div>`:''}
+        <div class="detail-section-title">Video</div>
+        <div class="video-section">
+          <div class="video-tab-row">
+            <button class="video-tab${!ex.videoFile?' active':''}" onclick="setVideoTab('url',${selectedEx.dayId},${selectedEx.exIdx})">🔗 URL</button>
+            <button class="video-tab${ex.videoFile?' active':''}" onclick="setVideoTab('upload',${selectedEx.dayId},${selectedEx.exIdx})">📁 Upload</button>
+          </div>
+          <div id="video-url-panel" style="${ex.videoFile?'display:none':''}">
+            <input class="detail-video" placeholder="YouTube or web link" value="${videoUrl}"
+                   oninput="setExVideo(this.value)">
+            ${videoUrl?`<div class="video-preview"><a href="${videoUrl}" target="_blank" rel="noopener">&#9654; Watch video</a></div>`:''}
+          </div>
+          <div id="video-upload-panel" style="${ex.videoFile?'':'display:none'}">
+            <label class="video-upload-label">
+              📹 ${ex.videoFile?'Replace video file':'Choose video file'}
+              <input type="file" accept="video/*" style="display:none" onchange="handleVideoUpload(event,${selectedEx.dayId},${selectedEx.exIdx})">
+            </label>
+            ${ex.videoFile?`<video class="video-thumb" src="${ex.videoFile}" controls style="max-height:140px;"></video>`:''}
+          </div>
+        </div>
       </div>
       <div class="detail-section">
         <div class="detail-section-title">Notes</div>
@@ -1324,9 +1386,8 @@ function setExType(dayId, exIdx, type){
   const ex = program.days.find(d=>d.id===dayId).exercises[exIdx];
   ex.type = type;
   ex.params = {...(TYPE_DEFAULTS[type]||{})};
-  // Reset progression to match new type
   delete ex.progression;
-  // getProgRule will re-initialize with correct defaults on next render
+  markBuildMyOwn();
   renderDays();
   renderDetailForm();
   scheduleAutoSave();
@@ -1337,7 +1398,7 @@ function setParam(key, val){
   const ex = program.days.find(d=>d.id===selectedEx.dayId).exercises[selectedEx.exIdx];
   if(!ex.params) ex.params={};
   ex.params[key] = val;
-  // Re-render just the block
+  markBuildMyOwn();
   const blockEl = document.getElementById(`ex-${selectedEx.dayId}-${selectedEx.exIdx}`);
   if(blockEl){
     const paramsEl = blockEl.querySelector('.ex-params');
@@ -1350,6 +1411,8 @@ function setExVideo(url){
   if(!selectedEx) return;
   const ex = program.days.find(d=>d.id===selectedEx.dayId).exercises[selectedEx.exIdx];
   ex.video = url;
+  markBuildMyOwn();
+  scheduleAutoSave();
 }
 
 function buildSupersetSection(ex, dayId, exIdx){
@@ -1390,9 +1453,8 @@ function setExNotes(notes){
   if(!selectedEx) return;
   const ex = program.days.find(d=>d.id===selectedEx.dayId).exercises[selectedEx.exIdx];
   ex.notes = notes;
+  markBuildMyOwn();
 }
-
-// ── CUSTOM EXERCISES ──────────────────────────────────────────────────────────
 function loadCustomExercises(){
   try{ return JSON.parse(localStorage.getItem('larofit_custom_exercises')||'[]'); }
   catch(e){ return []; }
@@ -2164,16 +2226,18 @@ function addSelectedExercises(){
 function makeLibRow(ex, group, eq, type, extraStyle){
   const eqLabel = EQ_LABELS[eq]||eq;
   const safeName = ex.name.replace(/"/g,'&quot;');
+  const safeNameJs = ex.name.replace(/'/g,"\\'");
   const isSelected = libSelected.some(e=>e.name===ex.name);
   return `<div class="lib-ex-item lib-ex-clickable${isSelected?' lib-selected':''}"
     data-name="${safeName}" data-group="${group}" data-eq="${eq}" data-type="${type}"
-    onclick="toggleLibItem(this)" ${extraStyle?`style="${extraStyle}"`:''}
-    title="Select to add to program">
+    ${extraStyle?`style="${extraStyle}"`:''}
+    title="Click to preview · Check to add">
     <input type="checkbox" class="lib-ex-cb" ${isSelected?'checked':''} onclick="event.stopPropagation();toggleLibItem(this.closest('.lib-ex-item'))">
-    <div style="flex:1;min-width:0;">
+    <div style="flex:1;min-width:0;" onclick="toggleLibItem(this.closest('.lib-ex-item'))">
       <div class="lib-ex-name">${ex.name}</div>
       <div class="lib-ex-meta">${group} · ${eqLabel}</div>
     </div>
+    <button style="background:none;border:none;color:var(--slate);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0;" onclick="event.stopPropagation();showLibPreview('${safeNameJs}','${group}','${eq}','${type}')" title="Preview">ℹ</button>
   </div>`;
 }
 
@@ -2286,7 +2350,22 @@ function syncMeta(){
   program.startDate = document.getElementById('prog-start').value;
   program.weeks = +document.getElementById('prog-weeks').value;
   program.goal = document.getElementById('prog-goal').value;
+  program.programType = document.getElementById('prog-type').value;
   program.updatedAt = new Date().toISOString();
+}
+
+function onProgTypeChange(val){
+  program.programType = val;
+  scheduleAutoSave();
+}
+
+// Call this whenever the user modifies the program — auto-switches to Build My Own
+function markBuildMyOwn(){
+  const sel = document.getElementById('prog-type');
+  if(sel && sel.value === 'template'){
+    sel.value = 'build';
+    program.programType = 'build';
+  }
 }
 
 function updateSummary(){
@@ -2334,17 +2413,7 @@ function loadSupabaseConfig(){
   cloudConnected = !!(SUPABASE_URL && SUPABASE_KEY && USER_ID);
 }
 
-function updateCloudBadge(){
-  const badge = document.getElementById('cloud-badge');
-  if(!badge) return;
-  if(cloudConnected){
-    badge.className='cloud-badge';
-    badge.innerHTML='☁️ Cloud on';
-  } else {
-    badge.className='cloud-badge offline';
-    badge.innerHTML='💾 Local only';
-  }
-}
+function updateCloudBadge(){ /* badge removed */ }
 
 async function connectSupabase(){
   const url  = document.getElementById('setup-url').value.trim().replace(/\/$/,'');
@@ -2469,6 +2538,18 @@ function scheduleAutoSave(){
 // ── SAVE / EXPORT / CLEAR ────────────────────────────────────────────────────
 
 async function saveProgram(silent=false){
+  // For non-silent saves that aren't templates, show name modal first
+  if(!silent){
+    const progType = document.getElementById('prog-type')?.value || 'build';
+    if(progType !== 'template'){
+      openSaveModal();
+      return;
+    }
+  }
+  await _doSaveProgram(silent);
+}
+
+async function _doSaveProgram(silent=false){
   syncMeta();
 
   // If editing an existing program, update it in the programs array
@@ -2556,7 +2637,101 @@ function goToToday(){
   showToast('In the full app, this opens today\'s workout in the mobile app.');
 }
 
-// ── TOAST ────────────────────────────────────────────────────────────────────
+// ── SAVE NAME MODAL ───────────────────────────────────────────────────────────
+
+function openSaveModal(){
+  const modal = document.getElementById('save-name-modal');
+  const input = document.getElementById('save-modal-name-input');
+  input.value = document.getElementById('prog-name').value || '';
+  modal.style.display = 'flex';
+  setTimeout(()=>input.focus(), 50);
+}
+
+function closeSaveModal(){
+  document.getElementById('save-name-modal').style.display = 'none';
+}
+
+async function confirmSaveName(){
+  const name = document.getElementById('save-modal-name-input').value.trim();
+  if(!name){ showToast('Please enter a program name'); return; }
+  document.getElementById('prog-name').value = name;
+  program.name = name;
+  closeSaveModal();
+  await _doSaveProgram(false);
+}
+
+// ── VIDEO TAB / UPLOAD ────────────────────────────────────────────────────────
+
+function setVideoTab(tab, dayId, exIdx){
+  const urlPanel    = document.getElementById('video-url-panel');
+  const uploadPanel = document.getElementById('video-upload-panel');
+  const tabs        = document.querySelectorAll('.video-tab');
+  if(!urlPanel || !uploadPanel) return;
+  if(tab === 'url'){
+    urlPanel.style.display    = '';
+    uploadPanel.style.display = 'none';
+    tabs[0].classList.add('active');
+    tabs[1].classList.remove('active');
+  } else {
+    urlPanel.style.display    = 'none';
+    uploadPanel.style.display = '';
+    tabs[0].classList.remove('active');
+    tabs[1].classList.add('active');
+  }
+}
+
+function handleVideoUpload(e, dayId, exIdx){
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 50 * 1024 * 1024){ showToast('Video must be under 50MB'); return; }
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    const day = program.days.find(d=>d.id===dayId);
+    if(!day) return;
+    const ex = day.exercises[exIdx];
+    if(!ex) return;
+    ex.videoFile = evt.target.result;
+    ex.video = ''; // clear URL when file uploaded
+    markBuildMyOwn();
+    scheduleAutoSave();
+    renderDetailForm();
+    renderDays();
+    showToast('Video uploaded');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── LIBRARY PREVIEW IN DETAILS PANEL (#4) ────────────────────────────────────
+
+function showLibPreview(name, group, eq, type){
+  // Switch to details panel
+  switchPanel('details', document.querySelectorAll('.panel-tab')[1]);
+  const empty = document.getElementById('detail-empty');
+  const form  = document.getElementById('detail-form');
+  empty.style.display = 'none';
+  form.style.display  = '';
+  const eqLabel = EQ_LABELS[eq] || eq;
+  // Find video from custom exercises if exists
+  const customs = loadCustomExercises();
+  const custom  = customs.find(e=>e.name===name);
+  const video   = custom?.video || '';
+  form.innerHTML = `<div class="lib-preview">
+    <div class="lib-preview-name">${name}</div>
+    <div class="lib-preview-meta">${group} · ${eqLabel} · ${TYPE_LABELS[type]||type}</div>
+    ${video ? `<div style="margin-bottom:12px;"><a href="${video}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:5px;">&#9654; Watch video</a></div>` : ''}
+    <div class="lib-preview-section">About this exercise</div>
+    <div style="font-size:12px;color:var(--mist);line-height:1.6;margin-bottom:10px;">
+      ${group} exercise · ${eqLabel} · Default: ${TYPE_LABELS[type]||type}
+    </div>
+    <div style="font-size:11px;color:var(--slate);">Select a day target in the library, then use the + Add to program button — or click an exercise already on a day to edit its sets, reps, and more.</div>
+    ${window._targetDay !== undefined && window._targetDay !== null ? `
+    <button class="lib-preview-add" onclick="addExFromLib('${name.replace(/'/g,"\\'")}','${group}','${eq}','${type}')">
+      + Add to ${program.days.find(d=>d.id===window._targetDay)?.name || 'program'}
+    </button>` : ''}
+  </div>`;
+}
+
+
 
 let toastTimer;
 function showToast(msg){
@@ -2576,6 +2751,8 @@ function applyProgram(p){
   document.getElementById('prog-start').value = p.startDate||'';
   document.getElementById('prog-weeks').value = p.weeks||6;
   document.getElementById('prog-goal').value = p.goal||'hypertrophy';
+  const typeEl = document.getElementById('prog-type');
+  if(typeEl) typeEl.value = p.programType || 'build';
 }
 
 async function loadSaved(){
