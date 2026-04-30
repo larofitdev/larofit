@@ -2382,6 +2382,16 @@ function syncMeta(){
 }
 
 function onProgTypeChange(val){
+  if(val === 'ai'){
+    window.location.href = 'larofit-ai-coach.html';
+    return;
+  }
+  if(val === 'template'){
+    openTemplateModal();
+    // Reset dropdown to current state so it doesn't stay on "Template" after closing
+    document.getElementById('prog-type').value = program.programType || 'build';
+    return;
+  }
   program.programType = val;
   scheduleAutoSave();
 }
@@ -2602,11 +2612,13 @@ async function _doSaveProgram(silent=false){
   if(cloudConnected){
     const ok = await sbUpsert(program);
     if(!silent){
+      document.getElementById('prog-name').value = '';
       showToast(ok ? '☁️ Program saved!' : '💾 Saved locally');
       setTimeout(()=>{ window.location.href='larofit-congrats.html'; }, 800);
     }
   } else {
     if(!silent){
+      document.getElementById('prog-name').value = '';
       showToast('💾 Program saved!');
       setTimeout(()=>{ window.location.href='larofit-congrats.html'; }, 800);
     }
