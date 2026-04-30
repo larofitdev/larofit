@@ -77,7 +77,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .day-card:hover{border-color:var(--steel);}
 .day-card.rest-day{border-style:dashed;opacity:0.7;}
 .day-card.drag-over{border-color:var(--volt);background:rgba(198,241,53,0.04);}
-.day-header{padding:10px 12px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+.day-card.day-drag-over{border-color:var(--volt);background:rgba(198,241,53,0.06);box-shadow:0 0 0 2px var(--volt);}
+.day-header{padding:10px 12px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;cursor:grab;}
+.day-header:active{cursor:grabbing;}
 .day-name-input{background:transparent;border:none;color:var(--white);font-size:12px;font-weight:700;font-family:var(--font-body);outline:none;width:100%;letter-spacing:0.04em;}
 .day-name-input::placeholder{color:var(--slate);}
 .day-controls{display:flex;align-items:center;justify-content:space-between;}
@@ -91,10 +93,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .day-add-btn:hover{border-color:var(--volt);color:var(--volt);}
 
 /* ── EXERCISE BLOCK ── */
-.ex-block{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;cursor:pointer;transition:all 0.15s;position:relative;}
+.ex-block{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;cursor:grab;transition:border-color 0.15s,opacity 0.15s;position:relative;}
+.ex-block:active{cursor:grabbing;}
 .ex-block.selected{border-color:var(--volt)!important;background:rgba(198,241,53,0.04);}
 .ex-block.superset-top{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom-color:transparent;}
 .ex-block.superset-bottom{border-top-left-radius:0;border-top-right-radius:0;border-top-color:transparent;}
+.ex-block.dragging{opacity:0.35;border-style:dashed;}
+.ex-block.drop-above{border-top:2px solid var(--volt)!important;}
+.ex-block.drop-below{border-bottom:2px solid var(--volt)!important;}
 .superset-connector{display:flex;align-items:center;gap:8px;padding:2px 10px;background:rgba(167,139,250,0.06);border-left:1px solid var(--purple);border-right:1px solid var(--purple);}
 .superset-connector-line{flex:1;height:1px;background:rgba(167,139,250,0.3);}
 .superset-badge{font-size:9px;font-weight:700;font-family:var(--font-mono);color:var(--purple);letter-spacing:0.08em;white-space:nowrap;}
@@ -109,11 +115,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .ex-block:hover{border-color:var(--steel);}
 .ex-block.selected{border-color:var(--volt);background:rgba(198,241,53,0.04);}
 .ex-block-header{display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;}
-.ex-drag{color:var(--slate);font-size:12px;cursor:grab;flex-shrink:0;margin-top:1px;}
-.ex-move-btns{display:flex;flex-direction:column;gap:1px;flex-shrink:0;}
-.ex-move-btn{width:22px;height:18px;background:var(--carbon);border:1.5px solid var(--steel);border-radius:3px;color:var(--fog);font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:all 0.15s;line-height:1;}
-.ex-move-btn:hover:not(:disabled){border-color:var(--volt);color:var(--volt);background:rgba(198,241,53,0.08);}
-.ex-move-btn:disabled{opacity:0.2;cursor:default;}
 .ex-name{font-size:12px;font-weight:600;color:var(--white);flex:1;line-height:1.3;}
 .ex-del{position:absolute;top:-8px;right:-8px;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer;background:var(--ember);border:2px solid var(--carbon);border-radius:50%;color:var(--pure);transition:all 0.15s;line-height:1;padding:0;z-index:5;}
 .ex-del:hover{background:#ff3300;transform:scale(1.15);}
@@ -937,10 +938,15 @@ function renderDays(){
   const grid = document.getElementById('days-grid');
   grid.innerHTML = program.days.map(day => `
     <div class="day-card${day.rest?' rest-day':''}" id="day-card-${day.id}"
-         ondragover="onDragOver(event,${day.id})" ondragleave="onDragLeave(event,${day.id})" ondrop="onDrop(event,${day.id})">
-      <div class="day-header">
+         ondragover="onDayDragOver(event,${day.id})" ondragleave="onDayDragLeave(event,${day.id})" ondrop="onDayDrop(event,${day.id})">
+      <div class="day-header"
+           draggable="true"
+           ondragstart="onDayDragStart(event,${day.id})"
+           ondragend="onDayDragEnd(event)"
+           title="Drag to swap with another day">
         <input class="day-name-input" value="${day.name}" placeholder="Day name"
-               onchange="program.days[${day.id}].name=this.value;updateSummary();scheduleAutoSave()">
+               onchange="program.days[${day.id}].name=this.value;updateSummary();scheduleAutoSave()"
+               ondragstart="event.stopPropagation()">
         <div class="day-controls">
           <label class="rest-toggle">
             <input type="checkbox" ${day.rest?'checked':''} onchange="toggleRest(${day.id},this.checked)">
@@ -949,7 +955,9 @@ function renderDays(){
           <span class="day-count">${day.rest?'REST':day.exercises.length+' ex'}</span>
         </div>
       </div>
-      <div class="day-body" id="day-body-${day.id}">
+      <div class="day-body" id="day-body-${day.id}"
+           ondragover="onExDragOverBody(event,${day.id})"
+           ondrop="onExDropBody(event,${day.id})">
         ${day.rest
           ? '<div class="day-empty"><div class="day-empty-icon">&#128564;</div>Rest &amp; recover</div>'
           : day.exercises.length === 0
@@ -961,6 +969,7 @@ function renderDays(){
     </div>
   `).join('');
   updateMeta();
+  initTouchDrag();
 }
 
 function renderExBlock(ex, dayId, exIdx){
@@ -979,13 +988,15 @@ function renderExBlock(ex, dayId, exIdx){
   const showConnector = ex.supersetWith === 'next';
 
   html += `<div class="ex-block${isSelected?' selected':''}${isSupTop?' superset-top':''}${isSupBottom?' superset-bottom':''}" id="ex-${dayId}-${exIdx}"
+    draggable="true"
+    ondragstart="onExDragStart(event,${dayId},${exIdx})"
+    ondragend="onExDragEnd(event)"
+    ondragover="onExDragOver(event,${dayId},${exIdx})"
+    ondragleave="onExDragLeave(event,${dayId},${exIdx})"
+    ondrop="onExDrop(event,${dayId},${exIdx})"
     onclick="selectExercise(${dayId},${exIdx})">
     <button class="ex-del" onclick="event.stopPropagation();deleteEx(${dayId},${exIdx})">&#10005;</button>
     <div class="ex-block-header">
-      <div class="ex-move-btns">
-        <button class="ex-move-btn" onclick="event.stopPropagation();moveEx(${dayId},${exIdx},-1)" ${exIdx===0?'disabled':''}>↑</button>
-        <button class="ex-move-btn" onclick="event.stopPropagation();moveEx(${dayId},${exIdx},1)" ${!day||exIdx===day.exercises.length-1?'disabled':''}>↓</button>
-      </div>
       <span class="ex-name">${ex.name}</span>
       ${isSuperset ? '<span style="font-size:10px;color:var(--purple);font-family:var(--font-mono);font-weight:700;">⛓ SS</span>' : ''}
     </div>
@@ -1831,38 +1842,265 @@ function openLibraryForDay(dayId){
 
 // ── DRAG AND DROP ────────────────────────────────────────────────────────────
 
-let dragSrc = null;
+let exDragSrc = null;   // {dayId, exIdx}
+let dayDragSrc = null;  // dayId
 
-function onDragStart(e, dayId, exIdx){
-  dragSrc = {dayId, exIdx};
+// ── EXERCISE DRAG ──
+
+function onExDragStart(e, dayId, exIdx){
+  if(dayDragSrc !== null) return; // day drag in progress
+  exDragSrc = {dayId, exIdx};
   e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', `ex:${dayId}:${exIdx}`);
+  e.stopPropagation();
+  requestAnimationFrame(()=>{
+    const el = document.getElementById(`ex-${dayId}-${exIdx}`);
+    if(el) el.classList.add('dragging');
+  });
 }
 
-function onDragOver(e, dayId){
+function onExDragEnd(e){
+  document.querySelectorAll('.ex-block').forEach(el=>{
+    el.classList.remove('dragging','drop-above','drop-below');
+  });
+  exDragSrc = null;
+}
+
+function onExDragOver(e, dayId, exIdx){
+  if(!exDragSrc) return;
+  e.preventDefault();
+  e.stopPropagation();
+  e.dataTransfer.dropEffect = 'move';
+  // Clear all highlights then set above/below based on mouse position
+  document.querySelectorAll('.ex-block').forEach(el=>el.classList.remove('drop-above','drop-below'));
+  const el = document.getElementById(`ex-${dayId}-${exIdx}`);
+  if(!el) return;
+  const rect = el.getBoundingClientRect();
+  const mid = rect.top + rect.height / 2;
+  el.classList.add(e.clientY < mid ? 'drop-above' : 'drop-below');
+}
+
+function onExDragLeave(e, dayId, exIdx){
+  const el = document.getElementById(`ex-${dayId}-${exIdx}`);
+  if(el) el.classList.remove('drop-above','drop-below');
+}
+
+function onExDragOverBody(e, dayId){
+  if(!exDragSrc) return;
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
-  document.getElementById('day-card-'+dayId).classList.add('drag-over');
 }
 
-function onDragLeave(e, dayId){
-  document.getElementById('day-card-'+dayId).classList.remove('drag-over');
-}
-
-function onDrop(e, dayId){
+function onExDropBody(e, dayId){
+  // Drop onto empty body — append to end
+  if(!exDragSrc) return;
   e.preventDefault();
-  document.getElementById('day-card-'+dayId).classList.remove('drag-over');
-  if(!dragSrc) return;
-  if(dragSrc.dayId === dayId) return; // same day — could do reorder later
-  const srcDay = program.days.find(d=>d.id===dragSrc.dayId);
+  document.querySelectorAll('.ex-block').forEach(el=>el.classList.remove('drop-above','drop-below'));
   const tgtDay = program.days.find(d=>d.id===dayId);
-  if(!srcDay||!tgtDay||tgtDay.rest) return;
-  const [ex] = srcDay.exercises.splice(dragSrc.exIdx, 1);
-  tgtDay.exercises.push(ex);
-  dragSrc = null;
+  if(!tgtDay || tgtDay.rest) return;
+  _doExDrop(dayId, tgtDay.exercises.length);
+}
+
+function onExDrop(e, dayId, dropIdx){
+  if(!exDragSrc) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const el = document.getElementById(`ex-${dayId}-${dropIdx}`);
+  const rect = el ? el.getBoundingClientRect() : null;
+  const insertBelow = rect && e.clientY >= rect.top + rect.height / 2;
+  document.querySelectorAll('.ex-block').forEach(el=>el.classList.remove('drop-above','drop-below'));
+  _doExDrop(dayId, insertBelow ? dropIdx + 1 : dropIdx);
+}
+
+function _doExDrop(tgtDayId, dropIdx){
+  const {dayId: srcDayId, exIdx: srcIdx} = exDragSrc;
+  exDragSrc = null;
+  const srcDay = program.days.find(d=>d.id===srcDayId);
+  const tgtDay = program.days.find(d=>d.id===tgtDayId);
+  if(!srcDay || !tgtDay) return;
+
+  if(srcDayId === tgtDayId){
+    // Same-day reorder
+    if(srcIdx === dropIdx || srcIdx === dropIdx - 1) return;
+    const [ex] = srcDay.exercises.splice(srcIdx, 1);
+    const insertAt = srcIdx < dropIdx ? dropIdx - 1 : dropIdx;
+    srcDay.exercises.splice(insertAt, 0, ex);
+    if(selectedEx && selectedEx.dayId === srcDayId){
+      if(selectedEx.exIdx === srcIdx) selectedEx.exIdx = insertAt;
+    }
+  } else {
+    // Cross-day move
+    if(tgtDay.rest) return;
+    const actualDrop = Math.min(dropIdx, tgtDay.exercises.length);
+    const [ex] = srcDay.exercises.splice(srcIdx, 1);
+    tgtDay.exercises.splice(actualDrop, 0, ex);
+    selectedEx = null;
+    showToast('Moved to ' + tgtDay.name);
+  }
+  renderDays();
+  renderDetailForm();
+  scheduleAutoSave();
+}
+
+// ── DAY DRAG (swap entire day) ──
+
+function onDayDragStart(e, dayId){
+  dayDragSrc = dayId;
+  exDragSrc = null;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', `day:${dayId}`);
+  // don't stopPropagation here — we want the card to receive it
+}
+
+function onDayDragEnd(e){
+  document.querySelectorAll('.day-card').forEach(c=>c.classList.remove('day-drag-over'));
+  dayDragSrc = null;
+}
+
+function onDayDragOver(e, dayId){
+  if(dayDragSrc === null) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.day-card').forEach(c=>c.classList.remove('day-drag-over'));
+  if(dayId !== dayDragSrc){
+    const card = document.getElementById('day-card-'+dayId);
+    if(card) card.classList.add('day-drag-over');
+  }
+}
+
+function onDayDragLeave(e, dayId){
+  if(!e.relatedTarget || !e.currentTarget.contains(e.relatedTarget)){
+    const card = document.getElementById('day-card-'+dayId);
+    if(card) card.classList.remove('day-drag-over');
+  }
+}
+
+function onDayDrop(e, dayId){
+  e.preventDefault();
+  document.querySelectorAll('.day-card').forEach(c=>c.classList.remove('day-drag-over'));
+  if(dayDragSrc === null || dayDragSrc === dayId){ dayDragSrc = null; return; }
+  const srcDay = program.days.find(d=>d.id===dayDragSrc);
+  const tgtDay = program.days.find(d=>d.id===dayId);
+  dayDragSrc = null;
+  if(!srcDay || !tgtDay) return;
+  // Swap exercises and rest state
+  [srcDay.exercises, tgtDay.exercises] = [tgtDay.exercises, srcDay.exercises];
+  [srcDay.rest, tgtDay.rest] = [tgtDay.rest, srcDay.rest];
   selectedEx = null;
   renderDays();
-  updateMeta();
-  showToast('Moved to '+tgtDay.name);
+  renderDetailForm();
+  scheduleAutoSave();
+  showToast('Days swapped');
+}
+
+// ── TOUCH DRAG (mobile) ──
+
+let touchDragData = null, touchDragType = null;
+let touchDragClone = null, touchDragEl = null, touchMoved = false;
+
+function initTouchDrag(){
+  document.querySelectorAll('.ex-block').forEach(el=>{
+    el.addEventListener('touchstart', onExTouchStart, {passive:false});
+  });
+  document.querySelectorAll('.day-header').forEach(el=>{
+    el.addEventListener('touchstart', onDayTouchStart, {passive:false});
+  });
+}
+
+function onExTouchStart(e){
+  const el = e.currentTarget;
+  const parts = el.id.split('-'); // ex-dayId-exIdx
+  const dayId = parseInt(parts[1]), exIdx = parseInt(parts[2]);
+  touchDragData = {dayId, exIdx};
+  touchDragType = 'ex';
+  touchDragEl = el;
+  touchMoved = false;
+  document.addEventListener('touchmove', onTouchMove, {passive:false});
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+function onDayTouchStart(e){
+  const card = e.currentTarget.closest('.day-card');
+  if(!card) return;
+  const dayId = parseInt(card.id.split('-')[2]);
+  touchDragData = {dayId};
+  touchDragType = 'day';
+  touchDragEl = card;
+  touchMoved = false;
+  document.addEventListener('touchmove', onTouchMove, {passive:false});
+  document.addEventListener('touchend', onTouchEnd);
+}
+
+function onTouchMove(e){
+  if(!touchDragData) return;
+  e.preventDefault();
+  touchMoved = true;
+  if(!touchDragClone && touchDragEl){
+    touchDragClone = touchDragEl.cloneNode(true);
+    touchDragClone.style.cssText = `position:fixed;z-index:9999;pointer-events:none;width:${touchDragEl.offsetWidth}px;opacity:0.85;box-shadow:0 8px 32px rgba(0,0,0,0.5);border:1.5px solid var(--volt);border-radius:8px;`;
+    document.body.appendChild(touchDragClone);
+    touchDragEl.style.opacity = '0.3';
+  }
+  if(touchDragClone){
+    touchDragClone.style.left = (e.touches[0].clientX - touchDragEl.offsetWidth/2)+'px';
+    touchDragClone.style.top  = (e.touches[0].clientY - 20)+'px';
+  }
+  document.querySelectorAll('.ex-block').forEach(el=>el.classList.remove('drop-above','drop-below'));
+  document.querySelectorAll('.day-card').forEach(c=>c.classList.remove('day-drag-over'));
+  const under = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  if(under){
+    if(touchDragType === 'ex'){
+      const tc = under.closest('.ex-block');
+      if(tc){
+        const rect = tc.getBoundingClientRect();
+        tc.classList.add(e.touches[0].clientY < rect.top + rect.height/2 ? 'drop-above' : 'drop-below');
+      }
+    } else {
+      const td = under.closest('.day-card');
+      if(td && td.id !== `day-card-${touchDragData.dayId}`) td.classList.add('day-drag-over');
+    }
+  }
+}
+
+function onTouchEnd(e){
+  document.removeEventListener('touchmove', onTouchMove);
+  document.removeEventListener('touchend', onTouchEnd);
+  if(touchDragClone){ touchDragClone.remove(); touchDragClone = null; }
+  if(touchDragEl){ touchDragEl.style.opacity = ''; touchDragEl = null; }
+  document.querySelectorAll('.ex-block').forEach(el=>el.classList.remove('drop-above','drop-below','dragging'));
+  document.querySelectorAll('.day-card').forEach(c=>c.classList.remove('day-drag-over'));
+  if(!touchMoved || !touchDragData){ touchDragData = null; return; }
+  const touch = e.changedTouches[0];
+  const under = document.elementFromPoint(touch.clientX, touch.clientY);
+  if(!under){ touchDragData = null; return; }
+
+  if(touchDragType === 'ex'){
+    const {dayId: srcDayId, exIdx: srcIdx} = touchDragData;
+    const targetEx = under.closest('.ex-block');
+    const targetBody = under.closest('.day-body');
+    let tgtDayId, dropIdx;
+    if(targetEx){
+      const parts = targetEx.id.split('-');
+      tgtDayId = parseInt(parts[1]);
+      dropIdx = parseInt(parts[2]);
+      const rect = targetEx.getBoundingClientRect();
+      if(touch.clientY >= rect.top + rect.height/2) dropIdx++;
+    } else if(targetBody){
+      tgtDayId = parseInt(targetBody.id.split('-')[2]);
+      dropIdx = program.days.find(d=>d.id===tgtDayId)?.exercises.length ?? 0;
+    } else { touchDragData = null; return; }
+    exDragSrc = {dayId: srcDayId, exIdx: srcIdx};
+    _doExDrop(tgtDayId, dropIdx);
+  } else {
+    const {dayId: srcDayId} = touchDragData;
+    const targetCard = under.closest('.day-card');
+    if(!targetCard){ touchDragData = null; return; }
+    const tgtDayId = parseInt(targetCard.id.split('-')[2]);
+    if(tgtDayId === srcDayId){ touchDragData = null; return; }
+    dayDragSrc = srcDayId;
+    onDayDrop({preventDefault:()=>{},currentTarget:{contains:()=>false}}, tgtDayId);
+  }
+  touchDragData = null;
 }
 
 // ── LIBRARY ─────────────────────────────────────────────────────────────────
