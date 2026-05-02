@@ -519,7 +519,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="right-panel">
       <div class="panel-tabs">
         <button class="panel-tab active" onclick="switchPanel('library',this)">LIBRARY</button>
-        <button class="panel-tab" onclick="switchPanel('details',this)">DETAILS</button>
         <button class="panel-tab" onclick="switchPanel('summary',this)">SUMMARY</button>
       </div>
       <div class="panel-content" id="panel-library">
@@ -1222,7 +1221,10 @@ function selectExercise(dayId, exIdx){
 
   renderDays();
   renderDetailForm();
-  if(activePanel!=='details') switchPanel('details', document.querySelectorAll('.panel-tab')[1]);
+  // Show details panel when exercise selected (details is no longer a top-level tab)
+  document.getElementById('panel-library').style.display = 'none';
+  document.getElementById('panel-summary').style.display = 'none';
+  document.getElementById('panel-details').style.display = '';
 }
 
 // ── DETAIL FORM ──────────────────────────────────────────────────────────────
@@ -1349,6 +1351,7 @@ function renderDetailForm(){
   const videoUrl = ex.video||'';
   form.innerHTML = `
     <div class="detail-form">
+      <button onclick="switchPanel('library', document.querySelectorAll('.panel-tab')[0])" style="display:inline-flex;align-items:center;gap:5px;background:none;border:none;color:var(--slate);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-body);letter-spacing:0.05em;padding:0 0 10px 0;transition:color 0.15s;" onmouseover="this.style.color='var(--volt)'" onmouseout="this.style.color='var(--slate)'">&#8592; LIBRARY</button>
       <div class="detail-ex-name">${ex.name}</div>
       <div class="detail-ex-day">${day.name}</div>
       <div class="detail-section">
@@ -2237,16 +2240,21 @@ function makeLibRow(ex, group, eq, type, extraStyle){
   const safeName = ex.name.replace(/"/g,'&quot;');
   const safeNameJs = ex.name.replace(/'/g,"\\'");
   const isSelected = libSelected.some(e=>e.name===ex.name);
+  // Check if this exercise has a video (custom exercises may have video set)
+  const customs = loadCustomExercises();
+  const customEx = customs.find(e=>e.name===ex.name);
+  const hasVideo = !!(ex.video || (customEx && (customEx.video || customEx.videoFile)));
+  const videoUrl = ex.video || (customEx && customEx.video) || '';
   return `<div class="lib-ex-item lib-ex-clickable${isSelected?' lib-selected':''}"
     data-name="${safeName}" data-group="${group}" data-eq="${eq}" data-type="${type}"
     ${extraStyle?`style="${extraStyle}"`:''}
-    title="Click to preview · Check to add">
+    title="Check to add to program">
     <input type="checkbox" class="lib-ex-cb" ${isSelected?'checked':''} onclick="event.stopPropagation();toggleLibItem(this.closest('.lib-ex-item'))">
     <div style="flex:1;min-width:0;" onclick="toggleLibItem(this.closest('.lib-ex-item'))">
       <div class="lib-ex-name">${ex.name}</div>
       <div class="lib-ex-meta">${group} · ${eqLabel}</div>
     </div>
-    <button style="background:none;border:none;color:var(--slate);font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0;" onclick="event.stopPropagation();showLibPreview('${safeNameJs}','${group}','${eq}','${type}')" title="Preview">ℹ</button>
+    ${hasVideo ? `<a href="${videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="flex-shrink:0;display:inline-flex;align-items:center;padding:3px 8px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);border-radius:999px;font-size:10px;font-weight:700;color:var(--blue);text-decoration:none;font-family:var(--font-body);letter-spacing:0.04em;transition:all 0.15s;" onmouseover="this.style.background='rgba(96,165,250,0.25)'" onmouseout="this.style.background='rgba(96,165,250,0.12)'">VIDEO</a>` : ''}
   </div>`;
 }
 
@@ -2337,10 +2345,9 @@ function switchPanel(name, btn){
   document.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById('panel-library').style.display = name==='library'?'':'none';
-  document.getElementById('panel-details').style.display = name==='details'?'':'none';
+  document.getElementById('panel-details').style.display = 'none'; // details only shown via exercise click overlay, not as a top-level tab
   document.getElementById('panel-summary').style.display = name==='summary'?'':'none';
   if(name==='summary') updateSummary();
-  if(name==='details') renderDetailForm();
 }
 
 // ── META / SUMMARY ───────────────────────────────────────────────────────────
@@ -2743,8 +2750,6 @@ function handleVideoUpload(e, dayId, exIdx){
 // ── LIBRARY PREVIEW IN DETAILS PANEL (#4) ────────────────────────────────────
 
 function showLibPreview(name, group, eq, type){
-  // Switch to details panel
-  switchPanel('details', document.querySelectorAll('.panel-tab')[1]);
   const empty = document.getElementById('detail-empty');
   const form  = document.getElementById('detail-form');
   empty.style.display = 'none';
