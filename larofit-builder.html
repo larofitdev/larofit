@@ -3012,6 +3012,8 @@ function applyProgram(p){
   document.getElementById('prog-goal').value = p.goal||'hypertrophy';
   const typeEl = document.getElementById('prog-type');
   if(typeEl) typeEl.value = p.programType || 'build';
+  renderDays();
+  updateSummary();
 }
 
 async function loadSaved(){
@@ -4283,8 +4285,7 @@ function closeFYW(){
 }
 
 // ── BOOT ─────────────────────────────────────────────────────────────────────
-loadSaved();
-init();
+loadSaved().then(() => init());
 </script>
 </body>
 </html>
