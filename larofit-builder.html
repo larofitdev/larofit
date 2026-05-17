@@ -176,6 +176,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .lib-filters{display:flex;gap:6px;padding:10px 14px;flex-wrap:wrap;border-bottom:1px solid var(--border);}
 .lib-filter{padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid var(--border);background:transparent;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;}
 .lib-filter.active{background:var(--volt);color:var(--black);border-color:var(--volt);}
+.lib-eq-filters{display:flex;gap:5px;padding:8px 14px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15);}
+.lib-eq-filter{padding:3px 8px;border-radius:999px;font-size:10px;font-weight:700;border:1px solid var(--border);background:transparent;color:var(--slate);cursor:pointer;font-family:var(--font-mono);letter-spacing:0.05em;transition:all 0.15s;}
+.lib-eq-filter:hover{color:var(--mist);border-color:var(--steel);}
+.lib-eq-filter.active{background:rgba(96,165,250,0.15);color:var(--blue);border-color:rgba(96,165,250,0.4);}
 .lib-group{padding:10px 14px 4px;}
 .lib-group-title{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
 .lib-ex-item{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:9px 10px;border-radius:var(--radius-sm);margin-bottom:3px;}
@@ -183,6 +187,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .lib-ex-clickable:hover{background:rgba(198,241,53,0.07);border-color:rgba(198,241,53,0.2);}
 .lib-ex-clickable:active{background:rgba(198,241,53,0.15);}
 .lib-ex-clickable.lib-selected{background:rgba(198,241,53,0.1);border-color:rgba(198,241,53,0.35);}
+.lib-play-btn, .lib-play-btn-spacer{width:28px;height:28px;min-width:28px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;}
+.lib-play-btn{border:none;background:rgba(255,255,255,0.06);color:var(--volt);cursor:pointer;transition:background 0.15s;}
+.lib-play-btn:hover{background:rgba(255,255,255,0.12);}
+.lib-play-btn:active{background:rgba(255,255,255,0.18);}
+.lib-play-btn-spacer{visibility:hidden;}
 .lib-ex-cb{width:15px;height:15px;accent-color:var(--volt);cursor:pointer;flex-shrink:0;}
 .lib-add-bar{background:var(--volt);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(0,0,0,0.15);}
 .lib-add-bar-btn{background:var(--black);border:none;border-radius:var(--radius-sm);padding:8px 16px;font-size:13px;font-weight:700;color:var(--volt);cursor:pointer;font-family:var(--font-body);letter-spacing:0.03em;}
@@ -191,6 +200,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .lib-ex-meta{font-size:10px;color:var(--mist);margin-top:1px;}
 .lib-add-hint{font-size:10px;font-weight:700;color:var(--slate);font-family:var(--font-mono);opacity:0;transition:opacity 0.15s;flex-shrink:0;}
 .lib-ex-clickable:hover .lib-add-hint{opacity:1;color:var(--volt);}
+.vid-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;display:flex;align-items:center;justify-content:center;padding:24px;}
+.vid-modal{max-width:960px;width:100%;max-height:100%;overflow:auto;background:rgba(10,10,10,0.98);border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.45);position:relative;}
+.vid-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border:none;border-radius:50%;background:rgba(255,255,255,0.08);color:var(--white);font-size:16px;cursor:pointer;}
+.vid-close:hover{background:rgba(255,255,255,0.16);}
+.vid-header{margin-bottom:16px;}
+.vid-title{font-size:18px;font-weight:700;color:var(--white);margin-bottom:6px;}
+.vid-meta{font-size:12px;color:var(--slate);}
+.vid-content{display:flex;align-items:center;justify-content:center;}
+.vid-media{max-width:100%;max-height:70vh;border-radius:16px;}
 
 /* ── DETAILS PANEL ── */
 .detail-empty{padding:40px 20px;text-align:center;color:var(--slate);font-size:13px;line-height:1.6;}
@@ -524,10 +542,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="panel-content" id="panel-library">
         <div id="target-day-badge" style="display:none;padding:8px 14px;background:var(--volt-pale);border-bottom:1px solid rgba(198,241,53,0.2);font-size:11px;font-weight:600;color:var(--volt);font-family:var(--font-mono);"></div>
         <div class="lib-search-wrap" style="display:flex;gap:8px;align-items:center;">
-          <input class="lib-search" id="lib-search" placeholder="Search exercises..." oninput="renderLibrary()" style="flex:1;">
+          <div id="lib-search-container" style="flex:1;"></div>
           <button onclick="openCustomExModal()" style="padding:7px 12px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--purple);cursor:pointer;font-family:var(--font-body);white-space:nowrap;flex-shrink:0;">+ Custom</button>
         </div>
         <div class="lib-filters" id="lib-filters"></div>
+        <div class="lib-eq-filters" id="lib-eq-filters"></div>
         <div id="lib-add-bar" class="lib-add-bar" style="display:none;">
           <span style="font-size:13px;font-weight:700;color:var(--black);" id="lib-add-bar-label">0 selected</span>
           <div style="display:flex;gap:8px;">
@@ -784,6 +803,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+<script src="larofit-library-data.js"></script>
 <script>
 // ── DATA ────────────────────────────────────────────────────────────────────
 
@@ -818,7 +838,7 @@ const EXERCISE_LIBRARY = {
     {name:"Dumbbell overhead press",eq:"db",defaultType:"strength"},
     {name:"Dumbbell lateral raise",eq:"db",defaultType:"strength"},
     {name:"Dumbbell front raise",eq:"db",defaultType:"strength"},
-    {name:"Arnold press",eq:"db",defaultType:"strength"},
+    {name:"Arnold press",eq:"db",defaultType:"strength",video:"https://www.youtube.com/watch?v=6Z15_WdXmVw"},
     {name:"Barbell overhead press",eq:"bb",defaultType:"strength"},
     {name:"Machine shoulder press",eq:"mc",defaultType:"strength"},
     {name:"Cable lateral raise",eq:"mc",defaultType:"strength"},
@@ -931,6 +951,12 @@ const EXERCISE_LIBRARY = {
   ],
 };
 
+if(typeof BUILT_IN_EXERCISE_LIBRARY === 'object'){
+  Object.keys(BUILT_IN_EXERCISE_LIBRARY).forEach(key => {
+    EXERCISE_LIBRARY[key] = BUILT_IN_EXERCISE_LIBRARY[key];
+  });
+}
+
 const TYPE_DEFAULTS = {
   strength:        {sets:3, reps:10,  weight:25, rest:'90s'},
   bodyweight:      {sets:3, reps:10,  rest:'60s'},
@@ -949,7 +975,8 @@ const TYPE_LABELS = {
   hiit:'HIIT', recovery:'RECOVERY', plyo:'PLYO',
 };
 
-const EQ_LABELS = {db:'DB',bb:'BB',mc:'Machine',bw:'BW',cd:'Cardio',yoga:'Yoga',rc:'Recovery'};
+const EQ_LABELS = {db:'DB',bb:'BB',mc:'MC',bw:'BW',cd:'CD',yoga:'YG',rc:'RC'};
+const EQ_FULL   = {db:'Dumbbells',bb:'Barbell',mc:'Machine',bw:'Bodyweight',cd:'Cardio',yoga:'Yoga',rc:'Recovery'};
 
 // ── STATE ───────────────────────────────────────────────────────────────────
 
@@ -963,23 +990,144 @@ let program = {
 
 let activePanel = 'library';
 let libFilter = 'All';
+let eqFilter  = 'All';
 let selectedEx = null; // {dayId, exIdx}
 let exIdCounter = 0;
 
 // ── INIT ────────────────────────────────────────────────────────────────────
 
 function init(){
-  // Set today as default start date
+  // Set start date to the date of the first workout session
   const today = new Date();
   initCustomExModal();
-  const nextMon = new Date(today);
-  nextMon.setDate(today.getDate()+(8-today.getDay())%7||7);
-  document.getElementById('prog-start').value = nextMon.toISOString().split('T')[0];
+
+  // Find the first non-rest day in the program
+  const firstWorkoutDayIndex = program.days.findIndex(day => !day.rest);
+  if (firstWorkoutDayIndex !== -1) {
+    // Calculate how many days from today to the next occurrence of this day of the week
+    const todayDayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const targetDayOfWeek = firstWorkoutDayIndex; // days array is 0=Monday, 1=Tuesday, etc.
+    const daysUntilTarget = (targetDayOfWeek - todayDayOfWeek + 7) % 7 || 7;
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + daysUntilTarget);
+    document.getElementById('prog-start').value = startDate.toISOString().split('T')[0];
+  } else {
+    // Fallback to next Monday if no workout days found
+    const nextMon = new Date(today);
+    nextMon.setDate(today.getDate()+(8-today.getDay())%7||7);
+    document.getElementById('prog-start').value = nextMon.toISOString().split('T')[0];
+  }
 
   renderDays();
+  clearLibrarySearchAutofill();
   renderLibrary();
   renderLibFilters();
   syncMeta();
+}
+
+function clearLibrarySearchAutofill(){
+  const container = document.getElementById('lib-search-container');
+  if(!container) return;
+
+  // Generate completely random identifiers to prevent any autofill association
+  const randomId = 'search-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  const randomName = 'field-' + Math.random().toString(36).substr(2, 9);
+
+  // Create contenteditable div - least likely to be autofilled
+  const input = document.createElement('div');
+  input.className = 'lib-search';
+  input.id = randomId;
+  input.contentEditable = 'true';
+  input.setAttribute('data-name', randomName);
+  input.textContent = '';
+  input.style.cssText = 'flex:1; min-height: 32px; line-height: 32px; padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--carbon); color: var(--white); font-size: 13px; font-family: var(--font-body); outline: none; cursor: text;';
+  input.setAttribute('data-placeholder', 'Search exercises...');
+
+  // Handle placeholder manually
+  const updatePlaceholder = () => {
+    if (!input.textContent.trim()) {
+      input.textContent = 'Search exercises...';
+      input.style.color = 'var(--slate)';
+    } else if (input.textContent === 'Search exercises...') {
+      input.textContent = '';
+      input.style.color = 'var(--white)';
+    }
+  };
+
+  input.addEventListener('focus', () => {
+    if (input.textContent === 'Search exercises...') {
+      input.textContent = '';
+      input.style.color = 'var(--white)';
+    }
+  });
+
+  input.addEventListener('blur', updatePlaceholder);
+  input.addEventListener('input', () => {
+    if (input.textContent !== 'Search exercises...') {
+      renderLibrary();
+    }
+  });
+
+  updatePlaceholder();
+
+  // Store the random ID globally so renderLibrary can find it
+  window.libSearchInputId = randomId;
+
+  container.appendChild(input);
+
+  // Add CSS to prevent any autofill styling
+  const styleId = 'lib-search-autofill-prevention';
+  if(!document.getElementById(styleId)) {
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .lib-search:-webkit-autofill,
+      .lib-search:-webkit-autofill:hover,
+      .lib-search:-webkit-autofill:focus,
+      .lib-search:-webkit-autofill:active,
+      textarea.lib-search:-webkit-autofill,
+      textarea.lib-search:-webkit-autofill:hover,
+      textarea.lib-search:-webkit-autofill:focus,
+      textarea.lib-search:-webkit-autofill:active,
+      div.lib-search:-webkit-autofill,
+      div.lib-search:-webkit-autofill:hover,
+      div.lib-search:-webkit-autofill:focus,
+      div.lib-search:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 1000px var(--carbon) inset !important;
+        -webkit-text-fill-color: var(--white) !important;
+        background-color: var(--carbon) !important;
+        background-image: none !important;
+        color: var(--white) !important;
+      }
+      .lib-search::placeholder,
+      textarea.lib-search::placeholder,
+      div.lib-search::placeholder {
+        color: var(--slate) !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Force clear any value that might appear
+  const clearValue = () => {
+    const currentValue = input.textContent || input.value || '';
+    if(currentValue && (currentValue.includes('@') || currentValue !== 'Search exercises...')) {
+      input.textContent = '';
+      input.style.color = 'var(--white)';
+    }
+  };
+
+  // Clear immediately and after delays
+  clearValue();
+  setTimeout(clearValue, 10);
+  setTimeout(clearValue, 100);
+  setTimeout(clearValue, 300);
+  setTimeout(clearValue, 1000);
+
+  // Clear on any user interaction
+  input.addEventListener('focus', clearValue);
+  input.addEventListener('click', clearValue);
+  input.addEventListener('input', clearValue);
 }
 
 // ── DAYS RENDER ─────────────────────────────────────────────────────────────
@@ -2186,6 +2334,13 @@ function renderLibFilters(){
   document.getElementById('lib-filters').innerHTML = groups.map(g=>
     `<button class="lib-filter${g===libFilter?' active':''}" onclick="libFilter='${g}';renderLibFilters();renderLibrary()">${g}</button>`
   ).join('');
+  // Equipment filter row
+  const eqs = ['All','db','bb','bw','mc','cd'];
+  document.getElementById('lib-eq-filters').innerHTML =
+    eqs.map(e=> e==='All'
+      ? `<button class="lib-eq-filter${eqFilter==='All'?' active':''}" onclick="eqFilter='All';renderLibFilters();renderLibrary()" title="All equipment">All</button>`
+      : `<button class="lib-eq-filter${eqFilter===e?' active':''}" onclick="eqFilter='${e}';renderLibFilters();renderLibrary()" title="${EQ_FULL[e]||e}">${EQ_LABELS[e]}</button>`
+    ).join('');
 }
 
 // Track selected exercises in library
@@ -2238,13 +2393,18 @@ function addSelectedExercises(){
 function makeLibRow(ex, group, eq, type, extraStyle){
   const eqLabel = EQ_LABELS[eq]||eq;
   const safeName = ex.name.replace(/"/g,'&quot;');
-  const safeNameJs = ex.name.replace(/'/g,"\\'");
+  const safeNameJs = ex.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const safeGroupJs = group.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const safeEqJs = eqLabel.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const isSelected = libSelected.some(e=>e.name===ex.name);
-  // Check if this exercise has a video (custom exercises may have video set)
   const customs = loadCustomExercises();
   const customEx = customs.find(e=>e.name===ex.name);
-  const hasVideo = !!(ex.video || (customEx && (customEx.video || customEx.videoFile)));
-  const videoUrl = ex.video || (customEx && customEx.video) || '';
+  const hasVideo = !!(ex.video || ex.videoFile || (customEx && (customEx.video || customEx.videoFile)));
+  const videoUrl = ex.video || ex.videoFile || (customEx && (customEx.video || customEx.videoFile)) || '';
+  const safeVideoUrl = (videoUrl||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"');
+  const playButton = hasVideo ?
+    `<button type="button" class="lib-play-btn" onclick="event.stopPropagation();openVideoPreview('${safeNameJs}','${safeGroupJs}','${safeEqJs}','${safeVideoUrl}')">&#9658;</button>` :
+    `<div class="lib-play-btn-spacer"></div>`;
   return `<div class="lib-ex-item lib-ex-clickable${isSelected?' lib-selected':''}"
     data-name="${safeName}" data-group="${group}" data-eq="${eq}" data-type="${type}"
     ${extraStyle?`style="${extraStyle}"`:''}
@@ -2254,16 +2414,28 @@ function makeLibRow(ex, group, eq, type, extraStyle){
       <div class="lib-ex-name">${ex.name}</div>
       <div class="lib-ex-meta">${group} · ${eqLabel}</div>
     </div>
-    ${hasVideo ? `<a href="${videoUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="flex-shrink:0;display:inline-flex;align-items:center;padding:3px 8px;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.3);border-radius:999px;font-size:10px;font-weight:700;color:var(--blue);text-decoration:none;font-family:var(--font-body);letter-spacing:0.04em;transition:all 0.15s;" onmouseover="this.style.background='rgba(96,165,250,0.25)'" onmouseout="this.style.background='rgba(96,165,250,0.12)'">VIDEO</a>` : ''}
+    <div style="display:flex;align-items:center;gap:8px;">
+      ${playButton}
+    </div>
   </div>`;
 }
 
 function renderLibrary(){
-  const search = (document.getElementById('lib-search').value||'').toLowerCase();
+  const searchEl = window.libSearchInputId ? document.getElementById(window.libSearchInputId) : document.getElementById('lib-search');
+  let search = '';
+  if (searchEl) {
+    const searchText = (searchEl.textContent || searchEl.value || '').trim();
+    // Don't filter if the search field has the placeholder or is empty
+    if (searchText && searchText !== 'Search exercises...') {
+      search = searchText.toLowerCase();
+    }
+  }
   let html = '';
+  const sortAlpha = list => list.slice().sort((a,b)=>a.name.localeCompare(b.name, undefined, {numeric:true, sensitivity:'base'}));
+  const matchesEq = e => eqFilter==='All' || (e.eq||'bw')===eqFilter;
 
   // Show custom exercises first
-  const customs = loadCustomExercises().filter(e=>!search||e.name.toLowerCase().includes(search));
+  const customs = sortAlpha(loadCustomExercises().filter(e=>(!search||e.name.toLowerCase().includes(search))&&matchesEq(e)));
   if((libFilter==='All'||libFilter==='Custom') && customs.length){
     html += `<div class="lib-group">
       <div class="lib-group-title" style="color:var(--purple);">⭐ My Custom Exercises</div>
@@ -2274,7 +2446,7 @@ function renderLibrary(){
   // Bodyweight filter — show all bw exercises across all groups
   if(libFilter==='Bodyweight'){
     Object.keys(EXERCISE_LIBRARY).forEach(group=>{
-      const items = EXERCISE_LIBRARY[group].filter(e=>e.eq==='bw'&&(!search||e.name.toLowerCase().includes(search)));
+      const items = sortAlpha(EXERCISE_LIBRARY[group].filter(e=>e.eq==='bw'&&(!search||e.name.toLowerCase().includes(search))&&matchesEq(e)));
       if(!items.length) return;
       html += `<div class="lib-group">
         <div class="lib-group-title">${group}</div>
@@ -2288,7 +2460,7 @@ function renderLibrary(){
 
   Object.keys(EXERCISE_LIBRARY).forEach(group=>{
     if(libFilter!=='All'&&libFilter!==group) return;
-    const items = EXERCISE_LIBRARY[group].filter(e=>e.name.toLowerCase().includes(search));
+    const items = sortAlpha(EXERCISE_LIBRARY[group].filter(e=>(!search||e.name.toLowerCase().includes(search))&&matchesEq(e)));
     if(!items.length) return;
     html += `<div class="lib-group">
       <div class="lib-group-title">${group}</div>
@@ -2297,6 +2469,47 @@ function renderLibrary(){
   });
   document.getElementById('lib-list').innerHTML = html ||
     '<div style="padding:24px;text-align:center;color:var(--slate);font-size:13px;">No exercises found.</div>';
+}
+
+function openVideoPreview(name, group, eq, url){
+  if(!url) return;
+  const isImage = /(^data:image)|\.gif(?:\?|$)/i.test(url);
+  const isVideo = /(^data:video)|\.(mp4|mov|webm)(?:\?|$)/i.test(url);
+  if(!(isImage || isVideo)){
+    window.open(url, '_blank', 'noopener');
+    return;
+  }
+  const safeUrl = url.replace(/"/g,'&quot;');
+  const mediaHtml = isImage ?
+    `<img src="${safeUrl}" alt="${name}" class="vid-media">` :
+    `<video src="${safeUrl}" controls autoplay loop muted playsinline class="vid-media"></video>`;
+  const overlay = document.createElement('div');
+  overlay.id = 'vid-overlay';
+  overlay.className = 'vid-overlay';
+  overlay.innerHTML = `
+    <div class="vid-modal" role="dialog" aria-modal="true" aria-label="Video preview">
+      <button type="button" class="vid-close" onclick="closeVideoPreview()">✕</button>
+      <div class="vid-header">
+        <div class="vid-title">${name}</div>
+        <div class="vid-meta">${group} · ${eq}</div>
+      </div>
+      <div class="vid-content">${mediaHtml}</div>
+    </div>`;
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) closeVideoPreview(); });
+  document.body.appendChild(overlay);
+  document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', handleVideoPreviewKeydown);
+}
+
+function closeVideoPreview(){
+  const overlay = document.getElementById('vid-overlay');
+  if(overlay) overlay.remove();
+  document.body.style.overflow = ''; 
+  document.removeEventListener('keydown', handleVideoPreviewKeydown);
+}
+
+function handleVideoPreviewKeydown(e){
+  if(e.key === 'Escape') closeVideoPreview();
 }
 
 function addExFromLibBtn(el){
@@ -2648,6 +2861,7 @@ function clearProgram(){
   selectedEx  = null;
   exIdCounter = 0;
   libFilter   = 'All';
+  eqFilter    = 'All';
 
   // Save blank program immediately so navigating away and back keeps it cleared
   try{ localStorage.setItem('larofit_program', JSON.stringify(program)); } catch(e){}
