@@ -197,6 +197,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <a class="nav-item active" href="larofit-trainer-library.html"><span class="nav-icon">📚</span>Trainer library</a>
     <div class="nav-section">Account</div>
     <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#" onclick="trainerLogout()"><span class="nav-icon">🚪</span>Logout</a>
     <a class="nav-item" href="#"><span class="nav-icon">📱</span>Get the app</a>
   </nav>
   <div class="sidebar-user">
@@ -269,6 +270,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <div class="toast" id="toast"></div>
 
 <script>
+
+// ── TRAINER AUTH GUARD ──────────────────────────────────────────────────────
+(function(){
+  const session = localStorage.getItem('larofit_trainer_session');
+  if(!session){
+    window.location.href = 'larofit-trainer-login.html';
+  }
+})();
 // ── STANDARD LIBRARY (subset — same data as main library) ─────────────────
 const STANDARD = {
   'Chest':[
@@ -938,6 +947,14 @@ function seedDemoIfEmpty(){
 
 seedDemoIfEmpty();
 init();
+
+// ── TRAINER LOGOUT ──────────────────────────────────────────────────────────
+function trainerLogout(){
+  if(confirm('Log out of your trainer account?')){
+    localStorage.removeItem('larofit_trainer_session');
+    window.location.href = 'larofit-trainer-login.html';
+  }
+}
 </script>
 </body>
 </html>

@@ -9,10 +9,26 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0a0a0a">
 <script>
+
+// ── TRAINER AUTH GUARD ──────────────────────────────────────────────────────
+(function(){
+  const session = localStorage.getItem('larofit_trainer_session');
+  if(!session){
+    window.location.href = 'larofit-trainer-login.html';
+  }
+})();
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
     navigator.serviceWorker.register("/sw.js").catch(e=>console.warn("SW:",e));
   });
+}
+
+// ── TRAINER LOGOUT ──────────────────────────────────────────────────────────
+function trainerLogout(){
+  if(confirm('Log out of your trainer account?')){
+    localStorage.removeItem('larofit_trainer_session');
+    window.location.href = 'larofit-trainer-login.html';
+  }
 }
 </script>
 <title>LaroFit — Trainer Dashboard</title>
@@ -196,6 +212,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <a class="nav-item" href="#" onclick="switchTab('directory')"><span class="nav-icon">🔍</span>Directory listing</a>
     <div class="nav-section">Account</div>
     <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#" onclick="trainerLogout()"><span class="nav-icon">🚪</span>Logout</a>
   </nav>
   <div class="sidebar-user">
     <div class="s-avatar" id="sidebar-avatar">T</div>

@@ -395,6 +395,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <a class="nav-item" href="larofit-trainer.html"><span class="nav-icon">🔍</span>Directory listing</a>
     <div class="nav-section">Account</div>
     <a class="nav-item" href="#"><span class="nav-icon">⚙️</span>Settings</a>
+    <a class="nav-item" href="#" onclick="trainerLogout()"><span class="nav-icon">🚪</span>Logout</a>
   </nav>
   <div class="sidebar-user">
     <div class="s-avatar" id="sidebar-avatar" style="background:var(--purple);color:var(--white);">T</div>
@@ -694,8 +695,24 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
-<script src="larofit-library-data.js"></script>
+<script src="larofit-library-data.js">
+// ── TRAINER LOGOUT ──────────────────────────────────────────────────────────
+function trainerLogout(){
+  if(confirm('Log out of your trainer account?')){
+    localStorage.removeItem('larofit_trainer_session');
+    window.location.href = 'larofit-trainer-login.html';
+  }
+}
+</script>
 <script>
+
+// ── TRAINER AUTH GUARD ──────────────────────────────────────────────────────
+(function(){
+  const session = localStorage.getItem('larofit_trainer_session');
+  if(!session){
+    window.location.href = 'larofit-trainer-login.html';
+  }
+})();
 // ── DATA ────────────────────────────────────────────────────────────────────
 
 const EXERCISE_LIBRARY = {

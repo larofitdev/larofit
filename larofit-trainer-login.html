@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LaroFit — Trainer Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --black:#0a0a0a;--offblack:#111418;--carbon:#1c2128;--steel:#2d3748;
+  --slate:#6b7a8d;--mist:#b8c4d0;--fog:#e2e8f0;--white:#f4f6f8;--pure:#ffffff;
+  --volt:#c6f135;--volt-dim:#a8d020;--volt-pale:rgba(198,241,53,0.08);
+  --ember:#ff5733;--success:#4ade80;--blue:#60a5fa;--purple:#a78bfa;
+  --purple-pale:rgba(167,139,250,0.08);--purple-border:rgba(167,139,250,0.25);
+  --card-bg:#161b22;--border:#2d3748;--radius:12px;--radius-sm:8px;
+  --font-display:'Bebas Neue',sans-serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--font-body);
+  background:var(--black);
+  color:var(--white);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+
+/* noise texture */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:999;opacity:0.35;
+}
+
+/* glow backdrop */
+body::after{
+  content:'';position:fixed;
+  width:600px;height:600px;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(ellipse, rgba(167,139,250,0.07) 0%, transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+.login-wrap{
+  position:relative;z-index:1;
+  width:100%;max-width:420px;
+  padding:0 24px;
+}
+
+/* logo */
+.login-logo{
+  text-align:center;
+  margin-bottom:8px;
+}
+.logo-text{
+  font-family:var(--font-display);
+  font-size:32px;letter-spacing:3px;color:var(--pure);
+}
+.logo-text span{color:var(--volt);}
+.trainer-badge{
+  display:inline-block;
+  padding:4px 12px;
+  background:var(--purple-pale);
+  border:1px solid var(--purple-border);
+  border-radius:999px;
+  font-size:10px;font-weight:700;
+  color:var(--purple);
+  font-family:var(--font-mono);
+  letter-spacing:0.1em;
+  margin-top:8px;
+}
+
+/* card */
+.login-card{
+  background:var(--card-bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:36px 32px;
+  margin-top:28px;
+}
+.card-title{
+  font-family:var(--font-display);
+  font-size:22px;letter-spacing:1px;
+  color:var(--pure);
+  margin-bottom:4px;
+}
+.card-sub{
+  font-size:12px;color:var(--slate);
+  margin-bottom:28px;
+  line-height:1.5;
+}
+
+/* form */
+.form-group{
+  margin-bottom:18px;
+}
+.form-label{
+  display:block;
+  font-size:11px;font-weight:600;
+  color:var(--mist);
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  margin-bottom:7px;
+  font-family:var(--font-mono);
+}
+.form-input{
+  width:100%;
+  padding:12px 14px;
+  background:var(--carbon);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--white);
+  font-family:var(--font-body);
+  font-size:14px;
+  transition:border-color 0.2s, box-shadow 0.2s;
+  outline:none;
+}
+.form-input:focus{
+  border-color:var(--purple);
+  box-shadow:0 0 0 3px rgba(167,139,250,0.12);
+}
+.form-input::placeholder{color:var(--slate);}
+
+/* password wrapper */
+.pw-wrap{position:relative;}
+.pw-toggle{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;
+  color:var(--slate);font-size:14px;padding:4px;
+  transition:color 0.15s;
+}
+.pw-toggle:hover{color:var(--mist);}
+
+/* error */
+.form-error{
+  background:rgba(255,87,51,0.08);
+  border:1px solid rgba(255,87,51,0.25);
+  border-radius:var(--radius-sm);
+  padding:11px 14px;
+  font-size:12px;color:var(--ember);
+  margin-bottom:18px;
+  display:none;
+}
+.form-error.show{display:block;}
+
+/* submit btn */
+.btn-login{
+  width:100%;
+  padding:14px;
+  background:var(--purple);
+  border:none;border-radius:var(--radius-sm);
+  color:var(--black);
+  font-family:var(--font-display);
+  font-size:17px;letter-spacing:1px;
+  cursor:pointer;
+  transition:background 0.15s, transform 0.1s, opacity 0.15s;
+  margin-top:4px;
+}
+.btn-login:hover{background:#b5a0ff;}
+.btn-login:active{transform:scale(0.99);}
+.btn-login:disabled{opacity:0.5;cursor:not-allowed;}
+
+/* divider */
+.divider{
+  display:flex;align-items:center;gap:12px;
+  margin:22px 0;
+  font-size:11px;color:var(--slate);font-family:var(--font-mono);
+}
+.divider::before,.divider::after{
+  content:'';flex:1;height:1px;background:var(--border);
+}
+
+/* demo login */
+.btn-demo{
+  width:100%;
+  padding:11px;
+  background:transparent;
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  color:var(--mist);
+  font-family:var(--font-body);
+  font-size:13px;font-weight:500;
+  cursor:pointer;
+  transition:border-color 0.15s, color 0.15s;
+}
+.btn-demo:hover{border-color:var(--slate);color:var(--white);}
+
+/* footer links */
+.login-footer{
+  text-align:center;
+  margin-top:24px;
+  font-size:12px;
+  color:var(--slate);
+  line-height:1.8;
+}
+.login-footer a{
+  color:var(--mist);text-decoration:none;
+  transition:color 0.15s;
+}
+.login-footer a:hover{color:var(--white);}
+.login-footer .sep{margin:0 8px;opacity:0.4;}
+
+/* loading spinner */
+.spinner{
+  display:inline-block;
+  width:14px;height:14px;
+  border:2px solid rgba(0,0,0,0.3);
+  border-top-color:#000;
+  border-radius:50%;
+  animation:spin 0.6s linear infinite;
+  vertical-align:middle;
+  margin-right:6px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* already logged in banner */
+.already-in{
+  background:rgba(74,222,128,0.08);
+  border:1px solid rgba(74,222,128,0.2);
+  border-radius:var(--radius-sm);
+  padding:11px 14px;
+  font-size:12px;color:var(--success);
+  margin-bottom:18px;
+  display:none;
+}
+.already-in.show{display:block;}
+
+@media(max-width:480px){
+  .login-card{padding:28px 20px;}
+}
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <!-- Logo -->
+  <div class="login-logo">
+    <div class="logo-text">LARO<span>FIT</span></div>
+    <div class="trainer-badge">🎓 TRAINER PORTAL</div>
+  </div>
+
+  <!-- Card -->
+  <div class="login-card">
+    <div class="card-title">TRAINER LOGIN</div>
+    <div class="card-sub">Access your trainer dashboard, client programs, and tools.</div>
+
+    <div class="already-in" id="already-in">
+      ✅ You're already logged in. <a href="larofit-trainer.html">Go to dashboard →</a>
+    </div>
+
+    <div class="form-error" id="form-error"></div>
+
+    <div class="form-group">
+      <label class="form-label" for="email">Email</label>
+      <input class="form-input" type="email" id="email" placeholder="trainer@example.com" autocomplete="email" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="password">Password</label>
+      <div class="pw-wrap">
+        <input class="form-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+        <button class="pw-toggle" type="button" onclick="togglePw()" id="pw-toggle-btn" title="Show/hide password">👁</button>
+      </div>
+    </div>
+
+    <button class="btn-login" id="login-btn" onclick="doLogin()">LOGIN TO TRAINER PORTAL</button>
+
+    <div class="divider">or</div>
+
+    <button class="btn-demo" onclick="demoLogin()">🎓 Continue with demo trainer account</button>
+  </div>
+
+  <div class="login-footer">
+    <a href="larofit-dashboard.html">← Back to user app</a>
+    <span class="sep">·</span>
+    <a href="larofit-signup.html">Create trainer account</a>
+    <br>
+    <span style="font-size:11px;opacity:0.5;margin-top:4px;display:block;">LaroFit Trainer Portal · Separate from user accounts</span>
+  </div>
+
+</div>
+
+<script>
+// ── TRAINER AUTH ─────────────────────────────────────────────────────────────
+// Credentials are stored in localStorage under 'larofit_trainer_accounts'
+// as an array of {email, passwordHash, profile} objects.
+// Session is stored under 'larofit_trainer_session' as {email, name, loginTime}.
+//
+// NOTE: This is a localStorage-based stub for dev/demo. Replace with real
+// server auth (Supabase, Firebase, etc.) before production launch.
+
+// ── DEMO ACCOUNT (always available as fallback) ──
+const DEMO_TRAINER = {
+  email: 'demo@larofit.com',
+  password: 'LaroFit2025!',
+  profile: {
+    name: 'Demo Trainer',
+    first: 'Demo',
+    email: 'demo@larofit.com',
+    specialties: ['Strength', 'HIIT'],
+    bio: 'Demo trainer account for testing LaroFit Trainer Portal.'
+  }
+};
+
+// Simple hash (not cryptographic — replace with bcrypt/server-side before prod)
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + ch;
+    hash |= 0;
+  }
+  return hash.toString(36);
+}
+
+function getAccounts() {
+  const raw = localStorage.getItem('larofit_trainer_accounts');
+  const accounts = raw ? JSON.parse(raw) : [];
+  // Always include demo account
+  if (!accounts.find(a => a.email === DEMO_TRAINER.email)) {
+    accounts.push({
+      email: DEMO_TRAINER.email,
+      passwordHash: simpleHash(DEMO_TRAINER.password),
+      profile: DEMO_TRAINER.profile
+    });
+    localStorage.setItem('larofit_trainer_accounts', JSON.stringify(accounts));
+  }
+  return accounts;
+}
+
+function setSession(profile) {
+  const session = {
+    email: profile.email,
+    name: profile.name || profile.first || 'Trainer',
+    loginTime: new Date().toISOString()
+  };
+  localStorage.setItem('larofit_trainer_session', JSON.stringify(session));
+  localStorage.setItem('larofit_trainer_profile', JSON.stringify(profile));
+}
+
+function showError(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function clearError() {
+  document.getElementById('form-error').classList.remove('show');
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('login-btn');
+  if (on) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>LOGGING IN…';
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = 'LOGIN TO TRAINER PORTAL';
+  }
+}
+
+function togglePw() {
+  const inp = document.getElementById('password');
+  const btn = document.getElementById('pw-toggle-btn');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+function doLogin() {
+  clearError();
+  const email = document.getElementById('email').value.trim().toLowerCase();
+  const password = document.getElementById('password').value;
+
+  if (!email) { showError('Please enter your email address.'); return; }
+  if (!password) { showError('Please enter your password.'); return; }
+
+  setLoading(true);
+
+  // Simulate async check (replace with real API call)
+  setTimeout(() => {
+    const accounts = getAccounts();
+    const account = accounts.find(a => a.email === email);
+
+    if (!account) {
+      setLoading(false);
+      showError('No trainer account found with that email.');
+      return;
+    }
+
+    if (account.passwordHash !== simpleHash(password)) {
+      setLoading(false);
+      showError('Incorrect password. Please try again.');
+      return;
+    }
+
+    // Success
+    setSession(account.profile);
+    window.location.href = 'larofit-trainer.html';
+  }, 600);
+}
+
+function demoLogin() {
+  clearError();
+  setLoading(true);
+  setTimeout(() => {
+    setSession(DEMO_TRAINER.profile);
+    window.location.href = 'larofit-trainer.html';
+  }, 400);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+function init() {
+  // Seed demo account into localStorage
+  getAccounts();
+
+  // If already logged in, show banner
+  const session = localStorage.getItem('larofit_trainer_session');
+  if (session) {
+    document.getElementById('already-in').classList.add('show');
+  }
+
+  // Focus email field
+  document.getElementById('email').focus();
+}
+
+init();
+</script>
+</body>
+</html>
