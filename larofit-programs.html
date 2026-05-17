@@ -376,11 +376,35 @@ function viewProgram(id) {
         </div>
       </div>`;
     }
-    const exHtml = (d.exercises || []).map(ex => `
-      <div class="ex-row">
-        <div class="ex-row-name">${ex.name}</div>
-        <div class="ex-row-meta">${ex.params?.sets||3} sets × ${ex.params?.reps||10} reps</div>
-      </div>`).join('');
+    const exHtml = (d.exercises || []).map(ex => {
+      const t = ex.type||'strength';
+      const p = ex.params||{};
+      let meta = '';
+      if(t==='cardio'||t==='hiit'){
+        meta = [p.duration, p.intensity].filter(Boolean).join(' · ') || 'Cardio';
+      } else if(t==='timed_bodyweight'){
+        const sets = p.sets||3;
+        meta = `${sets} set${sets!==1?'s':''} × ${p.holdTime||'hold'}`;
+      } else if(t==='yoga'||t==='stretch'||t==='recovery'){
+        meta = p.duration || p.holdTime || t;
+      } else {
+        const sets = p.sets||3;
+        const reps = p.reps||10;
+        const wt   = p.weight ? ` @ ${p.weight} lbs` : '';
+        meta = `${sets} sets × ${reps} reps${wt}`;
+      }
+      const badgeColor = t==='cardio'||t==='hiit' ? 'color:var(--blue);background:rgba(96,165,250,0.1);'
+        : t==='timed_bodyweight' ? 'color:var(--purple);background:rgba(167,139,250,0.1);'
+        : t==='bodyweight' ? 'color:var(--success);background:rgba(74,222,128,0.1);'
+        : 'color:var(--volt);background:rgba(198,241,53,0.08);';
+      return `<div class="ex-row">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+          <div class="ex-row-name">${ex.name}</div>
+          <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:999px;font-family:var(--font-mono);white-space:nowrap;${badgeColor}">${t.toUpperCase()}</span>
+        </div>
+        <div class="ex-row-meta">${meta}</div>
+      </div>`;
+    }).join('');
 
     return `<div class="day-block">
       <div class="day-block-header" onclick="const ex=this.nextElementSibling;const open=ex.style.display==='flex';ex.style.display=open?'none':'flex';this.querySelector('.arrow').textContent=open?'▾':'▴'">
