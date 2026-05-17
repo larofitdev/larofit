@@ -147,6 +147,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <div class="main">
   <div class="topbar">
     <div class="page-title">WORKOUT HISTORY</div>
+    <button class="btn-volt" onclick="openLogModal()" style="padding:9px 20px;font-size:12px;font-weight:700;letter-spacing:0.04em;">+ Log Workout</button>
   </div>
   <div class="content">
     <div class="stats-row">
@@ -167,6 +168,77 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- ── LOG WORKOUT MODAL ─────────────────────────────────────────────────── -->
+<style>
+.lw-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:200;display:none;align-items:center;justify-content:center;}
+.lw-overlay.open{display:flex;}
+.lw-modal{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);width:520px;max-width:calc(100vw - 32px);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+.lw-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.lw-title{font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--pure);}
+.lw-close{background:none;border:none;color:var(--slate);font-size:20px;cursor:pointer;padding:2px 6px;line-height:1;transition:color 0.15s;}
+.lw-close:hover{color:var(--white);}
+.lw-body{padding:20px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px;}
+.lw-label{font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:4px;}
+.lw-input{width:100%;padding:9px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);outline:none;transition:border-color 0.2s;color-scheme:dark;}
+.lw-input:focus{border-color:var(--volt);}
+.lw-day-grid{display:flex;flex-direction:column;gap:6px;}
+.lw-day-btn{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all 0.15s;text-align:left;width:100%;}
+.lw-day-btn:hover{border-color:var(--steel);background:rgba(255,255,255,0.03);}
+.lw-day-btn.selected{border-color:var(--volt);background:var(--volt-pale);}
+.lw-day-name{font-size:13px;font-weight:700;color:var(--white);}
+.lw-day-excount{font-size:11px;color:var(--mist);font-family:var(--font-mono);}
+.lw-no-program{padding:16px;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--mist);text-align:center;}
+.lw-no-program a{color:var(--volt);text-decoration:none;}
+.lw-ex-list{display:flex;flex-direction:column;gap:10px;}
+.lw-ex-card{background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;}
+.lw-ex-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.lw-ex-name{font-size:13px;font-weight:700;color:var(--pure);}
+.lw-ex-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(198,241,53,0.1);color:var(--volt);font-family:var(--font-mono);}
+.lw-sets-area{padding:10px 14px;display:flex;flex-direction:column;gap:5px;}
+.lw-set-row{display:flex;align-items:center;gap:8px;}
+.lw-set-num{font-size:10px;color:var(--slate);width:20px;font-family:var(--font-mono);flex-shrink:0;}
+.lw-set-input{padding:6px 10px;background:var(--card-bg);border:1.5px solid var(--border);border-radius:6px;color:var(--white);font-size:12px;font-family:var(--font-mono);outline:none;transition:border-color 0.15s;}
+.lw-set-input:focus{border-color:var(--volt);}
+.lw-set-sep{font-size:11px;color:var(--slate);}
+.lw-set-del{background:none;border:none;color:var(--slate);cursor:pointer;font-size:11px;padding:2px 5px;border-radius:4px;transition:all 0.15s;margin-left:2px;}
+.lw-set-del:hover{color:var(--ember);background:rgba(255,87,51,0.1);}
+.lw-add-set-btn{margin-top:4px;padding:4px 10px;background:transparent;border:1px dashed var(--border);border-radius:6px;font-size:11px;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;width:fit-content;}
+.lw-add-set-btn:hover{border-color:var(--volt);color:var(--volt);}
+.lw-foot{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;}
+.lw-btn-cancel{padding:9px 18px;background:transparent;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.15s;}
+.lw-btn-cancel:hover{border-color:var(--mist);color:var(--white);}
+.lw-btn-save{padding:9px 22px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);transition:background 0.15s;}
+.lw-btn-save:hover{background:var(--volt-dim);}
+.lw-step-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mist);font-family:var(--font-mono);}
+.lw-step{padding:2px 8px;border-radius:999px;border:1px solid var(--border);transition:all 0.2s;}
+.lw-step.active{background:var(--volt);color:var(--black);border-color:var(--volt);font-weight:700;}
+.lw-step.done{border-color:var(--volt);color:var(--volt);}
+</style>
+
+<div class="lw-overlay" id="lw-overlay">
+  <div class="lw-modal">
+    <div class="lw-head">
+      <div class="lw-title">LOG WORKOUT</div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="lw-step-indicator">
+          <span class="lw-step active" id="lw-step1">1 DATE</span>
+          <span style="color:var(--border);">›</span>
+          <span class="lw-step" id="lw-step2">2 DAY</span>
+          <span style="color:var(--border);">›</span>
+          <span class="lw-step" id="lw-step3">3 LOG</span>
+        </div>
+        <button class="lw-close" onclick="closeLogModal()">✕</button>
+      </div>
+    </div>
+    <div class="lw-body" id="lw-body"></div>
+    <div class="lw-foot">
+      <button class="lw-btn-cancel" id="lw-back-btn" onclick="lwBack()" style="display:none;">← Back</button>
+      <button class="lw-btn-cancel" onclick="closeLogModal()">Cancel</button>
+      <button class="lw-btn-save" id="lw-next-btn" onclick="lwNext()">Next →</button>
+    </div>
+  </div>
+</div>
 
 <script>
 function getLogs(){ return JSON.parse(localStorage.getItem('larofit_logs')||'[]'); }
@@ -228,7 +300,7 @@ function renderSessions(){
 
   const container = document.getElementById('session-list');
   if(!filtered.length){
-    container.innerHTML=`<div class="empty-state"><div class="empty-icon">🏋️</div><div class="empty-title">NO WORKOUTS YET</div><div class="empty-body">Your completed workouts will appear here.</div><a class="btn-volt" href="larofit-today.html">Start a workout →</a></div>`;
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">🏋️</div><div class="empty-title">NO WORKOUTS YET</div><div class="empty-body">Your completed workouts will appear here. Forgot to log one?</div><button class="btn-volt" onclick="openLogModal()">Log a workout →</button></div>`;
     return;
   }
 
@@ -279,19 +351,80 @@ function renderSessions(){
 function renderSessionBody(log, sessionIdx){
   if(!log.exercises?.length) return '<div style="padding:20px;color:var(--slate);font-size:13px;">No exercises recorded.</div>';
   return log.exercises.map((ex,exIdx)=>{
-    const isBodyweight=ex.type==='bodyweight'||ex.type==='timed_bodyweight';
-    const isCardio=ex.type==='cardio'||ex.type==='hiit';
-    const hasWarmup=ex.warmupSet?.reps;
+    const isTimed  = ex.type==='timed_bodyweight';
+    const isCardio = ex.type==='cardio'||ex.type==='hiit';
+    const isBodyweight = ex.type==='bodyweight'||isTimed;
+    const hasWarmup = ex.warmupSet?.reps;
+    const p = ex.params||{};
+
+    // ── CARDIO: single info block, no set table ───────────────────────────
+    if(isCardio){
+      const logged = ex.sets?.find(s=>s.reps||s.weight);
+      const duration   = logged?.reps  || p.duration   || '—';
+      const distance   = logged?.weight|| p.distance   || '';
+      const intensity  = p.intensity || '';
+      const cardioHtml = `<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:9px;font-weight:600;color:var(--slate);font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase;">Duration</span>
+          <span class="val-display${!logged?.reps?' empty':''}" onclick="startEdit(this,${sessionIdx},${exIdx},0,'reps')">${duration}</span>
+        </div>
+        ${distance||p.distance?`<div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:9px;font-weight:600;color:var(--slate);font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase;">Distance</span>
+          <span class="val-display${!logged?.weight?' empty':''}" onclick="startEdit(this,${sessionIdx},${exIdx},0,'weight')">${distance||'—'}</span>
+        </div>`:''}
+        ${intensity?`<div style="display:flex;flex-direction:column;gap:2px;">
+          <span style="font-size:9px;font-weight:600;color:var(--slate);font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase;">Speed / Level</span>
+          <span style="font-size:13px;color:var(--mist);font-family:var(--font-mono);">${intensity}</span>
+        </div>`:''}
+      </div>`;
+      return `<div class="ex-section">
+        <div class="ex-section-header">
+          <div class="ex-section-name">${ex.name}</div>
+          <span class="ex-type-badge" style="background:rgba(96,165,250,0.12);color:var(--blue);">${ex.type.toUpperCase()}</span>
+        </div>
+        ${cardioHtml}
+      </div>`;
+    }
+
+    // ── TIMED BODYWEIGHT: sets table with Time (sec) column only ─────────
+    if(isTimed){
+      const target = p.holdTime || '';
+      const timedHtml=`${target?`<div style="font-size:11px;color:var(--mist);font-family:var(--font-mono);margin-bottom:8px;">Target: <span style="color:var(--volt);">${target}</span></div>`:''}
+      <table class="sets-tbl"><thead><tr>
+        <th style="width:32px;">Set</th>
+        <th>Time (sec)</th>
+        <th style="width:36px;"></th>
+      </tr></thead><tbody>
+        ${(ex.sets||[]).map((s,sIdx)=>{
+          if(!s.reps&&!s.logged) return '';
+          return `<tr>
+            <td class="set-num-cell">${sIdx+1}</td>
+            <td><span class="val-display${!s.reps?' empty':''}" onclick="startEdit(this,${sessionIdx},${exIdx},${sIdx},'reps')">${s.reps||'—'}</span></td>
+            <td><button class="btn-del-set" onclick="deleteSet(${sessionIdx},${exIdx},${sIdx})">✕</button></td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+      <button class="btn-add-set" onclick="addSet(${sessionIdx},${exIdx})">+ Add set</button>`;
+      return `<div class="ex-section">
+        <div class="ex-section-header">
+          <div class="ex-section-name">${ex.name}</div>
+          <span class="ex-type-badge" style="background:rgba(167,139,250,0.12);color:var(--purple);">TIMED</span>
+        </div>
+        ${timedHtml}
+      </div>`;
+    }
+
+    // ── STRENGTH / BODYWEIGHT: original set table ─────────────────────────
     const setsHtml=`<table class="sets-tbl"><thead><tr>
       <th style="width:32px;">Set</th>
-      <th>${isCardio?'Duration':'Reps'}</th>
-      ${!isBodyweight&&!isCardio?'<th>Weight (lbs)</th>':''}
+      <th>Reps</th>
+      ${!isBodyweight?'<th>Weight (lbs)</th>':''}
       <th style="width:36px;"></th>
     </tr></thead><tbody>
       ${hasWarmup?`<tr>
         <td class="warmup-cell">W</td>
         <td><span class="val-display" onclick="startEdit(this,${sessionIdx},${exIdx},'warmup','reps')">${ex.warmupSet.reps||'—'}</span></td>
-        ${!isBodyweight&&!isCardio?`<td><span class="val-display" onclick="startEdit(this,${sessionIdx},${exIdx},'warmup','weight')">${ex.warmupSet.weight||'—'}</span></td>`:''}
+        ${!isBodyweight?`<td><span class="val-display" onclick="startEdit(this,${sessionIdx},${exIdx},'warmup','weight')">${ex.warmupSet.weight||'—'}</span></td>`:''}
         <td><button class="btn-del-set" onclick="deleteSet(${sessionIdx},${exIdx},'warmup')">✕</button></td>
       </tr>`:''}
       ${(ex.sets||[]).map((s,sIdx)=>{
@@ -299,7 +432,7 @@ function renderSessionBody(log, sessionIdx){
         return `<tr>
           <td class="set-num-cell">${sIdx+1}</td>
           <td><span class="val-display${!s.reps?' empty':''}" onclick="startEdit(this,${sessionIdx},${exIdx},${sIdx},'reps')">${s.reps||'—'}</span></td>
-          ${!isBodyweight&&!isCardio?`<td><span class="val-display${!s.weight?' empty':''}" onclick="startEdit(this,${sessionIdx},${exIdx},${sIdx},'weight')">${s.weight||'—'}</span></td>`:''}
+          ${!isBodyweight?`<td><span class="val-display${!s.weight?' empty':''}" onclick="startEdit(this,${sessionIdx},${exIdx},${sIdx},'weight')">${s.weight||'—'}</span></td>`:''}
           <td><button class="btn-del-set" onclick="deleteSet(${sessionIdx},${exIdx},${sIdx})">✕</button></td>
         </tr>`;
       }).join('')}
@@ -407,6 +540,262 @@ function showToast(msg){
   t.textContent=msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200);
 }
+
+// ── LOG WORKOUT MODAL ─────────────────────────────────────────────────────────
+let lwStep=1, lwDate='', lwSelectedDay=null, lwExercises=[];
+
+function getYesterday(){ const d=new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0]; }
+
+function openLogModal(){
+  lwStep=1; lwDate=getYesterday(); lwSelectedDay=null; lwExercises=[];
+  document.getElementById('lw-overlay').classList.add('open');
+  lwRender();
+}
+function closeLogModal(){ document.getElementById('lw-overlay').classList.remove('open'); }
+
+function lwSetStep(n){
+  lwStep=n;
+  ['lw-step1','lw-step2','lw-step3'].forEach((id,i)=>{
+    document.getElementById(id).className='lw-step'+(i+1===n?' active':i+1<n?' done':'');
+  });
+  document.getElementById('lw-back-btn').style.display=n>1?'inline-block':'none';
+  document.getElementById('lw-next-btn').textContent=n===3?'💾 Save Workout':'Next →';
+}
+
+function lwBack(){ if(lwStep>1){ lwStep--; lwRender(); } }
+
+function lwNext(){
+  if(lwStep===1){
+    const inp=document.getElementById('lw-date-input');
+    if(!inp||!inp.value){ showToast('Please pick a date'); return; }
+    lwDate=inp.value; lwStep=2; lwRender();
+  } else if(lwStep===2){
+    if(!lwSelectedDay){ showToast('Please select a program day'); return; }
+    lwExercises=(lwSelectedDay.exercises||[]).filter(ex=>!ex.rest).map(ex=>{
+      const isTimed=ex.type==='timed_bodyweight';
+      const isCardio=ex.type==='cardio'||ex.type==='hiit';
+      const numSets=isCardio?1:(ex.params?.sets||ex.sets||3);
+      const sets=Array.from({length:numSets},()=>({reps:'',weight:''}));
+      return {name:ex.name, type:ex.type||'strength', params:ex.params||{}, sets};
+    });
+    if(!lwExercises.length){ showToast('This day has no exercises'); return; }
+    lwStep=3; lwRender();
+  } else if(lwStep===3){
+    lwSave();
+  }
+}
+
+function lwRender(){
+  lwSetStep(lwStep);
+  const body=document.getElementById('lw-body');
+  if(lwStep===1){
+    body.innerHTML=`
+      <div>
+        <div class="lw-label">Date of workout</div>
+        <input class="lw-input" type="date" id="lw-date-input" value="${lwDate}" max="${new Date().toISOString().split('T')[0]}">
+      </div>
+      <p style="font-size:12px;color:var(--mist);line-height:1.6;">Pick the date you worked out. Next you'll choose which program day you followed.</p>`;
+  } else if(lwStep===2){
+    const program=JSON.parse(localStorage.getItem('larofit_program')||'null');
+    if(!program||!program.days){
+      body.innerHTML=`<div class="lw-no-program">No program found. <a href="larofit-builder.html">Build one first →</a></div>`; return;
+    }
+    const workoutDays=program.days.filter(d=>!d.rest&&d.exercises&&d.exercises.length>0);
+    if(!workoutDays.length){
+      body.innerHTML=`<div class="lw-no-program">Your program has no workout days yet. <a href="larofit-builder.html">Add exercises →</a></div>`; return;
+    }
+    const dateLabel=new Date(lwDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    body.innerHTML=`
+      <div>
+        <div class="lw-label">Workout date</div>
+        <div style="font-size:13px;color:var(--fog);padding:8px 12px;background:var(--carbon);border-radius:var(--radius-sm);border:1px solid var(--border);">${dateLabel}</div>
+      </div>
+      <div>
+        <div class="lw-label">Which program day did you do?</div>
+        <div class="lw-day-grid" id="lw-day-grid">
+          ${workoutDays.map((day,i)=>`
+            <button class="lw-day-btn${lwSelectedDay&&lwSelectedDay.id===day.id?' selected':''}" onclick="lwSelectDay(${day.id})">
+              <div>
+                <div class="lw-day-name">${day.name||'Day '+(i+1)}</div>
+                <div class="lw-day-excount">${day.exercises.length} exercise${day.exercises.length!==1?'s':''} · ${day.exercises.map(e=>e.name).slice(0,3).join(', ')}${day.exercises.length>3?'…':''}</div>
+              </div>
+              ${lwSelectedDay&&lwSelectedDay.id===day.id?'<span style="color:var(--volt);font-size:16px;">✓</span>':''}
+            </button>`).join('')}
+        </div>
+      </div>`;
+  } else if(lwStep===3){
+    const dateLabel=new Date(lwDate+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+    body.innerHTML=`
+      <div>
+        <div class="lw-label">Logging for</div>
+        <div style="font-size:13px;color:var(--fog);">${dateLabel} · ${lwSelectedDay?.name||''}</div>
+      </div>
+      <div class="lw-ex-list" id="lw-ex-list">
+        ${lwExercises.map((ex,exIdx)=>lwRenderExCard(ex,exIdx)).join('')}
+      </div>
+      <p style="font-size:11px;color:var(--slate);line-height:1.5;">Fill in the weights and reps you used. Leave blank to skip.</p>`;
+  }
+}
+
+function lwRenderExCard(ex, exIdx){
+  const isTimed    = ex.type==='timed_bodyweight';
+  const isCardio   = ex.type==='cardio'||ex.type==='hiit';
+  const isBodyweight = ex.type==='bodyweight'||isTimed;
+
+  // ── CARDIO: duration + distance fields, show programmed intensity ─────
+  if(isCardio){
+    const s=ex.sets[0]||{reps:'',weight:''};
+    const intensity=ex.params?.intensity||'';
+    return `<div class="lw-ex-card" id="lw-ex-${exIdx}">
+      <div class="lw-ex-header">
+        <span class="lw-ex-name">${ex.name}</span>
+        <span class="lw-ex-badge" style="background:rgba(96,165,250,0.12);color:var(--blue);">CARDIO</span>
+      </div>
+      <div class="lw-sets-area">
+        ${intensity?`<div style="font-size:11px;color:var(--mist);font-family:var(--font-mono);margin-bottom:6px;">Program: <span style="color:var(--volt);">${intensity}</span></div>`:''}
+        <div class="lw-set-row">
+          <span style="font-size:11px;color:var(--slate);white-space:nowrap;min-width:60px;">Duration</span>
+          <input class="lw-set-input" type="text" placeholder="e.g. 20 min"
+            value="${s.reps}" onchange="lwUpdateSet(${exIdx},0,'reps',this.value)" style="width:120px;">
+        </div>
+        <div class="lw-set-row" style="margin-top:4px;">
+          <span style="font-size:11px;color:var(--slate);white-space:nowrap;min-width:60px;">Distance</span>
+          <input class="lw-set-input" type="text" placeholder="optional"
+            value="${s.weight}" onchange="lwUpdateSet(${exIdx},0,'weight',this.value)" style="width:120px;">
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── TIMED BODYWEIGHT: per-set hold time in seconds ────────────────────
+  if(isTimed){
+    const target=ex.params?.holdTime||'';
+    const setsHtml=ex.sets.map((s,sIdx)=>`
+      <div class="lw-set-row" id="lw-set-${exIdx}-${sIdx}">
+        <span class="lw-set-num">${sIdx+1}</span>
+        <input class="lw-set-input" type="text" inputmode="decimal" placeholder="sec"
+          value="${s.reps}" onchange="lwUpdateSet(${exIdx},${sIdx},'reps',this.value)" style="width:80px;">
+        <span class="lw-set-sep" style="font-size:10px;color:var(--slate);">sec</span>
+        <button class="lw-set-del" onclick="lwDelSet(${exIdx},${sIdx})">✕</button>
+      </div>`).join('');
+    return `<div class="lw-ex-card" id="lw-ex-${exIdx}">
+      <div class="lw-ex-header">
+        <span class="lw-ex-name">${ex.name}</span>
+        <span class="lw-ex-badge" style="background:rgba(167,139,250,0.12);color:var(--purple);">TIMED</span>
+      </div>
+      <div class="lw-sets-area" id="lw-sets-${exIdx}">
+        ${target?`<div style="font-size:11px;color:var(--mist);font-family:var(--font-mono);margin-bottom:6px;">Target: <span style="color:var(--volt);">${target}</span></div>`:''}
+        ${setsHtml}
+        <button class="lw-add-set-btn" onclick="lwAddSet(${exIdx})">+ Add set</button>
+      </div>
+    </div>`;
+  }
+
+  // ── STRENGTH / BODYWEIGHT: reps × weight per set ──────────────────────
+  const setsHtml=ex.sets.map((s,sIdx)=>`
+    <div class="lw-set-row" id="lw-set-${exIdx}-${sIdx}">
+      <span class="lw-set-num">${sIdx+1}</span>
+      <input class="lw-set-input" type="text" inputmode="decimal" placeholder="reps"
+        value="${s.reps}" onchange="lwUpdateSet(${exIdx},${sIdx},'reps',this.value)" style="width:64px;">
+      ${!isBodyweight?`
+        <span class="lw-set-sep">×</span>
+        <input class="lw-set-input" type="text" inputmode="decimal" placeholder="lbs"
+          value="${s.weight}" onchange="lwUpdateSet(${exIdx},${sIdx},'weight',this.value)" style="width:72px;">
+        <span class="lw-set-sep" style="font-size:10px;color:var(--slate);">lbs</span>`:''}
+      <button class="lw-set-del" onclick="lwDelSet(${exIdx},${sIdx})">✕</button>
+    </div>`).join('');
+  return `<div class="lw-ex-card" id="lw-ex-${exIdx}">
+    <div class="lw-ex-header">
+      <span class="lw-ex-name">${ex.name}</span>
+      <span class="lw-ex-badge">${ex.type.toUpperCase()}</span>
+    </div>
+    <div class="lw-sets-area" id="lw-sets-${exIdx}">
+      ${setsHtml}
+      <button class="lw-add-set-btn" onclick="lwAddSet(${exIdx})">+ Add set</button>
+    </div>
+  </div>`;
+}
+
+function lwSelectDay(dayId){
+  const program=JSON.parse(localStorage.getItem('larofit_program')||'null');
+  lwSelectedDay=program?.days?.find(d=>d.id===dayId)||null;
+  const workoutDays=(program?.days||[]).filter(d=>!d.rest&&d.exercises&&d.exercises.length>0);
+  const grid=document.getElementById('lw-day-grid');
+  if(grid) grid.innerHTML=workoutDays.map((day,i)=>`
+    <button class="lw-day-btn${lwSelectedDay&&lwSelectedDay.id===day.id?' selected':''}" onclick="lwSelectDay(${day.id})">
+      <div>
+        <div class="lw-day-name">${day.name||'Day '+(i+1)}</div>
+        <div class="lw-day-excount">${day.exercises.length} exercise${day.exercises.length!==1?'s':''} · ${day.exercises.map(e=>e.name).slice(0,3).join(', ')}${day.exercises.length>3?'…':''}</div>
+      </div>
+      ${lwSelectedDay&&lwSelectedDay.id===day.id?'<span style="color:var(--volt);font-size:16px;">✓</span>':''}
+    </button>`).join('');
+}
+
+function lwUpdateSet(exIdx,sIdx,field,val){ if(lwExercises[exIdx]?.sets[sIdx]) lwExercises[exIdx].sets[sIdx][field]=val; }
+
+function lwAddSet(exIdx){
+  const ex=lwExercises[exIdx];
+  ex.sets.push({reps:'',weight:''});
+  const area=document.getElementById('lw-sets-'+exIdx);
+  if(!area) return;
+  const sIdx=ex.sets.length-1;
+  const isTimed=ex.type==='timed_bodyweight';
+  const isBodyweight=ex.type==='bodyweight'||isTimed;
+  const row=document.createElement('div');
+  row.className='lw-set-row'; row.id=`lw-set-${exIdx}-${sIdx}`;
+  row.innerHTML=isTimed?`
+    <span class="lw-set-num">${sIdx+1}</span>
+    <input class="lw-set-input" type="text" inputmode="decimal" placeholder="sec"
+      value="" onchange="lwUpdateSet(${exIdx},${sIdx},'reps',this.value)" style="width:80px;">
+    <span class="lw-set-sep" style="font-size:10px;color:var(--slate);">sec</span>
+    <button class="lw-set-del" onclick="lwDelSet(${exIdx},${sIdx})">✕</button>`:`
+    <span class="lw-set-num">${sIdx+1}</span>
+    <input class="lw-set-input" type="text" inputmode="decimal" placeholder="reps"
+      value="" onchange="lwUpdateSet(${exIdx},${sIdx},'reps',this.value)" style="width:64px;">
+    ${!isBodyweight?`<span class="lw-set-sep">×</span>
+    <input class="lw-set-input" type="text" inputmode="decimal" placeholder="lbs"
+      value="" onchange="lwUpdateSet(${exIdx},${sIdx},'weight',this.value)" style="width:72px;">
+    <span class="lw-set-sep" style="font-size:10px;color:var(--slate);">lbs</span>`:''}
+    <button class="lw-set-del" onclick="lwDelSet(${exIdx},${sIdx})">✕</button>`;
+  area.insertBefore(row,area.querySelector('.lw-add-set-btn'));
+}
+
+function lwDelSet(exIdx,sIdx){
+  if(lwExercises[exIdx].sets.length<=1){ showToast('Need at least one set'); return; }
+  lwExercises[exIdx].sets.splice(sIdx,1);
+  const card=document.getElementById('lw-ex-'+exIdx);
+  if(card) card.outerHTML=lwRenderExCard(lwExercises[exIdx],exIdx);
+}
+
+function lwSave(){
+  const exercises=lwExercises.map(ex=>{
+    const isCardio=ex.type==='cardio'||ex.type==='hiit';
+    const isTimed=ex.type==='timed_bodyweight';
+    const sets=ex.sets
+      .filter(s=>s.reps||s.weight)
+      .map((s,i)=>({set:i+1,reps:parseFloat(s.reps)||0,weight:parseFloat(s.weight)||0,logged:true}));
+    // For cardio/timed, keep even if just duration filled
+    if(isCardio||isTimed){
+      const filled=ex.sets.filter(s=>s.reps);
+      if(!filled.length) return null;
+      return {name:ex.name,type:ex.type,params:ex.params,sets:filled.map((s,i)=>({set:i+1,reps:s.reps,weight:s.weight||0,logged:true})),notes:''};
+    }
+    if(!sets.length) return null;
+    return {name:ex.name,type:ex.type,params:ex.params,sets,notes:''};
+  }).filter(Boolean);
+
+  if(!exercises.length){ showToast('Please log at least one exercise before saving'); return; }
+  const logs=getLogs();
+  logs.push({date:lwDate,exercises,dayName:lwSelectedDay?.name||''});
+  saveLogs(logs);
+  closeLogModal();
+  populateMonthFilter();
+  renderStats();
+  renderSessions();
+  showToast('✅ Workout logged!');
+}
+
+document.getElementById('lw-overlay').addEventListener('click',function(e){ if(e.target===this) closeLogModal(); });
 </script>
 </body>
 </html>
