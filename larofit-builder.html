@@ -960,7 +960,7 @@ if(typeof BUILT_IN_EXERCISE_LIBRARY === 'object'){
 const TYPE_DEFAULTS = {
   strength:        {sets:3, reps:10,  weight:25, rest:'90s'},
   bodyweight:      {sets:3, reps:10,  rest:'60s'},
-  timed_bodyweight:{sets:3, reps:1,   rest:'30s'},
+  timed_bodyweight:{sets:3, holdTime:'30s', rest:'30s'},
   cardio:          {duration:'20 min',distance:'',intensity:'moderate'},
   yoga:            {holds:5, holdTime:'30s', sides:'both'},
   stretch:         {holds:3, holdTime:'30s', sides:'both'},
@@ -1226,7 +1226,8 @@ function buildParamString(ex){
     if(p.rest) tags.push(p.rest+' rest');
   } else if(t==='timed_bodyweight'){
     if(p.sets) tags.push(p.sets+'×');
-    if(p.reps) tags.push(p.reps+' hold');
+    const hold = p.holdTime || (p.reps ? p.reps+'s' : '');
+    if(hold) tags.push(hold+' hold');
     if(p.rest) tags.push(p.rest+' rest');
   } else if(t==='bodyweight'){
     if(p.sets) tags.push(p.sets+'×');
@@ -1431,14 +1432,15 @@ function renderDetailForm(){
         </select></div>
     </div>`;
   } else if(t==='timed_bodyweight'){
+    const curHold = p.holdTime || (p.reps ? p.reps+'s' : '30s');
     paramFields = `<div class="param-grid">
       <div class="param-field"><label>Sets</label>
         <select onchange="setParam('sets',+this.value)">
           ${[1,2,3,4,5,6].map(n=>`<option ${p.sets==n?'selected':''}>${n}</option>`).join('')}
         </select></div>
-      <div class="param-field"><label>Target hold (sec)</label>
-        <select onchange="setParam('reps',+this.value)">
-          ${[15,20,30,45,60,90,120].map(n=>`<option ${p.reps==n?'selected':''}>${n} sec</option>`).join('')}
+      <div class="param-field"><label>Hold time</label>
+        <select onchange="setParam('holdTime',this.value)">
+          ${['15s','20s','30s','45s','60s','90s','2 min','3 min','5 min'].map(r=>`<option ${curHold===r?'selected':''}>${r}</option>`).join('')}
         </select></div>
       <div class="param-field"><label>Rest</label>
         <select onchange="setParam('rest',this.value)">
@@ -1898,6 +1900,10 @@ function buildWeekTable(ex, rule, weeks){
       const base = parseInt(p.duration)||20;
       const val = isDeload ? Math.round(base*0.6) : base + stepsApplied*rule.increment;
       targetStr = `${val} min`;
+    } else if(t==='timed_bodyweight'){
+      const base = parseInt(p.holdTime||p.reps)||30;
+      const val = isDeload ? Math.round(base*0.6) : base + stepsApplied*rule.increment;
+      targetStr = `${val}s hold`;
     } else if(t==='yoga'||t==='stretch'){
       const base = parseInt(p.holdTime)||30;
       const val = isDeload ? Math.round(base*0.6) : base + stepsApplied*rule.increment;
@@ -3080,7 +3086,7 @@ const PROGRAM_TEMPLATES = [
         {name:'Dumbbell bent-over row', sets:3,reps:10,weight:20,rest:'60s',type:'strength'},
         {name:'Dumbbell overhead press',sets:3,reps:10,weight:15,rest:'60s',type:'strength'},
         {name:'Dumbbell curl',          sets:2,reps:12,weight:12,rest:'45s',type:'strength'},
-        {name:'Plank', sets:3,reps:30,weight:0, rest:'30s',type:'timed_bodyweight'},
+        {name:'Plank', sets:3,holdTime:'30s',rest:'30s',type:'timed_bodyweight',params:{sets:3,holdTime:'30s',rest:'30s'}},
       ]},
       {exercises:[]}, // rest
       {exercises:[
@@ -3089,7 +3095,7 @@ const PROGRAM_TEMPLATES = [
         {name:'Single-arm dumbbell row',sets:3,reps:10,weight:20,rest:'60s',type:'strength'},
         {name:'Dumbbell lateral raise', sets:3,reps:12,weight:10,rest:'45s',type:'strength'},
         {name:'Hammer curl',            sets:2,reps:12,weight:12,rest:'45s',type:'strength'},
-        {name:'Dead bug', sets:3,reps:30,weight:0, rest:'30s',type:'timed_bodyweight'},
+        {name:'Dead bug', sets:3,holdTime:'30s',rest:'30s',type:'timed_bodyweight',params:{sets:3,holdTime:'30s',rest:'30s'}},
       ]},
       {exercises:[]}, // rest
       {exercises:[
@@ -3652,7 +3658,7 @@ const PROGRAM_TEMPLATES = [
         {name:'Glute bridge',            sets:3,reps:15,weight:0,  rest:'45s',type:'strength'},
         {name:'Machine leg curl',        sets:3,reps:12,weight:55, rest:'60s',type:'strength'},
         {name:'Machine calf raise',      sets:3,reps:15,weight:70, rest:'45s',type:'strength'},
-        {name:'Dead bug', sets:3,reps:30,weight:0, rest:'30s',type:'timed_bodyweight'},
+        {name:'Dead bug', sets:3,holdTime:'30s',rest:'30s',type:'timed_bodyweight',params:{sets:3,holdTime:'30s',rest:'30s'}},
       ]},
       {exercises:[
         {name:'Sun salutation B',        sets:1,reps:1,weight:0,rest:'0s',type:'yoga',params:{holds:3,holdTime:'30s',sides:'both'}},
@@ -3691,7 +3697,7 @@ const PROGRAM_TEMPLATES = [
         {name:'Dumbbell bent-over row',  sets:3,reps:10,weight:20,rest:'90s',type:'strength'},
         {name:'Dumbbell overhead press', sets:3,reps:10,weight:15,rest:'60s',type:'strength'},
         {name:'Dumbbell curl',           sets:3,reps:12,weight:12,rest:'60s',type:'strength'},
-        {name:'Plank', sets:3,reps:30,weight:0, rest:'30s',type:'timed_bodyweight'},
+        {name:'Plank', sets:3,holdTime:'30s',rest:'30s',type:'timed_bodyweight',params:{sets:3,holdTime:'30s',rest:'30s'}},
       ]},
       {exercises:[]},
       {exercises:[
@@ -3709,7 +3715,7 @@ const PROGRAM_TEMPLATES = [
         {name:'Glute bridge',            sets:3,reps:15,weight:0, rest:'60s',type:'strength'},
         {name:'Machine leg curl',        sets:3,reps:12,weight:50,rest:'60s',type:'strength'},
         {name:'Machine calf raise',      sets:3,reps:15,weight:60,rest:'45s',type:'strength'},
-        {name:'Dead bug', sets:3,reps:30,weight:0, rest:'30s',type:'timed_bodyweight'},
+        {name:'Dead bug', sets:3,holdTime:'30s',rest:'30s',type:'timed_bodyweight',params:{sets:3,holdTime:'30s',rest:'30s'}},
       ]},
       {exercises:[]},
       {exercises:[]},
@@ -3798,7 +3804,7 @@ const PROGRAM_TEMPLATES = [
         {name:'Machine leg press',       sets:3,reps:12,weight:100,rest:'90s',type:'strength'},
         {name:'Machine leg curl',        sets:3,reps:12,weight:50,rest:'60s',type:'strength'},
         {name:'Machine calf raise',      sets:3,reps:15,weight:60,rest:'45s',type:'strength'},
-        {name:'Plank', sets:3,reps:30,weight:0, rest:'30s',type:'timed_bodyweight'},
+        {name:'Plank', sets:3,holdTime:'30s',rest:'30s',type:'timed_bodyweight',params:{sets:3,holdTime:'30s',rest:'30s'}},
       ]},
       {exercises:[]},
       {exercises:[
@@ -3815,7 +3821,7 @@ const PROGRAM_TEMPLATES = [
         {name:'Glute bridge',            sets:3,reps:15,weight:0, rest:'60s',type:'strength'},
         {name:'Machine leg extension',   sets:3,reps:12,weight:50,rest:'60s',type:'strength'},
         {name:'Machine calf raise',      sets:3,reps:15,weight:60,rest:'45s',type:'strength'},
-        {name:'Dead bug', sets:3,reps:30,weight:0, rest:'30s',type:'timed_bodyweight'},
+        {name:'Dead bug', sets:3,holdTime:'30s',rest:'30s',type:'timed_bodyweight',params:{sets:3,holdTime:'30s',rest:'30s'}},
       ]},
       {exercises:[]},
       {exercises:[]},
