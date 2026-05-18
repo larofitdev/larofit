@@ -261,7 +261,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <a class="nav-item " href="larofit-profile.html"><span class="nav-icon">👤</span>My profile</a>
     <a class="nav-item " href="larofit-ai-coach.html"><span class="nav-icon">🤖</span>AI Coach</a>
     <a class="nav-item " href="larofit-builder.html"><span class="nav-icon">📋</span>Program builder</a>
-    <a class="nav-item " href="larofit-sessions.html"><span class="nav-icon">🕐</span>Workout history</a>
     <a class="nav-item " href="larofit-diet.html"><span class="nav-icon">🥗</span>Diet plan</a>
     <div class="nav-section">Track</div>
     <a class="nav-item active" href="larofit-today.html"><span class="nav-icon">📅</span>Today's workout</a>
@@ -1463,7 +1462,12 @@ function loadTodayFromProgram(now){
   const saved=localStorage.getItem('larofit_program');
   if(!saved) return;
   const prog=JSON.parse(saved);
-  const dayIdx=getCurrentDayIndex();
+  let dayIdx=getCurrentDayIndex();
+  // Skip rest days — find next workout day
+  for(let i=0;i<7;i++){
+    const d=prog.days[(dayIdx+i)%7];
+    if(d&&!d.rest&&d.exercises.length>0){ dayIdx=(dayIdx+i)%7; break; }
+  }
   const progDay=prog.days[dayIdx];
   if(progDay&&!progDay.rest&&progDay.exercises.length){
     const bw = getUserBodyweight();
