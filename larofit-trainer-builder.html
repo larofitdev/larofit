@@ -3675,13 +3675,52 @@ const FYW_STARTING_WEIGHTS = {
 };
 
 function getSuggestedWeight(name, bodyweightLbs, sex){
-  const base = FYW_STARTING_WEIGHTS[name.toLowerCase()];
-  if(!base) return 25;
-  // Adjust for sex (female ~70% of male starting weights)
-  const sexMult = sex==='female' ? 0.7 : 1;
-  // Adjust for bodyweight (scale relative to 185lbs baseline)
-  const bwMult = Math.sqrt((bodyweightLbs||185)/185);
-  return Math.round((base*sexMult*bwMult)/2.5)*2.5; // round to nearest 2.5
+  const n = name.toLowerCase();
+  const bw = bodyweightLbs || 185;
+  const sexMult = sex === 'female' ? 0.7 : 1;
+  const bwMult = Math.sqrt(bw / 185);
+
+  // Try exact lookup first
+  const base = FYW_STARTING_WEIGHTS[n];
+  if(base){
+    return Math.round((base * sexMult * bwMult) / 2.5) * 2.5;
+  }
+
+  // ── Keyword fallback — covers any exercise name not in the lookup table ──
+  // Isolation / light movements (must check before broader patterns)
+  const isRaise      = /lateral raise|front raise|rear delt|side raise|cable raise/.test(n);
+  const isFly        = /fly|flye|flyes|pec.?deck|crossover|cable chest|svend|around.?the.?world|pullover/.test(n);
+  const isCurl       = /curl/.test(n);
+  const isExtension  = /extension|pushdown|kickback|skull/.test(n);
+  const isFacePull   = /face pull/.test(n);
+  const isShrug      = /shrug/.test(n);
+  const isCalf       = /calf/.test(n);
+  const isHipThrust  = /hip thrust|glute bridge/.test(n);
+  const isRDL        = /romanian|rdl/.test(n);
+  const isLegPress   = /leg press|hack squat/.test(n);
+  const isLegMachine = /leg curl|leg extension|hip abduct|hip adduct/.test(n);
+  const isRow        = /row|pulldown|pull.?down|pull.?up/.test(n);
+  const isPress      = /press|bench|overhead|military|arnold/.test(n);
+  const isSquat      = /squat|lunge|step.?up|goblet|sumo/.test(n);
+
+  let base2;
+  if(isRaise)      base2 = 10;
+  else if(isFly)   base2 = 15;
+  else if(isCurl)  base2 = 15;
+  else if(isExtension) base2 = 20;
+  else if(isFacePull)  base2 = 30;
+  else if(isShrug)     base2 = 30;
+  else if(isCalf)      base2 = 30;
+  else if(isHipThrust) base2 = 45;
+  else if(isRDL)       base2 = 25;
+  else if(isLegPress)  base2 = 90;
+  else if(isLegMachine)base2 = 40;
+  else if(isRow)       base2 = 30;
+  else if(isPress)     base2 = 25;
+  else if(isSquat)     base2 = 20;
+  else base2 = 20; // safe generic fallback
+
+  return Math.round((base2 * sexMult * bwMult) / 2.5) * 2.5;
 }
 
 function openFYW(exName){
