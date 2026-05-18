@@ -1259,6 +1259,7 @@ function addExToDay(dayId, exData){
     name: exData.name,
     eq: exData.eq,
     type: defaultType,
+    category: exData.category||'',
     params: defaultParams,
     notes:'', video:''
   };
@@ -4132,6 +4133,7 @@ function loadTemplate(){
       name:ex.name,
       type:ex.type||'strength',
       eq:ex.eq||'db',
+      category:ex.category||'',
       // Weight always starts at 0 — user finds their weight on day 1
       params:ex.params
         ? {...ex.params, weight:0}
