@@ -337,6 +337,23 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </div>
     </div>
 
+    <!-- DATA SYNC -->
+    <div class="next-card" id="sync-card">
+      <div class="card-header">
+        <div class="card-title">📲 Move data to another device</div>
+        <div class="card-badge">LOCAL DATA</div>
+      </div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--mist);margin-bottom:16px;line-height:1.6;">Export all your LaroFit data as a file, then import it on any other device or browser.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button class="card-btn" onclick="exportData()" style="display:flex;align-items:center;justify-content:center;gap:8px;">⬇️ Export data</button>
+          <button class="card-btn outline" onclick="document.getElementById('import-file').click()" style="display:flex;align-items:center;justify-content:center;gap:8px;">⬆️ Import data</button>
+        </div>
+        <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importData(event)">
+        <div id="sync-status" style="margin-top:12px;font-size:12px;color:var(--mist);display:none;padding:10px 14px;background:var(--carbon);border-radius:var(--radius-sm);border:1px solid var(--border);"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 </div>
@@ -644,6 +661,65 @@ function showToast(msg){
 }
 
 init();
+
+// ── DATA EXPORT / IMPORT ───────────────────────────────────────────────────────
+const LAROFIT_KEYS = [
+  'larofit_1rm','larofit_active_plan','larofit_active_program_id',
+  'larofit_ai_plan','larofit_current_day_idx','larofit_custom_exercises',
+  'larofit_custom_lib','larofit_diet_saved','larofit_exercise_notes',
+  'larofit_logs','larofit_measurements','larofit_measurements_log',
+  'larofit_profile','larofit_program','larofit_programs',
+  'larofit_progress_photos','larofit_sleep','larofit_swap_history',
+  'larofit_user_email','larofit_user_id','larofit_user_name','larofit_signup'
+];
+
+function exportData(){
+  const data = {};
+  let count = 0;
+  LAROFIT_KEYS.forEach(key => {
+    const val = localStorage.getItem(key);
+    if(val !== null){ data[key] = val; count++; }
+  });
+  if(count === 0){ showSyncStatus('⚠️ No data found to export.', false); return; }
+  const blob = new Blob([JSON.stringify({version:1, exported: new Date().toISOString(), data}, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'larofit-data-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showSyncStatus('✅ Exported ' + count + ' data items. Open this file on your other device to import.', true);
+}
+
+function importData(event){
+  const file = event.target.files[0];
+  if(!file){ return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if(!parsed.data){ throw new Error('Invalid file'); }
+      let count = 0;
+      Object.entries(parsed.data).forEach(([key, val]) => {
+        if(key.startsWith('larofit_')){ localStorage.setItem(key, val); count++; }
+      });
+      showSyncStatus('✅ Imported ' + count + ' data items successfully. Reloading...', true);
+      setTimeout(() => location.reload(), 1500);
+    } catch(err) {
+      showSyncStatus('❌ Could not read file. Make sure it\'s a LaroFit export file.', false);
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function showSyncStatus(msg, ok){
+  const el = document.getElementById('sync-status');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.borderColor = ok ? 'rgba(74,222,128,0.3)' : 'rgba(255,87,51,0.3)';
+  el.style.color = ok ? 'var(--success)' : 'var(--ember)';
+}
 </script>
 
 <!-- MOBILE BOTTOM NAV -->
