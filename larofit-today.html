@@ -828,114 +828,126 @@ function getFMW(exName, category, eq, bodyweight){
   if(!bodyweight || eq==='bw' || eq==='band' || eq==='yoga' || eq==='cd' || eq==='rc') return null;
 
   const bw = bodyweight;
-  const cat = (category||'').toLowerCase();
   const n = exName.toLowerCase();
 
   // ── NSCA beginner 1RM standards (% of BW) × 60% working weight
   // DB/KB = ~40% of BB equivalent per limb
   // Machine = ~70% of BB equivalent (more stable)
+  // NOTE: All detection is name-based so it works even when category is missing
+  //       from exercises saved by older versions of the program builder.
 
-  // ── CHEST sub-categories ──
-  if(cat === 'chest'){
-    const isFly = /fly|flye|flyes|pullover|crossover|around.?the.?world|pec.?deck|svend/.test(n);
-    if(isFly){
-      const t = { db:0.048, mc:0.083, bb:0.114, kb:0.048 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    } else {
-      // press (bench, incline, decline, squeeze press)
-      const t = { db:0.130, mc:0.222, bb:0.323, kb:0.130 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    }
+  // ── ISOLATION / LIGHT — check these first (most specific) ──
+
+  // Raises: lateral, front, rear delt — always light
+  if(/lateral raise|front raise|rear delt|side raise|cable raise|w raise|y raise|prone raise|plate front/.test(n)){
+    const t = { db:0.056, mc:0.083, bb:null, kb:0.056 };
+    const raw = bw * (t[eq]||t.db);
+    const inc = (eq==='db'||eq==='kb') ? 2.5 : 5;
+    return Math.max(eq==='db'||eq==='kb' ? 10 : 15, Math.round(raw/inc)*inc);
   }
 
-  // ── BACK sub-categories ──
-  if(cat === 'back'){
-    const isShrug   = /shrug/.test(n);
-    const isPullover = /pullover/.test(n);
-    if(isShrug){
-      const t = { db:0.130, mc:0.222, bb:0.343, kb:0.130 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    } else if(isPullover){
-      const t = { db:0.048, mc:0.095, bb:0.114, kb:0.048 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    } else {
-      // rows, lat pulldowns, seated rows, face pulls
-      const t = { db:0.162, mc:0.278, bb:0.390, kb:0.162 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    }
+  // Flies / crossovers / pec deck
+  if(/fly|flye|flyes|pec.?deck|crossover|cable chest fly|svend|around.?the.?world/.test(n)){
+    const t = { db:0.048, mc:0.083, bb:0.114, kb:0.048 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
   }
 
-  // ── SHOULDERS sub-categories ──
-  if(cat === 'shoulders'){
-    const isRaise   = /lateral|front raise|rear delt|w raise|y raise|prone|behind.?the.?back|plate front/.test(n);
-    const isPress   = /press|arnold|military|push press|push jerk/.test(n);
-    if(isRaise){
-      // Adjusted up one increment from pure NSCA — 10 lb DB / 15 lb machine minimum
-      const t = { db:0.056, mc:0.083, bb:null, kb:0.056 };
-      const raw = bw * (t[eq]||t.db);
-      const inc = (eq==='db'||eq==='kb') ? 2.5 : 5;
-      return Math.max(eq==='db'||eq==='kb' ? 10 : 15, Math.round(raw/inc)*inc);
-    } else if(isPress){
-      const t = { db:0.097, mc:0.167, bb:0.243, kb:0.097 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    } else {
-      // upright row, shrug (neutral grip), face pull
-      const t = { db:0.083, mc:0.139, bb:0.222, kb:0.083 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    }
+  // Pullover (chest/back isolation)
+  if(/pullover/.test(n)){
+    const t = { db:0.048, mc:0.095, bb:0.114, kb:0.048 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
   }
 
-  // ── BICEPS ──
-  if(cat === 'biceps'){
+  // Curls (bicep)
+  if(/curl/.test(n)){
     const t = { db:0.069, mc:0.111, bb:0.167, kb:0.069 };
     return roundWeight(bw * (t[eq]||t.db), eq);
   }
 
-  // ── TRICEPS ──
-  if(cat === 'triceps'){
+  // Tricep isolation: pushdowns, kickbacks, skull crushers, overhead extensions
+  if(/pushdown|push.?down|kickback|skull|overhead tricep|tricep extension/.test(n)){
     const t = { db:0.083, mc:0.139, bb:0.222, kb:0.083 };
     return roundWeight(bw * (t[eq]||t.db), eq);
   }
 
-  // ── LEGS sub-categories ──
-  if(cat === 'legs'){
-    const isPress   = /leg press|hack squat|pendulum/.test(n);
-    const isCurl    = /leg curl|leg extension|hip abduct|hip adduct|seated hip/.test(n);
-    const isCalf    = /calf/.test(n);
-    const isHip     = /hip thrust|glute bridge|romanian|rdl|glute kickback|cable pull.?through/.test(n);
-    const isSquat   = /squat|lunge|step.?up|split squat|goblet|sumo/.test(n);
-
-    if(isPress){
-      const t = { db:null, mc:0.519, bb:null, kb:null };
-      return t[eq] ? roundWeight(bw * t[eq], eq) : null;
-    } else if(isCurl){
-      const t = { db:0.083, mc:0.139, bb:0.222, kb:0.083 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    } else if(isCalf){
-      const t = { db:0.181, mc:0.333, bb:0.472, kb:0.181 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    } else if(isHip){
-      const t = { db:0.208, mc:0.361, bb:0.528, kb:0.208 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    } else if(isSquat){
-      // DB/KB = per dumbbell (60 lbs total goblet at 180 lbs = reasonable)
-      const t = { db:0.167, mc:0.389, bb:0.444, kb:0.167 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    } else {
-      // fallback: general leg
-      const t = { db:0.167, mc:0.333, bb:0.444, kb:0.167 };
-      return roundWeight(bw * (t[eq]||t.db), eq);
-    }
+  // Face pull
+  if(/face pull/.test(n)){
+    const t = { db:0.083, mc:0.139, bb:0.222, kb:0.083 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
   }
 
-  // ── CORE ──
-  if(cat === 'core'){
+  // Core
+  if(/crunch|sit.?up|ab |ab-|plank|pallof|wood.?chop|cable twist|russian twist/.test(n)){
     const t = { db:0.042, mc:0.083, bb:0.111, kb:0.042 };
     return roundWeight(bw * (t[eq]||t.db), eq);
   }
 
-  // ── FULLBODY ──
-  const t = { db:0.125, mc:0.222, bb:0.333, kb:0.125 };
+  // ── LEGS — check before generic press/row ──
+
+  // Leg press / hack squat (machine only)
+  if(/leg press|hack squat|pendulum/.test(n)){
+    const t = { db:null, mc:0.519, bb:null, kb:null };
+    return t[eq] ? roundWeight(bw * t[eq], eq) : null;
+  }
+
+  // Leg curl / extension / hip abductor machine
+  if(/leg curl|leg extension|hip abduct|hip adduct|seated hip/.test(n)){
+    const t = { db:0.083, mc:0.139, bb:0.222, kb:0.083 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // Calf raises
+  if(/calf/.test(n)){
+    const t = { db:0.181, mc:0.333, bb:0.472, kb:0.181 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // Hip thrust / glute bridge / RDL / glute kickback
+  if(/hip thrust|glute bridge|romanian|rdl|glute kickback|cable pull.?through/.test(n)){
+    const t = { db:0.208, mc:0.361, bb:0.528, kb:0.208 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // Squats / lunges / step-ups
+  if(/squat|lunge|step.?up|split squat|goblet|sumo/.test(n)){
+    const t = { db:0.167, mc:0.389, bb:0.444, kb:0.167 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // ── UPPER BODY COMPOUND ──
+
+  // Shrug
+  if(/shrug/.test(n)){
+    const t = { db:0.130, mc:0.222, bb:0.343, kb:0.130 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // Rows / pulldowns / pull-ups (back)
+  if(/row|pulldown|pull.?down|lat pull|seated row|cable row/.test(n)){
+    const t = { db:0.162, mc:0.278, bb:0.390, kb:0.162 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // Shoulder press / Arnold / military / overhead press
+  if(/shoulder press|arnold|military|overhead press|push press|push jerk/.test(n)){
+    const t = { db:0.097, mc:0.167, bb:0.243, kb:0.097 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // Chest press / bench / incline / decline
+  if(/bench|chest press|incline press|decline press|squeeze press/.test(n)){
+    const t = { db:0.130, mc:0.222, bb:0.323, kb:0.130 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // Generic press fallback (covers anything with "press" not caught above)
+  if(/press/.test(n)){
+    const t = { db:0.097, mc:0.167, bb:0.243, kb:0.097 };
+    return roundWeight(bw * (t[eq]||t.db), eq);
+  }
+
+  // ── GENERIC FALLBACK ──
+  const t = { db:0.097, mc:0.167, bb:0.243, kb:0.097 };
   return roundWeight(bw * (t[eq]||t.db), eq);
 }
 
@@ -1473,7 +1485,7 @@ function loadTodayFromProgram(now){
     const bw = getUserBodyweight();
     todayExercises=progDay.exercises.map(ex=>{
       const type = ex.type||'strength';
-      const eq = getEquipment(ex.name);
+      const eq = ex.eq || getEquipment(ex.name);
       const isWeighted = eq!=='bw' && eq!=='band' && eq!=='yoga' && eq!=='cd' && eq!=='rc'
         && type!=='bodyweight' && type!=='timed_bodyweight' && type!=='cardio'
         && type!=='hiit' && type!=='yoga' && type!=='stretch' && type!=='recovery';
