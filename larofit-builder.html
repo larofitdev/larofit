@@ -386,7 +386,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .toast.show{opacity:1;}
 
 /* ── SETUP OVERLAY ── */
-.setup-overlay{position:fixed;inset:0;background:var(--black);z-index:1000;display:flex;align-items:center;justify-content:center;}
+.setup-overlay{position:fixed;inset:0;background:var(--black);z-index:1000;display:none;align-items:center;justify-content:center;}
+.setup-overlay.visible{display:flex;}
 .setup-overlay.hidden{display:none;}
 .setup-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:480px;width:90%;position:relative;overflow:hidden;}
 .setup-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--volt),var(--blue));}
@@ -2736,7 +2737,7 @@ async function connectSupabase(){
 
       setTimeout(async ()=>{
         await saveProgram();
-        document.getElementById('setup-overlay').classList.add('hidden');
+        document.getElementById('setup-overlay').classList.remove('visible');
         updateCloudBadge();
         showToast('Cloud connected — program saved!');
       }, 800);
@@ -2754,7 +2755,8 @@ async function connectSupabase(){
 }
 
 function skipSetup(){
-  document.getElementById('setup-overlay').classList.add('hidden');
+  localStorage.setItem('larofit_setup_skipped', '1');
+  document.getElementById('setup-overlay').classList.remove('visible');
   showToast('Running in local-only mode');
 }
 
@@ -3043,14 +3045,13 @@ async function loadSaved(){
     if(local) applyProgram(JSON.parse(local));
   } catch(e){}
 
-  // Only show setup screen if keys are genuinely not saved
-  if(!cloudConnected){
-    document.getElementById('setup-overlay').classList.add('hidden');
-  } else {
-    // Keys exist — hide setup immediately, no flash
-    document.getElementById('setup-overlay').classList.add('hidden');
+  // Show setup only if no credentials AND user hasn't skipped before
+  const skippedBefore = localStorage.getItem('larofit_setup_skipped');
+  if(!cloudConnected && !skippedBefore){
+    document.getElementById('setup-overlay').classList.add('visible');
+  } else if(cloudConnected){
     updateCloudBadge();
-    // Then try cloud sync in background
+    // Try cloud sync in background
     const cloud = await sbFetch();
     if(cloud && cloud._test !== true){
       const localTs = program.updatedAt || 0;
@@ -3063,7 +3064,6 @@ async function loadSaved(){
         showToast('☁️ Program synced from cloud');
       }
     }
-    // Update sidebar name
     const savedName = localStorage.getItem('larofit_user_name');
     if(savedName){
       const nameEl = document.querySelector('.s-name');
