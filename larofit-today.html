@@ -82,7 +82,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .set-timer-status{font-size:11px;color:var(--mist);flex:1;}
 .ex-card.active-set{border-color:var(--volt);box-shadow:0 0 0 1px var(--volt);}
 .ex-card.active-set .ex-card-header{background:rgba(198,241,53,0.06);}
-.content{display:grid;grid-template-columns:1fr 300px;flex:1;overflow:hidden;}
+.content{display:flex;flex-direction:column;flex:1;overflow:hidden;}
 .ex-list{overflow-y:auto;padding:28px 32px;display:flex;flex-direction:column;gap:14px;padding-bottom:80px;}
 .day-header-card{background:var(--volt-pale);border:1px solid rgba(198,241,53,0.15);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
 .day-header-name{font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--volt);}
@@ -191,7 +191,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .empty-title{font-family:var(--font-display);font-size:28px;color:var(--white);letter-spacing:1px;margin-bottom:8px;}
 .empty-sub{font-size:14px;color:var(--mist);line-height:1.6;max-width:300px;}
 .empty-btn{margin-top:20px;padding:12px 28px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);}
-.workout-timer-bar{background:var(--carbon);border-bottom:1px solid var(--border);padding:8px 32px;display:none;align-items:center;gap:24px;}
+.workout-timer-bar{background:var(--carbon);border-bottom:1px solid var(--border);padding:8px 32px;display:none;align-items:center;gap:24px;position:sticky;top:var(--topbar-h,62px);z-index:49;}
 .workout-timer-bar.show{display:flex;}
 .wt-item{display:flex;flex-direction:column;align-items:center;}
 .wt-label{font-size:9px;font-weight:700;letter-spacing:0.12em;color:var(--mist);font-family:var(--font-mono);text-transform:uppercase;}
@@ -246,7 +246,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .adjust-banner.same{background:rgba(198,241,53,0.06);border:1px solid rgba(198,241,53,0.15);color:var(--volt);}
 .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--carbon);border:1px solid var(--volt);border-radius:999px;padding:10px 24px;font-size:13px;color:var(--volt);font-weight:600;font-family:var(--font-mono);z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;}
-@media(max-width:1100px){.content{grid-template-columns:1fr;}.right-panel{display:none;}}
+@media(max-width:1100px){.content{grid-template-columns:1fr;}}
 @media(max-width:900px){.shell{grid-template-columns:1fr;}.sidebar{display:none;}.rest-hud{left:0;}}
 
 /* ── MOBILE NAV — shared ── */
@@ -367,35 +367,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="ex-announce-label" id="ann-label">Exercise 1</div>
         <div class="ex-announce-name" id="ann-name"></div>
         <div class="ex-announce-info" id="ann-info"></div>
-      </div>
-    </div>
-    <div class="right-panel">
-      <div>
-        <div class="panel-section-title">Today's totals</div>
-        <div class="stat-grid">
-          <div class="stat-card"><div class="stat-num" id="stat-sets">0</div><div class="stat-label">Sets logged</div></div>
-          <div class="stat-card"><div class="stat-num" id="stat-vol">0</div><div class="stat-label">Volume (lbs)</div></div>
-          <div class="stat-card"><div class="stat-num" id="stat-ex">0</div><div class="stat-label">Exercises done</div></div>
-          <div class="stat-card"><div class="stat-num" id="stat-pct">0%</div><div class="stat-label">Complete</div></div>
-        </div>
-      </div>
-      <div>
-        <div class="panel-section-title">Exercise checklist</div>
-        <div class="prog-list" id="prog-list"></div>
-      </div>
-      <div>
-        <div class="panel-section-title">This week</div>
-        <div class="week-view" id="week-view"></div>
-      </div>
-      <div class="voice-guide">
-        <div class="voice-guide-title">🎤 Voice Commands</div>
-        <div class="voice-cmd"><div class="voice-cmd-phrase">"Start Workout"</div><div class="voice-cmd-desc">Reads last session for exercise 1 set 1</div></div>
-        <div class="voice-cmd"><div class="voice-cmd-phrase">"Start Set"</div><div class="voice-cmd-desc">Starts set timer counting up</div></div>
-        <div class="voice-cmd"><div class="voice-cmd-phrase">"Stop Set"</div><div class="voice-cmd-desc">Stops timer, listens for reps + weight</div></div>
-        <div class="voice-cmd"><div class="voice-cmd-phrase">"9 reps 40 pounds"</div><div class="voice-cmd-desc">Logs the set. Starts rest timer.</div></div>
-        <div class="voice-cmd"><div class="voice-cmd-phrase">"Next exercise"</div><div class="voice-cmd-desc">Moves to next exercise</div></div>
-        <div class="voice-cmd"><div class="voice-cmd-phrase">"Mark done"</div><div class="voice-cmd-desc">Marks current exercise complete</div></div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--slate);">También funciona en español 🇪🇸</div>
       </div>
     </div>
   </div>
@@ -523,8 +494,6 @@ function startWorkoutTimer(){
   workoutStarted=true;
   workoutStartTime=Date.now();
   document.getElementById('workout-timer-bar').classList.add('show');
-  const vb=document.getElementById('voice-banner');
-  if(vb) vb.style.display='none';
   totalTimerInterval=setInterval(()=>{
     totalSeconds++;
     document.getElementById('wt-total').textContent=formatTime(totalSeconds);
@@ -1061,7 +1030,6 @@ function autoProgressNextSet(exIdx, setIdx){
   }
 
   if(msg) showAdjustBanner(exIdx, nextSetIdx, nextWeight > (actualWeight||0) || msg.startsWith('↑') ? 'up' : 'same', msg, null, null);
-  renderPanel();
 }
 
 function feelAndLog(exIdx, setIdx, feel, isLastSet){
@@ -1093,7 +1061,6 @@ function feelAndLog(exIdx, setIdx, feel, isLastSet){
 
   // Render to show logged state
   render();
-  renderPanel();
 
   // Start rest timer — on last set point to next exercise card, otherwise same card
   const nextSetIdx2 = setIdx + 1 < ex.sets.length ? setIdx + 1 : null;
@@ -1213,7 +1180,6 @@ function applyAdjustment(exIdx, setIdx, feel){
   if(wgtInput){ wgtInput.value = adj.weight; wgtInput.classList.add('voice-filled','filled'); }
 
   showAdjustBanner(exIdx, nextSetIdx, adj.direction, adj.reason, adj.weight, null);
-  renderPanel();
 }
 
 function showAdjustBanner(exIdx, nextSetIdx, direction, reason, weight, reps){
@@ -1570,7 +1536,7 @@ async function loadLastTimes(){
   });
 }
 
-function render(){renderExList();renderPanel();}
+function render(){renderExList();}
 
 function renderExList(){
   const list=document.getElementById('ex-list');
@@ -1841,7 +1807,6 @@ function stopSet(){
     if(nextSetIdx===null&&nextExIdx!==null&&todayExercises[nextExIdx]){currentExIdx=nextExIdx;currentSetIdx=0;}
 
     startRest(currentExIdx, nextSetIdx, nextExIdx);
-    renderPanel();
     render();
     return;
   }
@@ -1887,7 +1852,6 @@ function logSet(reps,weight){
   if(nextSetIdx===null&&nextExIdx!==null&&todayExercises[nextExIdx]){currentExIdx=nextExIdx;currentSetIdx=0;}
 
   startRest(currentExIdx, nextSetIdx, nextExIdx);
-  renderPanel();
   // Check if all sets done for this exercise
   setTimeout(()=>checkAutoAdvance(currentExIdx),500);
 }
@@ -2145,7 +2109,6 @@ function manualLogSet(exIdx, setIdx){
 
   // Render now — 1RM is in state so it paints correctly
   render();
-  renderPanel();
 
   const nextSetIdx = setIdx + 1 < ex.sets.length ? setIdx + 1 : null;
   const nextExIdx = nextSetIdx === null ? exIdx + 1 : null;
@@ -2179,7 +2142,6 @@ function manualLogSet(exIdx, setIdx){
 
 function updateWarmup(exIdx, field, val){
   todayExercises[exIdx].warmupSet[field] = val;
-  renderPanel();
 }
 
 function manualLogWarmup(exIdx){
@@ -2195,7 +2157,6 @@ function manualLogWarmup(exIdx){
   if(weight) ex.warmupSet.weight = weight;
 
   render();
-  renderPanel();
 
   // Warm-up: rest timer points to set 1 of same exercise
   startRest(exIdx, 0, null);
@@ -2263,7 +2224,6 @@ function show1RMToast(exIdx){
 
 function updateSet(exIdx,setIdx,field,val){
   todayExercises[exIdx].sets[setIdx][field]=val;
-  renderPanel();
 }
 function toggleComplete(exIdx){completedEx.has(exIdx)?completedEx.delete(exIdx):completedEx.add(exIdx);render();}
 function markAllDone(){todayExercises.forEach((_,i)=>completedEx.add(i));render();showToast('All exercises marked done');}
@@ -2320,6 +2280,9 @@ function renderPanel(){
 
 let toastTimer;
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
+
+// Set topbar height CSS variable for sticky timer bar positioning
+(function(){const tb=document.querySelector('.topbar');if(tb)document.documentElement.style.setProperty('--topbar-h',tb.offsetHeight+'px');})();
 
 init();
 </script>
