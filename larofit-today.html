@@ -1014,6 +1014,80 @@ function autoProgressNextSet(exIdx, setIdx){
   if(msg) showAdjustBanner(exIdx, nextSetIdx, nextWeight > (actualWeight||0) || msg.startsWith('↑') ? 'up' : 'same', msg, null, null);
 }
 
+function calcNextSessionSuggestion(exIdx){
+  // Rep-based next-session suggestion for exercises with history — no feel prompt needed
+  const ex = todayExercises[exIdx];
+  const isTimed = ex.type === 'timed_bodyweight';
+  const isBW = ex.type === 'bodyweight';
+  const isCardio = isCardioType(ex.type);
+  const eq = getEquipment(ex.name);
+  const targetReps = parseFloat(ex.params?.reps) || 10;
+
+  // Gather logged sets
+  const loggedSets = ex.sets.filter(s => s.logged && s.reps);
+  if(!loggedSets.length) return;
+
+  let msg = '';
+
+  if(isCardio){
+    // Cardio: no weight suggestion needed
+    return;
+  } else if(isTimed){
+    const avgSec = loggedSets.reduce((a,s)=>a+parseFloat(s.reps||0),0) / loggedSets.length;
+    const nextSec = Math.round(avgSec + 5);
+    msg = `Next session: try ${nextSec} sec holds`;
+  } else if(isBW){
+    const avgReps = loggedSets.reduce((a,s)=>a+parseFloat(s.reps||0),0) / loggedSets.length;
+    const hitTarget = avgReps >= targetReps;
+    const nextReps = hitTarget ? Math.round(avgReps) + 1 : Math.round(avgReps);
+    msg = hitTarget
+      ? `Next session: try ${nextReps} reps (avg ${Math.round(avgReps)} this session)`
+      : `Next session: aim for ${targetReps} reps (avg ${Math.round(avgReps)} today)`;
+  } else {
+    // Weighted — look at last set weight and reps
+    const lastLogged = loggedSets[loggedSets.length - 1];
+    const lastWeight = parseFloat(lastLogged.weight) || 0;
+    const lastReps = parseFloat(lastLogged.reps) || 0;
+    if(!lastWeight) return;
+    const inc = (eq==='db'||eq==='kb') ? 2.5 : 5;
+    // All sets hit target → increase; any set missed → hold
+    const allHit = loggedSets.every(s => parseFloat(s.reps||0) >= targetReps);
+    const nextWeight = allHit ? roundWeight(lastWeight + inc, eq) : lastWeight;
+    msg = allHit
+      ? `Next session: try ${nextWeight} lbs (+${inc}) — all sets completed`
+      : `Next session: stay at ${lastWeight} lbs — hit ${targetReps} reps on all sets first`;
+  }
+
+  if(!msg) return;
+
+  // Persist to nextSessionSuggestion
+  todayExercises[exIdx].nextSessionSuggestion = msg;
+
+  // Append to notes field (prepend with separator if notes already exist)
+  const existing = (todayExercises[exIdx].notes || '').trim();
+  const newNotes = existing ? existing + '\n📈 ' + msg : '📈 ' + msg;
+  todayExercises[exIdx].notes = newNotes;
+
+  // Update the notes input in the DOM without triggering a full render
+  const notesInput = document.querySelector(`input.ex-notes-input[oninput*="[${exIdx}]"]`);
+  if(notesInput) notesInput.value = newNotes;
+
+  // Show persistent banner below the last set row
+  const lastSetIdx = ex.sets.length - 1;
+  const lastRowId = `set-row-${exIdx}-${lastSetIdx}`;
+  const lastRow = document.getElementById(lastRowId);
+  if(lastRow){
+    const existingBanner = document.getElementById(`next-session-banner-${exIdx}`);
+    if(existingBanner) existingBanner.remove();
+    const banner = document.createElement('tr');
+    banner.id = `next-session-banner-${exIdx}`;
+    banner.innerHTML = `<td colspan="4"><div class="adjust-banner up" style="background:rgba(198,241,53,0.08);border-color:rgba(198,241,53,0.3);color:var(--volt);">
+      📈 ${msg}
+    </div></td>`;
+    lastRow.after(banner);
+  }
+}
+
 function feelAndLog(exIdx, setIdx, feel, isLastSet){
   const ex = todayExercises[exIdx];
   const ri = document.getElementById(`inp-reps-${exIdx}-${setIdx}`);
@@ -1099,8 +1173,25 @@ function applyAdjustment(exIdx, setIdx, feel){
       msg = feel==='easy' ? 'Easy — push harder next session' : feel==='hard' ? 'Hard — stay here next session' : 'Solid work — small increase next session';
     }
 
-    // Save suggestion for next session
+    // Save suggestion — append to notes, show persistent banner
     todayExercises[exIdx].nextSessionSuggestion = msg;
+    const existingNotes = (todayExercises[exIdx].notes || '').trim();
+    const newNotes = existingNotes ? existingNotes + '\n📈 ' + msg : '📈 ' + msg;
+    todayExercises[exIdx].notes = newNotes;
+    const notesInput = document.querySelector(`input.ex-notes-input[oninput*="[${exIdx}]"]`);
+    if(notesInput) notesInput.value = newNotes;
+    // Persistent banner below last set row
+    const lastRowEl = document.getElementById(`set-row-${exIdx}-${setIdx}`);
+    if(lastRowEl){
+      const existingBanner = document.getElementById(`next-session-banner-${exIdx}`);
+      if(existingBanner) existingBanner.remove();
+      const bannerEl = document.createElement('tr');
+      bannerEl.id = `next-session-banner-${exIdx}`;
+      bannerEl.innerHTML = `<td colspan="4"><div class="adjust-banner up" style="background:rgba(198,241,53,0.08);border-color:rgba(198,241,53,0.3);color:var(--volt);">
+        📈 ${msg}
+      </div></td>`;
+      lastRowEl.after(bannerEl);
+    }
     showToast(msg);
     return;
   }
@@ -1531,9 +1622,7 @@ function renderExList(){
       :`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">NO PROGRAM YET</div><div class="empty-sub">Build a program first and today's exercises will appear here automatically.</div><button class="empty-btn" onclick="window.location='larofit-builder.html'">Build a program →</button></div>`;
     return;
   }
-  const dayName=todayExercises[0]?.dayName||'';
-  const totalSets=todayExercises.reduce((s,ex)=>s+ex.sets.length,0);
-  let html=`<div class="day-header-card"><div><div class="day-header-name">${dayName}</div><div class="day-header-focus">${todayExercises.length} exercises &middot; ${totalSets} total sets</div></div><div class="day-header-meta">${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div></div>`;
+  let html=``;
 
   todayExercises.forEach((ex,exIdx)=>{
     const isDone=completedEx.has(exIdx);
@@ -2101,11 +2190,13 @@ function manualLogSet(exIdx, setIdx){
   const partnerIdx = isSupersetTop ? exIdx + 1 : isSupersetBottom ? exIdx - 1 : null;
   const partner = partnerIdx !== null ? todayExercises[partnerIdx] : null;
 
-  // Show feel buttons — checkAutoAdvance only fires AFTER feel is selected
+  // Show feel buttons ONLY for first-time exercises (FMW system)
+  // For known exercises: silently auto-progress and generate next-session suggestion on last set
   const hasHistory = lastTimeData[ex.name]?.length > 0;
+  const isLastSet = (setIdx + 1) >= ex.sets.length;
   if(hasHistory){
     setTimeout(()=>autoProgressNextSet(exIdx, setIdx), 100);
-    setTimeout(()=>showFeelButtons(exIdx, setIdx), 150);
+    if(isLastSet) setTimeout(()=>calcNextSessionSuggestion(exIdx), 200);
   } else {
     setTimeout(()=>showFeelButtons(exIdx, setIdx), 100);
   }
@@ -2118,8 +2209,11 @@ function manualLogSet(exIdx, setIdx){
   } else if(nextSetIdx !== null){
     // More sets — start rest timer
     startRest(exIdx, nextSetIdx, nextExIdx);
+  } else if(hasHistory){
+    // Last set of a known exercise — rest timer not gated behind feel buttons
+    startRest(exIdx, null, nextExIdx);
   }
-  // Last set with no superset — feelAndLog handles rest
+  // Last set of first-time exercise — feelAndLog handles rest after feel selection
 }
 
 function updateWarmup(exIdx, field, val){
