@@ -440,17 +440,23 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .mob-sheet-add-label{font-size:13px;font-weight:700;color:var(--black);}
 .mob-sheet-add-btn{padding:8px 18px;background:var(--black);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--volt);cursor:pointer;font-family:var(--font-body);}
 
-/* mob add-ex button on each day card header */
-.mob-add-ex-btn{display:none;}
+/* mob add-ex button on each day card header — visible on all sizes */
+.mob-add-ex-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--volt);border:none;border-radius:999px;font-size:10px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;flex-shrink:0;}
 @media(max-width:900px){
-  .mob-add-ex-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--volt);border:none;border-radius:999px;font-size:10px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;flex-shrink:0;}
-  /* hide the desktop "N ex +" clickable span on mobile */
-  .day-count{pointer-events:none;}
-  /* Tighten day card height on mobile so all 7 are reachable */
-  .day-card{min-height:200px;}
+  /* hide the desktop "N ex" count on mobile to save space */
+  .day-count{display:none;}
   /* add-ex bar also hidden on mobile — sheet handles it */
   #add-ex-bar{display:none !important;}
-  .program-grid{padding:12px 14px;}
+  .program-grid{padding:8px 10px;}
+  /* Compact day cards — no forced height, content-driven */
+  .days-grid{grid-template-columns:1fr;gap:6px;}
+  .day-card{min-height:0;}
+  .day-header{padding:8px 10px;gap:4px;}
+  .day-name-input{font-size:13px;}
+  /* Body only takes space if it has exercises; collapses when empty */
+  .day-body{flex:0 0 auto;padding:4px 8px;min-height:0;}
+  .day-body:not(:empty){padding:6px 8px;}
+  .day-empty{display:none !important;}
 }
 
 /* ── MOBILE NAV — shared ── */
@@ -1203,20 +1209,17 @@ function renderDays(){
             <input type="checkbox" ${day.rest?'checked':''} onchange="toggleRest(${day.id},this.checked)">
             Rest day
           </label>
-          <span class="day-count" onclick="event.stopPropagation();${day.rest?'':(`openLibraryForDay(${day.id})`)};" style="cursor:${day.rest?'default':'pointer'}" title="${day.rest?'':'Click to add exercises'}">${day.rest?'REST':day.exercises.length+' ex +'}</span>
-          ${day.rest?'':`<button class="mob-add-ex-btn" onclick="event.stopPropagation();mobSheetOpen(${day.id})">+ Add</button>`}
+          <span class="day-count">${day.rest?'REST':day.exercises.length+' ex'}</span>
+          ${day.rest?'':`<button class="mob-add-ex-btn" onclick="event.stopPropagation();if(window.innerWidth<=900)mobSheetOpen(${day.id});else openLibraryForDay(${day.id})">+ Add</button>`}
         </div>
       </div>
       <div class="day-body" id="day-body-${day.id}"
-           onclick="if(event.target===this||event.target.classList.contains('day-empty')||event.target.classList.contains('day-empty-icon')){if(window.innerWidth<=900)mobSheetOpen(${day.id});else openLibraryForDay(${day.id});}"
            ondragover="onExDragOverBody(event,${day.id})"
            ondrop="onExDropBody(event,${day.id})"
-           style="cursor:${day.rest?'default':'pointer'}">
+           style="cursor:default;min-height:60px;">
         ${day.rest
           ? '<div class="day-empty"><div class="day-empty-icon">&#128564;</div>Rest &amp; recover</div>'
-          : day.exercises.length === 0
-            ? `<div class="day-empty"><div class="day-empty-icon">&#10133;</div>Click to add exercises</div>`
-            : day.exercises.map((ex,ei) => renderExBlock(ex,day.id,ei)).join('')
+          : day.exercises.map((ex,ei) => renderExBlock(ex,day.id,ei)).join('')
         }
       </div>
     </div>
@@ -2121,6 +2124,119 @@ function openLibraryForDay(dayId){
   const card = document.getElementById('day-card-'+dayId);
   if(card) card.classList.add('drag-over');
   setTimeout(()=>{if(card)card.classList.remove('drag-over');},1500);
+}
+
+// ── MOBILE BOTTOM SHEET ──────────────────────────────────────────────────────
+
+function mobSheetOpen(dayId){
+  window._targetDay = dayId;
+  clearLibSelection();
+
+  const day = program.days.find(d=>d.id===dayId);
+  const target = document.getElementById('mob-sheet-target');
+  if(target){
+    target.textContent = day ? '➕ Adding to: ' + day.name : '';
+    target.classList.toggle('visible', !!day);
+  }
+
+  // Populate sheet body with the library HTML
+  const body = document.getElementById('mob-sheet-body');
+  if(body){
+    // Temporarily redirect lib-list render target into the sheet
+    body.innerHTML = '<div id="mob-lib-list"></div>';
+    renderMobLibrary(body.querySelector('#mob-lib-list'));
+  }
+
+  // Update add bar
+  updateMobSheetAddBar();
+
+  document.getElementById('mob-sheet-overlay').classList.add('open');
+  document.getElementById('mob-sheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function mobSheetClose(){
+  document.getElementById('mob-sheet-overlay').classList.remove('open');
+  document.getElementById('mob-sheet').classList.remove('open');
+  document.body.style.overflow = '';
+  clearLibSelection();
+}
+
+function mobSheetAddSelected(){
+  if(!libSelected.length) return;
+  libSelected.forEach(ex=>{ addExToDay(window._targetDay, {name:ex.name, eq:ex.eq, defaultType:ex.type}); });
+  const count = libSelected.length;
+  clearLibSelection();
+  updateMobSheetAddBar();
+  mobSheetClose();
+  renderDays();
+  showToast(count + ' exercise' + (count>1?'s':'') + ' added');
+}
+
+function updateMobSheetAddBar(){
+  const bar   = document.getElementById('mob-sheet-add-bar');
+  const label = document.getElementById('mob-sheet-add-label');
+  if(!bar) return;
+  if(libSelected.length > 0){
+    bar.classList.add('visible');
+    label.textContent = libSelected.length + ' exercise' + (libSelected.length>1?'s':'') + ' selected';
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function renderMobLibrary(container){
+  if(!container) return;
+  let html = '';
+  const sortAlpha = list => list.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+
+  // Custom exercises first
+  const customs = sortAlpha(loadCustomExercises());
+  if(customs.length){
+    html += `<div class="lib-group">
+      <div class="lib-group-title" style="color:var(--purple);">⭐ My Custom Exercises</div>
+      ${customs.map(ex=>makeMobLibRow(ex,ex.category||'Custom',ex.eq||'bw',ex.type||'strength')).join('')}
+    </div>`;
+  }
+
+  Object.keys(EXERCISE_LIBRARY).forEach(group=>{
+    const items = sortAlpha(EXERCISE_LIBRARY[group]);
+    if(!items.length) return;
+    html += `<div class="lib-group">
+      <div class="lib-group-title">${group}</div>
+      ${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}
+    </div>`;
+  });
+
+  container.innerHTML = html || '<div style="padding:24px;text-align:center;color:var(--slate);font-size:13px;">No exercises found.</div>';
+}
+
+function makeMobLibRow(ex, group, eq, type){
+  const safeName  = ex.name.replace(/"/g,'&quot;');
+  const safeNameJs = ex.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const isSelected = libSelected.some(e=>e.name===ex.name);
+  return `<div class="lib-ex-item lib-ex-clickable${isSelected?' lib-selected':''}"
+    data-name="${safeName}" data-group="${group}" data-eq="${eq||'bw'}" data-type="${type||'strength'}"
+    onclick="toggleMobLibItem(this);updateMobSheetAddBar()"
+    style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;">
+    <input type="checkbox" class="lib-ex-cb" ${isSelected?'checked':''} style="accent-color:var(--volt);flex-shrink:0;" onclick="event.stopPropagation()">
+    <span style="flex:1;font-size:13px;font-weight:500;color:var(--white);">${ex.name}</span>
+    <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);">${group}</span>
+  </div>`;
+}
+
+function toggleMobLibItem(el){
+  const name = el.dataset.name;
+  const cb   = el.querySelector('.lib-ex-cb');
+  if(libSelected.find(e=>e.name===name)){
+    libSelected = libSelected.filter(e=>e.name!==name);
+    el.classList.remove('lib-selected');
+    if(cb) cb.checked = false;
+  } else {
+    libSelected.push({name:el.dataset.name, group:el.dataset.group, eq:el.dataset.eq, type:el.dataset.type});
+    el.classList.add('lib-selected');
+    if(cb) cb.checked = true;
+  }
 }
 
 // ── DRAG AND DROP ────────────────────────────────────────────────────────────
