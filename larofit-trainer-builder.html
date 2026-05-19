@@ -44,8 +44,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
 
 /* ── TOPBAR ── */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
-.topbar-left{display:flex;align-items:center;gap:16px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px;}
+.topbar-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.goal-select-compact{background:var(--carbon);border:1px solid var(--border);border-radius:999px;color:var(--mist);font-size:11px;font-weight:600;font-family:var(--font-body);padding:5px 10px;outline:none;cursor:pointer;transition:border-color 0.2s;max-width:130px;}
+.goal-select-compact:focus{border-color:var(--volt);}
+.btn-topbar-save{padding:7px 14px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;white-space:nowrap;}
+.btn-topbar-save:hover{background:var(--volt-dim);}
+.btn-topbar-clear{padding:7px 14px;background:transparent;border:1px solid var(--ember);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--ember);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;white-space:nowrap;}
+.btn-topbar-clear:hover{background:rgba(255,87,51,0.1);}
 .page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
 .prog-name-input{background:transparent;border:none;border-bottom:1.5px solid var(--border);color:var(--white);font-size:14px;font-family:var(--font-body);padding:4px 8px;outline:none;width:220px;transition:border-color 0.2s;}
 .prog-name-input:focus{border-bottom-color:var(--volt);}
@@ -417,11 +423,24 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <span class="cloud-badge offline" id="cloud-badge">💾 Local only</span>
     </div>
     <div class="topbar-right">
-      <button class="btn-volt-sm" onclick="openTemplateModal()" style="background:transparent;border:1px solid var(--volt);color:var(--volt);">&#128218; Use template</button>
-      <button class="btn-sm-outline" style="border-color:rgba(251,191,36,0.4);color:#fbbf24;" onclick="maybeShowDeload()" title="Simulate app-open deload check">&#9889; Deload check</button>
-      <button class="btn-export" onclick="exportProgram()">&#8681; Export to phone</button>
+      <select class="goal-select-compact" id="prog-goal" onchange="syncMeta();scheduleAutoSave()">
+        <option value="strength">💪 Strength</option>
+        <option value="hypertrophy" selected>🏋️ Muscle</option>
+        <option value="endurance">🏃 Endurance</option>
+        <option value="weightloss">🔥 Weight Loss</option>
+        <option value="flexibility">🧘 Flexibility</option>
+        <option value="general">⚡ General</option>
+      </select>
+      <button class="btn-topbar-save" onclick="saveProgram()">💾 Save</button>
+      <button class="btn-topbar-clear" onclick="clearProgram()">🗑 Clear</button>
+      <button class="btn-volt-sm" onclick="openTemplateModal()" style="background:transparent;border:1px solid var(--volt);color:var(--volt);">&#128218; Template</button>
+      <button class="btn-sm-outline" style="border-color:rgba(251,191,36,0.4);color:#fbbf24;" onclick="maybeShowDeload()" title="Simulate app-open deload check">&#9889; Deload</button>
+      <button class="btn-export" onclick="exportProgram()">&#8681; Export</button>
     </div>
   </div>
+  <!-- Hidden inputs to preserve JS compatibility -->
+  <input type="hidden" id="prog-start">
+  <input type="hidden" id="prog-weeks" value="6">
 
   <!-- BUILDER AREA -->
   <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
@@ -438,47 +457,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
     <!-- PROGRAM GRID -->
     <div class="program-grid">
-
-      <!-- META ROW -->
-      <div class="program-meta">
-        <div class="meta-field">
-          <div class="meta-label">Start date</div>
-          <input class="meta-input" type="date" id="prog-start">
-        </div>
-        <div class="meta-field">
-          <div class="meta-label">Weeks</div>
-          <select class="meta-input" id="prog-weeks" style="width:80px;" onchange="syncMeta();renderDetailForm();scheduleAutoSave();">
-            <option>4</option><option selected>6</option><option>8</option><option>10</option><option>12</option>
-          </select>
-        </div>
-        <div class="meta-field">
-          <div class="meta-label">Goal</div>
-          <select class="meta-input" id="prog-goal" style="width:160px;">
-            <option value="strength">Strength &amp; Power</option>
-            <option value="hypertrophy" selected>Muscle Growth</option>
-            <option value="endurance">Fitness &amp; Endurance</option>
-            <option value="weightloss">Weight Loss</option>
-            <option value="flexibility">Flexibility</option>
-            <option value="general">General Fitness</option>
-          </select>
-        </div>
-        <div class="meta-field">
-          <div class="meta-label">Program actions</div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button onclick="saveProgram()" style="padding:6px 14px;background:var(--volt);border:1.5px solid var(--volt);border-radius:var(--radius-sm);color:var(--black);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;" onmouseover="this.style.background='var(--volt-dim)'" onmouseout="this.style.background='var(--volt)'">&#128190; Save</button>
-            <button onclick="saveAsTemplate()" style="padding:6px 14px;background:transparent;border:1.5px solid var(--purple);border-radius:var(--radius-sm);color:var(--purple);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;" onmouseover="this.style.background='rgba(167,139,250,0.1)'" onmouseout="this.style.background='transparent'">&#9733; Save as template</button>
-            <button onclick="clearProgram()" style="padding:6px 14px;background:transparent;border:1.5px solid var(--ember);border-radius:var(--radius-sm);color:var(--ember);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.2s;" onmouseover="this.style.background='rgba(255,87,51,0.1)'" onmouseout="this.style.background='transparent'">&#128465; Clear all</button>
-          </div>
-        </div>
-        <div class="meta-field" style="margin-left:auto;">
-          <div class="meta-label">Total exercises</div>
-          <div style="font-family:var(--font-display);font-size:28px;color:var(--volt);" id="total-ex-count">0</div>
-        </div>
-        <div class="meta-field">
-          <div class="meta-label">Active days</div>
-          <div style="font-family:var(--font-display);font-size:28px;color:var(--white);" id="active-day-count">0</div>
-        </div>
-      </div>
 
       <!-- 7-DAY GRID -->
       <div class="days-grid" id="days-grid"></div>
@@ -2164,10 +2142,6 @@ function switchPanel(name, btn){
 // ── META / SUMMARY ───────────────────────────────────────────────────────────
 
 function updateMeta(){
-  const total = program.days.reduce((s,d)=>s+d.exercises.length,0);
-  const active = program.days.filter(d=>!d.rest).length;
-  document.getElementById('total-ex-count').textContent = total;
-  document.getElementById('active-day-count').textContent = active;
   syncMeta();
   updateSummary();
 }
