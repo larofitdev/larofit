@@ -98,11 +98,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .card-body{padding:18px;}
 .next-day-name{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);margin-bottom:4px;}
 .next-day-date{font-size:12px;color:var(--mist);font-family:var(--font-mono);margin-bottom:16px;}
-.next-ex-list{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
-.next-ex-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--carbon);border-radius:var(--radius-sm);font-size:12px;color:var(--fog);}
-.next-ex-dot{width:6px;height:6px;border-radius:50%;background:var(--volt);flex-shrink:0;}
-.next-ex-name{flex:1;font-weight:500;}
-.next-ex-params{font-size:10px;color:var(--slate);font-family:var(--font-mono);}
+.next-ex-list{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;}
+.next-ex-item{display:flex;align-items:center;gap:6px;padding:7px 10px;background:var(--carbon);border-radius:var(--radius-sm);font-size:13px;color:var(--fog);min-width:0;}
+.next-ex-dot{display:none;}
+.next-ex-name{flex:1;font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.next-ex-params{font-size:10px;color:var(--slate);font-family:var(--font-mono);white-space:nowrap;flex-shrink:0;}
 .next-ex-more{font-size:11px;color:var(--mist);padding:4px 10px;}
 .card-btn{display:block;width:100%;padding:11px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);text-align:center;text-decoration:none;transition:background 0.2s;}
 .card-btn:hover{background:var(--volt-dim);}
@@ -387,24 +387,12 @@ function loadNextWorkout(){
     </div>`;
   }
 
-  const preview = nextDay.exercises.slice(0,5);
-  const rest    = nextDay.exercises.slice(5);
-  const more    = rest.length;
-
-  const previewHtml = preview.map(makeExRow).join('');
-  const restHtml    = rest.map(makeExRow).join('');
+  const allExHtml = nextDay.exercises.map(makeExRow).join('');
 
   body.innerHTML = `
     <div class="next-ex-list" id="ex-preview">
-      ${previewHtml}
+      ${allExHtml}
     </div>
-    ${more > 0 ? `
-    <div class="next-ex-list" id="ex-rest" style="display:none;">
-      ${restHtml}
-    </div>
-    <button class="card-btn outline" id="btn-toggle-ex" onclick="toggleExList()" style="margin-bottom:10px;">
-      Show all ${nextDay.exercises.length} exercises ▾
-    </button>` : ''}
     <div style="display:flex;gap:8px;">
       <a class="card-btn" href="larofit-today.html" style="flex:1;">▶ Start workout</a>
     </div>`;
@@ -449,31 +437,6 @@ function checkMilestone(){
   }
 
   banner.style.display='none';
-}
-
-// ── TOGGLE EXERCISE LIST ─────────────────────────────────────────────────────
-function toggleExList(){
-  const rest = document.getElementById('ex-rest');
-  const btn  = document.getElementById('btn-toggle-ex');
-  if(!rest||!btn) return;
-  const prog = JSON.parse(localStorage.getItem('larofit_program')||'null');
-  let dayIdx = parseInt(localStorage.getItem('larofit_current_day_idx')||'0');
-  let nextDay = null;
-  for(let i=0;i<7;i++){
-    const idx=(dayIdx+i)%7;
-    const d=prog&&prog.days&&prog.days[idx];
-    if(d&&!d.rest&&d.exercises.length>0){ nextDay=d; break; }
-  }
-  const total = nextDay ? nextDay.exercises.length : '?';
-  if(rest.style.display==='none'){
-    rest.style.display='flex';
-    rest.style.flexDirection='column';
-    rest.style.gap='6px';
-    btn.textContent=`Show less ▴`;
-  } else {
-    rest.style.display='none';
-    btn.textContent=`Show all ${total} exercises ▾`;
-  }
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────
