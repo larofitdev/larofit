@@ -1197,7 +1197,7 @@ function renderDays(){
     <div class="day-card${day.rest?' rest-day':''}" id="day-card-${day.id}"
          ondragover="onDayDragOver(event,${day.id})" ondragleave="onDayDragLeave(event,${day.id})" ondrop="onDayDrop(event,${day.id})">
       <div class="day-header"
-           draggable="true"
+           draggable="${window.innerWidth > 900}"
            ondragstart="onDayDragStart(event,${day.id})"
            ondragend="onDayDragEnd(event)"
            title="Drag to swap with another day">
@@ -1244,7 +1244,7 @@ function renderExBlock(ex, dayId, exIdx){
   const showConnector = ex.supersetWith === 'next';
 
   html += `<div class="ex-block${isSelected?' selected':''}${isSupTop?' superset-top':''}${isSupBottom?' superset-bottom':''}" id="ex-${dayId}-${exIdx}"
-    draggable="true"
+    draggable="${window.innerWidth > 900}"
     ondragstart="onExDragStart(event,${dayId},${exIdx})"
     ondragend="onExDragEnd(event)"
     ondragover="onExDragOver(event,${dayId},${exIdx})"
@@ -2398,6 +2398,7 @@ let touchDragData = null, touchDragType = null;
 let touchDragClone = null, touchDragEl = null, touchMoved = false;
 
 function initTouchDrag(){
+  if(window.innerWidth <= 900) return; // disable drag on mobile — interferes with scrolling
   document.querySelectorAll('.ex-block').forEach(el=>{
     el.addEventListener('touchstart', onExTouchStart, {passive:false});
   });
