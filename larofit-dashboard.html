@@ -342,7 +342,6 @@ function loadStats(){
 function loadNextWorkout(){
   const prog = JSON.parse(localStorage.getItem('larofit_program')||'null');
   const body = document.getElementById('next-workout-body');
-  const badge = document.getElementById('next-day-badge');
 
   if(!prog || !prog.days){
     body.innerHTML = `<div class="no-program"><div class="no-program-icon">📋</div><div>No program built yet.</div><a href="larofit-ai-coach.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Build one now →</a></div>`;
@@ -369,11 +368,9 @@ function loadNextWorkout(){
 
   if(!nextDay){
     body.innerHTML = `<div class="no-program"><div class="no-program-icon">😴</div><div>No upcoming workouts found.</div><a href="larofit-builder.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Edit program →</a></div>`;
-    badge.textContent = 'Not found';
     return;
   }
 
-  badge.textContent = 'Up next';
   const dateStr = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   document.getElementById('next-workout-title').textContent = `Your next workout is ${nextDay.name} — ${dateStr}`;
 
