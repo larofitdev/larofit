@@ -415,6 +415,41 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   .days-grid{grid-template-columns:repeat(2,1fr);}
 }
 
+/* ── MOBILE SHEET ── */
+.mob-sheet-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:400;}
+.mob-sheet-overlay.open{display:block;}
+.mob-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--offblack);border-top:1px solid var(--border);border-radius:16px 16px 0 0;z-index:401;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);max-height:88vh;}
+.mob-sheet.open{transform:translateY(0);}
+.mob-sheet-handle-row{padding:12px 16px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.mob-sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;}
+.mob-sheet-close{background:none;border:none;color:var(--mist);font-size:20px;cursor:pointer;padding:0;line-height:1;}
+.mob-sheet-title{padding:8px 16px 4px;font-size:11px;font-weight:700;color:var(--mist);letter-spacing:0.12em;text-transform:uppercase;font-family:var(--font-mono);flex-shrink:0;}
+.mob-sheet-target{padding:6px 16px;background:var(--volt-pale);border-bottom:1px solid rgba(198,241,53,0.2);font-size:12px;font-weight:700;color:var(--volt);font-family:var(--font-mono);flex-shrink:0;display:none;}
+.mob-sheet-target.visible{display:block;}
+.mob-sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.mob-sheet-add-bar{padding:10px 14px;background:var(--volt);display:none;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;}
+.mob-sheet-add-bar.visible{display:flex;}
+.mob-sheet-add-label{font-size:13px;font-weight:700;color:var(--black);}
+.mob-sheet-add-btn{padding:8px 18px;background:var(--black);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--volt);cursor:pointer;font-family:var(--font-body);}
+
+/* mob add-ex button on each day card header */
+.mob-add-ex-btn{display:none;}
+@media(max-width:900px){
+  .mob-add-ex-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--volt);border:none;border-radius:999px;font-size:10px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;flex-shrink:0;}
+  /* hide the desktop "N ex +" clickable span on mobile */
+  .day-count{pointer-events:none;}
+  /* Tighten day card height on mobile so all 7 are reachable */
+  .day-card{min-height:200px;}
+  /* topbar on mobile: keep it lean */
+  .prog-name-input{width:140px !important;}
+  .prog-type-select{display:none;}
+  /* add-ex bar also hidden on mobile — sheet handles it */
+  #add-ex-bar{display:none !important;}
+  /* program meta: scroll horizontally on mobile */
+  .program-meta{overflow-x:auto;gap:14px;padding:12px 14px;flex-wrap:nowrap;}
+  .program-grid{padding:12px 14px;}
+}
+
 /* ── MOBILE NAV — shared ── */
 @media(max-width:768px){
   .shell{grid-template-columns:1fr !important;}
@@ -657,6 +692,22 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
+</div>
+
+<!-- MOBILE LIBRARY SHEET -->
+<div class="mob-sheet-overlay" id="mob-sheet-overlay" onclick="mobSheetClose()"></div>
+<div class="mob-sheet" id="mob-sheet">
+  <div class="mob-sheet-handle-row">
+    <div class="mob-sheet-handle"></div>
+    <button class="mob-sheet-close" onclick="mobSheetClose()">✕</button>
+  </div>
+  <div class="mob-sheet-title">ADD EXERCISES</div>
+  <div class="mob-sheet-target" id="mob-sheet-target"></div>
+  <div class="mob-sheet-body" id="mob-sheet-body"></div>
+  <div class="mob-sheet-add-bar" id="mob-sheet-add-bar">
+    <span class="mob-sheet-add-label" id="mob-sheet-add-label">0 selected</span>
+    <button class="mob-sheet-add-btn" onclick="mobSheetAddSelected()">+ Add to day</button>
+  </div>
 </div>
 
 <!-- SUPABASE SETUP OVERLAY -->
@@ -1184,10 +1235,11 @@ function renderDays(){
             Rest day
           </label>
           <span class="day-count" onclick="event.stopPropagation();${day.rest?'':(`openLibraryForDay(${day.id})`)};" style="cursor:${day.rest?'default':'pointer'}" title="${day.rest?'':'Click to add exercises'}">${day.rest?'REST':day.exercises.length+' ex +'}</span>
+          ${day.rest?'':`<button class="mob-add-ex-btn" onclick="event.stopPropagation();mobSheetOpen(${day.id})">+ Add</button>`}
         </div>
       </div>
       <div class="day-body" id="day-body-${day.id}"
-           onclick="if(event.target===this||event.target.classList.contains('day-empty')||event.target.classList.contains('day-empty-icon'))openLibraryForDay(${day.id})"
+           onclick="if(event.target===this||event.target.classList.contains('day-empty')||event.target.classList.contains('day-empty-icon')){if(window.innerWidth<=900)mobSheetOpen(${day.id});else openLibraryForDay(${day.id});}"
            ondragover="onExDragOverBody(event,${day.id})"
            ondrop="onExDropBody(event,${day.id})"
            style="cursor:${day.rest?'default':'pointer'}">
@@ -4441,6 +4493,191 @@ function mobDrawerOpen(){document.getElementById('mob-drawer').classList.add('op
 function mobDrawerClose(){document.getElementById('mob-drawer').classList.remove('open');document.getElementById('mob-drawer-overlay').classList.remove('open');document.getElementById('mobtab-more').setAttribute('aria-expanded','false');document.body.style.overflow='';}
 window.addEventListener('popstate',mobDrawerClose);
 (function(){var startY=0;var drawer=document.getElementById('mob-drawer');drawer.addEventListener('touchstart',function(e){startY=e.touches[0].clientY;},{passive:true});drawer.addEventListener('touchend',function(e){if(e.changedTouches[0].clientY-startY>60)mobDrawerClose();},{passive:true});})();
+
+// ── MOBILE LIBRARY SHEET ────────────────────────────────────────────────────
+var _mobSheetDayId = null;
+var _mobSheetSelected = [];
+
+function mobSheetOpen(dayId){
+  _mobSheetDayId = dayId;
+  _mobSheetSelected = [];
+  var day = program.days.find(function(d){return d.id===dayId;});
+  var targetEl = document.getElementById('mob-sheet-target');
+  if(day && !day.rest){
+    targetEl.textContent = '📌 Adding to: ' + day.name;
+    targetEl.classList.add('visible');
+  } else {
+    targetEl.classList.remove('visible');
+  }
+  _mobSheetRenderLibrary();
+  document.getElementById('mob-sheet').classList.add('open');
+  document.getElementById('mob-sheet-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function mobSheetClose(){
+  document.getElementById('mob-sheet').classList.remove('open');
+  document.getElementById('mob-sheet-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  _mobSheetDayId = null;
+  _mobSheetSelected = [];
+  _mobSheetUpdateBar();
+}
+
+function _mobSheetRenderLibrary(){
+  // Render full library HTML into the sheet body, using the existing renderLibrary logic
+  // We reuse the right-panel library HTML structure but inject it into the sheet
+  var body = document.getElementById('mob-sheet-body');
+
+  // Build search input
+  var searchId = 'mob-sheet-search';
+  var filtersId = 'mob-sheet-filters';
+  var eqFiltersId = 'mob-sheet-eq-filters';
+  var listId = 'mob-sheet-list';
+
+  body.innerHTML =
+    '<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;">' +
+      '<input id="' + searchId + '" type="search" placeholder="Search exercises..." ' +
+        'style="flex:1;padding:9px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-family:var(--font-body);outline:none;" ' +
+        'oninput="_mobSheetDoRender()">' +
+      '<button onclick="openCustomExModal()" style="padding:7px 12px;background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.3);border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--purple);cursor:pointer;font-family:var(--font-body);white-space:nowrap;flex-shrink:0;">+ Custom</button>' +
+    '</div>' +
+    '<div id="' + filtersId + '" style="display:flex;gap:6px;padding:10px 14px;flex-wrap:wrap;border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;"></div>' +
+    '<div id="' + eqFiltersId + '" style="display:flex;gap:5px;padding:8px 14px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--border);background:rgba(0,0,0,0.15);"></div>' +
+    '<div id="' + listId + '"></div>';
+
+  _mobSheetRenderFilters();
+  _mobSheetDoRender();
+}
+
+var _mobLibFilter = 'All';
+var _mobEqFilter = 'All';
+
+function _mobSheetRenderFilters(){
+  var groups = ['All', ...Object.keys(EXERCISE_LIBRARY), 'Bodyweight'];
+  var filtersEl = document.getElementById('mob-sheet-filters');
+  if(!filtersEl) return;
+  filtersEl.innerHTML = groups.map(function(g){
+    return '<button style="padding:5px 12px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid ' +
+      (g===_mobLibFilter?'var(--volt)':'var(--border)') + ';background:' +
+      (g===_mobLibFilter?'var(--volt)':'transparent') + ';color:' +
+      (g===_mobLibFilter?'var(--black)':'var(--mist)') + ';cursor:pointer;font-family:var(--font-body);white-space:nowrap;flex-shrink:0;" ' +
+      'onclick="_mobLibFilter=\'' + g + '\';_mobSheetRenderFilters();_mobSheetDoRender()">' + g + '</button>';
+  }).join('');
+
+  var eqs = [['All','All'],['db','DB'],['bb','BB'],['bw','BW'],['mc','Machine'],['cd','Cardio']];
+  var eqEl = document.getElementById('mob-sheet-eq-filters');
+  if(!eqEl) return;
+  eqEl.innerHTML = eqs.map(function(pair){
+    var e=pair[0],label=pair[1];
+    return '<button style="padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid ' +
+      (e===_mobEqFilter?'var(--volt)':'var(--border)') + ';background:' +
+      (e===_mobEqFilter?'var(--volt)':'transparent') + ';color:' +
+      (e===_mobEqFilter?'var(--black)':'var(--mist)') + ';cursor:pointer;font-family:var(--font-body);white-space:nowrap;flex-shrink:0;" ' +
+      'onclick="_mobEqFilter=\'' + e + '\';_mobSheetRenderFilters();_mobSheetDoRender()">' + label + '</button>';
+  }).join('');
+}
+
+function _mobSheetDoRender(){
+  var listEl = document.getElementById('mob-sheet-list');
+  if(!listEl) return;
+  var searchEl = document.getElementById('mob-sheet-search');
+  var search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  var html = '';
+  var sortAlpha = function(list){return list.slice().sort(function(a,b){return a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'});});};
+  var matchesEq = function(e){return _mobEqFilter==='All'||(e.eq||'bw')===_mobEqFilter;};
+
+  // Custom exercises first
+  var customs = sortAlpha(loadCustomExercises().filter(function(e){return(!search||e.name.toLowerCase().includes(search))&&matchesEq(e);}));
+  if((_mobLibFilter==='All'||_mobLibFilter==='Custom') && customs.length){
+    html += '<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:var(--purple);letter-spacing:0.1em;text-transform:uppercase;">⭐ My Custom</div>';
+    html += customs.map(function(ex){return _mobMakeRow(ex,ex.category||'Custom',ex.eq||'bw',ex.type||'strength','border-left:2px solid rgba(167,139,250,0.4);');}).join('');
+  }
+
+  if(_mobLibFilter==='Bodyweight'){
+    Object.keys(EXERCISE_LIBRARY).forEach(function(group){
+      var items = sortAlpha(EXERCISE_LIBRARY[group].filter(function(e){return e.eq==='bw'&&(!search||e.name.toLowerCase().includes(search))&&matchesEq(e);}));
+      if(!items.length) return;
+      html += '<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;">' + group + '</div>';
+      html += items.map(function(ex){return _mobMakeRow(ex,group,ex.eq,ex.defaultType,'');}).join('');
+    });
+  } else {
+    var groups = _mobLibFilter==='All' ? Object.keys(EXERCISE_LIBRARY) : [_mobLibFilter];
+    groups.forEach(function(group){
+      var lib = EXERCISE_LIBRARY[group];
+      if(!lib) return;
+      var items = sortAlpha(lib.filter(function(e){return(!search||e.name.toLowerCase().includes(search))&&matchesEq(e);}));
+      if(!items.length) return;
+      html += '<div style="padding:8px 14px 4px;font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;">' + group + '</div>';
+      html += items.map(function(ex){return _mobMakeRow(ex,group,ex.eq,ex.defaultType,'');}).join('');
+    });
+  }
+
+  listEl.innerHTML = html || '<div style="padding:24px;text-align:center;color:var(--slate);font-size:13px;">No exercises found.</div>';
+}
+
+function _mobMakeRow(ex, group, eq, type, extraStyle){
+  var isSelected = _mobSheetSelected.some(function(e){return e.name===ex.name;});
+  var eqLabel = EQ_LABELS[eq]||eq;
+  var safeName = (ex.name||'').replace(/"/g,'&quot;');
+  return '<div onclick="_mobSheetToggle(this)" data-name="' + safeName + '" data-group="' + group + '" data-eq="' + eq + '" data-type="' + (type||'strength') + '" ' +
+    'style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;background:' +
+    (isSelected?'rgba(198,241,53,0.08)':'transparent') + ';' + (extraStyle||'') + '">' +
+    '<div style="width:20px;height:20px;border-radius:4px;border:1.5px solid ' + (isSelected?'var(--volt)':'var(--border)') + ';background:' + (isSelected?'var(--volt)':'transparent') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--black);">' +
+    (isSelected?'✓':'') + '</div>' +
+    '<div style="flex:1;min-width:0;">' +
+      '<div style="font-size:13px;font-weight:600;color:var(--white);">' + (ex.name||'') + '</div>' +
+      '<div style="font-size:11px;color:var(--mist);">' + group + ' · ' + eqLabel + '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+function _mobSheetToggle(el){
+  var name = el.dataset.name;
+  var idx = _mobSheetSelected.findIndex(function(e){return e.name===name;});
+  if(idx >= 0){
+    _mobSheetSelected.splice(idx,1);
+    el.style.background = 'transparent';
+    var check = el.querySelector('div');
+    if(check){check.style.borderColor='var(--border)';check.style.background='transparent';check.innerHTML='';}
+  } else {
+    _mobSheetSelected.push({name:el.dataset.name, group:el.dataset.group, eq:el.dataset.eq, type:el.dataset.type});
+    el.style.background = 'rgba(198,241,53,0.08)';
+    var check = el.querySelector('div');
+    if(check){check.style.borderColor='var(--volt)';check.style.background='var(--volt)';check.innerHTML='✓';}
+  }
+  _mobSheetUpdateBar();
+}
+
+function _mobSheetUpdateBar(){
+  var bar = document.getElementById('mob-sheet-add-bar');
+  var label = document.getElementById('mob-sheet-add-label');
+  if(_mobSheetSelected.length > 0){
+    bar.classList.add('visible');
+    label.textContent = _mobSheetSelected.length + ' exercise' + (_mobSheetSelected.length>1?'s':'') + ' selected';
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function mobSheetAddSelected(){
+  if(!_mobSheetSelected.length || _mobSheetDayId === null) return;
+  _mobSheetSelected.forEach(function(ex){
+    addExToDay(_mobSheetDayId, {name:ex.name, eq:ex.eq, defaultType:ex.type, category:ex.group});
+  });
+  mobSheetClose();
+}
+
+// Swipe down to close sheet
+(function(){
+  var startY=0;
+  var sheet=document.getElementById('mob-sheet');
+  sheet.addEventListener('touchstart',function(e){startY=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchend',function(e){
+    var dy=e.changedTouches[0].clientY-startY;
+    if(dy>80) mobSheetClose();
+  },{passive:true});
+})();
 </script>
 
 </body>
