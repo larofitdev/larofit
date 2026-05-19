@@ -417,6 +417,26 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .mob-sheet-add-bar.visible{display:flex;}
 .mob-sheet-add-label{font-size:13px;font-weight:700;color:var(--black);}
 .mob-sheet-add-btn{padding:8px 18px;background:var(--black);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--volt);cursor:pointer;font-family:var(--font-body);}
+/* Mobile detail sheet */
+.mob-detail-sheet{position:fixed;bottom:0;left:0;right:0;background:var(--offblack);border-top:1px solid var(--border);border-radius:16px 16px 0 0;z-index:402;display:flex;flex-direction:column;transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);max-height:92vh;}
+.mob-detail-sheet.open{transform:translateY(0);}
+.mob-detail-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 24px;}
+.mob-detail-name{font-size:17px;font-weight:700;color:var(--pure);margin-bottom:2px;}
+.mob-detail-day{font-size:11px;color:var(--mist);margin-bottom:16px;}
+.mob-detail-section{margin-bottom:18px;}
+.mob-detail-section-title{font-size:10px;font-weight:700;color:var(--slate);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:8px;}
+.mob-type-row{display:flex;flex-wrap:wrap;gap:6px;}
+.mob-param-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.mob-param-field{display:flex;flex-direction:column;gap:4px;}
+.mob-param-field label{font-size:10px;font-weight:700;color:var(--mist);letter-spacing:0.08em;text-transform:uppercase;}
+.mob-param-field input,.mob-param-field select{padding:10px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:15px;font-family:var(--font-body);outline:none;-webkit-appearance:none;width:100%;}
+.mob-param-field input:focus,.mob-param-field select:focus{border-color:var(--volt);}
+.mob-param-field select option{background:var(--carbon);}
+.mob-detail-notes{width:100%;padding:10px 12px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:14px;font-family:var(--font-body);resize:none;outline:none;min-height:72px;transition:border-color 0.2s;box-sizing:border-box;}
+.mob-detail-notes:focus{border-color:var(--volt);}
+.mob-detail-notes::placeholder{color:var(--slate);}
+.mob-detail-del{width:100%;padding:13px;background:transparent;border:1.5px solid var(--ember);border-radius:var(--radius-sm);color:var(--ember);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);margin-top:4px;}
+.mob-detail-del:active{background:rgba(255,87,51,0.1);}
 /* Mobile sheet filter area */
 .mob-sheet-filters{padding:8px 12px 4px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:6px;}
 .mob-sheet-search{width:100%;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);padding:7px 10px;outline:none;-webkit-appearance:none;}
@@ -676,6 +696,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <span class="mob-sheet-add-label" id="mob-sheet-add-label">0 selected</span>
     <button class="mob-sheet-add-btn" onclick="mobSheetAddSelected()">+ Add to day</button>
   </div>
+</div>
+
+<!-- MOBILE EXERCISE DETAIL SHEET -->
+<div class="mob-sheet-overlay" id="mob-detail-overlay" onclick="mobDetailClose()"></div>
+<div class="mob-detail-sheet" id="mob-detail-sheet">
+  <div class="mob-sheet-handle-row">
+    <div class="mob-sheet-handle"></div>
+    <button class="mob-sheet-close" onclick="mobDetailClose()">✕</button>
+  </div>
+  <div class="mob-detail-body" id="mob-detail-body"></div>
 </div>
 
 
@@ -1238,10 +1268,8 @@ function selectExercise(dayId, exIdx){
 
     if(correctType && ex.type !== correctType){
       ex.type = correctType;
-      // Fix params to match correct type
       const defaults = TYPE_DEFAULTS[correctType] || {};
       ex.params = {...defaults};
-      // Fix progression metric
       if(ex.progression && correctType === 'timed_bodyweight'){
         ex.progression.metric = 'holdTime';
         ex.progression.increment = 5;
@@ -1252,11 +1280,16 @@ function selectExercise(dayId, exIdx){
   }
 
   renderDays();
-  renderDetailForm();
-  // Show details panel when exercise selected (details is no longer a top-level tab)
-  document.getElementById('panel-library').style.display = 'none';
-  document.getElementById('panel-summary').style.display = 'none';
-  document.getElementById('panel-details').style.display = '';
+
+  // On mobile open bottom sheet; on desktop use right panel
+  if(window.innerWidth <= 900){
+    mobDetailOpen();
+  } else {
+    renderDetailForm();
+    document.getElementById('panel-library').style.display = 'none';
+    document.getElementById('panel-summary').style.display = 'none';
+    document.getElementById('panel-details').style.display = '';
+  }
 }
 
 // ── DETAIL FORM ──────────────────────────────────────────────────────────────
@@ -2050,7 +2083,152 @@ function updateMobSheetAddBar(){
   }
 }
 
-function renderMobLibrary(container){
+// ── MOBILE EXERCISE DETAIL SHEET ─────────────────────────────────────────────
+
+function mobDetailOpen(){
+  renderMobDetailForm();
+  document.getElementById('mob-detail-overlay').classList.add('open');
+  document.getElementById('mob-detail-sheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function mobDetailClose(){
+  document.getElementById('mob-detail-overlay').classList.remove('open');
+  document.getElementById('mob-detail-sheet').classList.remove('open');
+  document.body.style.overflow = '';
+  selectedEx = null;
+}
+
+function renderMobDetailForm(){
+  const body = document.getElementById('mob-detail-body');
+  if(!body || !selectedEx) return;
+
+  const day = program.days.find(d=>d.id===selectedEx.dayId);
+  if(!day){ mobDetailClose(); return; }
+  const ex = day.exercises[selectedEx.exIdx];
+  if(!ex){ mobDetailClose(); return; }
+
+  const t = ex.type || 'strength';
+  const p = ex.params || {};
+  const dayId = selectedEx.dayId;
+  const exIdx = selectedEx.exIdx;
+
+  // Type buttons (reuse existing setExType)
+  const typeBtns = Object.keys(TYPE_LABELS).map(type=>`
+    <button class="type-btn ${t===type?'active-'+type:''}"
+      onclick="setExType(${dayId},${exIdx},'${type}');renderMobDetailForm()">${TYPE_LABELS[type]}</button>
+  `).join('');
+
+  // Param fields — mirrors renderDetailForm logic but uses mob-param-* classes
+  let paramFields = '';
+  const setsOpts = [1,2,3,4,5,6].map(n=>`<option ${p.sets==n?'selected':''}>${n}</option>`).join('');
+  const repsOpts = Array.from({length:20},(_,i)=>i+1).map(n=>`<option ${p.reps==n?'selected':''}>${n}</option>`).join('');
+  const reps30   = Array.from({length:30},(_,i)=>i+1).map(n=>`<option ${p.reps==n?'selected':''}>${n}</option>`).join('');
+  const restOpts = ['30s','45s','60s','90s','2 min','3 min','4 min','5 min'].map(r=>`<option ${p.rest===r?'selected':''}>${r}</option>`).join('');
+  const holdOpts = ['15s','20s','30s','45s','60s','90s','2 min','3 min','5 min'].map(r=>`<option ${(p.holdTime||'30s')===r?'selected':''}>${r}</option>`).join('');
+
+  if(t==='strength'||t==='plyo'){
+    paramFields = `<div class="mob-param-grid">
+      <div class="mob-param-field"><label>Sets</label>
+        <select onchange="setParam('sets',+this.value)">${setsOpts}</select></div>
+      <div class="mob-param-field"><label>Reps</label>
+        <select onchange="setParam('reps',+this.value)">${repsOpts}</select></div>
+      <div class="mob-param-field"><label>Weight (lbs)</label>
+        <input type="number" inputmode="decimal" value="${p.weight||''}" placeholder="lbs" onchange="setParam('weight',+this.value)"></div>
+      <div class="mob-param-field"><label>Rest</label>
+        <select onchange="setParam('rest',this.value)">${restOpts}</select></div>
+    </div>`;
+  } else if(t==='bodyweight'){
+    paramFields = `<div class="mob-param-grid">
+      <div class="mob-param-field"><label>Sets</label>
+        <select onchange="setParam('sets',+this.value)">${setsOpts}</select></div>
+      <div class="mob-param-field"><label>Reps</label>
+        <select onchange="setParam('reps',+this.value)">${reps30}</select></div>
+      <div class="mob-param-field"><label>Rest</label>
+        <select onchange="setParam('rest',this.value)">${['30s','45s','60s','90s','2 min','3 min'].map(r=>`<option ${p.rest===r?'selected':''}>${r}</option>`).join('')}</select></div>
+    </div>`;
+  } else if(t==='timed_bodyweight'){
+    paramFields = `<div class="mob-param-grid">
+      <div class="mob-param-field"><label>Sets</label>
+        <select onchange="setParam('sets',+this.value)">${setsOpts}</select></div>
+      <div class="mob-param-field"><label>Hold time</label>
+        <select onchange="setParam('holdTime',this.value)">${holdOpts}</select></div>
+      <div class="mob-param-field"><label>Rest</label>
+        <select onchange="setParam('rest',this.value)">${['15s','30s','45s','60s','90s','2 min'].map(r=>`<option ${p.rest===r?'selected':''}>${r}</option>`).join('')}</select></div>
+    </div>`;
+  } else if(t==='cardio'){
+    paramFields = `<div class="mob-param-grid">
+      <div class="mob-param-field"><label>Duration</label>
+        <input type="text" value="${p.duration||''}" placeholder="20 min" onchange="setParam('duration',this.value)"></div>
+      <div class="mob-param-field"><label>Distance</label>
+        <input type="text" value="${p.distance||''}" placeholder="e.g. 2 miles" onchange="setParam('distance',this.value)"></div>
+      <div class="mob-param-field"><label>Speed / Pace</label>
+        <input type="text" value="${p.intensity||''}" placeholder="e.g. 6 mph" onchange="setParam('intensity',this.value)"></div>
+      <div class="mob-param-field"><label>Level</label>
+        <input type="text" value="${p.level||''}" placeholder="e.g. level 8" onchange="setParam('level',this.value)"></div>
+    </div>`;
+  } else if(t==='yoga'||t==='stretch'){
+    paramFields = `<div class="mob-param-grid">
+      <div class="mob-param-field"><label>Holds / Rounds</label>
+        <select onchange="setParam('holds',+this.value)">${[1,2,3,4,5].map(n=>`<option ${p.holds==n?'selected':''}>${n}</option>`).join('')}</select></div>
+      <div class="mob-param-field"><label>Hold time</label>
+        <select onchange="setParam('holdTime',this.value)">${holdOpts}</select></div>
+      <div class="mob-param-field"><label>Sides</label>
+        <select onchange="setParam('sides',this.value)">
+          <option ${p.sides==='both'?'selected':''}>both</option>
+          <option ${p.sides==='left only'?'selected':''}>left only</option>
+          <option ${p.sides==='right only'?'selected':''}>right only</option>
+          <option ${p.sides==='alternating'?'selected':''}>alternating</option>
+        </select></div>
+    </div>`;
+  } else if(t==='hiit'){
+    paramFields = `<div class="mob-param-grid">
+      <div class="mob-param-field"><label>Rounds</label>
+        <select onchange="setParam('rounds',+this.value)">${[2,3,4,5,6,8,10].map(n=>`<option ${p.rounds==n?'selected':''}>${n}</option>`).join('')}</select></div>
+      <div class="mob-param-field"><label>Work</label>
+        <select onchange="setParam('workInterval',this.value)">${['20s','30s','40s','45s','60s'].map(r=>`<option ${p.workInterval===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="mob-param-field"><label>Rest</label>
+        <select onchange="setParam('restInterval',this.value)">${['10s','15s','20s','30s','45s','60s'].map(r=>`<option ${p.restInterval===r?'selected':''}>${r}</option>`).join('')}</select></div>
+    </div>`;
+  } else if(t==='recovery'){
+    paramFields = `<div class="mob-param-grid">
+      <div class="mob-param-field"><label>Duration</label>
+        <input type="text" value="${p.duration||''}" placeholder="10 min" onchange="setParam('duration',this.value)"></div>
+    </div>`;
+  }
+
+  body.innerHTML = `
+    <div style="padding-top:4px;">
+      <div class="mob-detail-name">${ex.name}</div>
+      <div class="mob-detail-day">${day.name}</div>
+
+      <div class="mob-detail-section">
+        <div class="mob-detail-section-title">Activity type</div>
+        <div class="mob-type-row">${typeBtns}</div>
+      </div>
+
+      <div class="mob-detail-section">
+        <div class="mob-detail-section-title">Parameters</div>
+        ${paramFields}
+      </div>
+
+      <div class="mob-detail-section">
+        <div class="mob-detail-section-title">Notes</div>
+        <textarea class="mob-detail-notes" placeholder="Coaching notes, form cues..."
+          oninput="setExNotes(this.value)">${ex.notes||''}</textarea>
+      </div>
+
+      <button class="mob-detail-del" onclick="mobDetailDelete(${dayId},${exIdx})">🗑 Remove exercise</button>
+    </div>`;
+}
+
+function mobDetailDelete(dayId, exIdx){
+  mobDetailClose();
+  // small delay so sheet closes before re-render
+  setTimeout(()=>{ deleteEx(dayId, exIdx); }, 120);
+}
+
+
   if(!container) container = document.getElementById('mob-lib-list');
   if(!container) return;
 
