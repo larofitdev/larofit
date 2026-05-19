@@ -156,40 +156,40 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 @media(max-width:768px){
   .shell{grid-template-columns:1fr !important;}
   .sidebar{display:none !important;}
-  .main,.ex-list,.content{padding-bottom:72px;}
-  .toast{bottom:calc(64px + 14px) !important;}
+  .main,.ex-list,.content{padding-bottom:20px;}
+  
   .topbar{padding:12px 16px !important;}
   .page-title{font-size:22px !important;}
   .content,.ex-list{padding-left:14px !important;padding-right:14px !important;}
 }
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;height:64px;background:#111418;border-top:1px solid #2d3748;z-index:300;padding:0 4px;padding-bottom:env(safe-area-inset-bottom);}
-@media(max-width:768px){.mob-nav{display:flex;}}
-.mob-nav-tabs{display:flex;align-items:stretch;width:100%;}
-.mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;cursor:pointer;background:transparent;border:none;padding:0;-webkit-tap-highlight-color:transparent;transition:opacity 0.15s;}
-.mob-tab:active{opacity:0.7;}
-.mob-tab-icon{font-size:20px;line-height:1;transition:transform 0.15s;}
-.mob-tab.active .mob-tab-icon{transform:scale(1.1);}
-.mob-tab-label{font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;color:#6b7a8d;letter-spacing:0.02em;transition:color 0.15s;}
-.mob-tab.active .mob-tab-label{color:#c6f135;}
-.mob-tab-dot{width:4px;height:4px;border-radius:50%;background:#c6f135;opacity:0;transition:opacity 0.15s;margin-top:-2px;}
-.mob-tab.active .mob-tab-dot{opacity:1;}
-.mob-drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:350;opacity:0;transition:opacity 0.25s;}
-.mob-drawer-overlay.open{display:block;opacity:1;}
-.mob-drawer{position:fixed;bottom:0;left:0;right:0;background:#111418;border-top:1px solid #2d3748;border-radius:16px 16px 0 0;z-index:360;padding:0 0 env(safe-area-inset-bottom);transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.32,0.72,0,1);}
-.mob-drawer.open{transform:translateY(0);}
-.mob-drawer-handle{width:36px;height:4px;background:#2d3748;border-radius:2px;margin:12px auto 4px;}
-.mob-drawer-title{font-family:'DM Mono',monospace;font-size:10px;font-weight:600;color:#6b7a8d;letter-spacing:0.14em;text-transform:uppercase;padding:8px 20px 4px;}
-.mob-drawer-section{font-family:'DM Mono',monospace;font-size:9px;font-weight:600;color:#4a5568;letter-spacing:0.14em;text-transform:uppercase;padding:10px 20px 4px;}
-.mob-drawer-item{display:flex;align-items:center;gap:14px;padding:13px 20px;text-decoration:none;color:#b8c4d0;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;transition:background 0.12s;-webkit-tap-highlight-color:transparent;}
-.mob-drawer-item:active{background:rgba(255,255,255,0.04);}
-.mob-drawer-item.active-drawer{color:#f4f6f8;background:rgba(198,241,53,0.06);}
-.mob-drawer-icon{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
-.mob-drawer-divider{height:1px;background:#2d3748;margin:6px 20px;}
-.mob-drawer-user{display:flex;align-items:center;gap:12px;padding:14px 20px;border-top:1px solid #2d3748;margin-top:4px;}
-.mob-drawer-avatar{width:36px;height:36px;border-radius:50%;background:#c6f135;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;font-weight:700;color:#0a0a0a;flex-shrink:0;}
-.mob-drawer-name{font-size:13px;font-weight:600;color:#f4f6f8;}
-.mob-drawer-plan{font-size:10px;color:#c6f135;font-family:'DM Mono',monospace;}
 
+/* ── HAMBURGER BUTTON ── */
+.mob-menu-btn{display:none;align-items:center;justify-content:center;width:38px;height:38px;background:var(--carbon,#1c2128);border:1px solid var(--border,#2d3748);border-radius:8px;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
+.mob-menu-btn:active{background:var(--steel,#2d3748);}
+.mob-menu-btn svg{width:18px;height:18px;stroke:#f4f6f8;stroke-width:2;fill:none;stroke-linecap:round;}
+@media(max-width:768px){.mob-menu-btn{display:flex;}}
+
+/* ── FULLSCREEN MENU ── */
+.mob-menu-overlay{display:none;position:fixed;inset:0;background:#111418;z-index:400;flex-direction:column;}
+.mob-menu-overlay.open{display:flex;}
+.mob-menu-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #2d3748;flex-shrink:0;}
+.mob-menu-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#f4f6f8;}
+.mob-menu-logo span{color:#c6f135;}
+.mob-menu-close{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:#1c2128;border:1px solid #2d3748;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.mob-menu-close svg{width:16px;height:16px;stroke:#f4f6f8;stroke-width:2.5;fill:none;stroke-linecap:round;}
+.mob-menu-body{flex:1;overflow-y:auto;padding:16px 14px;}
+.mob-menu-section{font-family:'DM Mono',monospace;font-size:9px;font-weight:600;color:#4a5568;letter-spacing:0.14em;text-transform:uppercase;margin:0 0 8px 2px;}
+.mob-menu-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;}
+.mob-menu-item{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;background:#1c2128;border:1px solid #2d3748;border-radius:12px;text-decoration:none;-webkit-tap-highlight-color:transparent;}
+.mob-menu-item:active{background:#2d3748;}
+.mob-menu-item.active-page{border-color:#c6f135;background:rgba(198,241,53,0.08);}
+.mob-menu-item-icon{font-size:22px;line-height:1;}
+.mob-menu-item-label{font-size:11px;font-weight:600;color:#c8d0dc;text-align:center;line-height:1.2;}
+.mob-menu-item.active-page .mob-menu-item-label{color:#c6f135;}
+.mob-menu-user{display:flex;align-items:center;gap:10px;padding:14px;background:#1c2128;border:1px solid #2d3748;border-radius:12px;margin-top:4px;}
+.mob-menu-avatar{width:34px;height:34px;border-radius:50%;background:#c6f135;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:#0a0a0a;flex-shrink:0;}
+.mob-menu-uname{font-size:13px;font-weight:600;color:#f4f6f8;}
+.mob-menu-uplan{font-size:10px;color:#c6f135;font-family:'DM Mono',monospace;}
 </style>
 </head>
 <body data-page="more">
@@ -232,7 +232,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 <!-- MAIN -->
 <div class="main">
   <div class="topbar">
-    <div class="page-title">AI COACH</div>
+    <div class="page-title">AI COACH
+    <button class="mob-menu-btn" onclick="mobMenuOpen()" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+  </div>
     <div class="topbar-badge">🤖 POWERED BY CLAUDE</div>
   </div>
 
@@ -1057,81 +1059,66 @@ if(_startParam === 'ai'){
 }
 </script>
 
-<!-- MOBILE BOTTOM NAV -->
-<nav class="mob-nav" aria-label="Main navigation">
-  <div class="mob-nav-tabs">
-    <a class="mob-tab" id="mobtab-dashboard" href="larofit-dashboard.html" aria-label="Home">
-      <span class="mob-tab-icon">🏠</span>
-      <span class="mob-tab-label">Home</span>
-      <span class="mob-tab-dot" aria-hidden="true"></span>
-    </a>
-    <a class="mob-tab" id="mobtab-today" href="larofit-today.html" aria-label="Today's workout">
-      <span class="mob-tab-icon">📅</span>
-      <span class="mob-tab-label">Today</span>
-      <span class="mob-tab-dot" aria-hidden="true"></span>
-    </a>
-    <a class="mob-tab" id="mobtab-programs" href="larofit-programs.html" aria-label="My programs">
-      <span class="mob-tab-icon">📂</span>
-      <span class="mob-tab-label">Programs</span>
-      <span class="mob-tab-dot" aria-hidden="true"></span>
-    </a>
-    <a class="mob-tab" id="mobtab-progress" href="larofit-progress.html" aria-label="Progress">
-      <span class="mob-tab-icon">📊</span>
-      <span class="mob-tab-label">Progress</span>
-      <span class="mob-tab-dot" aria-hidden="true"></span>
-    </a>
-    <button class="mob-tab" id="mobtab-more" onclick="mobDrawerOpen()" aria-label="More" aria-expanded="false" aria-controls="mob-drawer">
-      <span class="mob-tab-icon">☰</span>
-      <span class="mob-tab-label">More</span>
-      <span class="mob-tab-dot" aria-hidden="true"></span>
+
+<!-- MOBILE FULLSCREEN MENU -->
+<div class="mob-menu-overlay" id="mob-menu-overlay" role="dialog" aria-label="Navigation menu" aria-modal="true">
+  <div class="mob-menu-header">
+    <div class="mob-menu-logo">LARO<span>FIT</span></div>
+    <button class="mob-menu-close" onclick="mobMenuClose()" aria-label="Close menu">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
   </div>
-</nav>
-<div class="mob-drawer-overlay" id="mob-drawer-overlay" onclick="mobDrawerClose()" aria-hidden="true"></div>
-<div class="mob-drawer" id="mob-drawer" role="dialog" aria-label="More navigation" aria-modal="true">
-  <div class="mob-drawer-handle" aria-hidden="true"></div>
-  <div class="mob-drawer-title">Menu</div>
-  <div class="mob-drawer-section">Build</div>
-  <a class="mob-drawer-item" href="larofit-profile.html"><span class="mob-drawer-icon">👤</span>My profile</a>
-  <a class="mob-drawer-item" href="larofit-ai-coach.html"><span class="mob-drawer-icon">🤖</span>AI Coach</a>
-  <a class="mob-drawer-item" href="larofit-builder.html"><span class="mob-drawer-icon">📋</span>Program builder</a>
-  <a class="mob-drawer-item" href="larofit-diet.html"><span class="mob-drawer-icon">🥗</span>Diet plan</a>
-  <div class="mob-drawer-section">Track</div>
-  <a class="mob-drawer-item" href="larofit-sessions.html"><span class="mob-drawer-icon">🕐</span>Workout history</a>
-  <a class="mob-drawer-item" href="larofit-measurements.html"><span class="mob-drawer-icon">📏</span>Measurements</a>
-  <a class="mob-drawer-item" href="larofit-library.html"><span class="mob-drawer-icon">📚</span>Exercise library</a>
-  <div class="mob-drawer-section">Community</div>
-  <a class="mob-drawer-item" href="larofit-group.html"><span class="mob-drawer-icon">👥</span>Group feed</a>
-  <a class="mob-drawer-item" href="larofit-find-trainer.html"><span class="mob-drawer-icon">🔍</span>Find a trainer</a>
-  <div class="mob-drawer-divider"></div>
-  <a class="mob-drawer-item" href="#"><span class="mob-drawer-icon">⚙️</span>Settings</a>
-  <div class="mob-drawer-user">
-    <div class="mob-drawer-avatar" id="mob-drawer-avatar">LJ</div>
-    <div>
-      <div class="mob-drawer-name" id="mob-drawer-name">Lyndon J.</div>
-      <div class="mob-drawer-plan">⭐ PRO TRIAL</div>
+  <div class="mob-menu-body">
+    <div class="mob-menu-section">Home</div>
+    <div class="mob-menu-grid" style="grid-template-columns:1fr;">
+      <a class="mob-menu-item" href="larofit-dashboard.html"><span class="mob-menu-item-icon">🏠</span><span class="mob-menu-item-label">Dashboard</span></a>
+    </div>
+    <div class="mob-menu-section">Build</div>
+    <div class="mob-menu-grid">
+      <a class="mob-menu-item" href="larofit-profile.html"><span class="mob-menu-item-icon">👤</span><span class="mob-menu-item-label">My Profile</span></a>
+      <a class="mob-menu-item" href="larofit-ai-coach.html"><span class="mob-menu-item-icon">🤖</span><span class="mob-menu-item-label">AI Coach</span></a>
+      <a class="mob-menu-item" href="larofit-builder.html"><span class="mob-menu-item-icon">📋</span><span class="mob-menu-item-label">Program Builder</span></a>
+      <a class="mob-menu-item" href="larofit-diet.html"><span class="mob-menu-item-icon">🥗</span><span class="mob-menu-item-label">Diet Plan</span></a>
+    </div>
+    <div class="mob-menu-section">Track</div>
+    <div class="mob-menu-grid">
+      <a class="mob-menu-item" href="larofit-today.html"><span class="mob-menu-item-icon">📅</span><span class="mob-menu-item-label">Today's Workout</span></a>
+      <a class="mob-menu-item" href="larofit-sessions.html"><span class="mob-menu-item-icon">🕐</span><span class="mob-menu-item-label">Workout History</span></a>
+      <a class="mob-menu-item" href="larofit-programs.html"><span class="mob-menu-item-icon">📂</span><span class="mob-menu-item-label">My Programs</span></a>
+      <a class="mob-menu-item" href="larofit-progress.html"><span class="mob-menu-item-icon">📊</span><span class="mob-menu-item-label">Progress</span></a>
+      <a class="mob-menu-item" href="larofit-measurements.html"><span class="mob-menu-item-icon">📏</span><span class="mob-menu-item-label">Measurements</span></a>
+      <a class="mob-menu-item" href="larofit-library.html"><span class="mob-menu-item-icon">📚</span><span class="mob-menu-item-label">Exercise Library</span></a>
+    </div>
+    <div class="mob-menu-section">Community</div>
+    <div class="mob-menu-grid">
+      <a class="mob-menu-item" href="larofit-group.html"><span class="mob-menu-item-icon">👥</span><span class="mob-menu-item-label">Group Feed</span></a>
+      <a class="mob-menu-item" href="larofit-find-trainer.html"><span class="mob-menu-item-icon">🔍</span><span class="mob-menu-item-label">Find a Trainer</span></a>
+      <a class="mob-menu-item" href="#"><span class="mob-menu-item-icon">⚙️</span><span class="mob-menu-item-label">Settings</span></a>
+    </div>
+    <div class="mob-menu-user">
+      <div class="mob-menu-avatar" id="mob-menu-avatar">L</div>
+      <div>
+        <div class="mob-menu-uname" id="mob-menu-uname">Profile</div>
+        <div class="mob-menu-uplan">⭐ PRO TRIAL</div>
+      </div>
     </div>
   </div>
 </div>
 <script>
+function mobMenuOpen(){document.getElementById('mob-menu-overlay').classList.add('open');document.body.style.overflow='hidden';}
+function mobMenuClose(){document.getElementById('mob-menu-overlay').classList.remove('open');document.body.style.overflow='';}
+window.addEventListener('popstate',mobMenuClose);
 (function(){
-  var page=document.body.dataset.page||'';
-  var tabMap={dashboard:'mobtab-dashboard',today:'mobtab-today',programs:'mobtab-programs',progress:'mobtab-progress',more:'mobtab-more'};
-  var el=document.getElementById(tabMap[page]||'mobtab-more');
-  if(el)el.classList.add('active');
   var path=location.pathname.split('/').pop();
-  document.querySelectorAll('.mob-drawer-item').forEach(function(a){if(a.getAttribute('href')===path)a.classList.add('active-drawer');});
-  var sName=document.getElementById('sidebar-name');
-  var sAvatar=document.getElementById('sidebar-avatar');
-  var dName=document.getElementById('mob-drawer-name');
-  var dAvatar=document.getElementById('mob-drawer-avatar');
-  if(sName&&dName)dName.textContent=sName.textContent;
-  if(sAvatar&&dAvatar)dAvatar.textContent=sAvatar.textContent;
+  document.querySelectorAll('.mob-menu-item').forEach(function(a){if(a.getAttribute('href')===path)a.classList.add('active-page');});
+  var uname=localStorage.getItem('larofit_user_name')||'';
+  if(uname){
+    var el=document.getElementById('mob-menu-uname');
+    var av=document.getElementById('mob-menu-avatar');
+    if(el)el.textContent=uname;
+    if(av)av.textContent=uname.charAt(0).toUpperCase();
+  }
 })();
-function mobDrawerOpen(){document.getElementById('mob-drawer').classList.add('open');document.getElementById('mob-drawer-overlay').classList.add('open');document.getElementById('mobtab-more').setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
-function mobDrawerClose(){document.getElementById('mob-drawer').classList.remove('open');document.getElementById('mob-drawer-overlay').classList.remove('open');document.getElementById('mobtab-more').setAttribute('aria-expanded','false');document.body.style.overflow='';}
-window.addEventListener('popstate',mobDrawerClose);
-(function(){var startY=0;var drawer=document.getElementById('mob-drawer');drawer.addEventListener('touchstart',function(e){startY=e.touches[0].clientY;},{passive:true});drawer.addEventListener('touchend',function(e){if(e.changedTouches[0].clientY-startY>60)mobDrawerClose();},{passive:true});})();
 </script>
 
 </body>
