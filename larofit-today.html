@@ -191,11 +191,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .empty-title{font-family:var(--font-display);font-size:28px;color:var(--white);letter-spacing:1px;margin-bottom:8px;}
 .empty-sub{font-size:14px;color:var(--mist);line-height:1.6;max-width:300px;}
 .empty-btn{margin-top:20px;padding:12px 28px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);}
-.workout-timer-bar{background:var(--carbon);border-bottom:1px solid var(--border);padding:8px 32px;display:none;align-items:center;gap:24px;position:sticky;top:var(--topbar-h,62px);z-index:49;}
-.workout-timer-bar.show{display:flex;}
+.topbar-timers{display:none;align-items:center;gap:20px;flex:1;justify-content:center;}
+.topbar-timers.show{display:flex;}
 .wt-item{display:flex;flex-direction:column;align-items:center;}
 .wt-label{font-size:9px;font-weight:700;letter-spacing:0.12em;color:var(--mist);font-family:var(--font-mono);text-transform:uppercase;}
-.wt-val{font-family:var(--font-display);font-size:22px;letter-spacing:1px;color:var(--volt);}
+.wt-val{font-family:var(--font-display);font-size:20px;letter-spacing:1px;color:var(--volt);}
 .wt-val.work{color:var(--success);}
 .wt-val.rest{color:var(--blue);}
 .btn-stop-workout{padding:7px 16px;background:var(--ember);border:none;border-radius:var(--radius-sm);font-size:11px;font-weight:700;color:var(--white);cursor:pointer;font-family:var(--font-body);margin-left:auto;}
@@ -325,23 +325,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 <div class="main">
   <div class="topbar">
-    <div class="topbar-left">
+    <div class="topbar-left" id="topbar-title">
       <div class="page-title">TODAY'S WORKOUT</div>
       <div class="workout-date" id="workout-date"></div>
+    </div>
+    <div class="topbar-timers" id="topbar-timers">
+      <div class="wt-item"><div class="wt-label">Total</div><div class="wt-val" id="wt-total">0:00</div></div>
+      <div class="wt-item"><div class="wt-label">Work</div><div class="wt-val work" id="wt-work">0:00</div></div>
+      <div class="wt-item"><div class="wt-label">Rest</div><div class="wt-val rest" id="wt-rest">0:00</div></div>
+      <div class="wt-item"><div class="wt-label">Exercise</div><div class="wt-val" id="wt-ex" style="font-size:13px;font-family:var(--font-body);color:var(--fog);">—</div></div>
     </div>
     <div class="topbar-right">
       <button id="btn-voice" onclick="toggleVoice()" style="padding:8px 18px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;display:flex;align-items:center;gap:6px;">🎤 Activate mic</button>
       <button class="btn-save" id="btn-start-workout" onclick="beginWorkout()" style="display:flex;align-items:center;gap:6px;">▶ Start Workout</button>
     </div>
-  </div>
-
-  <!-- WORKOUT TIMER BAR -->
-  <div class="workout-timer-bar" id="workout-timer-bar">
-    <div class="wt-item"><div class="wt-label">Total Time</div><div class="wt-val" id="wt-total">0:00</div></div>
-    <div class="wt-item"><div class="wt-label">Work Time</div><div class="wt-val work" id="wt-work">0:00</div></div>
-    <div class="wt-item"><div class="wt-label">Rest Time</div><div class="wt-val rest" id="wt-rest">0:00</div></div>
-    <div class="wt-item"><div class="wt-label">Exercise</div><div class="wt-val" id="wt-ex" style="font-size:14px;font-family:var(--font-body);color:var(--fog);">—</div></div>
-    <button class="btn-stop-workout" onclick="stopWorkout()">⏹ Stop Workout</button>
   </div>
 
   <div class="content">
@@ -476,7 +473,8 @@ function startWorkoutTimer(){
   if(workoutStarted) return;
   workoutStarted=true;
   workoutStartTime=Date.now();
-  document.getElementById('workout-timer-bar').classList.add('show');
+  document.getElementById('topbar-timers').classList.add('show');
+  document.getElementById('topbar-title').style.display='none';
   totalTimerInterval=setInterval(()=>{
     totalSeconds++;
     document.getElementById('wt-total').textContent=formatTime(totalSeconds);
@@ -547,7 +545,8 @@ async function confirmSave(dateStr){
   await saveWorkout(dateStr);
   // Reset timers
   workoutStarted=false;totalSeconds=0;workSeconds=0;restSeconds=0;
-  document.getElementById('workout-timer-bar').classList.remove('show');
+  document.getElementById('topbar-timers').classList.remove('show');
+  document.getElementById('topbar-title').style.display='';
   const sw=document.getElementById('btn-start-workout');
   if(sw){sw.textContent='▶ Start Workout';sw.onclick=beginWorkout;sw.style.background='';}
   if(voiceActive) stopVoice();
@@ -2264,8 +2263,6 @@ function renderPanel(){
 let toastTimer;
 function showToast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2800);}
 
-// Set topbar height CSS variable for sticky timer bar positioning
-(function(){const tb=document.querySelector('.topbar');if(tb)document.documentElement.style.setProperty('--topbar-h',tb.offsetHeight+'px');})();
 
 init();
 </script>
