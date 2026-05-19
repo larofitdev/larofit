@@ -333,7 +333,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <span class="cloud-badge offline" id="cloud-badge">💾 Local only</span>
       <button class="btn-sm" onclick="resendLastAnalysis()" style="border-color:var(--purple);color:var(--purple);">🧪 Resend last analysis</button>
       <button class="btn-save" id="btn-start-workout" onclick="beginWorkout()" style="display:flex;align-items:center;gap:6px;">▶ Start Workout</button>
-      <button class="btn-sm" onclick="markAllDone()">✓ Mark all done</button>
       <button class="btn-save" onclick="saveWorkout()" style="background:transparent;border:1px solid var(--border);color:var(--mist);">☁️ Save</button>
     </div>
   </div>
@@ -1644,7 +1643,6 @@ function renderExList(){
         </tbody></table>
         <div class="complete-row">
           <input class="ex-notes-input" placeholder="Notes…" value="${ex.notes}" oninput="todayExercises[${exIdx}].notes=this.value">
-          <button class="complete-btn${isDone?' done':''}" onclick="toggleComplete(${exIdx})">${isDone?'✓ Done':'Mark done'}</button>
         </div>
       </div>
     </div>`;
