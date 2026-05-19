@@ -330,10 +330,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="workout-date" id="workout-date"></div>
     </div>
     <div class="topbar-right">
-      <span class="cloud-badge offline" id="cloud-badge">💾 Local only</span>
-      <button class="btn-sm" onclick="resendLastAnalysis()" style="border-color:var(--purple);color:var(--purple);">🧪 Resend last analysis</button>
+      <button id="btn-voice" onclick="toggleVoice()" style="padding:8px 18px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;display:flex;align-items:center;gap:6px;">🎤 Activate mic</button>
       <button class="btn-save" id="btn-start-workout" onclick="beginWorkout()" style="display:flex;align-items:center;gap:6px;">▶ Start Workout</button>
-      <button class="btn-save" onclick="saveWorkout()" style="background:transparent;border:1px solid var(--border);color:var(--mist);">☁️ Save</button>
     </div>
   </div>
 
@@ -344,21 +342,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="wt-item"><div class="wt-label">Rest Time</div><div class="wt-val rest" id="wt-rest">0:00</div></div>
     <div class="wt-item"><div class="wt-label">Exercise</div><div class="wt-val" id="wt-ex" style="font-size:14px;font-family:var(--font-body);color:var(--fog);">—</div></div>
     <button class="btn-stop-workout" onclick="stopWorkout()">⏹ Stop Workout</button>
-  </div>
-
-  <!-- VOICE ACTIVATION BANNER -->
-  <div id="voice-banner" style="background:var(--volt-pale);border-bottom:1px solid rgba(198,241,53,0.15);padding:10px 32px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-size:18px;">🎤</span>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--volt);">Go hands-free</div>
-        <div style="font-size:11px;color:var(--mist);">Activate the mic once — then voice controls your entire workout. No touching your phone.</div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <button id="btn-voice" onclick="toggleVoice()" style="padding:8px 18px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--mist);cursor:pointer;font-family:var(--font-body);transition:all 0.2s;display:flex;align-items:center;gap:6px;">🎤 Activate mic</button>
-      <button onclick="document.getElementById('voice-banner').style.display='none'" style="background:none;border:none;color:var(--slate);cursor:pointer;font-size:16px;padding:4px 8px;">✕</button>
-    </div>
   </div>
 
   <div class="content">
@@ -1437,7 +1420,7 @@ async function init(){
   document.getElementById('workout-date').textContent=now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   const uname=localStorage.getItem('larofit_user_name');
   if(uname) document.getElementById('sidebar-name').textContent=uname;
-  if(CLOUD){document.getElementById('cloud-badge').className='cloud-badge';document.getElementById('cloud-badge').textContent='☁️ Cloud on';}
+
   loadTodayFromProgram(now);
   await loadLastTimes();
   render();
