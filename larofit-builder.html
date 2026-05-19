@@ -541,7 +541,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="page-title">PROGRAM BUILDER
     <button class="mob-menu-btn" onclick="mobMenuOpen()" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
   </div>
-      <input class="prog-name-input" id="prog-name" placeholder="Name your program..." value="My 6-day split" oninput="scheduleAutoSave()">
       <select class="prog-type-select" id="prog-type" onchange="onProgTypeChange(this.value)">
         <option value="build">🔨 Build My Own</option>
         <option value="ai">🤖 AI Generated</option>
@@ -563,6 +562,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
   </div>
   <!-- Hidden inputs to preserve JS compatibility -->
+  <input type="hidden" id="prog-name" value="My new program">
   <input type="hidden" id="prog-start">
   <input type="hidden" id="prog-weeks" value="6">
 

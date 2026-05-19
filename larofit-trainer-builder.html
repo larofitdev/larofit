@@ -419,7 +419,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="topbar">
     <div class="topbar-left">
       <div class="page-title">PROGRAM BUILDER</div>
-      <input class="prog-name-input" id="prog-name" placeholder="Name your program..." value="My 6-day split" oninput="scheduleAutoSave()">
       <span class="cloud-badge offline" id="cloud-badge">💾 Local only</span>
     </div>
     <div class="topbar-right">
@@ -439,6 +438,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     </div>
   </div>
   <!-- Hidden inputs to preserve JS compatibility -->
+  <input type="hidden" id="prog-name" value="My new program">
   <input type="hidden" id="prog-start">
   <input type="hidden" id="prog-weeks" value="6">
 
