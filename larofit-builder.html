@@ -550,14 +550,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       </select>
     </div>
     <div class="topbar-right">
-      <select class="goal-select-compact" id="prog-goal" onchange="syncMeta();scheduleAutoSave()">
-        <option value="strength">💪 Strength</option>
-        <option value="hypertrophy" selected>🏋️ Muscle</option>
-        <option value="endurance">🏃 Endurance</option>
-        <option value="weightloss">🔥 Weight Loss</option>
-        <option value="flexibility">🧘 Flexibility</option>
-        <option value="general">⚡ General</option>
-      </select>
       <button class="btn-topbar-save" onclick="saveProgram()">💾 Save</button>
       <button class="btn-topbar-clear" onclick="clearProgram()">🗑 Clear</button>
     </div>
@@ -566,7 +558,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <input type="hidden" id="prog-name" value="My new program">
   <input type="hidden" id="prog-start">
   <input type="hidden" id="prog-weeks" value="6">
-
   <!-- BUILDER AREA -->
   <div class="builder-area">
 
@@ -2666,7 +2657,6 @@ function syncMeta(){
   program.name = document.getElementById('prog-name').value || 'My program';
   program.startDate = document.getElementById('prog-start').value;
   program.weeks = +document.getElementById('prog-weeks').value;
-  program.goal = document.getElementById('prog-goal').value;
   program.programType = document.getElementById('prog-type').value;
   program.updatedAt = new Date().toISOString();
 }
@@ -2926,7 +2916,7 @@ function clearProgram(){
     }))
   };
   document.getElementById('prog-name').value  = 'My new program';
-  document.getElementById('prog-goal').value  = 'hypertrophy';
+
   document.getElementById('prog-weeks').value = 6;
   selectedEx  = null;
   exIdCounter = 0;
@@ -3078,7 +3068,7 @@ function applyProgram(p){
   document.getElementById('prog-name').value = p.name||'';
   document.getElementById('prog-start').value = p.startDate||'';
   document.getElementById('prog-weeks').value = p.weeks||6;
-  document.getElementById('prog-goal').value = p.goal||'hypertrophy';
+
   const typeEl = document.getElementById('prog-type');
   if(typeEl) typeEl.value = p.programType || 'build';
 }
@@ -4214,7 +4204,7 @@ function loadTemplate(){
   }));
 
   document.getElementById('prog-name').value  = program.name;
-  document.getElementById('prog-goal').value  = program.goal;
+
   document.getElementById('prog-weeks').value = program.weeks;
   closeTemplateModal();
   renderDays();
