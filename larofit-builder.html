@@ -678,11 +678,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
   <div class="mob-sheet-title">ADD EXERCISES</div>
   <div class="mob-sheet-target" id="mob-sheet-target"></div>
-  <div class="mob-sheet-body" id="mob-sheet-body"></div>
   <div class="mob-sheet-add-bar" id="mob-sheet-add-bar">
     <span class="mob-sheet-add-label" id="mob-sheet-add-label">0 selected</span>
     <button class="mob-sheet-add-btn" onclick="mobSheetAddSelected()">+ Add to day</button>
   </div>
+  <div class="lib-filters" id="mob-lib-filters" style="padding:8px 10px;gap:5px;"></div>
+  <div class="lib-eq-filters" id="mob-lib-eq-filters" style="padding:6px 10px;gap:4px;"></div>
+  <div class="mob-sheet-body" id="mob-sheet-body">
+    <div id="mob-lib-list"></div>
+  </div>
+</div>
 </div>
 
 <!-- SUPABASE SETUP OVERLAY -->
@@ -2139,15 +2144,8 @@ function mobSheetOpen(dayId){
     target.classList.toggle('visible', !!day);
   }
 
-  // Populate sheet body with the library HTML
-  const body = document.getElementById('mob-sheet-body');
-  if(body){
-    // Temporarily redirect lib-list render target into the sheet
-    body.innerHTML = '<div id="mob-lib-list"></div>';
-    renderMobLibrary(body.querySelector('#mob-lib-list'));
-  }
-
-  // Update add bar
+  renderMobLibFilters();
+  renderMobLibrary();
   updateMobSheetAddBar();
 
   document.getElementById('mob-sheet-overlay').classList.add('open');
@@ -2185,43 +2183,62 @@ function updateMobSheetAddBar(){
   }
 }
 
-function renderMobLibrary(container){
-  if(!container) return;
-  let html = '';
-  const sortAlpha = list => list.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+function renderMobLibFilters(){
+  const groups = ['All', ...Object.keys(EXERCISE_LIBRARY), 'Bodyweight'];
+  const fEl = document.getElementById('mob-lib-filters');
+  const eEl = document.getElementById('mob-lib-eq-filters');
+  if(fEl) fEl.innerHTML = groups.map(g=>
+    `<button class="lib-filter${g===libFilter?' active':''}" onclick="libFilter='${g}';renderMobLibFilters();renderMobLibrary()">${g}</button>`
+  ).join('');
+  const eqs = ['All','db','bb','bw','mc','cd'];
+  if(eEl) eEl.innerHTML = eqs.map(e=> e==='All'
+    ? `<button class="lib-eq-filter${eqFilter==='All'?' active':''}" onclick="eqFilter='All';renderMobLibFilters();renderMobLibrary()">All</button>`
+    : `<button class="lib-eq-filter${eqFilter===e?' active':''}" onclick="eqFilter='${e}';renderMobLibFilters();renderMobLibrary()" title="${EQ_FULL[e]||e}">${EQ_LABELS[e]}</button>`
+  ).join('');
+}
 
-  // Custom exercises first
-  const customs = sortAlpha(loadCustomExercises());
-  if(customs.length){
-    html += `<div class="lib-group">
-      <div class="lib-group-title" style="color:var(--purple);">⭐ My Custom Exercises</div>
-      ${customs.map(ex=>makeMobLibRow(ex,ex.category||'Custom',ex.eq||'bw',ex.type||'strength')).join('')}
-    </div>`;
+function renderMobLibrary(){
+  const container = document.getElementById('mob-lib-list');
+  if(!container) return;
+  const sortAlpha = list => list.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+  const matchesEq = e => eqFilter==='All' || (e.eq||'bw')===eqFilter;
+  let html = '';
+
+  const customs = sortAlpha(loadCustomExercises().filter(e=>matchesEq(e)));
+  if((libFilter==='All'||libFilter==='Custom') && customs.length){
+    html += `<div class="lib-group"><div class="lib-group-title" style="color:var(--purple);">⭐ My Custom Exercises</div>${customs.map(ex=>makeMobLibRow(ex,ex.category||'Custom',ex.eq||'bw',ex.type||'strength')).join('')}</div>`;
   }
 
-  Object.keys(EXERCISE_LIBRARY).forEach(group=>{
-    const items = sortAlpha(EXERCISE_LIBRARY[group]);
-    if(!items.length) return;
-    html += `<div class="lib-group">
-      <div class="lib-group-title">${group}</div>
-      ${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}
-    </div>`;
-  });
+  if(libFilter==='Bodyweight'){
+    Object.keys(EXERCISE_LIBRARY).forEach(group=>{
+      const items = sortAlpha(EXERCISE_LIBRARY[group].filter(e=>e.eq==='bw'&&matchesEq(e)));
+      if(!items.length) return;
+      html += `<div class="lib-group"><div class="lib-group-title">${group}</div>${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}</div>`;
+    });
+  } else {
+    Object.keys(EXERCISE_LIBRARY).forEach(group=>{
+      if(libFilter!=='All'&&libFilter!==group) return;
+      const items = sortAlpha(EXERCISE_LIBRARY[group].filter(e=>matchesEq(e)));
+      if(!items.length) return;
+      html += `<div class="lib-group"><div class="lib-group-title">${group}</div>${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}</div>`;
+    });
+  }
 
-  container.innerHTML = html || '<div style="padding:24px;text-align:center;color:var(--slate);font-size:13px;">No exercises found.</div>';
+  container.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--slate);font-size:12px;">No exercises found.</div>';
 }
 
 function makeMobLibRow(ex, group, eq, type){
-  const safeName  = ex.name.replace(/"/g,'&quot;');
-  const safeNameJs = ex.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const safeName   = ex.name.replace(/"/g,'&quot;');
   const isSelected = libSelected.some(e=>e.name===ex.name);
+  const eqLabel    = EQ_LABELS[eq]||'';
   return `<div class="lib-ex-item lib-ex-clickable${isSelected?' lib-selected':''}"
     data-name="${safeName}" data-group="${group}" data-eq="${eq||'bw'}" data-type="${type||'strength'}"
-    onclick="toggleMobLibItem(this);updateMobSheetAddBar()"
-    style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;">
-    <input type="checkbox" class="lib-ex-cb" ${isSelected?'checked':''} style="accent-color:var(--volt);flex-shrink:0;" onclick="event.stopPropagation()">
-    <span style="flex:1;font-size:13px;font-weight:500;color:var(--white);">${ex.name}</span>
-    <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);">${group}</span>
+    onclick="toggleMobLibItem(this);updateMobSheetAddBar()">
+    <input type="checkbox" class="lib-ex-cb" ${isSelected?'checked':''} onclick="event.stopPropagation()">
+    <div style="flex:1;min-width:0;">
+      <div class="lib-ex-name">${ex.name}</div>
+      <div class="lib-ex-meta">${group}${eqLabel?' · '+eqLabel:''}</div>
+    </div>
   </div>`;
 }
 
