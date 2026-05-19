@@ -339,30 +339,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .toast.show{opacity:1;}
 
 /* ── SETUP OVERLAY ── */
-.setup-overlay{position:fixed;inset:0;background:var(--black);z-index:1000;display:flex;align-items:center;justify-content:center;}
-.setup-overlay.hidden{display:none;}
-.setup-card{background:var(--card-bg);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:480px;width:90%;position:relative;overflow:hidden;}
-.setup-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--volt),var(--blue));}
-.setup-logo{font-family:var(--font-display);font-size:24px;letter-spacing:3px;color:var(--pure);margin-bottom:8px;}
-.setup-logo span{color:var(--volt);}
-.setup-title{font-family:var(--font-display);font-size:32px;letter-spacing:1px;color:var(--pure);margin-bottom:8px;}
-.setup-sub{font-size:14px;color:var(--mist);line-height:1.6;margin-bottom:28px;}
-.setup-field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
-.setup-label{font-size:11px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;}
-.setup-input{padding:12px 14px;background:var(--carbon);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-mono);outline:none;transition:border-color 0.2s;width:100%;}
-.setup-input:focus{border-color:var(--volt);}
-.setup-input::placeholder{color:var(--slate);}
-.setup-hint{font-size:11px;color:var(--slate);margin-top:2px;}
-.setup-btn{width:100%;padding:14px;background:var(--volt);border:none;border-radius:var(--radius-sm);font-size:14px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;transition:all 0.2s;margin-top:8px;}
-.setup-btn:hover{background:var(--volt-dim);}
-.setup-btn:disabled{opacity:0.4;cursor:not-allowed;}
-.setup-status{font-size:12px;color:var(--mist);text-align:center;margin-top:12px;min-height:18px;font-family:var(--font-mono);}
-.setup-status.error{color:var(--ember);}
-.setup-status.success{color:var(--success);}
-.setup-skip{font-size:12px;color:var(--slate);text-align:center;margin-top:12px;cursor:pointer;text-decoration:underline;}
-.setup-skip:hover{color:var(--mist);}
-.cloud-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:999px;font-size:11px;font-weight:600;color:var(--success);font-family:var(--font-mono);margin-left:10px;}
-.cloud-badge.offline{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--slate);}
 .save-indicator{font-size:11px;color:var(--mist);font-family:var(--font-mono);display:flex;align-items:center;gap:5px;}
 
 /* ── RESPONSIVE ── */
@@ -425,7 +401,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="topbar">
     <div class="topbar-left">
       <div class="page-title">PROGRAM BUILDER</div>
-      <span class="cloud-badge offline" id="cloud-badge">💾 Local only</span>
     </div>
     <div class="topbar-right">
       <button class="btn-topbar-save" onclick="saveProgram()">💾 Save</button>
@@ -493,31 +468,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div><!-- end flex column wrapper -->
 </div><!-- end main -->
 
-<!-- SUPABASE SETUP OVERLAY -->
-<div class="setup-overlay" id="setup-overlay">
-  <div class="setup-card">
-    <div class="setup-logo">LARO<span>FIT</span></div>
-    <div class="setup-title">CONNECT YOUR CLOUD</div>
-    <div class="setup-sub">Paste your Supabase keys below. These are saved only on your computer — never sent anywhere else. Do this once and your programs will sync across all your devices.</div>
-    <div class="setup-field">
-      <div class="setup-label">Project URL</div>
-      <input class="setup-input" id="setup-url" placeholder="https://xxxxxxxxxxxx.supabase.co" type="url" autocomplete="off">
-      <div class="setup-hint">Found in Supabase → Settings → API → Project URL</div>
-    </div>
-    <div class="setup-field">
-      <div class="setup-label">Publishable (anon) Key</div>
-      <input class="setup-input" id="setup-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." type="password" autocomplete="off">
-      <div class="setup-hint">Found in Supabase → Settings → API → anon / public key</div>
-    </div>
-    <div class="setup-field">
-      <div class="setup-label">Your name (for your profile)</div>
-      <input class="setup-input" id="setup-name" placeholder="e.g. Lyndon" type="text" style="font-family:var(--font-body);">
-    </div>
-    <button class="setup-btn" id="setup-btn" onclick="connectSupabase()">🔗 Connect &amp; Save to Cloud</button>
-    <div class="setup-status" id="setup-status"></div>
-    <div class="setup-skip" onclick="skipSetup()">Skip for now — use local save only</div>
-  </div>
-</div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -2023,127 +1973,8 @@ function updateSummary(){
 
 // ── SUPABASE CLOUD LAYER ─────────────────────────────────────────────────────
 
-let SUPABASE_URL = '';
-let SUPABASE_KEY = '';
-let USER_ID = '';
-let cloudConnected = false;
 let autoSaveTimer = null;
 
-function loadSupabaseConfig(){
-  SUPABASE_URL = localStorage.getItem('larofit_sb_url') || '';
-  SUPABASE_KEY = localStorage.getItem('larofit_sb_key') || '';
-  USER_ID      = localStorage.getItem('larofit_user_id') || '';
-  cloudConnected = !!(SUPABASE_URL && SUPABASE_KEY && USER_ID);
-}
-
-function updateCloudBadge(){
-  const badge = document.getElementById('cloud-badge');
-  if(!badge) return;
-  if(cloudConnected){
-    badge.className='cloud-badge';
-    badge.innerHTML='☁️ Cloud on';
-  } else {
-    badge.className='cloud-badge offline';
-    badge.innerHTML='💾 Local only';
-  }
-}
-
-async function connectSupabase(){
-  const url  = document.getElementById('setup-url').value.trim().replace(/\/$/,'');
-  const key  = document.getElementById('setup-key').value.trim();
-  const name = document.getElementById('setup-name').value.trim() || 'User';
-  const status = document.getElementById('setup-status');
-  const btn    = document.getElementById('setup-btn');
-
-  if(!url || !key){ status.textContent='Please fill in both fields.'; status.className='setup-status error'; return; }
-  if(!url.includes('supabase.co')){ status.textContent='URL should contain supabase.co'; status.className='setup-status error'; return; }
-
-  btn.disabled = true;
-  status.textContent = 'Connecting…';
-  status.className = 'setup-status';
-
-  // Generate a stable user ID based on this browser
-  const uid = localStorage.getItem('larofit_user_id') || 'user_' + Math.random().toString(36).slice(2,10);
-
-  try {
-    // Test the connection by upserting a hello record
-    const res = await fetch(`${url}/rest/v1/programs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': key,
-        'Authorization': `Bearer ${key}`,
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({ user_id: uid, data: { _test: true }, updated_at: new Date().toISOString() })
-    });
-
-    if(res.ok || res.status === 201 || res.status === 200){
-      localStorage.setItem('larofit_sb_url', url);
-      localStorage.setItem('larofit_sb_key', key);
-      localStorage.setItem('larofit_user_id', uid);
-      localStorage.setItem('larofit_user_name', name);
-      SUPABASE_URL = url; SUPABASE_KEY = key; USER_ID = uid;
-      cloudConnected = true;
-
-      status.textContent = '✅ Connected! Saving your program…';
-      status.className = 'setup-status success';
-
-      setTimeout(async ()=>{
-        await saveProgram();
-        document.getElementById('setup-overlay').classList.add('hidden');
-        updateCloudBadge();
-        showToast('Cloud connected — program saved!');
-      }, 800);
-    } else {
-      const err = await res.text();
-      status.textContent = `Connection failed (${res.status}). Check your keys.`;
-      status.className = 'setup-status error';
-      btn.disabled = false;
-    }
-  } catch(e){
-    status.textContent = 'Could not reach Supabase. Check URL and try again.';
-    status.className = 'setup-status error';
-    btn.disabled = false;
-  }
-}
-
-function skipSetup(){
-  document.getElementById('setup-overlay').classList.add('hidden');
-  showToast('Running in local-only mode');
-}
-
-async function sbUpsert(data){
-  if(!cloudConnected) return false;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/programs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({ user_id: USER_ID, data, updated_at: new Date().toISOString() })
-    });
-    return res.ok || res.status===201 || res.status===200;
-  } catch(e){ return false; }
-}
-
-async function sbFetch(){
-  if(!cloudConnected) return null;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/programs?user_id=eq.${USER_ID}&select=data,updated_at&order=updated_at.desc&limit=1`, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
-      }
-    });
-    if(!res.ok) return null;
-    const rows = await res.json();
-    return rows.length ? rows[0].data : null;
-  } catch(e){ return null; }
-}
 
 function scheduleAutoSave(){
   // Save immediately to localStorage so navigating away never loses data
@@ -2152,7 +1983,6 @@ function scheduleAutoSave(){
   // Then sync to cloud with a short delay to avoid hammering the API
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(()=>{
-    if(cloudConnected) sbUpsert(program);
   }, 2000);
 }
 
@@ -2202,8 +2032,6 @@ async function saveProgram(silent=false){
     localStorage.setItem('larofit_client_programs', JSON.stringify(clientPrograms));
   }
 
-  if(cloudConnected) sbUpsert(savedProg);
-
   if(!silent){
     showToast(`✅ Program saved for ${clientName} — visible in their My Programs`);
   }
@@ -2228,7 +2056,6 @@ function clearProgram(){
 
   // Save blank program immediately so navigating away and back keeps it cleared
   try{ localStorage.setItem('larofit_program', JSON.stringify(program)); } catch(e){}
-  if(cloudConnected) sbUpsert(program);
 
   // Clear search box if present
   const searchEl = document.getElementById('lib-search');
@@ -2283,7 +2110,6 @@ function applyProgram(p){
 }
 
 async function loadSaved(){
-  loadSupabaseConfig();
 
   // Load existing program if editing
   const editingId = localStorage.getItem('larofit_editing_program_id');
@@ -2304,14 +2130,6 @@ async function loadSaved(){
       if(found) applyProgram(found);
     }catch(e){}
   }
-
-  if(!cloudConnected){
-    document.getElementById('setup-overlay').classList.remove('hidden');
-  } else {
-    document.getElementById('setup-overlay').classList.add('hidden');
-    updateCloudBadge();
-  }
-  updateCloudBadge();
 }
 
 // ── SUGGESTED PROGRAM TEMPLATES ──────────────────────────────────────────────
