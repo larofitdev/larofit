@@ -678,16 +678,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
   <div class="mob-sheet-title">ADD EXERCISES</div>
   <div class="mob-sheet-target" id="mob-sheet-target"></div>
+  <div class="mob-sheet-body" id="mob-sheet-body"></div>
   <div class="mob-sheet-add-bar" id="mob-sheet-add-bar">
     <span class="mob-sheet-add-label" id="mob-sheet-add-label">0 selected</span>
     <button class="mob-sheet-add-btn" onclick="mobSheetAddSelected()">+ Add to day</button>
   </div>
-  <div class="lib-filters" id="mob-lib-filters" style="padding:8px 10px;gap:5px;"></div>
-  <div class="lib-eq-filters" id="mob-lib-eq-filters" style="padding:6px 10px;gap:4px;"></div>
-  <div class="mob-sheet-body" id="mob-sheet-body">
-    <div id="mob-lib-list"></div>
-  </div>
-</div>
 </div>
 
 <!-- SUPABASE SETUP OVERLAY -->
@@ -867,159 +862,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
 </div>
 
-<script src="larofit-library-data.js"></script>
-<script>
-// ── DATA ────────────────────────────────────────────────────────────────────
-
-const EXERCISE_LIBRARY = {
-  Chest:[
-    {name:"Dumbbell bench press",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell incline press",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell flyes",eq:"db",defaultType:"strength"},
-    {name:"Barbell bench press",eq:"bb",defaultType:"strength"},
-    {name:"Barbell incline press",eq:"bb",defaultType:"strength"},
-    {name:"Machine chest press",eq:"mc",defaultType:"strength"},
-    {name:"Machine pec deck fly",eq:"mc",defaultType:"strength"},
-    {name:"Cable chest fly",eq:"mc",defaultType:"strength"},
-    {name:"Push-up",eq:"bw",defaultType:"strength"},
-    {name:"Wide push-up",eq:"bw",defaultType:"strength"},
-    {name:"Decline push-up",eq:"bw",defaultType:"strength"},
-  ],
-  Back:[
-    {name:"Dumbbell bent-over row",eq:"db",defaultType:"strength"},
-    {name:"Single-arm dumbbell row",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell Romanian deadlift",eq:"db",defaultType:"strength"},
-    {name:"Barbell deadlift",eq:"bb",defaultType:"strength"},
-    {name:"Barbell bent-over row",eq:"bb",defaultType:"strength"},
-    {name:"Machine lat pulldown",eq:"mc",defaultType:"strength"},
-    {name:"Machine seated row",eq:"mc",defaultType:"strength"},
-    {name:"Cable straight-arm pulldown",eq:"mc",defaultType:"strength"},
-    {name:"Pull-up",eq:"bw",defaultType:"strength"},
-    {name:"Chin-up",eq:"bw",defaultType:"strength"},
-    {name:"Inverted row",eq:"bw",defaultType:"strength"},
-  ],
-  Shoulders:[
-    {name:"Dumbbell overhead press",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell lateral raise",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell front raise",eq:"db",defaultType:"strength"},
-    {name:"Arnold press",eq:"db",defaultType:"strength",video:"https://www.youtube.com/watch?v=6Z15_WdXmVw"},
-    {name:"Barbell overhead press",eq:"bb",defaultType:"strength"},
-    {name:"Machine shoulder press",eq:"mc",defaultType:"strength"},
-    {name:"Cable lateral raise",eq:"mc",defaultType:"strength"},
-    {name:"Pike push-up",eq:"bw",defaultType:"strength"},
-  ],
-  Biceps:[
-    {name:"Dumbbell curl",eq:"db",defaultType:"strength"},
-    {name:"Hammer curl",eq:"db",defaultType:"strength"},
-    {name:"Concentration curl",eq:"db",defaultType:"strength"},
-    {name:"Barbell curl",eq:"bb",defaultType:"strength"},
-    {name:"EZ-bar curl",eq:"bb",defaultType:"strength"},
-    {name:"Machine preacher curl",eq:"mc",defaultType:"strength"},
-    {name:"Cable curl",eq:"mc",defaultType:"strength"},
-  ],
-  Triceps:[
-    {name:"Dumbbell overhead tricep extension",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell skull crusher",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell kickback",eq:"db",defaultType:"strength"},
-    {name:"Barbell skull crusher",eq:"bb",defaultType:"strength"},
-    {name:"Cable rope pushdown",eq:"mc",defaultType:"strength"},
-    {name:"Machine tricep pushdown",eq:"mc",defaultType:"strength"},
-    {name:"Tricep dip",eq:"bw",defaultType:"strength"},
-    {name:"Diamond push-up",eq:"bw",defaultType:"strength"},
-  ],
-  Legs:[
-    {name:"Dumbbell squat",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell lunge",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell Bulgarian split squat",eq:"db",defaultType:"strength"},
-    {name:"Dumbbell goblet squat",eq:"db",defaultType:"strength"},
-    {name:"Barbell squat",eq:"bb",defaultType:"strength"},
-    {name:"Barbell Romanian deadlift",eq:"bb",defaultType:"strength"},
-    {name:"Barbell hip thrust",eq:"bb",defaultType:"strength"},
-    {name:"Machine leg press",eq:"mc",defaultType:"strength"},
-    {name:"Machine leg extension",eq:"mc",defaultType:"strength"},
-    {name:"Machine leg curl",eq:"mc",defaultType:"strength"},
-    {name:"Machine calf raise",eq:"mc",defaultType:"strength"},
-    {name:"Bodyweight squat",eq:"bw",defaultType:"strength"},
-    {name:"Glute bridge",eq:"bw",defaultType:"strength"},
-    {name:"Wall sit",eq:"bw",defaultType:"strength"},
-  ],
-  Core:[
-    {name:"Dumbbell Russian twist",eq:"db",defaultType:"strength"},
-    {name:"Weighted crunch",eq:"db",defaultType:"strength"},
-    {name:"Cable crunch",eq:"mc",defaultType:"strength"},
-    {name:"Plank",eq:"bw",defaultType:"strength"},
-    {name:"Side plank",eq:"bw",defaultType:"strength"},
-    {name:"Crunch",eq:"bw",defaultType:"strength"},
-    {name:"Bicycle crunch",eq:"bw",defaultType:"strength"},
-    {name:"Leg raise",eq:"bw",defaultType:"strength"},
-    {name:"Dead bug",eq:"bw",defaultType:"strength"},
-  ],
-  "Full body":[
-    {name:"Dumbbell thruster",eq:"db",defaultType:"strength"},
-    {name:"Farmer's carry",eq:"db",defaultType:"strength"},
-    {name:"Barbell clean",eq:"bb",defaultType:"strength"},
-    {name:"Burpee",eq:"bw",defaultType:"hiit"},
-    {name:"Jump squat",eq:"bw",defaultType:"plyo"},
-    {name:"Box jump",eq:"bw",defaultType:"plyo"},
-  ],
-  Cardio:[
-    {name:"Treadmill walk",eq:"cd",defaultType:"cardio"},
-    {name:"Treadmill run",eq:"cd",defaultType:"cardio"},
-    {name:"Treadmill incline walk",eq:"cd",defaultType:"cardio"},
-    {name:"Stationary bike",eq:"cd",defaultType:"cardio"},
-    {name:"Rowing machine",eq:"cd",defaultType:"cardio"},
-    {name:"Elliptical",eq:"cd",defaultType:"cardio"},
-    {name:"Stair climber",eq:"cd",defaultType:"cardio"},
-    {name:"Jump rope",eq:"bw",defaultType:"cardio"},
-    {name:"Outdoor run",eq:"bw",defaultType:"cardio"},
-  ],
-  Yoga:[
-    {name:"Downward dog",eq:"yoga",defaultType:"yoga"},
-    {name:"Warrior I",eq:"yoga",defaultType:"yoga"},
-    {name:"Warrior II",eq:"yoga",defaultType:"yoga"},
-    {name:"Triangle pose",eq:"yoga",defaultType:"yoga"},
-    {name:"Tree pose",eq:"yoga",defaultType:"yoga"},
-    {name:"Child's pose",eq:"yoga",defaultType:"yoga"},
-    {name:"Cat-cow flow",eq:"yoga",defaultType:"yoga"},
-    {name:"Pigeon pose",eq:"yoga",defaultType:"yoga"},
-    {name:"Cobra pose",eq:"yoga",defaultType:"yoga"},
-    {name:"Bridge pose",eq:"yoga",defaultType:"yoga"},
-    {name:"Seated forward fold",eq:"yoga",defaultType:"yoga"},
-    {name:"Supine spinal twist",eq:"yoga",defaultType:"yoga"},
-    {name:"Sun salutation A",eq:"yoga",defaultType:"yoga"},
-    {name:"Sun salutation B",eq:"yoga",defaultType:"yoga"},
-    {name:"Legs up the wall",eq:"yoga",defaultType:"yoga"},
-    {name:"Savasana",eq:"yoga",defaultType:"yoga"},
-  ],
-  Stretching:[
-    {name:"Standing quad stretch",eq:"bw",defaultType:"stretch"},
-    {name:"Standing hamstring stretch",eq:"bw",defaultType:"stretch"},
-    {name:"Hip flexor stretch",eq:"bw",defaultType:"stretch"},
-    {name:"Butterfly stretch",eq:"bw",defaultType:"stretch"},
-    {name:"90/90 hip stretch",eq:"bw",defaultType:"stretch"},
-    {name:"Doorway chest stretch",eq:"bw",defaultType:"stretch"},
-    {name:"Cross-body shoulder stretch",eq:"bw",defaultType:"stretch"},
-    {name:"Overhead tricep stretch",eq:"bw",defaultType:"stretch"},
-    {name:"Neck side stretch",eq:"bw",defaultType:"stretch"},
-    {name:"Calf stretch (wall)",eq:"bw",defaultType:"stretch"},
-  ],
-  Recovery:[
-    {name:"Foam roller — back",eq:"rc",defaultType:"recovery"},
-    {name:"Foam roller — legs",eq:"rc",defaultType:"recovery"},
-    {name:"Foam roller — IT band",eq:"rc",defaultType:"recovery"},
-    {name:"Massage bed",eq:"rc",defaultType:"recovery"},
-    {name:"Ice bath",eq:"rc",defaultType:"recovery"},
-    {name:"Sauna session",eq:"rc",defaultType:"recovery"},
-    {name:"Meditation",eq:"bw",defaultType:"recovery"},
-    {name:"Breathing exercise",eq:"bw",defaultType:"recovery"},
-  ],
-};
-
-if(typeof BUILT_IN_EXERCISE_LIBRARY === 'object'){
-  Object.keys(BUILT_IN_EXERCISE_LIBRARY).forEach(key => {
-    EXERCISE_LIBRARY[key] = BUILT_IN_EXERCISE_LIBRARY[key];
-  });
-}
+<script src="larofit-exercises.js"></script>
 
 const TYPE_DEFAULTS = {
   strength:        {sets:3, reps:10,  weight:25, rest:'90s'},
@@ -2144,8 +1987,15 @@ function mobSheetOpen(dayId){
     target.classList.toggle('visible', !!day);
   }
 
-  renderMobLibFilters();
-  renderMobLibrary();
+  // Populate sheet body with the library HTML
+  const body = document.getElementById('mob-sheet-body');
+  if(body){
+    // Temporarily redirect lib-list render target into the sheet
+    body.innerHTML = '<div id="mob-lib-list"></div>';
+    renderMobLibrary(body.querySelector('#mob-lib-list'));
+  }
+
+  // Update add bar
   updateMobSheetAddBar();
 
   document.getElementById('mob-sheet-overlay').classList.add('open');
@@ -2183,62 +2033,43 @@ function updateMobSheetAddBar(){
   }
 }
 
-function renderMobLibFilters(){
-  const groups = ['All', ...Object.keys(EXERCISE_LIBRARY), 'Bodyweight'];
-  const fEl = document.getElementById('mob-lib-filters');
-  const eEl = document.getElementById('mob-lib-eq-filters');
-  if(fEl) fEl.innerHTML = groups.map(g=>
-    `<button class="lib-filter${g===libFilter?' active':''}" onclick="libFilter='${g}';renderMobLibFilters();renderMobLibrary()">${g}</button>`
-  ).join('');
-  const eqs = ['All','db','bb','bw','mc','cd'];
-  if(eEl) eEl.innerHTML = eqs.map(e=> e==='All'
-    ? `<button class="lib-eq-filter${eqFilter==='All'?' active':''}" onclick="eqFilter='All';renderMobLibFilters();renderMobLibrary()">All</button>`
-    : `<button class="lib-eq-filter${eqFilter===e?' active':''}" onclick="eqFilter='${e}';renderMobLibFilters();renderMobLibrary()" title="${EQ_FULL[e]||e}">${EQ_LABELS[e]}</button>`
-  ).join('');
-}
-
-function renderMobLibrary(){
-  const container = document.getElementById('mob-lib-list');
+function renderMobLibrary(container){
   if(!container) return;
-  const sortAlpha = list => list.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
-  const matchesEq = e => eqFilter==='All' || (e.eq||'bw')===eqFilter;
   let html = '';
+  const sortAlpha = list => list.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
 
-  const customs = sortAlpha(loadCustomExercises().filter(e=>matchesEq(e)));
-  if((libFilter==='All'||libFilter==='Custom') && customs.length){
-    html += `<div class="lib-group"><div class="lib-group-title" style="color:var(--purple);">⭐ My Custom Exercises</div>${customs.map(ex=>makeMobLibRow(ex,ex.category||'Custom',ex.eq||'bw',ex.type||'strength')).join('')}</div>`;
+  // Custom exercises first
+  const customs = sortAlpha(loadCustomExercises());
+  if(customs.length){
+    html += `<div class="lib-group">
+      <div class="lib-group-title" style="color:var(--purple);">⭐ My Custom Exercises</div>
+      ${customs.map(ex=>makeMobLibRow(ex,ex.category||'Custom',ex.eq||'bw',ex.type||'strength')).join('')}
+    </div>`;
   }
 
-  if(libFilter==='Bodyweight'){
-    Object.keys(EXERCISE_LIBRARY).forEach(group=>{
-      const items = sortAlpha(EXERCISE_LIBRARY[group].filter(e=>e.eq==='bw'&&matchesEq(e)));
-      if(!items.length) return;
-      html += `<div class="lib-group"><div class="lib-group-title">${group}</div>${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}</div>`;
-    });
-  } else {
-    Object.keys(EXERCISE_LIBRARY).forEach(group=>{
-      if(libFilter!=='All'&&libFilter!==group) return;
-      const items = sortAlpha(EXERCISE_LIBRARY[group].filter(e=>matchesEq(e)));
-      if(!items.length) return;
-      html += `<div class="lib-group"><div class="lib-group-title">${group}</div>${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}</div>`;
-    });
-  }
+  Object.keys(EXERCISE_LIBRARY).forEach(group=>{
+    const items = sortAlpha(EXERCISE_LIBRARY[group]);
+    if(!items.length) return;
+    html += `<div class="lib-group">
+      <div class="lib-group-title">${group}</div>
+      ${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}
+    </div>`;
+  });
 
-  container.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--slate);font-size:12px;">No exercises found.</div>';
+  container.innerHTML = html || '<div style="padding:24px;text-align:center;color:var(--slate);font-size:13px;">No exercises found.</div>';
 }
 
 function makeMobLibRow(ex, group, eq, type){
-  const safeName   = ex.name.replace(/"/g,'&quot;');
+  const safeName  = ex.name.replace(/"/g,'&quot;');
+  const safeNameJs = ex.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   const isSelected = libSelected.some(e=>e.name===ex.name);
-  const eqLabel    = EQ_LABELS[eq]||'';
   return `<div class="lib-ex-item lib-ex-clickable${isSelected?' lib-selected':''}"
     data-name="${safeName}" data-group="${group}" data-eq="${eq||'bw'}" data-type="${type||'strength'}"
-    onclick="toggleMobLibItem(this);updateMobSheetAddBar()">
-    <input type="checkbox" class="lib-ex-cb" ${isSelected?'checked':''} onclick="event.stopPropagation()">
-    <div style="flex:1;min-width:0;">
-      <div class="lib-ex-name">${ex.name}</div>
-      <div class="lib-ex-meta">${group}${eqLabel?' · '+eqLabel:''}</div>
-    </div>
+    onclick="toggleMobLibItem(this);updateMobSheetAddBar()"
+    style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer;">
+    <input type="checkbox" class="lib-ex-cb" ${isSelected?'checked':''} style="accent-color:var(--volt);flex-shrink:0;" onclick="event.stopPropagation()">
+    <span style="flex:1;font-size:13px;font-weight:500;color:var(--white);">${ex.name}</span>
+    <span style="font-size:10px;color:var(--mist);font-family:var(--font-mono);">${group}</span>
   </div>`;
 }
 
