@@ -440,6 +440,16 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .mob-sheet-add-bar.visible{display:flex;}
 .mob-sheet-add-label{font-size:13px;font-weight:700;color:var(--black);}
 .mob-sheet-add-btn{padding:8px 18px;background:var(--black);border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--volt);cursor:pointer;font-family:var(--font-body);}
+/* Mobile sheet filter area */
+.mob-sheet-filters{padding:8px 12px 4px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column;gap:6px;}
+.mob-sheet-search{width:100%;background:var(--carbon);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-size:13px;font-family:var(--font-body);padding:7px 10px;outline:none;-webkit-appearance:none;}
+.mob-sheet-search:focus{border-color:var(--volt);}
+.mob-sheet-search::placeholder{color:var(--slate);}
+.mob-sheet-filter-row{display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;}
+.mob-sheet-filter-row::-webkit-scrollbar{display:none;}
+.mob-filt-btn{flex-shrink:0;padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--mist);font-size:11px;font-weight:600;font-family:var(--font-body);cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;}
+.mob-filt-btn.active{background:var(--volt);color:var(--black);border-color:var(--volt);}
+.mob-filt-btn.active-eq{background:rgba(96,165,250,0.15);color:var(--blue);border-color:var(--blue);}
 
 /* mob add-ex button on each day card header — visible on all sizes */
 .mob-add-ex-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--volt);border:none;border-radius:999px;font-size:10px;font-weight:700;color:var(--black);cursor:pointer;font-family:var(--font-body);letter-spacing:0.04em;flex-shrink:0;}
@@ -679,6 +689,11 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
   <div class="mob-sheet-title">ADD EXERCISES</div>
   <div class="mob-sheet-target" id="mob-sheet-target"></div>
+  <div class="mob-sheet-filters" id="mob-sheet-filters">
+    <input class="mob-sheet-search" id="mob-sheet-search" type="search" placeholder="Search exercises..." oninput="renderMobLibrary(document.getElementById('mob-lib-list'))">
+    <div class="mob-sheet-filter-row" id="mob-filt-groups"></div>
+    <div class="mob-sheet-filter-row" id="mob-filt-eq"></div>
+  </div>
   <div class="mob-sheet-body" id="mob-sheet-body"></div>
   <div class="mob-sheet-add-bar" id="mob-sheet-add-bar">
     <span class="mob-sheet-add-label" id="mob-sheet-add-label">0 selected</span>
@@ -1990,6 +2005,10 @@ function mobSheetOpen(dayId){
   window._targetDay = dayId;
   clearLibSelection();
 
+  // Reset filters
+  libFilter = 'All';
+  eqFilter  = 'All';
+
   const day = program.days.find(d=>d.id===dayId);
   const target = document.getElementById('mob-sheet-target');
   if(target){
@@ -1997,10 +2016,32 @@ function mobSheetOpen(dayId){
     target.classList.toggle('visible', !!day);
   }
 
-  // Populate sheet body with the library HTML
+  // Clear search
+  const searchEl = document.getElementById('mob-sheet-search');
+  if(searchEl) searchEl.value = '';
+
+  // Build muscle group filter pills
+  const groups = ['All','Bodyweight',...Object.keys(EXERCISE_LIBRARY)];
+  const grpEl = document.getElementById('mob-filt-groups');
+  if(grpEl){
+    grpEl.innerHTML = groups.map(g=>
+      `<button class="mob-filt-btn${g==='All'?' active':''}" data-group="${g}" onclick="mobSetGroupFilter('${g.replace(/'/g,"\\'")}',this)">${g}</button>`
+    ).join('');
+  }
+
+  // Build equipment filter pills
+  const eqs = ['All','db','bb','bw','mc','cd'];
+  const eqEl = document.getElementById('mob-filt-eq');
+  if(eqEl){
+    eqEl.innerHTML = eqs.map(e=> e==='All'
+      ? `<button class="mob-filt-btn active" data-eq="All" onclick="mobSetEqFilter('All',this)">All equip</button>`
+      : `<button class="mob-filt-btn" data-eq="${e}" onclick="mobSetEqFilter('${e}',this)" title="${EQ_FULL[e]||e}">${EQ_LABELS[e]||e}</button>`
+    ).join('');
+  }
+
+  // Populate sheet body with the library list
   const body = document.getElementById('mob-sheet-body');
   if(body){
-    // Temporarily redirect lib-list render target into the sheet
     body.innerHTML = '<div id="mob-lib-list"></div>';
     renderMobLibrary(body.querySelector('#mob-lib-list'));
   }
@@ -2011,6 +2052,20 @@ function mobSheetOpen(dayId){
   document.getElementById('mob-sheet-overlay').classList.add('open');
   document.getElementById('mob-sheet').classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function mobSetGroupFilter(group, btn){
+  libFilter = group;
+  document.querySelectorAll('#mob-filt-groups .mob-filt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMobLibrary(document.getElementById('mob-lib-list'));
+}
+
+function mobSetEqFilter(eq, btn){
+  eqFilter = eq;
+  document.querySelectorAll('#mob-filt-eq .mob-filt-btn').forEach(b=>{b.classList.remove('active');b.classList.remove('active-eq');});
+  btn.classList.add(eq==='All' ? 'active' : 'active-eq');
+  renderMobLibrary(document.getElementById('mob-lib-list'));
 }
 
 function mobSheetClose(){
@@ -2044,27 +2099,47 @@ function updateMobSheetAddBar(){
 }
 
 function renderMobLibrary(container){
+  if(!container) container = document.getElementById('mob-lib-list');
   if(!container) return;
-  let html = '';
-  const sortAlpha = list => list.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
 
-  // Custom exercises first
-  const customs = sortAlpha(loadCustomExercises());
-  if(customs.length){
+  const searchEl = document.getElementById('mob-sheet-search');
+  const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const sortAlpha = list => list.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+  const matchesEq = e => eqFilter==='All' || (e.eq||'bw')===eqFilter;
+  const matchesSearch = e => !search || e.name.toLowerCase().includes(search);
+
+  let html = '';
+
+  // Custom exercises
+  const customs = sortAlpha(loadCustomExercises().filter(e=>matchesSearch(e)&&matchesEq(e)));
+  if((libFilter==='All'||libFilter==='Custom') && customs.length){
     html += `<div class="lib-group">
       <div class="lib-group-title" style="color:var(--purple);">⭐ My Custom Exercises</div>
       ${customs.map(ex=>makeMobLibRow(ex,ex.category||'Custom',ex.eq||'bw',ex.type||'strength')).join('')}
     </div>`;
   }
 
-  Object.keys(EXERCISE_LIBRARY).forEach(group=>{
-    const items = sortAlpha(EXERCISE_LIBRARY[group]);
-    if(!items.length) return;
-    html += `<div class="lib-group">
-      <div class="lib-group-title">${group}</div>
-      ${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}
-    </div>`;
-  });
+  // Bodyweight shortcut — all bw exercises across groups
+  if(libFilter==='Bodyweight'){
+    Object.keys(EXERCISE_LIBRARY).forEach(group=>{
+      const items = sortAlpha(EXERCISE_LIBRARY[group].filter(e=>e.eq==='bw'&&matchesSearch(e)&&matchesEq(e)));
+      if(!items.length) return;
+      html += `<div class="lib-group">
+        <div class="lib-group-title">${group}</div>
+        ${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}
+      </div>`;
+    });
+  } else {
+    Object.keys(EXERCISE_LIBRARY).forEach(group=>{
+      if(libFilter!=='All' && libFilter!==group) return;
+      const items = sortAlpha(EXERCISE_LIBRARY[group].filter(e=>matchesSearch(e)&&matchesEq(e)));
+      if(!items.length) return;
+      html += `<div class="lib-group">
+        <div class="lib-group-title">${group}</div>
+        ${items.map(ex=>makeMobLibRow(ex,group,ex.eq,ex.defaultType)).join('')}
+      </div>`;
+    });
+  }
 
   container.innerHTML = html || '<div style="padding:24px;text-align:center;color:var(--slate);font-size:13px;">No exercises found.</div>';
 }
