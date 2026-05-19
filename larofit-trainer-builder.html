@@ -44,7 +44,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .s-plan{font-size:10px;color:var(--volt);font-family:var(--font-mono);}
 
 /* ── TOPBAR ── */
-.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;background:var(--offblack);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;flex-wrap:nowrap;gap:8px;}
 .topbar-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
 .topbar-right{display:flex;align-items:center;gap:8px;}
 .page-title{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);}
@@ -372,9 +372,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 @media(max-width:900px){
   .shell{grid-template-columns:1fr;}
   .sidebar{display:none;}
-  .builder-area{grid-template-columns:1fr;}
+  .builder-area{grid-template-columns:1fr;overflow:visible !important;display:block !important;}
+  .builder-wrapper{overflow:visible !important;}
   .right-panel{display:none;}
   .days-grid{grid-template-columns:repeat(2,1fr);}
+  .main{overflow:visible !important;}
+  .topbar{padding:10px 14px !important;flex-wrap:nowrap !important;}
+  .page-title{font-size:22px !important;}
 }
 </style>
 </head>
@@ -436,7 +440,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <input type="hidden" id="prog-weeks" value="6">
 
   <!-- BUILDER AREA -->
-  <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+  <div class="builder-wrapper" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
 
     <!-- CLIENT BANNER — spans full width above the builder grid -->
     <div id="trainer-client-bar" style="padding:8px 20px;background:rgba(167,139,250,0.08);border-bottom:1px solid rgba(167,139,250,0.2);display:flex;align-items:center;gap:10px;flex-shrink:0;">
