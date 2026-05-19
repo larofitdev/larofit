@@ -92,8 +92,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 /* ── NEXT WORKOUT CARD ── */
 .next-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
-.card-header{padding:14px 18px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.card-title{font-size:13px;font-weight:700;color:var(--pure);}
+.card-header{padding:14px 18px;background:var(--carbon);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.card-title{font-size:13px;font-weight:700;color:var(--pure);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .card-badge{padding:3px 10px;background:var(--volt-pale);border:1px solid rgba(198,241,53,0.2);border-radius:999px;font-size:10px;font-weight:700;color:var(--volt);font-family:var(--font-mono);}
 .card-body{padding:18px;}
 .next-day-name{font-family:var(--font-display);font-size:28px;letter-spacing:1px;color:var(--pure);margin-bottom:4px;}
@@ -257,7 +257,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="next-card">
         <div class="card-header">
           <div class="card-title" id="next-workout-title">Your next workout</div>
-          <a class="card-btn outline" href="larofit-builder.html" style="padding:4px 12px;font-size:11px;">Edit program →</a>
+          <a class="card-btn" href="larofit-builder.html" style="padding:5px 14px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;width:auto;">Edit program →</a>
         </div>
         <div class="card-body" id="next-workout-body">
           <div class="no-program">
@@ -372,7 +372,7 @@ function loadNextWorkout(){
   }
 
   const dateStr = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  document.getElementById('next-workout-title').textContent = `Your next workout is ${nextDay.name} — ${dateStr}`;
+  document.getElementById('next-workout-title').textContent = `Your next workout is ${dateStr}`;
 
   // Build all exercise rows
   function makeExRow(ex){
