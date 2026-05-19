@@ -48,6 +48,22 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .cloud-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);border-radius:999px;font-size:11px;font-weight:600;color:var(--success);font-family:var(--font-mono);}
 .cloud-badge.offline{background:rgba(255,255,255,0.04);border-color:var(--border);color:var(--slate);}
 
+/* ── PINNED STATS ── */
+.pinned-stats{display:flex;align-items:stretch;gap:8px;flex-wrap:nowrap;}
+.pstat{display:inline-flex;flex-direction:column;justify-content:center;gap:1px;white-space:nowrap;padding:5px 10px;border-radius:var(--radius-sm);border:1px solid;border-top-width:2px;background:var(--card-bg);min-width:0;}
+.pstat.volt{border-color:rgba(198,241,53,0.25);border-top-color:var(--volt);}
+.pstat.green{border-color:rgba(74,222,128,0.25);border-top-color:var(--success);}
+.pstat.blue{border-color:rgba(96,165,250,0.25);border-top-color:var(--blue);}
+.pstat.orange{border-color:rgba(251,146,60,0.25);border-top-color:var(--orange);}
+.pstat-label{font-size:9px;font-weight:600;color:var(--mist);text-transform:uppercase;letter-spacing:0.08em;}
+.pstat-val{font-size:13px;font-weight:700;color:var(--pure);font-family:var(--font-mono);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+@media(max-width:900px){
+  .pstat{padding:4px 8px;}
+  .pstat-label{font-size:8px;}
+  .pstat-val{font-size:11px;max-width:72px;}
+  .pinned-stats{gap:5px;}
+}
+
 /* ── CONTENT ── */
 .content{padding:28px 32px;display:flex;flex-direction:column;gap:20px;}
 
@@ -216,8 +232,12 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="page-title" id="dash-name">DASHBOARD</div>
     </div>
     <div class="topbar-right">
-      <span class="cloud-badge offline" id="cloud-badge">💾 Local only</span>
-      <span class="trial-badge">⭐ PRO TRIAL — 14 days</span>
+      <div class="pinned-stats" id="pinned-stats">
+        <span class="pstat volt"><span class="pstat-label">Workouts</span><span class="pstat-val" id="pin-workouts">0</span></span>
+        <span class="pstat green"><span class="pstat-label">Program</span><span class="pstat-val" id="pin-program">—</span></span>
+        <span class="pstat blue"><span class="pstat-label">Measurements</span><span class="pstat-val" id="pin-meas">0</span></span>
+        <span class="pstat orange"><span class="pstat-label">Next check</span><span class="pstat-val" id="pin-check">—</span></span>
+      </div>
     </div>
   </div>
 
@@ -228,30 +248,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="milestone-icon" id="milestone-icon">🎉</div>
       <div class="milestone-text" id="milestone-text"></div>
       <a class="milestone-btn" id="milestone-btn" href="#">Let's go →</a>
-    </div>
-
-    <!-- STAT ROW -->
-    <div class="stat-row">
-      <div class="stat-card volt">
-        <div class="stat-label">Workouts logged</div>
-        <div class="stat-num" id="stat-workouts">0</div>
-        <div class="stat-sub">total sessions</div>
-      </div>
-      <div class="stat-card green">
-        <div class="stat-label">Current program</div>
-        <div class="stat-num" id="stat-prog-days" style="font-size:20px;padding-top:8px;">—</div>
-        <div class="stat-sub" id="stat-prog-name">No program yet</div>
-      </div>
-      <div class="stat-card blue">
-        <div class="stat-label">Measurements</div>
-        <div class="stat-num" id="stat-meas">0</div>
-        <div class="stat-sub">entries logged</div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-label">Days until next check</div>
-        <div class="stat-num" id="stat-check">—</div>
-        <div class="stat-sub">measurement reminder</div>
-      </div>
     </div>
 
     <!-- MAIN GRID: NEXT WORKOUT + PROGRAM -->
@@ -289,51 +285,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
           </div>
         </div>
 
-        <!-- QUICK LINKS -->
-        <div class="next-card">
-          <div class="card-header"><div class="card-title">⚡ Quick access</div></div>
-          <div class="card-body">
-            <div class="quick-grid">
-              <a class="quick-item" href="larofit-builder.html">
-                <div class="quick-icon">📋</div>
-                <div><div class="quick-label">Program builder</div><div class="quick-sub">Edit your program</div></div>
-              </a>
-              <a class="quick-item" href="larofit-measurements.html">
-                <div class="quick-icon">📏</div>
-                <div><div class="quick-label">Measurements</div><div class="quick-sub">Log your stats</div></div>
-              </a>
-              <a class="quick-item" href="larofit-progress.html">
-                <div class="quick-icon">📊</div>
-                <div><div class="quick-label">Progress</div><div class="quick-sub">View your charts</div></div>
-              </a>
-              <a class="quick-item" href="larofit-profile.html">
-                <div class="quick-icon">👤</div>
-                <div><div class="quick-label">My profile</div><div class="quick-sub">Goals &amp; nutrition</div></div>
-              </a>
-              <a class="quick-item" href="larofit-library.html">
-                <div class="quick-icon">📚</div>
-                <div><div class="quick-label">Exercise library</div><div class="quick-sub">Browse exercises</div></div>
-              </a>
-              <div class="quick-item" style="opacity:0.4;cursor:default;">
-                <div class="quick-icon">🛒</div>
-                <div><div class="quick-label">Marketplace</div><div class="quick-sub">Coming soon</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- RECENT ACTIVITY -->
-    <div class="next-card">
-      <div class="card-header">
-        <div class="card-title">🕐 Recent activity</div>
-      </div>
-      <div class="card-body">
-        <div class="activity-list" id="activity-list">
-          <div class="empty-activity">No activity yet — your logged workouts and measurements will appear here.</div>
-        </div>
       </div>
     </div>
 
@@ -377,17 +328,11 @@ function init(){
     document.getElementById('dash-name').textContent = uname.toUpperCase()+"'S DASHBOARD";
   }
 
-  // Cloud badge
-  const hasCloud = !!(localStorage.getItem('larofit_sb_url') && localStorage.getItem('larofit_sb_key'));
-  if(hasCloud){
-    document.getElementById('cloud-badge').className = 'cloud-badge';
-    document.getElementById('cloud-badge').textContent = '☁️ Cloud on';
-  }
+  // Cloud badge removed
 
   loadStats();
   loadNextWorkout();
   loadProgramOverview();
-  loadRecentActivity();
   checkMilestone();
 }
 
@@ -397,21 +342,18 @@ function loadStats(){
   const meas  = JSON.parse(localStorage.getItem('larofit_measurements')||'[]');
   const prog  = JSON.parse(localStorage.getItem('larofit_program')||'null');
 
-  document.getElementById('stat-workouts').textContent = logs.length;
-  document.getElementById('stat-meas').textContent     = meas.length;
+  document.getElementById('pin-workouts').textContent = logs.length;
+  document.getElementById('pin-meas').textContent     = meas.length;
 
   if(prog){
-    const activeDays = prog.days.filter(d=>!d.rest).length;
-    document.getElementById('stat-prog-days').textContent = activeDays+' day split';
-    document.getElementById('stat-prog-name').textContent = prog.name||'My program';
+    document.getElementById('pin-program').textContent = prog.name||'My program';
   }
 
-  // Days until next measurement check (every 30 workouts)
   if(logs.length > 0 && meas.length > 0){
     const nextCheck = 30 - (logs.length % 30);
-    document.getElementById('stat-check').textContent = nextCheck === 30 ? '✓' : nextCheck;
+    document.getElementById('pin-check').textContent = nextCheck === 30 ? '✓' : nextCheck+'d';
   } else {
-    document.getElementById('stat-check').textContent = '—';
+    document.getElementById('pin-check').textContent = '—';
   }
 }
 
@@ -530,60 +472,6 @@ function loadProgramOverview(){
     <div style="font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">This week</div>
     <div class="week-grid" style="margin-bottom:14px;">${weekDots}</div>
     <a class="card-btn outline" href="larofit-builder.html">Edit program →</a>`;
-}
-
-// ── RECENT ACTIVITY ───────────────────────────────────────────────────────────
-function loadRecentActivity(){
-  const logs  = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
-  const meas  = JSON.parse(localStorage.getItem('larofit_measurements')||'[]');
-  const list  = document.getElementById('activity-list');
-
-  const items = [];
-
-  // Add workout logs
-  logs.slice(-5).reverse().forEach(log=>{
-    const exCount = (log.exercises||[]).length;
-    items.push({
-      date: log.date,
-      text: `Completed workout — ${exCount} exercise${exCount!==1?'s':''}`,
-      color: 'var(--volt)'
-    });
-  });
-
-  // Add measurement entries
-  meas.slice(-3).reverse().forEach(entry=>{
-    const date = new Date(entry.date).toISOString().split('T')[0];
-    items.push({
-      date,
-      text: `Logged measurements — weight ${entry.values?.weight||'—'}lbs`,
-      color: 'var(--blue)'
-    });
-  });
-
-  if(!items.length){
-    list.innerHTML = '<div class="empty-activity">No activity yet — your logged workouts and measurements will appear here.</div>';
-    return;
-  }
-
-  // Sort by date descending
-  items.sort((a,b)=>b.date.localeCompare(a.date));
-
-  list.innerHTML = items.slice(0,8).map(item=>`
-    <div class="activity-item">
-      <div class="activity-dot" style="background:${item.color}"></div>
-      <div class="activity-text">${item.text}</div>
-      <div class="activity-date">${formatDate(item.date)}</div>
-    </div>`).join('');
-}
-
-function formatDate(dateStr){
-  const d = new Date(dateStr);
-  const today = new Date();
-  const diff  = Math.floor((today-d)/(1000*60*60*24));
-  if(diff===0) return 'Today';
-  if(diff===1) return 'Yesterday';
-  if(diff<7)   return diff+' days ago';
-  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
 
 // ── MILESTONE CHECK ───────────────────────────────────────────────────────────
