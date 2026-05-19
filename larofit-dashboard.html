@@ -250,14 +250,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <a class="milestone-btn" id="milestone-btn" href="#">Let's go →</a>
     </div>
 
-    <!-- MAIN GRID: NEXT WORKOUT + PROGRAM -->
-    <div class="dash-grid three">
+    <!-- MAIN GRID: NEXT WORKOUT -->
+    <div>
 
       <!-- NEXT WORKOUT -->
       <div class="next-card">
         <div class="card-header">
-          <div class="card-title">📅 Your next workout</div>
-          <div class="card-badge" id="next-day-badge">—</div>
+          <div class="card-title" id="next-workout-title">Your next workout</div>
+          <a class="card-btn outline" href="larofit-builder.html" style="padding:4px 12px;font-size:11px;">Edit program →</a>
         </div>
         <div class="card-body" id="next-workout-body">
           <div class="no-program">
@@ -268,24 +268,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         </div>
       </div>
 
-      <!-- RIGHT COLUMN -->
-      <div style="display:flex;flex-direction:column;gap:20px;">
-
-        <!-- PROGRAM OVERVIEW -->
-        <div class="next-card">
-          <div class="card-header">
-            <div class="card-title">📋 Current program</div>
-          </div>
-          <div class="card-body" id="program-body">
-            <div class="no-program">
-              <div class="no-program-icon">📋</div>
-              <div style="font-size:12px;">No program yet.</div>
-              <a href="larofit-ai-coach.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Build one →</a>
-            </div>
-          </div>
-        </div>
-
-      </div>
     </div>
 
     <!-- DATA SYNC -->
@@ -332,7 +314,6 @@ function init(){
 
   loadStats();
   loadNextWorkout();
-  loadProgramOverview();
   checkMilestone();
 }
 
@@ -393,7 +374,8 @@ function loadNextWorkout(){
   }
 
   badge.textContent = 'Up next';
-  const dateStr = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const dateStr = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('next-workout-title').textContent = `Your next workout is ${nextDay.name} — ${dateStr}`;
 
   // Build all exercise rows
   function makeExRow(ex){
@@ -416,8 +398,6 @@ function loadNextWorkout(){
   const restHtml    = rest.map(makeExRow).join('');
 
   body.innerHTML = `
-    <div class="next-day-name">${nextDay.name}</div>
-    <div class="next-day-date">Up next · ${dateStr}</div>
     <div class="next-ex-list" id="ex-preview">
       ${previewHtml}
     </div>
@@ -431,47 +411,6 @@ function loadNextWorkout(){
     <div style="display:flex;gap:8px;">
       <a class="card-btn" href="larofit-today.html" style="flex:1;">▶ Start workout</a>
     </div>`;
-}
-
-// ── PROGRAM OVERVIEW ──────────────────────────────────────────────────────────
-function loadProgramOverview(){
-  const prog = JSON.parse(localStorage.getItem('larofit_program')||'null');
-  const body = document.getElementById('program-body');
-  if(!prog){
-    body.innerHTML = `<div class="no-program"><div class="no-program-icon">📋</div><div style="font-size:12px;">No program yet.</div><a href="larofit-ai-coach.html" style="color:var(--volt);font-size:12px;text-decoration:none;display:block;margin-top:8px;">Build one →</a></div>`;
-    return;
-  }
-
-  const logs      = JSON.parse(localStorage.getItem('larofit_logs')||'[]');
-  const totalEx   = prog.days.reduce((s,d)=>s+d.exercises.length,0);
-  const weeks     = prog.weeks||6;
-  const goalLabel = {strength:'Strength',hypertrophy:'Muscle Growth',weightloss:'Weight Loss',endurance:'Endurance',flexibility:'Flexibility',general:'General Fitness'}[prog.goal]||prog.goal;
-
-  // Week progress — estimate based on workouts logged
-  const workoutsPerWeek = prog.days.filter(d=>!d.rest).length;
-  const weeksIn = workoutsPerWeek > 0 ? Math.floor(logs.length / workoutsPerWeek) : 0;
-  const weekPct = weeks > 0 ? Math.min(100, Math.round((weeksIn/weeks)*100)) : 0;
-
-  // This week dots
-  const now      = new Date();
-  const todayIdx = now.getDay()===0 ? 6 : now.getDay()-1;
-  const weekDots = prog.days.map((d,i)=>`
-    <div class="week-dot${d.rest?' rest':i===todayIdx?' today':''}" title="${d.name}">
-      ${d.rest?'—':d.name.slice(0,1)}
-    </div>`).join('');
-
-  body.innerHTML = `
-    <div class="prog-info">
-      <div class="prog-name">${prog.name||'My program'}</div>
-      <div class="prog-meta">${goalLabel} · ${totalEx} exercises · ${weeks} weeks</div>
-    </div>
-    <div class="prog-week-bar">
-      <div class="prog-week-label"><span>Week progress</span><span>${weeksIn}/${weeks} weeks</span></div>
-      <div class="prog-week-track"><div class="prog-week-fill" style="width:${weekPct}%"></div></div>
-    </div>
-    <div style="font-size:10px;font-weight:600;color:var(--mist);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">This week</div>
-    <div class="week-grid" style="margin-bottom:14px;">${weekDots}</div>
-    <a class="card-btn outline" href="larofit-builder.html">Edit program →</a>`;
 }
 
 // ── MILESTONE CHECK ───────────────────────────────────────────────────────────
