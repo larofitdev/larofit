@@ -864,6 +864,15 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </div>
 
 <script src="larofit-exercises.js"></script>
+<script>
+// ── FALLBACK: if larofit-exercises.js failed to load, define empty stubs ──
+if(typeof EXERCISE_LIBRARY === 'undefined'){
+  console.error('larofit-exercises.js failed to load — using empty stubs');
+  window.EXERCISE_LIBRARY = {};
+  window.LAROFIT_EXERCISES = [];
+  window.CATEGORIES = [];
+  window.MUSCLES_ALL = [];
+}
 
 const TYPE_DEFAULTS = {
   strength:        {sets:3, reps:10,  weight:25, rest:'90s'},

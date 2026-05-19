@@ -454,6 +454,14 @@ tr:hover .row-actions{opacity:1;}
 </script>
 <script src="larofit-exercises.js"></script>
 <script>
+// ── FALLBACK ──
+if(typeof LAROFIT_EXERCISES === 'undefined'){
+  console.error('larofit-exercises.js failed to load — using empty stubs');
+  window.LAROFIT_EXERCISES = [];
+  window.EXERCISE_LIBRARY = {};
+  window.CATEGORIES = [];
+  window.MUSCLES_ALL = [];
+}
 
 const EQ_MAP={db:'DB',bb:'BB',mc:'Machine',bw:'Bodyweight',kb:'Kettlebell',band:'Band',cd:'Cardio',yoga:'Yoga',rc:'Recovery'};
 const TYPE_COLORS={strength:'#c6f135',cardio:'#60a5fa',yoga:'#a78bfa',stretch:'#4ade80',hiit:'#fb923c',recovery:'#f472b6',plyo:'#fbbf24'};
