@@ -256,12 +256,11 @@ input[type="number"], input[type="text"], select, textarea {
   right: 0;
   background: var(--bg-dark);
   border-top: 1px solid rgba(198,241,53,0.2);
-  padding: 10px 16px;
+  padding: 12px 16px;
   display: none;
   align-items: center;
   gap: 12px;
-  z-index: 150;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  z-index: 190;
 }
 
 .rest-banner.show { display: flex; }
@@ -547,7 +546,7 @@ input[type="number"], input[type="text"], select, textarea {
   </div>
 
   <!-- WORKOUT IN PROGRESS -->
-  <div id="workout-state" style="display:none;">
+  <div id="workout-state" style="display:none;padding-bottom:80px;">
 
     <!-- Exercise progress dots -->
     <div class="ex-progress-dots" id="ex-dots"></div>
@@ -1245,10 +1244,10 @@ function startAnyway() {
 
 // ── REST TIME FORMAT ─────────────────────────────────────────
 function formatRest(secs) {
-  if (!secs) return '60s';
-  return secs >= 60
-    ? Math.floor(secs / 60) + 'm' + (secs % 60 ? (secs % 60) + 's' : '')
-    : secs + 's';
+  if (!secs) return '60s rest';
+  if (secs < 60) return secs + 's rest';
+  if (secs % 60 === 0) return Math.floor(secs / 60) + 'm rest';
+  return secs + 's rest';
 }
 
 // ── TOAST ────────────────────────────────────────────────────
