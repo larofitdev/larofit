@@ -16,7 +16,7 @@
       id: 'home',
       label: 'Home',
       icon: 'ti-home',
-      href: 'dashboard.html',
+      href: 'index.html',
     },
     {
       id: 'workout',

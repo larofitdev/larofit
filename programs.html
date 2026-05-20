@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f0">
+<title>LaroFit — Programs</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="larofit.css?v=2">
+<style>
+/* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
+button, a { touch-action: manipulation; }
+
+/* ── ACTIVE BANNER ── */
+.active-banner {
+  margin: 14px var(--page-pad) 0;
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.active-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--volt);
+  box-shadow: 0 0 0 0 rgba(198,241,53,0.6);
+  animation: pulse 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(198,241,53,0.6); }
+  70%  { box-shadow: 0 0 0 7px rgba(198,241,53,0); }
+  100% { box-shadow: 0 0 0 0 rgba(198,241,53,0); }
+}
+
+.active-banner-text { flex: 1; min-width: 0; }
+
+.active-banner-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--volt);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  margin-bottom: 3px;
+}
+
+.active-banner-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--text-inv);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.active-banner-meta {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 2px;
+}
+
+/* ── PROGRAM CARD ── */
+.prog-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+  animation: fadeUp 0.25s ease both;
+}
+
+.prog-card.is-active {
+  border-color: var(--volt-border);
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.prog-card-header {
+  padding: 14px 16px 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.prog-card-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Day bar — 7 segments */
+.prog-day-bar {
+  display: flex;
+  gap: 3px;
+  padding: 12px 16px 0;
+}
+
+.prog-day-seg {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--bg-card2);
+}
+
+.prog-day-seg.training { background: var(--volt); }
+.prog-day-seg.rest     { background: var(--border-md); }
+
+/* Stats row */
+.prog-stats {
+  display: flex;
+  gap: 0;
+  padding: 10px 16px 12px;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.prog-stat {
+  flex: 1;
+  text-align: center;
+}
+
+.prog-stat + .prog-stat {
+  border-left: 0.5px solid var(--border);
+}
+
+.prog-stat-val {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--text);
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.prog-stat-label {
+  font-size: 9px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 3px;
+}
+
+/* Action buttons */
+.prog-actions {
+  display: flex;
+  gap: 0;
+}
+
+.prog-action-btn {
+  flex: 1;
+  padding: 12px 8px;
+  background: transparent;
+  border: none;
+  border-right: 0.5px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.prog-action-btn:last-child { border-right: none; }
+.prog-action-btn:active { background: var(--bg-card2); }
+
+.prog-action-btn.activate {
+  color: var(--volt-dark);
+  font-weight: 700;
+}
+
+.prog-action-btn.danger { color: var(--danger); }
+
+/* ── BOTTOM SHEET — Program Detail ── */
+.sheet-day-block {
+  border-bottom: 0.5px solid var(--border);
+}
+
+.sheet-day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sheet-day-header:active { background: var(--bg-card2); }
+
+.sheet-day-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sheet-day-name.rest-day { color: var(--text-3); }
+
+.sheet-day-count {
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sheet-day-exercises {
+  display: none;
+  flex-direction: column;
+  padding: 0 16px 8px;
+  gap: 6px;
+}
+
+.sheet-day-exercises.open { display: flex; }
+
+.sheet-ex-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-card2);
+  border-radius: var(--radius-sm);
+}
+
+.sheet-ex-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.sheet-ex-meta {
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+}
+
+/* ── DELETE CONFIRM SHEET ── */
+.delete-sheet-body {
+  padding: 16px;
+}
+
+.delete-sheet-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.delete-sheet-warn {
+  font-size: 13px;
+  color: var(--text-3);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* ── FAB ── */
+.lf-fab {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 16px);
+  right: 16px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--volt);
+  color: var(--bg-dark);
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(198,241,53,0.35);
+  cursor: pointer;
+  border: none;
+  z-index: 100;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.lf-fab:active {
+  transform: scale(0.92);
+  box-shadow: 0 2px 8px rgba(198,241,53,0.2);
+}
+
+@media (min-width: 768px) {
+  .lf-fab { bottom: 24px; right: 24px; }
+}
+
+/* ── TOAST ── */
+.lf-toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--bg-dark);
+  color: var(--text-inv);
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 500;
+}
+
+.lf-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<script>window.LF_PAGE = 'build';</script>
+<script src="larofit-nav.js"></script>
+
+<main class="lf-main-desktop">
+
+  <!-- HEADER -->
+  <div class="lf-header">
+    <div class="lf-header-inner">
+      <div>
+        <div class="lf-header-title">Programs</div>
+      </div>
+      <button class="btn btn-dark btn-sm" onclick="location.href='builder.html'">
+        <i class="ti ti-plus" aria-hidden="true"></i> New
+      </button>
+    </div>
+  </div>
+
+  <!-- ACTIVE PROGRAM BANNER -->
+  <div id="active-banner" style="display:none;">
+    <!-- injected by JS -->
+  </div>
+
+  <!-- SECTION LABEL -->
+  <div id="programs-label" class="lf-section-label" style="display:none;">My Programs</div>
+
+  <!-- PROGRAMS LIST -->
+  <div id="programs-list" style="display:flex;flex-direction:column;gap:10px;padding:0 var(--page-pad) 80px;">
+    <!-- injected by JS -->
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="empty-state" class="lf-empty" style="display:none;">
+    <div class="lf-empty-icon">📋</div>
+    <div class="lf-empty-title">No programs yet</div>
+    <div class="lf-empty-body">Build your first workout program and activate it to start training.</div>
+    <button class="btn btn-volt lf-mt" onclick="location.href='builder.html'">
+      <i class="ti ti-plus" aria-hidden="true"></i> Build a program
+    </button>
+  </div>
+
+</main>
+
+<!-- FAB — new program -->
+<button class="lf-fab" id="fab" onclick="location.href='builder.html'" aria-label="New program" style="display:none;">
+  <i class="ti ti-plus" style="font-size:22px;"></i>
+</button>
+
+<!-- ── PROGRAM DETAIL SHEET ── -->
+<div class="lf-sheet-backdrop" id="detail-backdrop" onclick="closeDetail()"></div>
+<div class="lf-sheet" id="detail-sheet" role="dialog" aria-modal="true" aria-label="Program detail">
+  <div class="lf-sheet-handle"></div>
+  <div class="lf-sheet-title" id="detail-title">Program</div>
+  <div class="lf-sheet-body" id="detail-body"></div>
+  <div style="padding:14px 16px;border-top:0.5px solid var(--border);display:flex;gap:8px;flex-shrink:0;">
+    <button class="btn btn-outline btn-sm" id="detail-edit-btn" onclick="editFromDetail()">
+      <i class="ti ti-edit" aria-hidden="true"></i> Edit
+    </button>
+    <button class="btn btn-volt btn-full" id="detail-activate-btn" onclick="activateFromDetail()">
+      <i class="ti ti-player-play" aria-hidden="true"></i> Set as active
+    </button>
+  </div>
+</div>
+
+<!-- ── DELETE CONFIRM SHEET ── -->
+<div class="lf-sheet-backdrop" id="delete-backdrop" onclick="closeDelete()"></div>
+<div class="lf-sheet" id="delete-sheet" role="dialog" aria-modal="true" aria-label="Delete program">
+  <div class="lf-sheet-handle"></div>
+  <div class="lf-sheet-title" style="color:var(--danger);">Delete Program</div>
+  <div class="delete-sheet-body">
+    <div class="delete-sheet-name" id="delete-prog-name"></div>
+    <div class="delete-sheet-warn">This will permanently delete this program. Your workout history will not be affected.</div>
+    <button class="btn btn-full btn-lg" id="delete-confirm-btn"
+            style="background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);margin-bottom:10px;"
+            onclick="confirmDelete()">
+      <i class="ti ti-trash" aria-hidden="true"></i> Yes, delete it
+    </button>
+    <button class="btn btn-outline btn-full btn-lg" onclick="closeDelete()">Cancel</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="lf-toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   programs.js — LaroFit v2
+   ============================================================ */
+
+// ── STORAGE ──────────────────────────────────────────────────
+const store = {
+  get(key, fallback = null) {
+    try {
+      const v = localStorage.getItem('lf_' + key);
+      return v === null ? fallback : JSON.parse(v);
+    } catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem('lf_' + key, JSON.stringify(value)); } catch {}
+  }
+};
+
+// ── STATE ─────────────────────────────────────────────────────
+let programs  = [];
+let activeId  = null;
+let detailId  = null;  // program currently open in detail sheet
+let deleteId  = null;  // program pending delete confirmation
+
+// ── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  programs = store.get('programs', []);
+  activeId = store.get('active_program', null);
+  render();
+});
+
+// ── RENDER ───────────────────────────────────────────────────
+function render() {
+  const bannerEl   = document.getElementById('active-banner');
+  const labelEl    = document.getElementById('programs-label');
+  const listEl     = document.getElementById('programs-list');
+  const emptyEl    = document.getElementById('empty-state');
+  const fabEl      = document.getElementById('fab');
+
+  if (!programs.length) {
+    bannerEl.style.display  = 'none';
+    labelEl.style.display   = 'none';
+    listEl.style.display    = 'none';
+    emptyEl.style.display   = 'flex';
+    fabEl.style.display     = 'none';
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  listEl.style.display  = 'flex';
+  fabEl.style.display   = 'flex';
+
+  // Active banner
+  const active = programs.find(p => p.id === activeId);
+  if (active) {
+    const trainingDays = active.days?.filter(d => !d.rest).length || 0;
+    const totalEx      = active.days?.reduce((s, d) => s + (d.exercises?.length || 0), 0) || 0;
+    bannerEl.innerHTML = `
+      <div class="active-banner">
+        <div class="active-pulse"></div>
+        <div class="active-banner-text">
+          <div class="active-banner-eyebrow">Active Program</div>
+          <div class="active-banner-name">${esc(active.name || 'My Program')}</div>
+          <div class="active-banner-meta">${trainingDays} training days · ${totalEx} exercises · ${active.weeks || 6} weeks</div>
+        </div>
+        <button class="btn btn-volt btn-sm" onclick="location.href='workout.html'" style="flex-shrink:0;">
+          Go <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>`;
+    bannerEl.style.display = 'block';
+  } else {
+    bannerEl.style.display = 'none';
+  }
+
+  // Programs label
+  labelEl.style.display = 'block';
+
+  // Program cards
+  listEl.innerHTML = programs.map((p, idx) => buildCard(p, idx)).join('');
+}
+
+function buildCard(p, idx) {
+  const isActive     = p.id === activeId;
+  const trainingDays = p.days?.filter(d => !d.rest).length || 0;
+  const totalEx      = p.days?.reduce((s, d) => s + (d.exercises?.length || 0), 0) || 0;
+  const totalSets    = p.days?.reduce((s, d) =>
+    s + (d.exercises?.reduce((ss, ex) => ss + (ex.sets || 3), 0) || 0), 0) || 0;
+
+  // 7-segment day bar
+  const daySegs = (p.days || Array(7).fill({ rest: true }))
+    .slice(0, 7)
+    .map(d => `<div class="prog-day-seg ${d.rest ? 'rest' : 'training'}"></div>`)
+    .join('');
+
+  // Badge
+  let badge = '';
+  if (isActive) {
+    badge = `<span class="badge" style="background:var(--volt-bg);color:var(--volt-dark);border:1px solid var(--volt-border);">● ACTIVE</span>`;
+  } else if (p.aiGenerated) {
+    badge = `<span class="badge badge-cardio">AI</span>`;
+  }
+
+  const activateBtn = isActive
+    ? `<button class="prog-action-btn" onclick="startWorkout(event)">
+         <i class="ti ti-player-play" aria-hidden="true"></i> Start
+       </button>`
+    : `<button class="prog-action-btn activate" onclick="setActive(event,'${p.id}')">
+         <i class="ti ti-circle-check" aria-hidden="true"></i> Activate
+       </button>`;
+
+  return `
+    <div class="prog-card${isActive ? ' is-active' : ''}" style="animation-delay:${idx * 0.04}s">
+      <div class="prog-card-header" onclick="openDetail('${p.id}')" style="cursor:pointer;">
+        <div>
+          <div class="prog-card-name">${esc(p.name || 'My Program')}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:3px;">
+            ${p.weeks || 6} weeks · saved ${formatDate(p.savedAt)}
+          </div>
+        </div>
+        ${badge}
+      </div>
+      <div class="prog-day-bar">${daySegs}</div>
+      <div class="prog-stats">
+        <div class="prog-stat">
+          <div class="prog-stat-val">${trainingDays}</div>
+          <div class="prog-stat-label">Days/wk</div>
+        </div>
+        <div class="prog-stat">
+          <div class="prog-stat-val">${totalEx}</div>
+          <div class="prog-stat-label">Exercises</div>
+        </div>
+        <div class="prog-stat">
+          <div class="prog-stat-val">${totalSets}</div>
+          <div class="prog-stat-label">Total sets</div>
+        </div>
+      </div>
+      <div class="prog-actions">
+        <button class="prog-action-btn" onclick="openDetail('${p.id}')">
+          <i class="ti ti-eye" aria-hidden="true"></i> View
+        </button>
+        <button class="prog-action-btn" onclick="editProgram(event,'${p.id}')">
+          <i class="ti ti-edit" aria-hidden="true"></i> Edit
+        </button>
+        ${activateBtn}
+        <button class="prog-action-btn danger" onclick="openDelete(event,'${p.id}')">
+          <i class="ti ti-trash" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>`;
+}
+
+// ── ACTIONS ──────────────────────────────────────────────────
+function setActive(e, id) {
+  e.stopPropagation();
+  activeId = id;
+  store.set('active_program', activeId);
+  render();
+  showToast('Program activated');
+}
+
+function startWorkout(e) {
+  e.stopPropagation();
+  location.href = 'workout.html';
+}
+
+function editProgram(e, id) {
+  e.stopPropagation();
+  store.set('editing_program_id', id);
+  location.href = 'builder.html';
+}
+
+// ── DETAIL SHEET ──────────────────────────────────────────────
+function openDetail(id) {
+  detailId = id;
+  const p = programs.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('detail-title').textContent = p.name || 'My Program';
+
+  // Build day list
+  const daysHtml = (p.days || []).map((d, i) => {
+    if (d.rest) {
+      return `<div class="sheet-day-block">
+        <div class="sheet-day-header">
+          <div class="sheet-day-name rest-day">${esc(d.name || 'Day ' + (i + 1))}</div>
+          <div class="sheet-day-count">REST</div>
+        </div>
+      </div>`;
+    }
+    const exRows = (d.exercises || []).map(ex => {
+      const name = lookupName(ex.id) || ex.name || ex.id || '—';
+      const meta = `${ex.sets || 3} × ${ex.reps || 10}`;
+      return `<div class="sheet-ex-row">
+        <div class="sheet-ex-name">${esc(name)}</div>
+        <div class="sheet-ex-meta">${meta}</div>
+      </div>`;
+    }).join('');
+
+    return `<div class="sheet-day-block">
+      <div class="sheet-day-header" onclick="toggleDay(this)">
+        <div class="sheet-day-name">${esc(d.name || 'Day ' + (i + 1))}</div>
+        <div class="sheet-day-count">
+          ${d.exercises?.length || 0} exercises
+          <i class="ti ti-chevron-down" style="font-size:13px;transition:transform 0.2s;" aria-hidden="true"></i>
+        </div>
+      </div>
+      <div class="sheet-day-exercises">${exRows || '<div style="font-size:12px;color:var(--text-3);padding:4px 0;">No exercises added</div>'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('detail-body').innerHTML = daysHtml;
+
+  // Show/hide activate button
+  const activateBtn = document.getElementById('detail-activate-btn');
+  if (id === activeId) {
+    activateBtn.style.display = 'none';
+  } else {
+    activateBtn.style.display = 'flex';
+  }
+
+  document.getElementById('detail-backdrop').classList.add('open');
+  document.getElementById('detail-sheet').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-backdrop').classList.remove('open');
+  document.getElementById('detail-sheet').classList.remove('open');
+  detailId = null;
+}
+
+function toggleDay(headerEl) {
+  const exList = headerEl.nextElementSibling;
+  const icon   = headerEl.querySelector('i');
+  const isOpen = exList.classList.toggle('open');
+  if (icon) icon.style.transform = isOpen ? 'rotate(180deg)' : '';
+}
+
+function editFromDetail() {
+  if (!detailId) return;
+  closeDetail();
+  store.set('editing_program_id', detailId);
+  location.href = 'builder.html';
+}
+
+function activateFromDetail() {
+  if (!detailId) return;
+  activeId = detailId;
+  store.set('active_program', activeId);
+  render();
+  closeDetail();
+  showToast('Program activated');
+}
+
+// ── DELETE SHEET ──────────────────────────────────────────────
+function openDelete(e, id) {
+  e.stopPropagation();
+  deleteId = id;
+  const p = programs.find(x => x.id === id);
+  document.getElementById('delete-prog-name').textContent = p?.name || 'My Program';
+  document.getElementById('delete-backdrop').classList.add('open');
+  document.getElementById('delete-sheet').classList.add('open');
+}
+
+function closeDelete() {
+  document.getElementById('delete-backdrop').classList.remove('open');
+  document.getElementById('delete-sheet').classList.remove('open');
+  deleteId = null;
+}
+
+function confirmDelete() {
+  if (!deleteId) return;
+  programs = programs.filter(p => p.id !== deleteId);
+  if (activeId === deleteId) {
+    activeId = programs.length ? programs[0].id : null;
+  }
+  store.set('programs', programs);
+  store.set('active_program', activeId);
+  render();
+  closeDelete();
+  showToast('Program deleted');
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function lookupName(id) {
+  if (!id) return null;
+  if (typeof LAROFIT_EXERCISES !== 'undefined') {
+    const found = LAROFIT_EXERCISES.find(e => e.id === id);
+    if (found) return found.name;
+  }
+  return null;
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  try {
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch { return '—'; }
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+</script>
+
+<!-- Exercise data for name lookups -->
+<script src="larofit-exercises.js"></script>
+
+</body>
+</html>
