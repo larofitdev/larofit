@@ -123,6 +123,17 @@ input, select, textarea {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Hide logo on mobile — only shows on desktop sidebar */
+.lf-nav-logo { display: none; }
+
+/* Tabs fill the full nav bar as a row on mobile */
+.lf-nav-tabs {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  flex: 1;
+}
+
 .lf-nav-tab {
   flex: 1;
   display: flex;
@@ -353,8 +364,9 @@ input, select, textarea {
 /* ── STREAK DOTS ── */
 .lf-streak-dots {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .lf-dot {
@@ -645,7 +657,7 @@ input, select, textarea {
     grid-template-rows: 100vh;
   }
 
-  /* Hide bottom nav on desktop — sidebar takes over */
+  /* Switch nav to sidebar */
   .lf-nav {
     position: sticky;
     top: 0;
@@ -659,6 +671,7 @@ input, select, textarea {
     overflow-y: auto;
   }
 
+  /* Show logo on desktop */
   .lf-nav-logo {
     display: flex;
     align-items: center;
@@ -673,8 +686,8 @@ input, select, textarea {
 
   .lf-nav-logo span { color: var(--volt-dark); }
 
+  /* Switch tabs back to column for sidebar */
   .lf-nav-tabs {
-    display: flex;
     flex-direction: column;
     padding: 12px 0;
     flex: 1;
@@ -688,6 +701,7 @@ input, select, textarea {
     padding: 11px 20px;
     border-left: 3px solid transparent;
     border-radius: 0;
+    flex: none;
   }
 
   .lf-nav-tab .lf-nav-icon {
