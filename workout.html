@@ -260,7 +260,7 @@ input[type="number"], input[type="text"], select, textarea {
   display: none;
   align-items: center;
   gap: 12px;
-  z-index: 190;
+  z-index: 210;
 }
 
 .rest-banner.show { display: flex; }
@@ -662,9 +662,9 @@ input[type="number"], input[type="text"], select, textarea {
   <div class="rest-label">Rest</div>
   <div class="rest-timer" id="rest-display">1:30</div>
   <div class="rest-controls">
-    <button class="rest-adj-btn" onclick="adjustRest(-15)">−15s</button>
-    <button class="rest-adj-btn" onclick="adjustRest(15)">+15s</button>
-    <button class="rest-skip-btn" onclick="skipRest()">Skip</button>
+    <button class="rest-adj-btn" onclick="adjustRest(-15);event.preventDefault();event.stopPropagation();">−15s</button>
+    <button class="rest-adj-btn" onclick="adjustRest(15);event.preventDefault();event.stopPropagation();">+15s</button>
+    <button class="rest-skip-btn" onclick="skipRest();event.preventDefault();event.stopPropagation();">Skip</button>
   </div>
 </div>
 
@@ -1021,6 +1021,9 @@ function startRest(seconds, onComplete) {
   restRemaining = seconds || 90;
   updateRestDisplay();
   document.getElementById('rest-banner').classList.add('show');
+  // Disable nav taps while rest banner is visible
+  const nav = document.querySelector('.lf-nav');
+  if (nav) nav.style.pointerEvents = 'none';
   clearInterval(restInterval);
   restInterval = setInterval(() => {
     restRemaining--;
@@ -1039,6 +1042,9 @@ function stopRest() {
   clearInterval(restInterval);
   restInterval = null;
   document.getElementById('rest-banner').classList.remove('show');
+  // Re-enable nav
+  const nav = document.querySelector('.lf-nav');
+  if (nav) nav.style.pointerEvents = '';
 }
 
 function skipRest() {

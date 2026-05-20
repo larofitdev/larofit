@@ -53,6 +53,7 @@
       <a href="${tab.href}"
          class="lf-nav-tab${isActive ? ' active' : ''}"
          aria-label="${tab.label}"
+         draggable="false"
          ${isActive ? 'aria-current="page"' : ''}>
         <div class="lf-nav-icon" aria-hidden="true">
           <i class="ti ${tab.icon}"></i>
