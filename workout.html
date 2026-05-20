@@ -90,6 +90,7 @@ input[type="number"], input[type="text"], select, textarea {
   border-bottom: 0.5px solid var(--border);
   vertical-align: middle;
   text-align: center;
+  height: 58px;
 }
 
 .sets-table td:first-child { text-align: left; }
@@ -587,20 +588,6 @@ input[type="number"], input[type="text"], select, textarea {
 
     </div>
 
-    <!-- Exercise navigation -->
-    <div class="ex-nav">
-      <button class="ex-nav-btn" id="btn-prev" onclick="goToEx(currentExIdx - 1)" aria-label="Previous exercise">
-        <i class="ti ti-chevron-left" aria-hidden="true"></i>
-      </button>
-      <div class="ex-nav-info">
-        <div class="ex-nav-label" id="ex-counter">Exercise 1 of —</div>
-        <div class="ex-nav-name" id="ex-next-name"></div>
-      </div>
-      <button class="ex-nav-btn" id="btn-next" onclick="goToEx(currentExIdx + 1)" aria-label="Next exercise">
-        <i class="ti ti-chevron-right" aria-hidden="true"></i>
-      </button>
-    </div>
-
     <!-- Finish button (shows when all sets logged) -->
     <div class="finish-bar" id="finish-bar">
       <button class="btn btn-volt btn-full btn-lg" onclick="finishWorkout()">
@@ -662,9 +649,9 @@ input[type="number"], input[type="text"], select, textarea {
   <div class="rest-label">Rest</div>
   <div class="rest-timer" id="rest-display">1:30</div>
   <div class="rest-controls">
-    <button class="rest-adj-btn" onclick="adjustRest(-15);event.preventDefault();event.stopPropagation();">−15s</button>
-    <button class="rest-adj-btn" onclick="adjustRest(15);event.preventDefault();event.stopPropagation();">+15s</button>
-    <button class="rest-skip-btn" onclick="skipRest();event.preventDefault();event.stopPropagation();">Skip</button>
+    <button class="rest-adj-btn" id="btn-minus">−15s</button>
+    <button class="rest-adj-btn" id="btn-plus">+15s</button>
+    <button class="rest-skip-btn" id="btn-skip">Skip</button>
   </div>
 </div>
 
@@ -837,28 +824,20 @@ function goToEx(idx) {
 }
 
 function renderExercise() {
-  const ex      = exercises[currentExIdx];
-  const history = store.get('workout_history', {});
+  const ex = exercises[currentExIdx];
 
   // Find last session data for this exercise
   const lastSession = getLastSession(ex.id || ex.name);
 
   // Header
-  document.getElementById('ex-name').textContent  = ex.name;
-  document.getElementById('ex-meta').textContent  =
-    ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec) + ' rest';
-  document.getElementById('ex-counter').textContent =
-    'Exercise ' + (currentExIdx + 1) + ' of ' + exercises.length;
+  document.getElementById('ex-name').textContent = ex.name;
+  document.getElementById('ex-meta').textContent =
+    ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec);
 
   // Badge
   const badgeEl = document.getElementById('ex-badge');
-  badgeEl.className = 'badge badge-' + (ex.type || 'strength');
+  badgeEl.className   = 'badge badge-' + (ex.type || 'strength');
   badgeEl.textContent = (ex.type || 'strength').toUpperCase();
-
-  // Next exercise name
-  const nextEx = exercises[currentExIdx + 1];
-  document.getElementById('ex-next-name').textContent =
-    nextEx ? 'Next: ' + nextEx.name : 'Last exercise';
 
   // Previous best
   const prevEl = document.getElementById('prev-best');
@@ -1021,6 +1000,8 @@ function startRest(seconds, onComplete) {
   restRemaining = seconds || 90;
   updateRestDisplay();
   document.getElementById('rest-banner').classList.add('show');
+  // Lock body scroll so iOS doesn't suppress fixed element taps
+  document.body.style.overflow = 'hidden';
   // Disable nav taps while rest banner is visible
   const nav = document.querySelector('.lf-nav');
   if (nav) nav.style.pointerEvents = 'none';
@@ -1042,7 +1023,8 @@ function stopRest() {
   clearInterval(restInterval);
   restInterval = null;
   document.getElementById('rest-banner').classList.remove('show');
-  // Re-enable nav
+  // Restore scroll and nav
+  document.body.style.overflow = '';
   const nav = document.querySelector('.lf-nav');
   if (nav) nav.style.pointerEvents = '';
 }
@@ -1067,8 +1049,7 @@ function updateRestDisplay() {
 
 // ── NAVIGATION ───────────────────────────────────────────────
 function updateNavButtons() {
-  document.getElementById('btn-prev').disabled = currentExIdx === 0;
-  document.getElementById('btn-next').disabled = currentExIdx === exercises.length - 1;
+  // Nav arrows removed — auto-advance only
 }
 
 function updateOverallProgress() {
@@ -1271,6 +1252,28 @@ function showToast(msg) {
 const style = document.createElement('style');
 style.textContent = `.active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }`;
 document.head.appendChild(style);
+
+// ── REST BUTTON TOUCH HANDLERS ───────────────────────────────
+// Use touchstart so iOS fires before any scroll suppression
+document.addEventListener('DOMContentLoaded', () => {
+  function addRestBtn(id, fn) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('touchstart', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      fn();
+    }, { passive: false });
+    el.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      fn();
+    });
+  }
+  addRestBtn('btn-minus', () => adjustRest(-15));
+  addRestBtn('btn-plus',  () => adjustRest(15));
+  addRestBtn('btn-skip',  () => skipRest());
+});
 
 // ── START ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
