@@ -249,79 +249,95 @@ input[type="number"], input[type="text"], select, textarea {
 .ex-dot.done { background: var(--volt); border-color: var(--volt); }
 .ex-dot.active { background: var(--bg-dark); border-color: var(--bg-dark); width: 18px; border-radius: 3px; }
 
-/* Rest timer banner */
-.rest-banner {
+/* Rest timer popup */
+.rest-overlay {
   position: fixed;
-  bottom: var(--nav-h);
-  left: 0;
-  right: 0;
-  background: var(--bg-dark);
-  border-top: 1px solid rgba(198,241,53,0.2);
-  padding: 12px 16px;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 500;
   display: none;
   align-items: center;
-  gap: 12px;
-  z-index: 210;
+  justify-content: center;
+  padding: 24px;
 }
 
-.rest-banner.show { display: flex; }
+.rest-overlay.show { display: flex; }
 
-.rest-label {
-  font-size: 10px;
+.rest-popup {
+  background: var(--bg-dark);
+  border-radius: var(--radius-lg);
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 320px;
+  text-align: center;
+  border: 1px solid rgba(198,241,53,0.15);
+}
+
+.rest-popup-label {
+  font-size: 11px;
   font-weight: 700;
-  color: rgba(255,255,255,0.5);
-  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   font-family: var(--font-mono);
-  flex-shrink: 0;
+  margin-bottom: 16px;
 }
 
-.rest-timer {
+.rest-popup-next {
+  font-size: 13px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 8px;
+}
+
+.rest-popup-timer {
   font-family: var(--font-display);
-  font-size: 32px;
+  font-size: 80px;
   color: var(--volt);
-  letter-spacing: 2px;
+  letter-spacing: 4px;
   line-height: 1;
-  flex-shrink: 0;
-  min-width: 70px;
+  margin-bottom: 24px;
 }
 
-.rest-timer.urgent { color: var(--danger); }
+.rest-popup-timer.urgent { color: var(--danger); }
 
-.rest-controls {
+.rest-popup-adj {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 1;
-  justify-content: flex-end;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 16px;
 }
 
-.rest-adj-btn {
-  padding: 5px 10px;
+.rest-popup-adj-btn {
+  padding: 12px 20px;
   background: rgba(255,255,255,0.08);
   border: none;
   border-radius: var(--radius-sm);
-  color: rgba(255,255,255,0.7);
-  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: background 0.15s;
+  min-width: 80px;
+  min-height: 48px;
 }
 
-.rest-adj-btn:active { background: rgba(255,255,255,0.15); }
+.rest-popup-adj-btn:active { background: rgba(255,255,255,0.18); }
 
-.rest-skip-btn {
-  padding: 5px 12px;
+.rest-popup-skip {
+  width: 100%;
+  padding: 14px;
   background: transparent;
   border: 1px solid rgba(255,255,255,0.2);
   border-radius: var(--radius-sm);
-  color: rgba(255,255,255,0.5);
-  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font-body);
+  min-height: 48px;
 }
+
+.rest-popup-skip:active { background: rgba(255,255,255,0.06); }
 
 /* Finish button */
 .finish-bar {
@@ -644,14 +660,17 @@ input[type="number"], input[type="text"], select, textarea {
 
 </main>
 
-<!-- REST TIMER BANNER -->
-<div class="rest-banner" id="rest-banner" role="timer" aria-live="polite">
-  <div class="rest-label">Rest</div>
-  <div class="rest-timer" id="rest-display">1:30</div>
-  <div class="rest-controls">
-    <button class="rest-adj-btn" id="btn-minus">−15s</button>
-    <button class="rest-adj-btn" id="btn-plus">+15s</button>
-    <button class="rest-skip-btn" id="btn-skip">Skip</button>
+<!-- REST TIMER POPUP -->
+<div class="rest-overlay" id="rest-overlay" role="dialog" aria-modal="true" aria-label="Rest timer">
+  <div class="rest-popup">
+    <div class="rest-popup-label">Rest</div>
+    <div class="rest-popup-next" id="rest-next-label"></div>
+    <div class="rest-popup-timer" id="rest-display">1:30</div>
+    <div class="rest-popup-adj">
+      <button class="rest-popup-adj-btn" id="btn-minus">−15s</button>
+      <button class="rest-popup-adj-btn" id="btn-plus">+15s</button>
+    </div>
+    <button class="rest-popup-skip" id="btn-skip">Skip rest</button>
   </div>
 </div>
 
@@ -968,23 +987,21 @@ function logSet(exIdx, setIdx) {
 
   // Auto-advance or start rest
   if (allDone) {
-    // Auto-advance to next exercise after rest
     const nextIdx = exIdx + 1;
     if (nextIdx < exercises.length) {
+      const nextName = exercises[nextIdx].name;
       startRest(ex.restSec, () => {
         goToEx(nextIdx);
-        showToast('Rest over — next exercise!');
-      });
+      }, 'Next: ' + nextName);
     } else {
-      // Last set of last exercise
-      startRest(ex.restSec, null);
+      startRest(ex.restSec, null, 'Last exercise done!');
       checkAllDone();
     }
   } else {
-    // More sets — start rest, stay on same exercise
+    const nextSetNum = setIdx + 2;
     startRest(ex.restSec, () => {
       renderSets(ex, getLastSession(ex.id || ex.name));
-    });
+    }, 'Set ' + nextSetNum + ' of ' + ex.sets + ' up next');
   }
 }
 
@@ -995,16 +1012,14 @@ function updateSet(exIdx, setIdx, field, value) {
 // ── REST TIMER ───────────────────────────────────────────────
 let restCallback = null;
 
-function startRest(seconds, onComplete) {
+function startRest(seconds, onComplete, nextLabel) {
   restCallback  = onComplete;
   restRemaining = seconds || 90;
   updateRestDisplay();
-  document.getElementById('rest-banner').classList.add('show');
-  // Lock body scroll so iOS doesn't suppress fixed element taps
+  document.getElementById('rest-next-label').textContent =
+    nextLabel || '';
+  document.getElementById('rest-overlay').classList.add('show');
   document.body.style.overflow = 'hidden';
-  // Disable nav taps while rest banner is visible
-  const nav = document.querySelector('.lf-nav');
-  if (nav) nav.style.pointerEvents = 'none';
   clearInterval(restInterval);
   restInterval = setInterval(() => {
     restRemaining--;
@@ -1022,11 +1037,8 @@ function startRest(seconds, onComplete) {
 function stopRest() {
   clearInterval(restInterval);
   restInterval = null;
-  document.getElementById('rest-banner').classList.remove('show');
-  // Restore scroll and nav
+  document.getElementById('rest-overlay').classList.remove('show');
   document.body.style.overflow = '';
-  const nav = document.querySelector('.lf-nav');
-  if (nav) nav.style.pointerEvents = '';
 }
 
 function skipRest() {
@@ -1040,11 +1052,11 @@ function adjustRest(delta) {
 }
 
 function updateRestDisplay() {
-  const m   = Math.floor(restRemaining / 60);
-  const s   = restRemaining % 60;
-  const el  = document.getElementById('rest-display');
+  const m  = Math.floor(restRemaining / 60);
+  const s  = restRemaining % 60;
+  const el = document.getElementById('rest-display');
   el.textContent = m + ':' + String(s).padStart(2, '0');
-  el.className   = 'rest-timer' + (restRemaining <= 10 ? ' urgent' : '');
+  el.className   = 'rest-popup-timer' + (restRemaining <= 10 ? ' urgent' : '');
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
