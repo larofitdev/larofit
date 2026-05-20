@@ -370,16 +370,17 @@ input, select, textarea {
 }
 
 .lf-dot {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  font-size: 8px;
+  font-size: 7px;
   font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-card2);
   color: var(--text-3);
+  flex-shrink: 0;
 }
 
 .lf-dot.done { background: var(--volt); color: var(--bg-dark); }
