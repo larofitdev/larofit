@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f0">
+<title>LaroFit — Progress</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="larofit.css?v=2">
+<style>
+button, a { touch-action: manipulation; }
+
+/* ── PERIOD TABS ── */
+.period-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px var(--page-pad) 0;
+}
+
+.period-tab {
+  flex: 1;
+  padding: 8px 4px;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-3);
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.period-tab.active {
+  background: var(--bg-dark);
+  color: var(--volt);
+  border-color: var(--bg-dark);
+}
+
+/* ── STAT CARDS ── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px var(--page-pad) 0;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.stat-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.stat-card-val {
+  font-family: var(--font-display);
+  font-size: 32px;
+  letter-spacing: 0.5px;
+  color: var(--text);
+  line-height: 1;
+}
+
+.stat-card-sub {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 4px;
+}
+
+.stat-card-delta {
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+}
+
+.delta-up   { color: var(--success); }
+.delta-down { color: var(--danger); }
+.delta-flat { color: var(--text-3); }
+
+/* ── STREAK CALENDAR ── */
+.streak-wrap {
+  margin: 0 var(--page-pad);
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.streak-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.streak-num {
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--volt);
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.streak-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.streak-msg {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  max-width: 160px;
+  text-align: right;
+  line-height: 1.4;
+}
+
+.streak-cal {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 3px;
+}
+
+.streak-day {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.06);
+}
+
+.streak-day.worked { background: var(--volt); }
+.streak-day.today  { outline: 2px solid rgba(255,255,255,0.3); outline-offset: 1px; }
+
+/* ── VOLUME CHART ── */
+.chart-wrap {
+  margin: 0 var(--page-pad);
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.chart-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.chart-meta {
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+}
+
+/* ── BODYWEIGHT CHART ── */
+.bw-chart-wrap {
+  margin: 0 var(--page-pad);
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+/* ── PR TABLE ── */
+.pr-search-wrap {
+  padding: 10px var(--page-pad) 0;
+}
+
+.pr-search {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  font-family: var(--font-body);
+}
+
+.pr-search::placeholder { color: var(--text-3); }
+.pr-search:focus { border-color: var(--volt-dark); }
+
+.pr-list {
+  margin: 0 var(--page-pad);
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.pr-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 0.5px solid var(--border);
+  gap: 12px;
+}
+
+.pr-row:last-child { border-bottom: none; }
+
+.pr-rank {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  width: 20px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.pr-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pr-vals {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.pr-orm {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--volt-dark);
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.pr-orm-label {
+  font-size: 9px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.pr-best {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+/* ── SESSION HISTORY ── */
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--bg-card);
+}
+
+.session-row:last-child { border-bottom: none; }
+
+.session-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--volt);
+  flex-shrink: 0;
+}
+
+.session-body { flex: 1; min-width: 0; }
+
+.session-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-meta {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.session-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.session-vol {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.session-date {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+/* ── EMPTY STATE INLINE ── */
+.chart-empty {
+  text-align: center;
+  padding: 24px 0 8px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+</style>
+</head>
+<body>
+
+<script>window.LF_PAGE = 'progress';</script>
+<script src="larofit-nav.js"></script>
+
+<main class="lf-main-desktop">
+
+  <!-- HEADER -->
+  <div class="lf-header">
+    <div class="lf-header-inner">
+      <div class="lf-header-title">Progress</div>
+    </div>
+  </div>
+
+  <!-- PERIOD TABS -->
+  <div class="period-tabs">
+    <button class="period-tab active" onclick="setPeriod(28,this)">4 Weeks</button>
+    <button class="period-tab" onclick="setPeriod(90,this)">3 Months</button>
+    <button class="period-tab" onclick="setPeriod(180,this)">6 Months</button>
+    <button class="period-tab" onclick="setPeriod(0,this)">All time</button>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-grid" id="stat-grid">
+    <!-- injected by JS -->
+  </div>
+
+  <!-- STREAK -->
+  <div class="lf-section-label">Streak</div>
+  <div style="padding:0 var(--page-pad);">
+    <div class="streak-wrap">
+      <div class="streak-top">
+        <div>
+          <div class="streak-num" id="streak-num">0</div>
+          <div class="streak-label">Day streak 🔥</div>
+        </div>
+        <div class="streak-msg" id="streak-msg">Log a workout to start your streak</div>
+      </div>
+      <div class="streak-cal" id="streak-cal"></div>
+    </div>
+  </div>
+
+  <!-- VOLUME CHART -->
+  <div class="lf-section-label">Weekly volume</div>
+  <div style="padding:0 var(--page-pad);">
+    <div class="chart-wrap">
+      <div class="chart-header">
+        <div class="chart-title">Lbs lifted per week</div>
+        <div class="chart-meta" id="vol-meta">—</div>
+      </div>
+      <canvas id="vol-chart" height="140"></canvas>
+      <div class="chart-empty" id="vol-empty" style="display:none;">No workouts logged yet</div>
+    </div>
+  </div>
+
+  <!-- BODYWEIGHT CHART -->
+  <div class="lf-section-label">Bodyweight</div>
+  <div style="padding:0 var(--page-pad);">
+    <div class="chart-wrap">
+      <div class="chart-header">
+        <div class="chart-title">Weight trend</div>
+        <div class="chart-meta" id="bw-meta">—</div>
+      </div>
+      <canvas id="bw-chart" height="120"></canvas>
+      <div class="chart-empty" id="bw-empty" style="display:none;">
+        Log your weight in Measurements to see your trend
+      </div>
+    </div>
+  </div>
+
+  <!-- 1RM / PR TABLE -->
+  <div class="lf-section-label">Personal records</div>
+  <div class="pr-search-wrap">
+    <input class="pr-search" type="text" id="pr-search"
+           placeholder="Search exercise…" oninput="renderPRs()"
+           autocomplete="off" autocorrect="off">
+  </div>
+  <div style="padding:8px var(--page-pad) 0;">
+    <div class="pr-list" id="pr-list">
+      <!-- injected by JS -->
+    </div>
+  </div>
+
+  <!-- SESSION HISTORY -->
+  <div class="lf-section-label">Recent sessions</div>
+  <div style="padding:0 var(--page-pad) 80px;">
+    <div style="background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;"
+         id="session-list">
+      <!-- injected by JS -->
+    </div>
+  </div>
+
+</main>
+
+<script>
+/* ============================================================
+   progress.js — LaroFit v2
+   ============================================================ */
+
+// ── STORAGE ──────────────────────────────────────────────────
+const store = {
+  get(key, fallback = null) {
+    try {
+      const v = localStorage.getItem('lf_' + key);
+      return v === null ? fallback : JSON.parse(v);
+    } catch { return fallback; }
+  }
+};
+
+// ── STATE ─────────────────────────────────────────────────────
+let periodDays = 28;
+let history    = {};   // lf_workout_history: { 'YYYY-MM-DD': { name, durationMin, totalVolume, prs, exercises[] } }
+let measLogs   = [];   // lf_measurements_log: [{ date, weight }]
+
+// ── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  history   = store.get('workout_history', {});
+  measLogs  = store.get('measurements_log', []);
+  renderAll();
+});
+
+function setPeriod(days, btn) {
+  periodDays = days;
+  document.querySelectorAll('.period-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function renderAll() {
+  renderStats();
+  renderStreak();
+  renderVolumeChart();
+  renderBWChart();
+  renderPRs();
+  renderSessions();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function cutoffTs() {
+  if (!periodDays) return 0;
+  return Date.now() - periodDays * 86400000;
+}
+
+function periodEntries() {
+  const cutoff = cutoffTs();
+  return Object.entries(history).filter(([dateStr]) => {
+    return !cutoff || new Date(dateStr).getTime() >= cutoff;
+  });
+}
+
+function allEntries() {
+  return Object.entries(history);
+}
+
+function fmtDate(dateStr) {
+  try {
+    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch { return dateStr; }
+}
+
+function fmtVol(lbs) {
+  return lbs >= 1000 ? (lbs / 1000).toFixed(1) + 'k' : Math.round(lbs).toString();
+}
+
+// ── STAT CARDS ────────────────────────────────────────────────
+function renderStats() {
+  const entries    = periodEntries();
+  const workouts   = entries.length;
+  const totalVol   = entries.reduce((s, [, d]) => s + (d.totalVolume || 0), 0);
+  const totalPRs   = entries.reduce((s, [, d]) => s + (d.prs || 0), 0);
+  const avgDur     = workouts
+    ? Math.round(entries.reduce((s, [, d]) => s + (d.durationMin || 0), 0) / workouts)
+    : 0;
+
+  // Compare to previous same period
+  const prevCutoff = cutoffTs() ? cutoffTs() - periodDays * 86400000 : null;
+  const prevEntries = prevCutoff
+    ? Object.entries(history).filter(([d]) => {
+        const t = new Date(d).getTime();
+        return t >= prevCutoff && t < cutoffTs();
+      })
+    : [];
+  const prevVol  = prevEntries.reduce((s, [, d]) => s + (d.totalVolume || 0), 0);
+  const volDelta = prevVol ? Math.round(((totalVol - prevVol) / prevVol) * 100) : null;
+
+  const deltaHtml = (val, unit = '%') => {
+    if (val === null) return `<div class="stat-card-delta delta-flat">—</div>`;
+    if (val > 0) return `<div class="stat-card-delta delta-up">↑ ${val}${unit} vs prev period</div>`;
+    if (val < 0) return `<div class="stat-card-delta delta-down">↓ ${Math.abs(val)}${unit} vs prev period</div>`;
+    return `<div class="stat-card-delta delta-flat">Same as prev period</div>`;
+  };
+
+  document.getElementById('stat-grid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-card-label">Workouts</div>
+      <div class="stat-card-val">${workouts}</div>
+      <div class="stat-card-sub">${periodDays ? 'this period' : 'all time'}</div>
+      ${deltaHtml(null)}
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Volume</div>
+      <div class="stat-card-val">${fmtVol(totalVol)}</div>
+      <div class="stat-card-sub">lbs lifted</div>
+      ${deltaHtml(volDelta)}
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">Avg session</div>
+      <div class="stat-card-val">${avgDur || '—'}</div>
+      <div class="stat-card-sub">minutes</div>
+      ${deltaHtml(null)}
+    </div>
+    <div class="stat-card">
+      <div class="stat-card-label">New PRs</div>
+      <div class="stat-card-val">${totalPRs}</div>
+      <div class="stat-card-sub">${periodDays ? 'this period' : 'all time'}</div>
+      ${deltaHtml(null)}
+    </div>`;
+}
+
+// ── STREAK ────────────────────────────────────────────────────
+function renderStreak() {
+  const workedDays = new Set(Object.keys(history));
+  let streak = 0;
+  const today = new Date();
+
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const k = d.toISOString().slice(0, 10);
+    if (workedDays.has(k)) streak++;
+    else if (i > 0) break;
+  }
+
+  document.getElementById('streak-num').textContent = streak;
+  document.getElementById('streak-msg').textContent = streak > 1
+    ? `${streak} days in a row — keep it up!`
+    : streak === 1
+    ? `Great start — come back tomorrow!`
+    : `Log a workout to start your streak`;
+
+  // 28-day calendar grid (14 × 2 rows)
+  const cal = document.getElementById('streak-cal');
+  cal.innerHTML = '';
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const k = d.toISOString().slice(0, 10);
+    const div = document.createElement('div');
+    let cls = 'streak-day';
+    if (workedDays.has(k)) cls += ' worked';
+    if (i === 0) cls += ' today';
+    div.className = cls;
+    div.title = fmtDate(k) + (workedDays.has(k) ? ' ✓' : '');
+    cal.appendChild(div);
+  }
+}
+
+// ── VOLUME CHART ──────────────────────────────────────────────
+function renderVolumeChart() {
+  const canvas  = document.getElementById('vol-chart');
+  const emptyEl = document.getElementById('vol-empty');
+  const metaEl  = document.getElementById('vol-meta');
+  const entries = periodEntries();
+
+  if (!entries.length) {
+    canvas.style.display  = 'none';
+    emptyEl.style.display = 'block';
+    metaEl.textContent    = '—';
+    return;
+  }
+
+  canvas.style.display  = 'block';
+  emptyEl.style.display = 'none';
+
+  // Group by week (Mon-start)
+  const weeks = {};
+  entries.forEach(([dateStr, data]) => {
+    const d = new Date(dateStr);
+    const day = d.getDay(); // 0=Sun
+    const diff = (day === 0 ? -6 : 1) - day;
+    const mon = new Date(d);
+    mon.setDate(d.getDate() + diff);
+    const key = mon.toISOString().slice(0, 10);
+    weeks[key] = (weeks[key] || 0) + (data.totalVolume || 0);
+  });
+
+  const labels = Object.keys(weeks).sort();
+  const values = labels.map(k => weeks[k]);
+  const maxVol = Math.max(...values, 1);
+  const total  = values.reduce((s, v) => s + v, 0);
+
+  metaEl.textContent = fmtVol(total) + ' lbs total';
+
+  drawBarChart(canvas, labels.map(fmtDate), values, maxVol, 'var(--volt)');
+}
+
+// ── BODYWEIGHT CHART ──────────────────────────────────────────
+function renderBWChart() {
+  const canvas  = document.getElementById('bw-chart');
+  const emptyEl = document.getElementById('bw-empty');
+  const metaEl  = document.getElementById('bw-meta');
+
+  const cutoff = cutoffTs();
+  const logs = measLogs
+    .filter(m => m.weight && (!cutoff || new Date(m.date).getTime() >= cutoff))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  if (logs.length < 2) {
+    canvas.style.display  = 'none';
+    emptyEl.style.display = 'block';
+    metaEl.textContent    = '—';
+    return;
+  }
+
+  canvas.style.display  = 'block';
+  emptyEl.style.display = 'none';
+
+  const labels = logs.map(m => fmtDate(m.date));
+  const values = logs.map(m => m.weight);
+  const change = (values[values.length - 1] - values[0]).toFixed(1);
+  const sign   = change > 0 ? '+' : '';
+  metaEl.textContent = `${sign}${change} lbs this period`;
+
+  drawLineChart(canvas, labels, values, '#3b82f6');
+}
+
+// ── CANVAS BAR CHART ─────────────────────────────────────────
+function drawBarChart(canvas, labels, values, maxVal, color) {
+  // Set actual pixel size
+  const dpr = window.devicePixelRatio || 1;
+  const W   = canvas.offsetWidth || canvas.parentElement.offsetWidth || 300;
+  const H   = 140;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const n      = labels.length;
+  const padL   = 8, padR = 8, padT = 10, padB = 28;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const barW   = Math.max(4, (chartW / n) * 0.55);
+  const gap    = chartW / n;
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+  ctx.lineWidth   = 0.5;
+  [0.25, 0.5, 0.75, 1].forEach(f => {
+    const y = padT + chartH * (1 - f);
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+  });
+
+  // Bars
+  values.forEach((v, i) => {
+    const x   = padL + i * gap + (gap - barW) / 2;
+    const bh  = (v / maxVal) * chartH;
+    const y   = padT + chartH - bh;
+
+    // Bar
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.85;
+    roundRect(ctx, x, y, barW, bh, 3);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Label
+    if (n <= 12) {
+      ctx.fillStyle  = 'rgba(0,0,0,0.35)';
+      ctx.font       = `${Math.max(8, 10 - Math.floor(n / 6))}px DM Mono, monospace`;
+      ctx.textAlign  = 'center';
+      ctx.fillText(labels[i], x + barW / 2, H - padB + 14);
+    }
+  });
+}
+
+// ── CANVAS LINE CHART ─────────────────────────────────────────
+function drawLineChart(canvas, labels, values, color) {
+  const dpr = window.devicePixelRatio || 1;
+  const W   = canvas.offsetWidth || canvas.parentElement.offsetWidth || 300;
+  const H   = 120;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.height = H + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const n      = values.length;
+  const padL   = 8, padR = 8, padT = 10, padB = 24;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const minV   = Math.min(...values) * 0.98;
+  const maxV   = Math.max(...values) * 1.02;
+  const range  = maxV - minV || 1;
+
+  const px = i => padL + (i / (n - 1)) * chartW;
+  const py = v => padT + chartH - ((v - minV) / range) * chartH;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+  ctx.lineWidth   = 0.5;
+  [0, 0.5, 1].forEach(f => {
+    const y = padT + chartH * f;
+    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+  });
+
+  // Fill under line
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(values[0]));
+  values.forEach((v, i) => { if (i > 0) ctx.lineTo(px(i), py(v)); });
+  ctx.lineTo(px(n - 1), padT + chartH);
+  ctx.lineTo(px(0), padT + chartH);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+  grad.addColorStop(0, color.replace(')', ', 0.18)').replace('rgb', 'rgba'));
+  grad.addColorStop(1, color.replace(')', ', 0)').replace('rgb', 'rgba'));
+  // Fallback for CSS var colors
+  ctx.fillStyle = 'rgba(59,130,246,0.12)';
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(px(0), py(values[0]));
+  values.forEach((v, i) => { if (i > 0) ctx.lineTo(px(i), py(v)); });
+  ctx.strokeStyle = color;
+  ctx.lineWidth   = 2;
+  ctx.lineJoin    = 'round';
+  ctx.stroke();
+
+  // Dots + labels
+  ctx.fillStyle = color;
+  values.forEach((v, i) => {
+    ctx.beginPath();
+    ctx.arc(px(i), py(v), 3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // X labels (sparse)
+  const step = Math.ceil(n / 6);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.font      = '9px DM Mono, monospace';
+  ctx.textAlign = 'center';
+  values.forEach((_, i) => {
+    if (i % step === 0 || i === n - 1) {
+      ctx.fillText(labels[i], px(i), H - padB + 14);
+    }
+  });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  if (h < r * 2) r = h / 2;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ── PR / 1RM TABLE ────────────────────────────────────────────
+function renderPRs() {
+  const search = (document.getElementById('pr-search').value || '').toLowerCase();
+
+  // Build best 1RM per exercise from ALL history
+  const bests = {}; // { exName: { orm, weight, reps, date } }
+
+  allEntries().forEach(([dateStr, session]) => {
+    (session.exercises || []).forEach(ex => {
+      // Use stored best1RM if available, otherwise calculate from sets
+      let sessionBest = ex.best1RM || 0;
+      let bestWeight  = 0, bestReps = 0;
+
+      (ex.sets || []).forEach(s => {
+        const orm = calc1RM(s.weight, s.reps);
+        if (orm > sessionBest) {
+          sessionBest = orm;
+          bestWeight  = s.weight;
+          bestReps    = s.reps;
+        }
+        if (s.weight > bestWeight) { bestWeight = s.weight; bestReps = s.reps; }
+      });
+
+      if (!bests[ex.name] || sessionBest > bests[ex.name].orm) {
+        bests[ex.name] = {
+          orm:    sessionBest,
+          weight: bestWeight,
+          reps:   bestReps,
+          date:   dateStr
+        };
+      }
+    });
+  });
+
+  let rows = Object.entries(bests)
+    .filter(([name]) => !search || name.toLowerCase().includes(search))
+    .sort(([, a], [, b]) => b.orm - a.orm);
+
+  const listEl = document.getElementById('pr-list');
+
+  if (!rows.length) {
+    listEl.innerHTML = `<div class="lf-empty" style="padding:24px;">
+      <div class="lf-empty-icon">🏆</div>
+      <div class="lf-empty-title">${search ? 'No results' : 'No PRs yet'}</div>
+      <div class="lf-empty-body">${search ? 'Try a different search term' : 'Complete workouts to see your personal records here'}</div>
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = rows.map(([name, data], i) => `
+    <div class="pr-row">
+      <div class="pr-rank">${i + 1}</div>
+      <div class="pr-name">${esc(name)}</div>
+      <div class="pr-vals">
+        <div class="pr-orm">${data.orm}<span style="font-size:11px;font-family:var(--font-body);color:var(--text-3);font-weight:400;"> lbs</span></div>
+        <div class="pr-orm-label">Est. 1RM</div>
+        <div class="pr-best">${data.weight}×${data.reps} · ${fmtDate(data.date)}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── SESSION HISTORY ───────────────────────────────────────────
+function renderSessions() {
+  const entries = allEntries()
+    .sort(([a], [b]) => b.localeCompare(a))
+    .slice(0, 15);
+
+  const listEl = document.getElementById('session-list');
+
+  if (!entries.length) {
+    listEl.innerHTML = `<div class="lf-empty">
+      <div class="lf-empty-icon">📅</div>
+      <div class="lf-empty-title">No sessions yet</div>
+      <div class="lf-empty-body">Complete your first workout to see your history here</div>
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = entries.map(([dateStr, s]) => {
+    const exCount = (s.exercises || []).length;
+    const prs     = s.prs ? `· 🏆 ${s.prs} PR${s.prs > 1 ? 's' : ''}` : '';
+    return `<div class="session-row">
+      <div class="session-dot"></div>
+      <div class="session-body">
+        <div class="session-name">${esc(s.name || 'Workout')}</div>
+        <div class="session-meta">${s.durationMin || '—'} min · ${exCount} exercise${exCount !== 1 ? 's' : ''} ${prs}</div>
+      </div>
+      <div class="session-right">
+        <div class="session-vol">${fmtVol(s.totalVolume || 0)} lbs</div>
+        <div class="session-date">${fmtDate(dateStr)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── EPLEY 1RM ────────────────────────────────────────────────
+function calc1RM(weight, reps) {
+  if (!weight || !reps || reps <= 0) return 0;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+
+</body>
+</html>

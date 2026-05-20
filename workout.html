@@ -934,11 +934,14 @@ function renderSets(ex, lastSession) {
     }
 
     if (isDone) {
+      const orm = calc1RM(parseFloat(set.weight), parseFloat(set.reps));
+      const ormLabel = orm ? `<span class="last-val" style="color:var(--volt-dark);">~${orm} 1RM</span>` : '';
       return `<tr>
         <td><span class="set-num ${numCls}">${i + 1}</span></td>
         <td style="text-align:center;">
           <span style="font-size:14px;font-weight:600;">${set.weight || '—'}</span>
           <span class="last-val">lbs</span>
+          ${ormLabel}
         </td>
         <td style="text-align:center;">
           <span style="font-size:14px;font-weight:600;">${set.reps || '—'}</span>
@@ -1178,14 +1181,22 @@ function finishWorkout() {
     durationMin,
     totalVolume: Math.round(totalVolume),
     prs:         totalPRs,
-    exercises:   exercises.map(ex => ({
-      id:   ex.id,
-      name: ex.name,
-      sets: ex.loggedSets.filter(s => s.logged).map(s => ({
+    exercises:   exercises.map(ex => {
+      const loggedSets = ex.loggedSets.filter(s => s.logged).map(s => ({
         weight: parseFloat(s.weight) || 0,
         reps:   parseFloat(s.reps)   || 0
-      }))
-    }))
+      }));
+      const best1RM = loggedSets.reduce((best, s) => {
+        const orm = calc1RM(s.weight, s.reps);
+        return orm > best ? orm : best;
+      }, 0);
+      return {
+        id:      ex.id,
+        name:    ex.name,
+        sets:    loggedSets,
+        best1RM: best1RM || null
+      };
+    })
   };
   store.set('workout_history', history);
 
