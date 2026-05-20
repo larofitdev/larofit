@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f0">
+<title>LaroFit — Workout</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="larofit.css?v=2">
+<style>
+/* ── WORKOUT-SPECIFIC STYLES ── */
+
+/* Exercise card */
+.ex-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border);
+  margin: 0 var(--page-pad);
+  overflow: hidden;
+}
+
+.ex-card-header {
+  padding: 14px 16px 12px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ex-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--volt);
+  font-size: 20px;
+}
+
+.ex-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  flex: 1;
+}
+
+.ex-card-sub {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+/* Sets table */
+.sets-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sets-table th {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 8px 16px 6px;
+  text-align: left;
+  border-bottom: 0.5px solid var(--border);
+}
+
+.sets-table th:not(:first-child) { text-align: center; }
+
+.sets-table td {
+  padding: 10px 16px;
+  border-bottom: 0.5px solid var(--border);
+  vertical-align: middle;
+}
+
+.sets-table tr:last-child td { border-bottom: none; }
+
+.set-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-card2);
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.set-num.done {
+  background: var(--volt);
+  color: var(--bg-dark);
+}
+
+.set-num.active-set {
+  background: var(--bg-dark);
+  color: var(--volt);
+}
+
+.sets-table td:not(:first-child) { text-align: center; }
+
+.last-val {
+  font-size: 11px;
+  color: var(--text-3);
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.log-btn {
+  padding: 7px 14px;
+  background: var(--bg-dark);
+  color: var(--volt);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+
+.log-btn:active { opacity: 0.7; }
+
+.log-btn.done-btn {
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+/* Previous best banner */
+.prev-best {
+  margin: 10px 16px;
+  padding: 8px 12px;
+  background: var(--bg-card2);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prev-best i { font-size: 13px; color: var(--text-3); }
+.prev-best strong { color: var(--text-2); }
+
+/* PR badge */
+.pr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(245,158,11,0.15);
+  color: var(--warning);
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+}
+
+/* Nav arrows */
+.ex-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--page-pad);
+  gap: 12px;
+}
+
+.ex-nav-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.ex-nav-btn:active { background: var(--bg-card2); }
+.ex-nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+.ex-nav-info {
+  flex: 1;
+  text-align: center;
+}
+
+.ex-nav-label {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.ex-nav-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Progress dots */
+.ex-progress-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0 4px;
+}
+
+.ex-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bg-card2);
+  border: 1px solid var(--border-md);
+  transition: all 0.2s;
+}
+
+.ex-dot.done { background: var(--volt); border-color: var(--volt); }
+.ex-dot.active { background: var(--bg-dark); border-color: var(--bg-dark); width: 18px; border-radius: 3px; }
+
+/* Rest timer banner */
+.rest-banner {
+  position: fixed;
+  bottom: var(--nav-h);
+  left: 0;
+  right: 0;
+  background: var(--bg-dark);
+  border-top: 1px solid rgba(198,241,53,0.2);
+  padding: 10px 16px;
+  display: none;
+  align-items: center;
+  gap: 12px;
+  z-index: 150;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+
+.rest-banner.show { display: flex; }
+
+.rest-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+
+.rest-timer {
+  font-family: var(--font-display);
+  font-size: 32px;
+  color: var(--volt);
+  letter-spacing: 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.rest-timer.urgent { color: var(--danger); }
+
+.rest-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.rest-adj-btn {
+  padding: 5px 10px;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.7);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.15s;
+}
+
+.rest-adj-btn:active { background: rgba(255,255,255,0.15); }
+
+.rest-skip-btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--radius-sm);
+  color: rgba(255,255,255,0.5);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+/* Finish button */
+.finish-bar {
+  padding: 12px var(--page-pad);
+  display: none;
+}
+
+.finish-bar.show { display: block; }
+
+/* No program screen */
+.no-program {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 32px 24px;
+  text-align: center;
+  gap: 12px;
+}
+
+/* Completion card */
+.completion-wrap {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 var(--page-pad) 24px;
+}
+
+.completion-wrap.show { display: flex; }
+
+.completion-hero {
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  color: var(--text-inv);
+}
+
+.completion-emoji {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.completion-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  letter-spacing: 1px;
+  color: var(--volt);
+  margin-bottom: 4px;
+}
+
+.completion-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+}
+
+.completion-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.completion-stat {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border);
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.completion-stat-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: var(--font-display);
+  letter-spacing: 0.5px;
+}
+
+.completion-stat-label {
+  font-size: 10px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+/* AI analysis card */
+.ai-analysis {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+}
+
+.ai-analysis-header {
+  padding: 12px 16px;
+  background: var(--bg-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-analysis-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--volt);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+
+.ai-analysis-body {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--text-2);
+  line-height: 1.65;
+}
+
+.ai-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.ai-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-md);
+  border-top-color: var(--volt-dark);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Toast */
+.lf-toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 16px);
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-dark);
+  color: var(--text-inv);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all 0.25s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 500;
+}
+
+.lf-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+
+<script>window.LF_PAGE = 'workout';</script>
+<script src="larofit-nav.js"></script>
+
+<main class="lf-main-desktop" id="main">
+
+  <!-- HEADER -->
+  <div class="lf-header" id="workout-header">
+    <div class="lf-header-inner">
+      <div>
+        <div id="header-title" style="font-size:18px;font-weight:700;color:var(--text);line-height:1.2;"></div>
+        <div id="header-sub" style="font-size:11px;color:var(--text-3);margin-top:2px;font-family:var(--font-mono);"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div id="workout-timer"
+             style="font-size:14px;font-weight:700;color:var(--text);
+                    background:var(--bg-card2);padding:5px 10px;
+                    border-radius:var(--radius-sm);font-family:var(--font-mono);
+                    display:none;">
+          0:00
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-finish-top"
+                style="display:none;color:var(--volt-dark);font-weight:700;"
+                onclick="finishWorkout()">
+          Finish
+        </button>
+      </div>
+    </div>
+    <!-- Overall progress bar -->
+    <div class="lf-prog-bar" style="margin-top:10px;" id="overall-prog-wrap">
+      <div class="lf-prog-fill" id="overall-prog" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- NO PROGRAM STATE -->
+  <div class="no-program" id="no-program-state" style="display:none;">
+    <div style="font-size:48px;" aria-hidden="true">🏋️</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text);">No active program</div>
+    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">
+      Choose or build a program to get your daily workouts here.
+    </div>
+    <button class="btn btn-dark lf-mt-sm btn-lg" onclick="location.href='programs.html'">
+      Go to programs <i class="ti ti-arrow-right" aria-hidden="true"></i>
+    </button>
+    <button class="btn btn-outline lf-mt-sm" onclick="location.href='programs.html?new=1'">
+      Build a new program
+    </button>
+  </div>
+
+  <!-- REST DAY STATE -->
+  <div class="no-program" id="rest-day-state" style="display:none;">
+    <div style="font-size:48px;" aria-hidden="true">😴</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text);">Rest day</div>
+    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">
+      Recovery is part of the plan. Sleep well, eat well, come back stronger.
+    </div>
+    <button class="btn btn-outline lf-mt-sm" onclick="startAnyway()">
+      Log a workout anyway
+    </button>
+  </div>
+
+  <!-- WORKOUT IN PROGRESS -->
+  <div id="workout-state" style="display:none;">
+
+    <!-- Exercise progress dots -->
+    <div class="ex-progress-dots" id="ex-dots"></div>
+
+    <!-- Exercise card -->
+    <div class="ex-card" id="ex-card">
+
+      <div class="ex-card-header">
+        <div class="ex-card-icon" aria-hidden="true">
+          <i class="ti ti-barbell"></i>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="ex-card-title" id="ex-name">—</div>
+          <div class="ex-card-sub" id="ex-meta">—</div>
+        </div>
+        <span class="badge badge-strength" id="ex-badge">STRENGTH</span>
+      </div>
+
+      <!-- Previous best -->
+      <div class="prev-best" id="prev-best" style="display:none;">
+        <i class="ti ti-history" aria-hidden="true"></i>
+        <span id="prev-best-text">Last session: —</span>
+        <span class="pr-badge" id="pr-badge" style="display:none;">🏆 PR</span>
+      </div>
+
+      <!-- Sets table -->
+      <table class="sets-table" id="sets-table">
+        <thead>
+          <tr>
+            <th style="width:36px;">Set</th>
+            <th>Weight</th>
+            <th>Reps</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="sets-body"></tbody>
+      </table>
+
+    </div>
+
+    <!-- Exercise navigation -->
+    <div class="ex-nav">
+      <button class="ex-nav-btn" id="btn-prev" onclick="goToEx(currentExIdx - 1)" aria-label="Previous exercise">
+        <i class="ti ti-chevron-left" aria-hidden="true"></i>
+      </button>
+      <div class="ex-nav-info">
+        <div class="ex-nav-label" id="ex-counter">Exercise 1 of —</div>
+        <div class="ex-nav-name" id="ex-next-name"></div>
+      </div>
+      <button class="ex-nav-btn" id="btn-next" onclick="goToEx(currentExIdx + 1)" aria-label="Next exercise">
+        <i class="ti ti-chevron-right" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <!-- Finish button (shows when all sets logged) -->
+    <div class="finish-bar" id="finish-bar">
+      <button class="btn btn-volt btn-full btn-lg" onclick="finishWorkout()">
+        <i class="ti ti-check" aria-hidden="true"></i> Finish workout
+      </button>
+    </div>
+
+  </div>
+
+  <!-- COMPLETION SCREEN -->
+  <div class="completion-wrap" id="completion-state">
+
+    <div class="completion-hero">
+      <div class="completion-emoji" aria-hidden="true">🏆</div>
+      <div class="completion-title">WORKOUT DONE</div>
+      <div class="completion-sub" id="completion-sub">Great session!</div>
+    </div>
+
+    <div class="completion-stats">
+      <div class="completion-stat">
+        <div class="completion-stat-val" id="c-duration">—</div>
+        <div class="completion-stat-label">Minutes</div>
+      </div>
+      <div class="completion-stat">
+        <div class="completion-stat-val" id="c-volume">—</div>
+        <div class="completion-stat-label">Lbs lifted</div>
+      </div>
+      <div class="completion-stat">
+        <div class="completion-stat-val" id="c-prs">—</div>
+        <div class="completion-stat-label">PRs</div>
+      </div>
+    </div>
+
+    <!-- AI Analysis -->
+    <div class="ai-analysis">
+      <div class="ai-analysis-header">
+        <i class="ti ti-sparkles" style="color:var(--volt);font-size:16px;" aria-hidden="true"></i>
+        <div class="ai-analysis-title">AI Coach Analysis</div>
+      </div>
+      <div class="ai-analysis-body" id="ai-analysis-body">
+        <div class="ai-loading" id="ai-loading">
+          <div class="ai-spinner"></div>
+          Analyzing your session...
+        </div>
+        <div id="ai-analysis-text" style="display:none;"></div>
+      </div>
+    </div>
+
+    <button class="btn btn-dark btn-full btn-lg" onclick="location.href='index.html'">
+      Back to home <i class="ti ti-home" aria-hidden="true"></i>
+    </button>
+
+  </div>
+
+</main>
+
+<!-- REST TIMER BANNER -->
+<div class="rest-banner" id="rest-banner" role="timer" aria-live="polite">
+  <div class="rest-label">Rest</div>
+  <div class="rest-timer" id="rest-display">1:30</div>
+  <div class="rest-controls">
+    <button class="rest-adj-btn" onclick="adjustRest(-15)">−15s</button>
+    <button class="rest-adj-btn" onclick="adjustRest(15)">+15s</button>
+    <button class="rest-skip-btn" onclick="skipRest()">Skip</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="lf-toast" id="toast" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   workout.js — LaroFit v2 workout page
+   ============================================================ */
+
+// ── STORAGE ──────────────────────────────────────────────────
+const store = {
+  get(key, fallback = null) {
+    try {
+      const v = localStorage.getItem('lf_' + key);
+      return v === null ? fallback : JSON.parse(v);
+    } catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem('lf_' + key, JSON.stringify(value)); } catch {}
+  }
+};
+
+// ── STATE ─────────────────────────────────────────────────────
+let exercises      = [];   // today's exercise objects
+let currentExIdx   = 0;
+let workoutStarted = false;
+let startTime      = null;
+let elapsedTimer   = null;
+let restInterval   = null;
+let restRemaining  = 0;
+let totalPRs       = 0;
+const todayKey     = new Date().toISOString().slice(0, 10);
+
+// ── EPLEY 1RM ────────────────────────────────────────────────
+function calc1RM(weight, reps) {
+  if (!weight || !reps || reps <= 0) return null;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+function init() {
+  const programs = store.get('programs', []);
+  const activeId = store.get('active_program', null);
+  const program  = programs.find(p => p.id === activeId);
+
+  if (!program) {
+    show('no-program-state');
+    document.getElementById('header-title').textContent = 'Workout';
+    document.getElementById('header-sub').textContent   = 'No active program';
+    return;
+  }
+
+  const dayIndex = (new Date().getDay() + 6) % 7; // Mon=0
+  const dayPlan  = program.days && program.days[dayIndex];
+
+  if (!dayPlan || dayPlan.rest) {
+    show('rest-day-state');
+    document.getElementById('header-title').textContent = 'Rest day';
+    document.getElementById('header-sub').textContent   = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    return;
+  }
+
+  // Build exercise list
+  exercises = (dayPlan.exercises || []).map(ex => ({
+    id:      ex.id,
+    name:    ex.name || lookupExName(ex.id),
+    sets:    ex.sets || 3,
+    reps:    ex.reps || 10,
+    restSec: ex.restSec || 90,
+    type:    ex.type || 'strength',
+    weight:  ex.weight || '',
+    // logged sets: array of { weight, reps, logged }
+    loggedSets: Array.from({ length: ex.sets || 3 }, () => ({
+      weight: ex.weight || '',
+      reps:   ex.reps || '',
+      logged: false
+    }))
+  }));
+
+  if (!exercises.length) {
+    show('no-program-state');
+    return;
+  }
+
+  // Start workout
+  workoutStarted = true;
+  startTime      = Date.now();
+  show('workout-state');
+
+  document.getElementById('header-title').textContent = dayPlan.name || program.name;
+  document.getElementById('header-sub').textContent   =
+    exercises.length + ' exercises · ' +
+    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+  document.getElementById('workout-timer').style.display = 'block';
+  document.getElementById('btn-finish-top').style.display = 'block';
+
+  // Start elapsed timer
+  elapsedTimer = setInterval(updateElapsed, 1000);
+
+  renderDots();
+  goToEx(0);
+}
+
+function lookupExName(id) {
+  // Will be replaced when exercises.js is loaded
+  return id || 'Exercise';
+}
+
+// ── SHOW/HIDE STATES ─────────────────────────────────────────
+function show(id) {
+  ['no-program-state','rest-day-state','workout-state','completion-state']
+    .forEach(s => {
+      const el = document.getElementById(s);
+      if (el) {
+        el.style.display = s === id ? (s === 'completion-state' ? 'flex' : 'block') : 'none';
+      }
+    });
+  if (id === 'completion-state') {
+    document.getElementById('completion-state').classList.add('show');
+  }
+}
+
+// ── ELAPSED TIMER ────────────────────────────────────────────
+function updateElapsed() {
+  if (!startTime) return;
+  const secs = Math.floor((Date.now() - startTime) / 1000);
+  const m    = Math.floor(secs / 60);
+  const s    = secs % 60;
+  document.getElementById('workout-timer').textContent =
+    m + ':' + String(s).padStart(2, '0');
+}
+
+// ── PROGRESS DOTS ────────────────────────────────────────────
+function renderDots() {
+  const container = document.getElementById('ex-dots');
+  container.innerHTML = exercises.map((ex, i) => {
+    const allLogged = ex.loggedSets.every(s => s.logged);
+    let cls = 'ex-dot';
+    if (allLogged)          cls += ' done';
+    else if (i === currentExIdx) cls += ' active';
+    return `<div class="${cls}" aria-hidden="true"></div>`;
+  }).join('');
+}
+
+// ── GO TO EXERCISE ───────────────────────────────────────────
+function goToEx(idx) {
+  if (idx < 0 || idx >= exercises.length) return;
+  currentExIdx = idx;
+  renderExercise();
+  renderDots();
+  updateNavButtons();
+  updateOverallProgress();
+}
+
+function renderExercise() {
+  const ex      = exercises[currentExIdx];
+  const history = store.get('workout_history', {});
+
+  // Find last session data for this exercise
+  const lastSession = getLastSession(ex.id || ex.name);
+
+  // Header
+  document.getElementById('ex-name').textContent  = ex.name;
+  document.getElementById('ex-meta').textContent  =
+    ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec) + ' rest';
+  document.getElementById('ex-counter').textContent =
+    'Exercise ' + (currentExIdx + 1) + ' of ' + exercises.length;
+
+  // Badge
+  const badgeEl = document.getElementById('ex-badge');
+  badgeEl.className = 'badge badge-' + (ex.type || 'strength');
+  badgeEl.textContent = (ex.type || 'strength').toUpperCase();
+
+  // Next exercise name
+  const nextEx = exercises[currentExIdx + 1];
+  document.getElementById('ex-next-name').textContent =
+    nextEx ? 'Next: ' + nextEx.name : 'Last exercise';
+
+  // Previous best
+  const prevEl = document.getElementById('prev-best');
+  if (lastSession) {
+    prevEl.style.display = 'flex';
+    document.getElementById('prev-best-text').textContent =
+      'Last: ' + lastSession.bestWeight + ' lbs × ' + lastSession.bestReps + ' reps';
+  } else {
+    prevEl.style.display = 'none';
+  }
+
+  // Pre-fill weight from last session
+  if (lastSession && ex.loggedSets.every(s => !s.weight)) {
+    ex.loggedSets.forEach(s => { if (!s.weight) s.weight = lastSession.bestWeight; });
+  }
+
+  renderSets(ex, lastSession);
+}
+
+function renderSets(ex, lastSession) {
+  const tbody = document.getElementById('sets-body');
+  tbody.innerHTML = ex.loggedSets.map((set, i) => {
+    const isDone   = set.logged;
+    const isActive = !isDone && ex.loggedSets.slice(0, i).every(s => s.logged);
+    const numCls   = isDone ? 'done' : isActive ? 'active-set' : '';
+
+    // PR detection
+    let isPR = false;
+    if (isDone && lastSession && set.weight && set.reps) {
+      const cur1rm  = calc1RM(parseFloat(set.weight), parseFloat(set.reps));
+      const prev1rm = calc1RM(parseFloat(lastSession.bestWeight), parseFloat(lastSession.bestReps));
+      if (cur1rm && prev1rm && cur1rm > prev1rm) isPR = true;
+    }
+
+    if (isDone) {
+      return `<tr>
+        <td><span class="set-num ${numCls}">${i + 1}</span></td>
+        <td style="text-align:center;">
+          <span style="font-size:14px;font-weight:600;">${set.weight || '—'}</span>
+          <span class="last-val">lbs</span>
+        </td>
+        <td style="text-align:center;">
+          <span style="font-size:14px;font-weight:600;">${set.reps || '—'}</span>
+          <span class="last-val">reps</span>
+        </td>
+        <td style="text-align:center;">
+          ${isPR
+            ? '<span class="pr-badge">🏆 PR</span>'
+            : '<span style="font-size:18px;color:var(--success);">✓</span>'}
+        </td>
+      </tr>`;
+    }
+
+    // Last session hint
+    const hint = lastSession
+      ? `<span class="last-val">${lastSession.bestWeight} last</span>`
+      : '';
+    const hintReps = lastSession
+      ? `<span class="last-val">${lastSession.bestReps} last</span>`
+      : '';
+
+    return `<tr>
+      <td><span class="set-num ${numCls}">${i + 1}</span></td>
+      <td style="text-align:center;">
+        <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
+               id="inp-w-${currentExIdx}-${i}"
+               type="number" inputmode="decimal"
+               placeholder="lbs"
+               value="${set.weight || ''}"
+               onchange="updateSet(${currentExIdx},${i},'weight',this.value)"
+               ${!isActive && !isDone ? 'style="opacity:0.45;"' : ''}>
+        ${hint}
+      </td>
+      <td style="text-align:center;">
+        <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
+               id="inp-r-${currentExIdx}-${i}"
+               type="number" inputmode="numeric"
+               placeholder="reps"
+               value="${set.reps || ''}"
+               onchange="updateSet(${currentExIdx},${i},'reps',this.value)"
+               ${!isActive && !isDone ? 'style="opacity:0.45;"' : ''}>
+        ${hintReps}
+      </td>
+      <td style="text-align:center;">
+        ${isActive
+          ? `<button class="log-btn" onclick="logSet(${currentExIdx},${i})">Log</button>`
+          : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── LOG A SET ────────────────────────────────────────────────
+function logSet(exIdx, setIdx) {
+  const ex  = exercises[exIdx];
+  const set = ex.loggedSets[setIdx];
+
+  const wEl = document.getElementById(`inp-w-${exIdx}-${setIdx}`);
+  const rEl = document.getElementById(`inp-r-${exIdx}-${setIdx}`);
+
+  const weight = wEl ? wEl.value.trim() : set.weight;
+  const reps   = rEl ? rEl.value.trim() : set.reps;
+
+  if (!reps) { showToast('Enter reps first'); return; }
+
+  set.weight = weight;
+  set.reps   = reps;
+  set.logged = true;
+
+  // PR check
+  const lastSession = getLastSession(ex.id || ex.name);
+  if (lastSession && weight && reps) {
+    const cur  = calc1RM(parseFloat(weight), parseFloat(reps));
+    const prev = calc1RM(parseFloat(lastSession.bestWeight), parseFloat(lastSession.bestReps));
+    if (cur && prev && cur > prev) {
+      totalPRs++;
+      showToast('🏆 New personal record!');
+    }
+  }
+
+  // Check if all sets done for this exercise
+  const allDone = ex.loggedSets.every(s => s.logged);
+
+  // Re-render sets
+  renderSets(ex, lastSession);
+  renderDots();
+  updateOverallProgress();
+
+  // Auto-advance or start rest
+  if (allDone) {
+    // Auto-advance to next exercise after rest
+    const nextIdx = exIdx + 1;
+    if (nextIdx < exercises.length) {
+      startRest(ex.restSec, () => {
+        goToEx(nextIdx);
+        showToast('Rest over — next exercise!');
+      });
+    } else {
+      // Last set of last exercise
+      startRest(ex.restSec, null);
+      checkAllDone();
+    }
+  } else {
+    // More sets — start rest, stay on same exercise
+    startRest(ex.restSec, () => {
+      renderSets(ex, getLastSession(ex.id || ex.name));
+    });
+  }
+}
+
+function updateSet(exIdx, setIdx, field, value) {
+  exercises[exIdx].loggedSets[setIdx][field] = value;
+}
+
+// ── REST TIMER ───────────────────────────────────────────────
+let restCallback = null;
+
+function startRest(seconds, onComplete) {
+  restCallback  = onComplete;
+  restRemaining = seconds || 90;
+  updateRestDisplay();
+  document.getElementById('rest-banner').classList.add('show');
+  clearInterval(restInterval);
+  restInterval = setInterval(() => {
+    restRemaining--;
+    if (restRemaining <= 0) {
+      restRemaining = 0;
+      updateRestDisplay();
+      stopRest();
+      if (restCallback) { restCallback(); restCallback = null; }
+    } else {
+      updateRestDisplay();
+    }
+  }, 1000);
+}
+
+function stopRest() {
+  clearInterval(restInterval);
+  restInterval = null;
+  document.getElementById('rest-banner').classList.remove('show');
+}
+
+function skipRest() {
+  stopRest();
+  if (restCallback) { restCallback(); restCallback = null; }
+}
+
+function adjustRest(delta) {
+  restRemaining = Math.max(5, restRemaining + delta);
+  updateRestDisplay();
+}
+
+function updateRestDisplay() {
+  const m   = Math.floor(restRemaining / 60);
+  const s   = restRemaining % 60;
+  const el  = document.getElementById('rest-display');
+  el.textContent = m + ':' + String(s).padStart(2, '0');
+  el.className   = 'rest-timer' + (restRemaining <= 10 ? ' urgent' : '');
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────
+function updateNavButtons() {
+  document.getElementById('btn-prev').disabled = currentExIdx === 0;
+  document.getElementById('btn-next').disabled = currentExIdx === exercises.length - 1;
+}
+
+function updateOverallProgress() {
+  const total  = exercises.reduce((acc, ex) => acc + ex.loggedSets.length, 0);
+  const done   = exercises.reduce((acc, ex) => acc + ex.loggedSets.filter(s => s.logged).length, 0);
+  const pct    = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('overall-prog').style.width = pct + '%';
+  checkAllDone();
+}
+
+function checkAllDone() {
+  const allDone = exercises.every(ex => ex.loggedSets.every(s => s.logged));
+  document.getElementById('finish-bar').classList.toggle('show', allDone);
+}
+
+// ── LAST SESSION LOOKUP ──────────────────────────────────────
+function getLastSession(exIdOrName) {
+  const history = store.get('workout_history', {});
+  // Search through recent sessions for this exercise
+  const dates = Object.keys(history).sort().reverse();
+  for (const date of dates) {
+    if (date === todayKey) continue;
+    const session = history[date];
+    if (!session || !session.exercises) continue;
+    const found = session.exercises.find(e =>
+      e.id === exIdOrName || e.name === exIdOrName
+    );
+    if (found && found.sets && found.sets.length) {
+      // Find best set
+      let bestWeight = 0, bestReps = 0;
+      found.sets.forEach(s => {
+        if ((parseFloat(s.weight) || 0) >= bestWeight) {
+          bestWeight = parseFloat(s.weight) || 0;
+          bestReps   = parseFloat(s.reps)   || 0;
+        }
+      });
+      return { bestWeight, bestReps, date };
+    }
+  }
+  return null;
+}
+
+// ── FINISH WORKOUT ───────────────────────────────────────────
+function finishWorkout() {
+  stopRest();
+  clearInterval(elapsedTimer);
+
+  const durationMs  = startTime ? Date.now() - startTime : 0;
+  const durationMin = Math.round(durationMs / 60000);
+
+  // Calculate total volume
+  let totalVolume = 0;
+  exercises.forEach(ex => {
+    ex.loggedSets.forEach(s => {
+      if (s.logged) {
+        totalVolume += (parseFloat(s.weight) || 0) * (parseFloat(s.reps) || 0);
+      }
+    });
+  });
+
+  // Save to history
+  const history = store.get('workout_history', {});
+  const programs = store.get('programs', []);
+  const activeId = store.get('active_program', null);
+  const program  = programs.find(p => p.id === activeId);
+  const dayIndex = (new Date().getDay() + 6) % 7;
+  const dayPlan  = program && program.days && program.days[dayIndex];
+
+  history[todayKey] = {
+    name:        dayPlan ? dayPlan.name : 'Workout',
+    durationMin,
+    totalVolume: Math.round(totalVolume),
+    prs:         totalPRs,
+    exercises:   exercises.map(ex => ({
+      id:   ex.id,
+      name: ex.name,
+      sets: ex.loggedSets.filter(s => s.logged).map(s => ({
+        weight: parseFloat(s.weight) || 0,
+        reps:   parseFloat(s.reps)   || 0
+      }))
+    }))
+  };
+  store.set('workout_history', history);
+
+  // Show completion screen
+  show('completion-state');
+  document.getElementById('overall-prog-wrap').style.display = 'none';
+  document.getElementById('btn-finish-top').style.display    = 'none';
+  document.getElementById('workout-timer').style.display     = 'none';
+  document.getElementById('header-title').textContent = 'Workout complete';
+  document.getElementById('header-sub').textContent   = '';
+
+  document.getElementById('c-duration').textContent = durationMin || '—';
+  document.getElementById('c-volume').textContent   =
+    totalVolume >= 1000 ? (totalVolume / 1000).toFixed(1) + 'k' : Math.round(totalVolume) || '—';
+  document.getElementById('c-prs').textContent      = totalPRs || '0';
+
+  const setsLogged = exercises.reduce((acc, ex) =>
+    acc + ex.loggedSets.filter(s => s.logged).length, 0);
+  document.getElementById('completion-sub').textContent =
+    setsLogged + ' sets logged · ' + exercises.length + ' exercises';
+
+  // Fetch AI analysis
+  fetchAIAnalysis(durationMin, totalVolume, totalPRs, exercises);
+}
+
+// ── AI ANALYSIS ──────────────────────────────────────────────
+async function fetchAIAnalysis(durationMin, totalVolume, prs, exList) {
+  const apiKey = store.get('anthropic_key', null);
+
+  // Build workout summary for prompt
+  const summary = exList.map(ex => {
+    const sets = ex.loggedSets.filter(s => s.logged);
+    if (!sets.length) return null;
+    const best = sets.reduce((b, s) =>
+      (parseFloat(s.weight) || 0) > (parseFloat(b.weight) || 0) ? s : b, sets[0]);
+    return `${ex.name}: ${sets.length} sets, best set ${best.weight || '—'} lbs × ${best.reps || '—'} reps`;
+  }).filter(Boolean).join('\n');
+
+  const prompt = `You are a supportive, expert fitness coach. Analyze this workout and give brief, personalized feedback in 3-4 sentences. Be specific, encouraging, and practical. Mention what went well, one area to focus on next time, and one actionable tip.
+
+Workout summary:
+- Duration: ${durationMin} minutes
+- Total volume: ${Math.round(totalVolume)} lbs
+- Personal records: ${prs}
+- Exercises:
+${summary}
+
+Keep response under 80 words. Be direct and coach-like, not generic.`;
+
+  if (!apiKey) {
+    // No API key — show placeholder
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-analysis-text').style.display = 'block';
+    document.getElementById('ai-analysis-text').innerHTML =
+      `<p style="color:var(--text-3);font-style:italic;">
+        AI analysis requires an API key. Add yours in Profile → Settings to get personalized coaching after every workout.
+      </p>`;
+    return;
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model:      'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages:   [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content && data.content[0] && data.content[0].text
+      ? data.content[0].text
+      : 'Great workout! Keep up the consistency.';
+
+    document.getElementById('ai-loading').style.display      = 'none';
+    document.getElementById('ai-analysis-text').style.display = 'block';
+    document.getElementById('ai-analysis-text').textContent   = text;
+
+    // Save insight to dashboard
+    store.set('ai_insight', { date: todayKey, text });
+
+  } catch (err) {
+    document.getElementById('ai-loading').style.display      = 'none';
+    document.getElementById('ai-analysis-text').style.display = 'block';
+    document.getElementById('ai-analysis-text').textContent   =
+      'Great work finishing your workout! Stay consistent and you\'ll see results.';
+  }
+}
+
+// ── START ANYWAY (rest day override) ─────────────────────────
+function startAnyway() {
+  // Build a blank workout with no exercises — user can log freely
+  // For now redirect to programs to pick a day
+  location.href = 'programs.html';
+}
+
+// ── REST TIME FORMAT ─────────────────────────────────────────
+function formatRest(secs) {
+  if (!secs) return '60s';
+  return secs >= 60
+    ? Math.floor(secs / 60) + 'm' + (secs % 60 ? (secs % 60) + 's' : '')
+    : secs + 's';
+}
+
+// ── TOAST ────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ── ACTIVE INPUT HIGHLIGHT ───────────────────────────────────
+// Add a style for active inputs
+const style = document.createElement('style');
+style.textContent = `.active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }`;
+document.head.appendChild(style);
+
+// ── START ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
