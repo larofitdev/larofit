@@ -263,21 +263,42 @@ select.su-input { cursor: pointer; }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 
 <script>
+function dobTab(el, nextId, maxLen) {
+  // Strip non-digits
+  el.value = el.value.replace(/[^0-9]/g, '');
+  if (el.value.length >= maxLen) {
+    document.getElementById(nextId)?.focus();
+  }
+}
+
 function handleSignup() {
   const name  = document.getElementById('f-name').value.trim();
   const email = document.getElementById('f-email').value.trim();
   const pass  = document.getElementById('f-pass').value;
   const pass2 = document.getElementById('f-pass2').value;
-  const dob   = document.getElementById('f-dob').value;
+  const mm    = document.getElementById('f-dob-mm').value.trim();
+  const dd    = document.getElementById('f-dob-dd').value.trim();
+  const yyyy  = document.getElementById('f-dob-yyyy').value.trim();
   const sex   = document.getElementById('f-sex').value;
   const errEl = document.getElementById('su-error');
 
   errEl.style.display = 'none';
 
-  if (!name)                        return showError('Please enter your name.');
+  if (!name)                          return showError('Please enter your name.');
   if (!email || !email.includes('@')) return showError('Please enter a valid email.');
-  if (pass.length < 8)              return showError('Password must be at least 8 characters.');
-  if (pass !== pass2)               return showError('Passwords do not match.');
+  if (pass.length < 8)                return showError('Password must be at least 8 characters.');
+  if (pass !== pass2)                 return showError('Passwords do not match.');
+
+  // Validate DOB if provided
+  let dob = '';
+  if (mm || dd || yyyy) {
+    const m = parseInt(mm), d = parseInt(dd), y = parseInt(yyyy);
+    if (!mm || !dd || !yyyy)          return showError('Please complete your date of birth.');
+    if (m < 1 || m > 12)              return showError('Please enter a valid month (01–12).');
+    if (d < 1 || d > 31)              return showError('Please enter a valid day (01–31).');
+    if (y < 1920 || y > 2015)         return showError('Please enter a valid birth year.');
+    dob = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
+  }
 
   // Save account basics
   const firstName = name.split(' ')[0];
