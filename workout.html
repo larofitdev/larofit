@@ -661,16 +661,56 @@ button, input, select, a { touch-action: manipulation; }
 </main>
 
 <!-- REST TIMER POPUP -->
-<div class="rest-overlay" id="rest-overlay" role="dialog" aria-modal="true" aria-label="Rest timer">
-  <div class="rest-popup" onclick="event.stopPropagation()" ontouchend="event.stopPropagation()">
-    <div class="rest-popup-label">Rest</div>
-    <div class="rest-popup-next" id="rest-next-label"></div>
-    <div class="rest-popup-timer" id="rest-display">1:30</div>
-    <div class="rest-popup-adj">
-      <button class="rest-popup-adj-btn" id="btn-minus">−15s</button>
-      <button class="rest-popup-adj-btn" id="btn-plus">+15s</button>
+<div id="rest-overlay" style="
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.75);
+  z-index:500;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  pointer-events:all;
+">
+  <div id="rest-popup" style="
+    background:#1a1a1a;
+    border-radius:20px;
+    padding:32px 24px;
+    width:100%;
+    max-width:320px;
+    text-align:center;
+    border:1px solid rgba(198,241,53,0.15);
+    pointer-events:all;
+    position:relative;
+    z-index:501;
+  ">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.14em;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:12px;">Rest</div>
+    <div id="rest-next-label" style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;min-height:20px;"></div>
+    <div id="rest-display" style="font-family:var(--font-display);font-size:80px;color:#c6f135;letter-spacing:4px;line-height:1;margin-bottom:28px;">1:30</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:14px;">
+      <button id="btn-minus" style="
+        padding:14px 0;width:120px;
+        background:rgba(255,255,255,0.1);
+        border:none;border-radius:10px;
+        color:white;font-size:16px;font-weight:700;
+        font-family:var(--font-body);cursor:pointer;
+      ">−15s</button>
+      <button id="btn-plus" style="
+        padding:14px 0;width:120px;
+        background:rgba(255,255,255,0.1);
+        border:none;border-radius:10px;
+        color:white;font-size:16px;font-weight:700;
+        font-family:var(--font-body);cursor:pointer;
+      ">+15s</button>
     </div>
-    <button class="rest-popup-skip" id="btn-skip">Skip rest</button>
+    <button id="btn-skip" style="
+      width:100%;padding:14px;
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.2);
+      border-radius:10px;
+      color:rgba(255,255,255,0.65);
+      font-size:16px;font-weight:600;
+      font-family:var(--font-body);cursor:pointer;
+    ">Skip rest</button>
   </div>
 </div>
 
@@ -1016,10 +1056,10 @@ function startRest(seconds, onComplete, nextLabel) {
   restCallback  = onComplete;
   restRemaining = seconds || 90;
   updateRestDisplay();
-  document.getElementById('rest-next-label').textContent =
-    nextLabel || '';
-  document.getElementById('rest-overlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
+  const overlay = document.getElementById('rest-overlay');
+  const nextEl  = document.getElementById('rest-next-label');
+  if (nextEl) nextEl.textContent = nextLabel || '';
+  overlay.style.display = 'flex';
   clearInterval(restInterval);
   restInterval = setInterval(() => {
     restRemaining--;
@@ -1037,8 +1077,7 @@ function startRest(seconds, onComplete, nextLabel) {
 function stopRest() {
   clearInterval(restInterval);
   restInterval = null;
-  document.getElementById('rest-overlay').classList.remove('show');
-  document.body.style.overflow = '';
+  document.getElementById('rest-overlay').style.display = 'none';
 }
 
 function skipRest() {
@@ -1056,7 +1095,7 @@ function updateRestDisplay() {
   const s  = restRemaining % 60;
   const el = document.getElementById('rest-display');
   el.textContent = m + ':' + String(s).padStart(2, '0');
-  el.className   = 'rest-popup-timer' + (restRemaining <= 10 ? ' urgent' : '');
+  el.style.color = restRemaining <= 10 ? '#ef4444' : '#c6f135';
 }
 
 // ── NAVIGATION ───────────────────────────────────────────────
@@ -1265,39 +1304,12 @@ const style = document.createElement('style');
 style.textContent = `.active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }`;
 document.head.appendChild(style);
 
-// ── INIT — single entry point ────────────────────────────────
+// ── INIT ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-
-  // Wire rest buttons — both touchend and click for reliability
-  function addRestBtn(id, fn) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    // touchend is more reliable than touchstart for buttons on iOS
-    el.addEventListener('touchend', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      fn();
-    }, { passive: false });
-    // click as fallback for non-touch
-    el.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      fn();
-    });
-  }
-
-  addRestBtn('btn-minus', () => adjustRest(-15));
-  addRestBtn('btn-plus',  () => adjustRest(15));
-  addRestBtn('btn-skip',  () => skipRest());
-
-  // Prevent overlay background from closing on any tap
-  const overlay = document.getElementById('rest-overlay');
-  if (overlay) {
-    overlay.addEventListener('touchend', e => e.stopPropagation());
-    overlay.addEventListener('click',    e => e.stopPropagation());
-  }
-
-  // Start workout
+  // Wire rest buttons with simple onclick — no touch event complexity
+  document.getElementById('btn-minus').onclick = () => adjustRest(-15);
+  document.getElementById('btn-plus').onclick  = () => adjustRest(15);
+  document.getElementById('btn-skip').onclick  = () => skipRest();
   init();
 });
 </script>
