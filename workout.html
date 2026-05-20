@@ -259,9 +259,15 @@ button, input, select, a { touch-action: manipulation; }
   align-items: center;
   justify-content: center;
   padding: 24px;
+  /* iOS Safari: prevent touch bleed-through */
+  -webkit-overflow-scrolling: auto;
+  overscroll-behavior: contain;
 }
 
 .rest-overlay.show { display: flex; }
+
+/* Body scroll lock when rest overlay is open */
+body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
 .rest-popup {
   background: var(--bg-dark);
@@ -665,7 +671,6 @@ button, input, select, a { touch-action: manipulation; }
   position:fixed;inset:0;
   background:rgba(0,0,0,0.75);
   z-index:500;
-  display:none;
   align-items:center;
   justify-content:center;
   padding:24px;
@@ -693,6 +698,7 @@ button, input, select, a { touch-action: manipulation; }
         border:none;border-radius:10px;
         color:white;font-size:16px;font-weight:700;
         font-family:var(--font-body);cursor:pointer;
+        touch-action:manipulation;-webkit-tap-highlight-color:transparent;
       ">−15s</button>
       <button id="btn-plus" style="
         padding:14px 0;width:120px;
@@ -700,6 +706,7 @@ button, input, select, a { touch-action: manipulation; }
         border:none;border-radius:10px;
         color:white;font-size:16px;font-weight:700;
         font-family:var(--font-body);cursor:pointer;
+        touch-action:manipulation;-webkit-tap-highlight-color:transparent;
       ">+15s</button>
     </div>
     <button id="btn-skip" style="
@@ -710,6 +717,7 @@ button, input, select, a { touch-action: manipulation; }
       color:rgba(255,255,255,0.65);
       font-size:16px;font-weight:600;
       font-family:var(--font-body);cursor:pointer;
+      touch-action:manipulation;-webkit-tap-highlight-color:transparent;
     ">Skip rest</button>
   </div>
 </div>
@@ -1059,7 +1067,8 @@ function startRest(seconds, onComplete, nextLabel) {
   const overlay = document.getElementById('rest-overlay');
   const nextEl  = document.getElementById('rest-next-label');
   if (nextEl) nextEl.textContent = nextLabel || '';
-  overlay.style.display = 'flex';
+  overlay.classList.add('show');
+  document.body.classList.add('rest-open');
   clearInterval(restInterval);
   restInterval = setInterval(() => {
     restRemaining--;
@@ -1077,7 +1086,8 @@ function startRest(seconds, onComplete, nextLabel) {
 function stopRest() {
   clearInterval(restInterval);
   restInterval = null;
-  document.getElementById('rest-overlay').style.display = 'none';
+  document.getElementById('rest-overlay').classList.remove('show');
+  document.body.classList.remove('rest-open');
 }
 
 function skipRest() {
