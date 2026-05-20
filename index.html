@@ -15,6 +15,7 @@
 <body>
 
 <!-- Nav injected by larofit-nav.js -->
+<script src="larofit-exercises.js"></script>
 <script>window.LF_PAGE = 'home';</script>
 <script src="larofit-nav.js"></script>
 
@@ -520,23 +521,29 @@ function seedDemoData() {
     weeks: 6,
     days: [
       { name: 'Push — Chest & Shoulders', rest: false, exercises: [
-          { id: 'b7', sets: 4, reps: 8, restSec: 90 },
-          { id: 'b2', sets: 3, reps: 10, restSec: 60 },
+          { id: 'b7',  sets: 4, reps: 8,  restSec: 90 },
+          { id: 'b2',  sets: 3, reps: 10, restSec: 60 },
           { id: 'b11', sets: 3, reps: 12, restSec: 60 },
         ]},
       { name: 'Pull — Back & Biceps', rest: false, exercises: [
-          { id: 'bk1', sets: 4, reps: 8, restSec: 90 },
-          { id: 'bi1', sets: 3, reps: 10, restSec: 60 },
+          { id: 'b23', sets: 4, reps: 8,  restSec: 90 },
+          { id: 'b45', sets: 3, reps: 10, restSec: 60 },
+          { id: 'b46', sets: 3, reps: 10, restSec: 60 },
         ]},
       { name: 'Legs', rest: false, exercises: [
-          { id: 'l1', sets: 4, reps: 8, restSec: 90 },
+          { id: 'b65', sets: 4, reps: 8,  restSec: 90 },
+          { id: 'b66', sets: 3, reps: 10, restSec: 60 },
+          { id: 'b68', sets: 3, reps: 10, restSec: 90 },
         ]},
       { rest: true },
       { name: 'Push — Chest & Shoulders', rest: false, exercises: [
-          { id: 'b7', sets: 4, reps: 8, restSec: 90 },
+          { id: 'b7',  sets: 4, reps: 8,  restSec: 90 },
+          { id: 'b2',  sets: 3, reps: 10, restSec: 60 },
+          { id: 'b11', sets: 3, reps: 12, restSec: 60 },
         ]},
       { name: 'Pull — Back & Biceps', rest: false, exercises: [
-          { id: 'bk1', sets: 4, reps: 8, restSec: 90 },
+          { id: 'b23', sets: 4, reps: 8,  restSec: 90 },
+          { id: 'b45', sets: 3, reps: 10, restSec: 60 },
         ]},
       { rest: true }
     ]
@@ -553,6 +560,13 @@ function seedDemoData() {
 
 // ── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Force re-seed if demo data has bad exercise IDs
+  const progs = store.get('programs', []);
+  const hasOldIds = progs.some(p => p.days && p.days.some(d =>
+    d.exercises && d.exercises.some(e => ['l1','bk1','bi1'].includes(e.id))
+  ));
+  if (hasOldIds) store.set('seeded', false);
+
   seedDemoData();
   loadUser();
   loadTodayCard();
