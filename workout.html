@@ -16,8 +16,8 @@ input[type="number"], input[type="text"], select, textarea {
   font-size: 16px !important;
 }
 
-/* ── PREVENT DOUBLE-TAP ZOOM ── */
-* { touch-action: manipulation; }
+/* ── PREVENT DOUBLE-TAP ZOOM on interactive elements only ── */
+button, input, select, a { touch-action: manipulation; }
 
 /* ── WORKOUT-SPECIFIC STYLES ── */
 
@@ -662,7 +662,7 @@ input[type="number"], input[type="text"], select, textarea {
 
 <!-- REST TIMER POPUP -->
 <div class="rest-overlay" id="rest-overlay" role="dialog" aria-modal="true" aria-label="Rest timer">
-  <div class="rest-popup">
+  <div class="rest-popup" onclick="event.stopPropagation()" ontouchend="event.stopPropagation()">
     <div class="rest-popup-label">Rest</div>
     <div class="rest-popup-next" id="rest-next-label"></div>
     <div class="rest-popup-timer" id="rest-display">1:30</div>
@@ -1265,30 +1265,41 @@ const style = document.createElement('style');
 style.textContent = `.active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }`;
 document.head.appendChild(style);
 
-// ── REST BUTTON TOUCH HANDLERS ───────────────────────────────
-// Use touchstart so iOS fires before any scroll suppression
+// ── INIT — single entry point ────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+
+  // Wire rest buttons — both touchend and click for reliability
   function addRestBtn(id, fn) {
     const el = document.getElementById(id);
     if (!el) return;
-    el.addEventListener('touchstart', e => {
+    // touchend is more reliable than touchstart for buttons on iOS
+    el.addEventListener('touchend', e => {
       e.preventDefault();
       e.stopPropagation();
       fn();
     }, { passive: false });
+    // click as fallback for non-touch
     el.addEventListener('click', e => {
       e.preventDefault();
       e.stopPropagation();
       fn();
     });
   }
+
   addRestBtn('btn-minus', () => adjustRest(-15));
   addRestBtn('btn-plus',  () => adjustRest(15));
   addRestBtn('btn-skip',  () => skipRest());
-});
 
-// ── START ─────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', init);
+  // Prevent overlay background from closing on any tap
+  const overlay = document.getElementById('rest-overlay');
+  if (overlay) {
+    overlay.addEventListener('touchend', e => e.stopPropagation());
+    overlay.addEventListener('click',    e => e.stopPropagation());
+  }
+
+  // Start workout
+  init();
+});
 </script>
 
 </body>
