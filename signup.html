@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a1a">
+<title>LaroFit — Create Account</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="larofit.css?v=2">
+<style>
+/* ── DARK FULL-SCREEN LAYOUT (signup is always dark) ── */
+html, body {
+  background: #1a1a1a;
+  color: #ffffff;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 0;
+  display: block;
+}
+
+button, a, input { touch-action: manipulation; }
+
+.signup-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HERO ── */
+.signup-hero {
+  background: #1a1a1a;
+  padding: 48px 24px 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.signup-logo {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: #ffffff;
+  margin-bottom: 28px;
+}
+
+.signup-logo span { color: var(--volt); }
+
+.signup-title {
+  font-family: var(--font-display);
+  font-size: 36px;
+  letter-spacing: 1px;
+  color: #ffffff;
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+
+.signup-title span { color: var(--volt); }
+
+.signup-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+}
+
+/* ── FORM CARD ── */
+.signup-form-wrap {
+  flex: 1;
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  padding: 28px 20px 40px;
+}
+
+/* field labels in dark mode on this page */
+.su-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.su-field { margin-bottom: 16px; }
+
+.su-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.su-input {
+  width: 100%;
+  padding: 13px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  font-size: 16px; /* prevent iOS zoom */
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+
+.su-input:focus { border-color: var(--volt-dark); }
+.su-input::placeholder { color: var(--text-3); }
+
+select.su-input { cursor: pointer; }
+
+.su-error {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 5px;
+  display: none;
+}
+
+/* ── PERKS ── */
+.perks-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 14px;
+  background: var(--volt-bg);
+  border: 1px solid var(--volt-border);
+  border-radius: var(--radius);
+}
+
+.perk {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.perk i {
+  color: var(--volt-dark);
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+/* ── SUBMIT ── */
+.su-submit {
+  width: 100%;
+  padding: 16px;
+  background: var(--volt);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bg-dark);
+  cursor: pointer;
+  font-family: var(--font-body);
+  letter-spacing: 0.02em;
+  transition: all 0.15s;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.su-submit:active { transform: scale(0.98); background: #b8e020; }
+
+.su-note {
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: center;
+  margin-top: 12px;
+  line-height: 1.5;
+}
+
+.su-signin {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+  margin-top: 16px;
+}
+
+.su-signin a { color: var(--volt-dark); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="signup-wrap">
+
+  <!-- HERO -->
+  <div class="signup-hero">
+    <div class="signup-logo">LARO<span>FIT</span></div>
+    <div class="signup-title">YOUR <span>FIRST</span><br>WORKOUT IS<br><span>AI-BUILT</span></div>
+    <div class="signup-sub">Tell us about yourself.<br>We'll build your perfect program in 60 seconds.</div>
+  </div>
+
+  <!-- FORM -->
+  <div class="signup-form-wrap">
+
+    <!-- Perks -->
+    <div class="perks-row">
+      <div class="perk"><i class="ti ti-robot"></i> AI builds your first program automatically</div>
+      <div class="perk"><i class="ti ti-trophy"></i> PR tracking, rest timers, voice logging</div>
+      <div class="perk"><i class="ti ti-chart-line"></i> Progress tracking from day one</div>
+    </div>
+
+    <!-- Name -->
+    <div class="su-field">
+      <label class="su-label" for="f-name">Full name</label>
+      <input class="su-input" type="text" id="f-name" placeholder="e.g. Lyndon Johnson" autocomplete="name">
+    </div>
+
+    <!-- Email -->
+    <div class="su-field">
+      <label class="su-label" for="f-email">Email address</label>
+      <input class="su-input" type="email" id="f-email" placeholder="you@email.com" autocomplete="email">
+    </div>
+
+    <!-- Password row -->
+    <div class="su-row">
+      <div>
+        <label class="su-label" for="f-pass">Password</label>
+        <input class="su-input" type="password" id="f-pass" placeholder="Min. 8 chars">
+      </div>
+      <div>
+        <label class="su-label" for="f-pass2">Confirm</label>
+        <input class="su-input" type="password" id="f-pass2" placeholder="Repeat">
+      </div>
+    </div>
+
+    <!-- DOB + Sex row -->
+    <div class="su-row">
+      <div>
+        <label class="su-label" for="f-dob">Date of birth</label>
+        <input class="su-input" type="date" id="f-dob">
+      </div>
+      <div>
+        <label class="su-label" for="f-sex">Sex</label>
+        <select class="su-input" id="f-sex">
+          <option value="">Select…</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Prefer not to say</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="su-error" class="su-error"></div>
+
+    <button class="su-submit" onclick="handleSignup()">
+      <i class="ti ti-rocket"></i> Create account &amp; build my program
+    </button>
+
+    <div class="su-note">14-day free trial · No credit card required</div>
+    <div class="su-signin">Already have an account? <a href="#">Sign in</a></div>
+
+  </div>
+</div>
+
+<!-- Tabler icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+
+<script>
+function handleSignup() {
+  const name  = document.getElementById('f-name').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const pass  = document.getElementById('f-pass').value;
+  const pass2 = document.getElementById('f-pass2').value;
+  const dob   = document.getElementById('f-dob').value;
+  const sex   = document.getElementById('f-sex').value;
+  const errEl = document.getElementById('su-error');
+
+  errEl.style.display = 'none';
+
+  if (!name)                        return showError('Please enter your name.');
+  if (!email || !email.includes('@')) return showError('Please enter a valid email.');
+  if (pass.length < 8)              return showError('Password must be at least 8 characters.');
+  if (pass !== pass2)               return showError('Passwords do not match.');
+
+  // Save account basics
+  const firstName = name.split(' ')[0];
+  localStorage.setItem('lf_user', JSON.stringify({
+    name: firstName,
+    fullName: name,
+    email,
+    dob,
+    sex,
+    initials: firstName.charAt(0).toUpperCase()
+  }));
+
+  // Clear any old seeded data so onboarding starts fresh
+  localStorage.removeItem('lf_seeded');
+  localStorage.removeItem('lf_programs');
+  localStorage.removeItem('lf_active_program');
+
+  window.location.href = 'onboarding.html';
+}
+
+function showError(msg) {
+  const el = document.getElementById('su-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+</script>
+
+</body>
+</html>
