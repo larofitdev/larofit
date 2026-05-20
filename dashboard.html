@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f5f5f0">
+<title>LaroFit</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="larofit.css">
+</head>
+<body>
+
+<!-- Nav injected by larofit-nav.js -->
+<script>window.LF_PAGE = 'home';</script>
+<script src="larofit-nav.js"></script>
+
+<!-- ── MAIN CONTENT ── -->
+<main class="lf-main-desktop" id="main">
+
+  <!-- TOP BAR -->
+  <div class="lf-header">
+    <div class="lf-header-inner">
+      <div>
+        <div id="greeting" style="font-size:12px;color:var(--text-3);font-weight:500;"></div>
+        <div id="username" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.2;margin-top:1px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn btn-ghost btn-sm" id="notif-btn" aria-label="Notifications" style="padding:8px;">
+          <i class="ti ti-bell" style="font-size:20px;" aria-hidden="true"></i>
+        </button>
+        <div id="avatar"
+             style="width:38px;height:38px;border-radius:50%;background:var(--bg-dark);
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:14px;font-weight:700;color:var(--volt);cursor:pointer;
+                    font-family:var(--font-display);letter-spacing:1px;"
+             onclick="location.href='profile.html'"
+             aria-label="Go to profile">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TODAY'S WORKOUT CARD -->
+  <div style="padding:14px var(--page-pad) 0;">
+    <div class="lf-card-dark" id="today-card">
+
+      <!-- Has a workout -->
+      <div id="today-has-workout" style="padding:16px;display:none;">
+        <div style="font-size:10px;font-weight:700;color:var(--volt);
+                    letter-spacing:0.12em;text-transform:uppercase;
+                    font-family:var(--font-mono);margin-bottom:5px;">
+          Today's workout
+        </div>
+        <div id="today-name"
+             style="font-size:18px;font-weight:700;color:var(--text-inv);
+                    line-height:1.25;margin-bottom:10px;"></div>
+        <div style="display:flex;gap:16px;margin-bottom:14px;" id="today-meta">
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,0.55);">
+            <i class="ti ti-clock" style="font-size:13px;color:var(--volt);" aria-hidden="true"></i>
+            <span id="today-duration">— min</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,0.55);">
+            <i class="ti ti-list-numbers" style="font-size:13px;color:var(--volt);" aria-hidden="true"></i>
+            <span id="today-excount">— exercises</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,0.55);">
+            <i class="ti ti-flame" style="font-size:13px;color:var(--volt);" aria-hidden="true"></i>
+            <span id="today-cal">— cal</span>
+          </div>
+        </div>
+        <button class="btn btn-volt btn-full" onclick="location.href='workout.html'" style="font-size:14px;padding:12px;">
+          Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- Rest day -->
+      <div id="today-rest-day" style="padding:16px;display:none;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);
+                    letter-spacing:0.12em;text-transform:uppercase;
+                    font-family:var(--font-mono);margin-bottom:6px;">Today</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text-inv);margin-bottom:4px;">Rest day</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:14px;">
+          Recovery is part of the program. Sleep well, eat well.
+        </div>
+        <button class="btn btn-outline btn-full"
+                style="border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);"
+                onclick="location.href='workout.html'">
+          Log a workout anyway
+        </button>
+      </div>
+
+      <!-- No program -->
+      <div id="today-no-program" style="padding:16px;display:none;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);
+                    letter-spacing:0.12em;text-transform:uppercase;
+                    font-family:var(--font-mono);margin-bottom:6px;">Get started</div>
+        <div style="font-size:18px;font-weight:700;color:var(--text-inv);margin-bottom:4px;">
+          No program yet
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:14px;">
+          Build your first program to get daily workouts here.
+        </div>
+        <button class="btn btn-volt btn-full" onclick="location.href='programs.html'">
+          Build a program <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STREAK -->
+  <div style="padding:12px var(--page-pad) 0;">
+    <div class="lf-card lf-card-pad" style="display:flex;align-items:center;gap:12px;">
+      <div id="streak-icon"
+           style="font-size:28px;line-height:1;flex-shrink:0;"
+           aria-hidden="true">🔥</div>
+      <div style="flex:1;min-width:0;">
+        <div id="streak-headline"
+             style="font-size:14px;font-weight:700;color:var(--text);"></div>
+        <div id="streak-sub"
+             style="font-size:11px;color:var(--text-3);margin-top:2px;"></div>
+      </div>
+      <div class="lf-streak-dots" id="streak-dots" aria-label="Week overview"></div>
+    </div>
+  </div>
+
+  <!-- THIS WEEK STATS -->
+  <div class="lf-section-label lf-mt">This week</div>
+  <div class="lf-stat-grid">
+    <div class="lf-stat">
+      <div class="lf-stat-label">Workouts</div>
+      <div class="lf-stat-val" id="stat-workouts">—</div>
+      <div class="lf-stat-unit" id="stat-workouts-sub">of — planned</div>
+    </div>
+    <div class="lf-stat">
+      <div class="lf-stat-label">Volume</div>
+      <div class="lf-stat-val" id="stat-volume">—</div>
+      <div class="lf-stat-unit">lbs lifted</div>
+    </div>
+    <div class="lf-stat">
+      <div class="lf-stat-label">Personal bests</div>
+      <div class="lf-stat-val" id="stat-prs">—</div>
+      <div class="lf-stat-unit">this week</div>
+    </div>
+    <div class="lf-stat">
+      <div class="lf-stat-label">Active days</div>
+      <div class="lf-stat-val" id="stat-days">—</div>
+      <div class="lf-stat-unit">this week</div>
+    </div>
+  </div>
+
+  <!-- AI COACH INSIGHT -->
+  <div class="lf-mt" id="ai-insight-wrap" style="display:none;">
+    <div class="lf-ai-card">
+      <i class="ti ti-sparkles lf-ai-icon" aria-hidden="true"></i>
+      <div>
+        <div class="lf-ai-label">AI Coach</div>
+        <div class="lf-ai-text" id="ai-insight-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MY PROGRAMS (quick access) -->
+  <div class="lf-section-label lf-mt">My programs</div>
+  <div style="padding:0 var(--page-pad);" id="programs-wrap">
+    <div class="lf-card" id="programs-list"></div>
+  </div>
+
+  <!-- RECENT ACTIVITY -->
+  <div class="lf-section-label lf-mt">Recent workouts</div>
+  <div style="padding:0 var(--page-pad);" id="history-wrap">
+    <div class="lf-card" id="history-list"></div>
+  </div>
+
+  <!-- bottom breathing room -->
+  <div style="height:24px;"></div>
+
+</main>
+
+<script>
+/* ============================================================
+   dashboard.js — inline script for dashboard.html
+   All data lives in localStorage under 'lf_' keys.
+   ============================================================ */
+
+// ── STORAGE HELPERS ──────────────────────────────────────────
+const store = {
+  get(key, fallback = null) {
+    try {
+      const v = localStorage.getItem('lf_' + key);
+      return v === null ? fallback : JSON.parse(v);
+    } catch { return fallback; }
+  },
+  set(key, value) {
+    try { localStorage.setItem('lf_' + key, JSON.stringify(value)); } catch {}
+  }
+};
+
+// ── DATE HELPERS ─────────────────────────────────────────────
+const today = new Date();
+const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const todayKey = today.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+
+function weekDates() {
+  // Return Mon–Sun of the current week
+  const d = new Date(today);
+  const day = d.getDay(); // 0=Sun
+  const monday = new Date(d);
+  monday.setDate(d.getDate() - ((day + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => {
+    const dd = new Date(monday);
+    dd.setDate(monday.getDate() + i);
+    return dd.toISOString().slice(0, 10);
+  });
+}
+
+// ── GREETING ────────────────────────────────────────────────
+function getGreeting() {
+  const h = today.getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+// ── LOAD USER ────────────────────────────────────────────────
+function loadUser() {
+  const user = store.get('user', { name: 'Athlete', initials: 'A' });
+  const name = user.name || 'Athlete';
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+  document.getElementById('greeting').textContent = getGreeting();
+  document.getElementById('username').textContent = name;
+  document.getElementById('avatar').textContent = initials;
+
+  return user;
+}
+
+// ── TODAY'S WORKOUT ──────────────────────────────────────────
+function loadTodayCard() {
+  const programs  = store.get('programs', []);
+  const activeId  = store.get('active_program', null);
+  const program   = programs.find(p => p.id === activeId);
+
+  const hasCard    = document.getElementById('today-has-workout');
+  const restCard   = document.getElementById('today-rest-day');
+  const noProg     = document.getElementById('today-no-program');
+
+  if (!program) {
+    noProg.style.display = 'block';
+    return;
+  }
+
+  const dayIndex  = today.getDay(); // 0=Sun, need Mon=0
+  const lf_day   = (dayIndex + 6) % 7; // Mon=0 … Sun=6
+  const dayPlan  = program.days && program.days[lf_day];
+
+  if (!dayPlan || dayPlan.rest) {
+    restCard.style.display = 'block';
+    return;
+  }
+
+  // Has a workout today
+  hasCard.style.display = 'block';
+  document.getElementById('today-name').textContent =
+    dayPlan.name || program.name + ' — Day ' + (lf_day + 1);
+
+  const exCount = (dayPlan.exercises || []).length;
+  const estMins = Math.round(exCount * 7 + (dayPlan.exercises || []).reduce((acc, ex) => {
+    return acc + (ex.sets || 3) * ((ex.restSec || 60) / 60);
+  }, 0));
+
+  document.getElementById('today-duration').textContent = estMins + ' min';
+  document.getElementById('today-excount').textContent  = exCount + ' exercise' + (exCount !== 1 ? 's' : '');
+  document.getElementById('today-cal').textContent      = '~' + Math.round(estMins * 7) + ' cal';
+}
+
+// ── STREAK ───────────────────────────────────────────────────
+function loadStreak() {
+  const history = store.get('workout_history', {}); // { 'YYYY-MM-DD': {...} }
+  const week    = weekDates();
+  const todayDow = (today.getDay() + 6) % 7; // Mon=0
+
+  // Calculate streak (consecutive days going back from today)
+  let streak = 0;
+  const check = new Date(today);
+  while (true) {
+    const key = check.toISOString().slice(0, 10);
+    if (history[key]) { streak++; }
+    else { break; }
+    check.setDate(check.getDate() - 1);
+  }
+
+  // Headline
+  const headline = document.getElementById('streak-headline');
+  const sub      = document.getElementById('streak-sub');
+  const icon     = document.getElementById('streak-icon');
+
+  if (streak === 0) {
+    icon.textContent = '💪';
+    headline.textContent = 'Start your streak today';
+    sub.textContent = 'Complete today\'s workout to begin';
+  } else if (streak === 1) {
+    icon.textContent = '🔥';
+    headline.textContent = '1-day streak — keep going!';
+    sub.textContent = 'Come back tomorrow to build momentum';
+  } else {
+    icon.textContent = streak >= 7 ? '🏆' : '🔥';
+    headline.textContent = streak + '-day streak';
+    sub.textContent = streak >= 7
+      ? 'Incredible consistency — week+ streak!'
+      : 'Don\'t break the chain';
+  }
+
+  // Week dots
+  const dotsEl = document.getElementById('streak-dots');
+  const dowAbbr = ['M','T','W','T','F','S','S'];
+  dotsEl.innerHTML = week.map((dateStr, i) => {
+    const isPast    = dateStr < todayKey;
+    const isToday   = dateStr === todayKey;
+    const isDone    = !!history[dateStr];
+    let cls = 'lf-dot';
+    if (isToday) cls += ' today';
+    else if (isDone) cls += ' done';
+    else if (isPast) cls += ' rest';
+    return `<div class="${cls}" aria-label="${dateStr}">${dowAbbr[i]}</div>`;
+  }).join('');
+}
+
+// ── WEEK STATS ───────────────────────────────────────────────
+function loadStats() {
+  const history  = store.get('workout_history', {});
+  const programs = store.get('programs', []);
+  const activeId = store.get('active_program', null);
+  const program  = programs.find(p => p.id === activeId);
+  const week     = weekDates();
+
+  let workouts = 0, volume = 0, prs = 0, activeDays = 0;
+
+  week.forEach(d => {
+    const session = history[d];
+    if (!session) return;
+    workouts++;
+    activeDays++;
+    volume += session.totalVolume || 0;
+    prs    += session.prs || 0;
+  });
+
+  // Planned workouts this week
+  let planned = 0;
+  if (program && program.days) {
+    program.days.forEach(d => { if (!d.rest) planned++; });
+  }
+
+  document.getElementById('stat-workouts').textContent      = workouts;
+  document.getElementById('stat-workouts-sub').textContent  = planned ? 'of ' + planned + ' planned' : 'this week';
+  document.getElementById('stat-volume').textContent        = volume >= 1000
+    ? (volume / 1000).toFixed(1) + 'k' : volume || '—';
+  document.getElementById('stat-prs').textContent           = prs || '—';
+  document.getElementById('stat-days').textContent          = activeDays || '—';
+}
+
+// ── AI INSIGHT ───────────────────────────────────────────────
+function loadAIInsight() {
+  const insight = store.get('ai_insight', null);
+  if (!insight || !insight.text) return;
+
+  // Only show if insight is from today
+  if (insight.date && insight.date !== todayKey) return;
+
+  document.getElementById('ai-insight-wrap').style.display = 'block';
+  document.getElementById('ai-insight-text').textContent   = insight.text;
+}
+
+// ── PROGRAMS LIST ────────────────────────────────────────────
+function loadPrograms() {
+  const programs = store.get('programs', []);
+  const activeId = store.get('active_program', null);
+  const el       = document.getElementById('programs-list');
+
+  if (!programs.length) {
+    el.innerHTML = `
+      <div class="lf-empty">
+        <div class="lf-empty-icon" aria-hidden="true"><i class="ti ti-layout-grid" style="font-size:36px;color:var(--text-3);"></i></div>
+        <div class="lf-empty-title">No programs yet</div>
+        <div class="lf-empty-body">Build your first training program to get started.</div>
+        <button class="btn btn-dark lf-mt-sm" onclick="location.href='programs.html'">
+          Build a program <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = programs.slice(0, 3).map(p => {
+    const isActive = p.id === activeId;
+    const days = p.days ? p.days.filter(d => !d.rest).length : 0;
+    return `
+      <div class="lf-list-row" style="cursor:pointer;"
+           onclick="location.href='programs.html?id=${p.id}'"
+           role="link" aria-label="Open program ${p.name}">
+        <div class="lf-list-row-icon">
+          <i class="ti ti-layout-grid" aria-hidden="true"></i>
+        </div>
+        <div class="lf-list-row-body">
+          <div class="lf-list-row-title">${escHtml(p.name || 'Untitled program')}</div>
+          <div class="lf-list-row-sub">${days} training day${days !== 1 ? 's' : ''} · ${p.weeks || '?'} weeks</div>
+        </div>
+        <div class="lf-list-row-right" style="display:flex;align-items:center;gap:6px;">
+          ${isActive ? '<span style="font-size:9px;font-weight:700;color:var(--volt-dark);background:var(--volt-bg);padding:2px 8px;border-radius:999px;font-family:var(--font-mono);letter-spacing:0.06em;">ACTIVE</span>' : ''}
+          <i class="ti ti-chevron-right" style="font-size:16px;" aria-hidden="true"></i>
+        </div>
+      </div>`;
+  }).join('');
+
+  if (programs.length > 3) {
+    el.insertAdjacentHTML('beforeend', `
+      <div class="lf-list-row" style="cursor:pointer;justify-content:center;"
+           onclick="location.href='programs.html'">
+        <span style="font-size:13px;color:var(--volt-dark);font-weight:600;">
+          View all ${programs.length} programs
+        </span>
+      </div>`);
+  }
+}
+
+// ── RECENT HISTORY ───────────────────────────────────────────
+function loadHistory() {
+  const history = store.get('workout_history', {});
+  const el      = document.getElementById('history-list');
+  const entries = Object.entries(history)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .slice(0, 4);
+
+  if (!entries.length) {
+    el.innerHTML = `
+      <div class="lf-empty">
+        <div class="lf-empty-icon" aria-hidden="true"><i class="ti ti-history" style="font-size:36px;color:var(--text-3);"></i></div>
+        <div class="lf-empty-title">No workouts logged yet</div>
+        <div class="lf-empty-body">Complete your first workout and it'll appear here.</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = entries.map(([dateStr, session]) => {
+    const d    = new Date(dateStr + 'T00:00:00');
+    const label = dateStr === todayKey ? 'Today'
+      : dateStr === new Date(today.getTime() - 86400000).toISOString().slice(0,10) ? 'Yesterday'
+      : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+    const vol  = session.totalVolume
+      ? (session.totalVolume >= 1000
+          ? (session.totalVolume / 1000).toFixed(1) + 'k lbs'
+          : session.totalVolume + ' lbs')
+      : '';
+    const sub  = [session.name, vol].filter(Boolean).join(' · ');
+
+    return `
+      <div class="lf-list-row" style="cursor:pointer;"
+           onclick="location.href='workout.html?date=${dateStr}'"
+           role="link" aria-label="View workout on ${label}">
+        <div class="lf-list-row-icon">
+          <i class="ti ti-barbell" aria-hidden="true"></i>
+        </div>
+        <div class="lf-list-row-body">
+          <div class="lf-list-row-title">${label}</div>
+          <div class="lf-list-row-sub">${escHtml(sub)}</div>
+        </div>
+        <div class="lf-list-row-right">
+          <i class="ti ti-chevron-right" style="font-size:16px;" aria-hidden="true"></i>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── UTILITIES ────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ── DEMO DATA (first run only) ───────────────────────────────
+function seedDemoData() {
+  if (store.get('seeded')) return;
+
+  store.set('user', { name: 'Lyndon', initials: 'L' });
+
+  const today0 = new Date();
+  const hist = {};
+  // Seed 3 recent workout days
+  [-3, -2, -1].forEach(offset => {
+    const d = new Date(today0);
+    d.setDate(today0.getDate() + offset);
+    const key = d.toISOString().slice(0, 10);
+    hist[key] = {
+      name: 'Push Day A',
+      totalVolume: Math.round(8000 + Math.random() * 6000),
+      prs: Math.floor(Math.random() * 3),
+      durationMin: 42
+    };
+  });
+  store.set('workout_history', hist);
+
+  store.set('programs', [{
+    id: 'p1',
+    name: 'Strength Block A',
+    weeks: 6,
+    days: [
+      { name: 'Push — Chest & Shoulders', rest: false, exercises: [
+          { id: 'b7', sets: 4, reps: 8, restSec: 90 },
+          { id: 'b2', sets: 3, reps: 10, restSec: 60 },
+          { id: 'b11', sets: 3, reps: 12, restSec: 60 },
+        ]},
+      { name: 'Pull — Back & Biceps', rest: false, exercises: [
+          { id: 'bk1', sets: 4, reps: 8, restSec: 90 },
+          { id: 'bi1', sets: 3, reps: 10, restSec: 60 },
+        ]},
+      { name: 'Legs', rest: false, exercises: [
+          { id: 'l1', sets: 4, reps: 8, restSec: 90 },
+        ]},
+      { rest: true },
+      { name: 'Push — Chest & Shoulders', rest: false, exercises: [
+          { id: 'b7', sets: 4, reps: 8, restSec: 90 },
+        ]},
+      { name: 'Pull — Back & Biceps', rest: false, exercises: [
+          { id: 'bk1', sets: 4, reps: 8, restSec: 90 },
+        ]},
+      { rest: true }
+    ]
+  }]);
+  store.set('active_program', 'p1');
+
+  store.set('ai_insight', {
+    date: new Date().toISOString().slice(0, 10),
+    text: 'Your push day volume has increased 14% over the last 3 weeks. Consider adding a deload next week to maximize recovery and continue progressing.'
+  });
+
+  store.set('seeded', true);
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  seedDemoData();
+  loadUser();
+  loadTodayCard();
+  loadStreak();
+  loadStats();
+  loadAIInsight();
+  loadPrograms();
+  loadHistory();
+});
+</script>
+
+</body>
+</html>
