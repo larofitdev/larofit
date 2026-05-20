@@ -11,6 +11,14 @@
 <link rel="apple-touch-icon" href="appletouchicon.png">
 <link rel="stylesheet" href="larofit.css?v=2">
 <style>
+/* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
+input[type="number"], input[type="text"], select, textarea {
+  font-size: 16px !important;
+}
+
+/* ── PREVENT DOUBLE-TAP ZOOM ── */
+* { touch-action: manipulation; }
+
 /* ── WORKOUT-SPECIFIC STYLES ── */
 
 /* Exercise card */
@@ -61,6 +69,7 @@
 .sets-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .sets-table th {
@@ -69,7 +78,7 @@
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 8px 16px 6px;
+  padding: 8px 8px 6px;
   text-align: left;
   border-bottom: 0.5px solid var(--border);
 }
@@ -77,11 +86,13 @@
 .sets-table th:not(:first-child) { text-align: center; }
 
 .sets-table td {
-  padding: 10px 16px;
+  padding: 8px 8px;
   border-bottom: 0.5px solid var(--border);
   vertical-align: middle;
+  text-align: center;
 }
 
+.sets-table td:first-child { text-align: left; }
 .sets-table tr:last-child td { border-bottom: none; }
 
 .set-num {
@@ -474,6 +485,7 @@
 </head>
 <body>
 
+<script src="larofit-exercises.js"></script>
 <script>window.LF_PAGE = 'workout';</script>
 <script src="larofit-nav.js"></script>
 
@@ -565,10 +577,10 @@
       <table class="sets-table" id="sets-table">
         <thead>
           <tr>
-            <th style="width:36px;">Set</th>
-            <th>Weight</th>
-            <th>Reps</th>
-            <th></th>
+            <th style="width:38px;">Set</th>
+            <th style="width:30%;">Weight</th>
+            <th style="width:30%;">Reps</th>
+            <th style="width:22%;">Log</th>
           </tr>
         </thead>
         <tbody id="sets-body"></tbody>
@@ -726,7 +738,7 @@ function init() {
     sets:    ex.sets || 3,
     reps:    ex.reps || 10,
     restSec: ex.restSec || 90,
-    type:    ex.type || 'strength',
+    type:    ex.type || lookupExType(ex.id),
     weight:  ex.weight || '',
     // logged sets: array of { weight, reps, logged }
     loggedSets: Array.from({ length: ex.sets || 3 }, () => ({
@@ -762,8 +774,21 @@ function init() {
 }
 
 function lookupExName(id) {
-  // Will be replaced when exercises.js is loaded
-  return id || 'Exercise';
+  if (!id) return 'Exercise';
+  if (typeof LAROFIT_EXERCISES !== 'undefined') {
+    const found = LAROFIT_EXERCISES.find(e => e.id === id);
+    if (found) return found.name;
+  }
+  return id;
+}
+
+function lookupExType(id) {
+  if (!id) return 'strength';
+  if (typeof LAROFIT_EXERCISES !== 'undefined') {
+    const found = LAROFIT_EXERCISES.find(e => e.id === id);
+    if (found) return found.type || 'strength';
+  }
+  return 'strength';
 }
 
 // ── SHOW/HIDE STATES ─────────────────────────────────────────

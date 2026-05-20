@@ -479,14 +479,14 @@ input, select, textarea {
   text-transform: uppercase;
 }
 
-/* ── NUMBER INPUT (set logging) ── */
 .lf-num-input {
-  width: 54px;
-  padding: 7px 6px;
+  width: 100%;
+  max-width: 80px;
+  padding: 8px 4px;
   background: var(--bg-card2);
   border: 1px solid var(--border-md);
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text);
   text-align: center;
