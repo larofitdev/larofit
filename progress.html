@@ -409,6 +409,19 @@ canvas {
     </div>
   </div>
 
+  <!-- MEASUREMENTS LINK -->
+  <div class="lf-section-label">Body</div>
+  <div style="margin:0 var(--page-pad);background:var(--bg-card);border-radius:var(--radius);border:0.5px solid var(--border);overflow:hidden;">
+    <a href="measurements.html" style="display:flex;align-items:center;gap:14px;padding:14px 16px;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;">
+      <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:var(--bg);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">📏</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:600;color:var(--text);">Body Measurements</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;" id="meas-summary">Track neck, chest, waist, arms, legs and more</div>
+      </div>
+      <div style="color:var(--text-3);font-size:18px;">›</div>
+    </a>
+  </div>
+
   <!-- 1RM / PR TABLE -->
   <div class="lf-section-label">Personal records</div>
   <div class="pr-search-wrap">
@@ -912,6 +925,19 @@ function esc(str) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+// ── MEASUREMENTS SUMMARY ─────────────────────────────────
+(function() {
+  const log = JSON.parse(localStorage.getItem('lf_measurements_log') || '[]');
+  const el  = document.getElementById('meas-summary');
+  if (!el) return;
+  if (!log.length) return; // keep default text
+  const latest = log.sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+  const d = new Date(latest.date + 'T12:00:00');
+  const label = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  const wt = latest.weight ? ` · ${latest.weight} lbs` : '';
+  el.textContent = `Last logged ${label}${wt}`;
+})();
 </script>
 
 </body>
