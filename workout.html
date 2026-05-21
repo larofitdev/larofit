@@ -151,6 +151,45 @@ button, input, select, a { touch-action: manipulation; }
   color: var(--success);
 }
 
+/* Last session chip */
+.last-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 8px;
+  background: var(--bg-dark);
+  color: var(--volt);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s, transform 0.1s;
+  line-height: 1;
+}
+.last-chip:active {
+  opacity: 0.7;
+  transform: scale(0.94);
+}
+.last-chip-x {
+  font-size: 10px;
+  opacity: 0.6;
+  margin: 0 1px;
+}
+.last-chip-empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 8px;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  cursor: default;
+}
+
 /* Previous best banner */
 .prev-best {
   margin: 10px 16px;
@@ -599,10 +638,11 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       <table class="sets-table" id="sets-table">
         <thead>
           <tr>
-            <th style="width:38px;">Set</th>
-            <th style="width:30%;">Weight</th>
-            <th style="width:30%;">Reps</th>
-            <th style="width:22%;"></th>
+            <th style="width:34px;">Set</th>
+            <th style="width:28%;">Last</th>
+            <th style="width:26%;">Weight</th>
+            <th style="width:26%;">Reps</th>
+            <th style="width:18%;"></th>
           </tr>
         </thead>
         <tbody id="sets-body"></tbody>
@@ -925,6 +965,22 @@ function renderSets(ex, lastSession) {
     const isActive = !isDone && ex.loggedSets.slice(0, i).every(s => s.logged);
     const numCls   = isDone ? 'done' : isActive ? 'active-set' : '';
 
+    // Per-set last values — fall back to best if set index doesn't exist
+    const lastSet     = lastSession && lastSession.sets ? lastSession.sets[i] : null;
+    const lastFallback= lastSession ? { weight: lastSession.bestWeight, reps: lastSession.bestReps } : null;
+    const lastData    = lastSet || lastFallback;
+    const lastW       = lastData && lastData.weight ? lastData.weight : null;
+    const lastR       = lastData && lastData.reps   ? lastData.reps   : null;
+    const hasLast     = lastW !== null && lastW > 0;
+
+    // Last chip — tappable to copy values into inputs
+    const lastChip = hasLast
+      ? `<button class="last-chip" onclick="fillSet(${currentExIdx},${i},${lastW},${lastR})"
+                 title="Tap to use these values" aria-label="Fill set with last session values">
+           ${lastW}<span class="last-chip-x">×</span>${lastR}
+         </button>`
+      : `<span class="last-chip last-chip-empty">—</span>`;
+
     // PR detection
     let isPR = false;
     if (isDone && lastSession && set.weight && set.reps) {
@@ -934,10 +990,11 @@ function renderSets(ex, lastSession) {
     }
 
     if (isDone) {
-      const orm = calc1RM(parseFloat(set.weight), parseFloat(set.reps));
+      const orm      = calc1RM(parseFloat(set.weight), parseFloat(set.reps));
       const ormLabel = orm ? `<span class="last-val" style="color:var(--volt-dark);">~${orm} 1RM</span>` : '';
       return `<tr>
         <td><span class="set-num ${numCls}">${i + 1}</span></td>
+        <td style="text-align:center;">${lastChip}</td>
         <td style="text-align:center;">
           <span style="font-size:14px;font-weight:600;">${set.weight || '—'}</span>
           <span class="last-val">lbs</span>
@@ -955,16 +1012,9 @@ function renderSets(ex, lastSession) {
       </tr>`;
     }
 
-    // Last session hint
-    const hint = lastSession
-      ? `<span class="last-val">${lastSession.bestWeight} last</span>`
-      : '';
-    const hintReps = lastSession
-      ? `<span class="last-val">${lastSession.bestReps} last</span>`
-      : '';
-
     return `<tr>
       <td><span class="set-num ${numCls}">${i + 1}</span></td>
+      <td style="text-align:center;">${lastChip}</td>
       <td style="text-align:center;">
         <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
                id="inp-w-${currentExIdx}-${i}"
@@ -973,7 +1023,6 @@ function renderSets(ex, lastSession) {
                value="${set.weight || ''}"
                onchange="updateSet(${currentExIdx},${i},'weight',this.value)"
                ${!isActive && !isDone ? 'style="opacity:0.45;"' : ''}>
-        ${hint}
       </td>
       <td style="text-align:center;">
         <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
@@ -983,7 +1032,6 @@ function renderSets(ex, lastSession) {
                value="${set.reps || ''}"
                onchange="updateSet(${currentExIdx},${i},'reps',this.value)"
                ${!isActive && !isDone ? 'style="opacity:0.45;"' : ''}>
-        ${hintReps}
       </td>
       <td style="text-align:center;">
         ${isActive
@@ -1052,6 +1100,24 @@ function logSet(exIdx, setIdx) {
 
 function updateSet(exIdx, setIdx, field, value) {
   exercises[exIdx].loggedSets[setIdx][field] = value;
+}
+
+// ── FILL SET FROM LAST SESSION ────────────────────────────────
+function fillSet(exIdx, setIdx, weight, reps) {
+  const wEl = document.getElementById(`inp-w-${exIdx}-${setIdx}`);
+  const rEl = document.getElementById(`inp-r-${exIdx}-${setIdx}`);
+  if (wEl) { wEl.value = weight; updateSet(exIdx, setIdx, 'weight', weight); }
+  if (rEl) { rEl.value = reps;   updateSet(exIdx, setIdx, 'reps',   reps);   }
+  // Brief visual feedback
+  [wEl, rEl].forEach(el => {
+    if (!el) return;
+    el.style.borderColor = 'var(--volt-dark)';
+    el.style.background  = 'var(--volt-bg)';
+    setTimeout(() => {
+      el.style.borderColor = '';
+      el.style.background  = '';
+    }, 600);
+  });
 }
 
 // ── REST TIMER ───────────────────────────────────────────────
@@ -1126,8 +1192,7 @@ function checkAllDone() {
 // ── LAST SESSION LOOKUP ──────────────────────────────────────
 function getLastSession(exIdOrName) {
   const history = store.get('workout_history', {});
-  // Search through recent sessions for this exercise
-  const dates = Object.keys(history).sort().reverse();
+  const dates   = Object.keys(history).sort().reverse();
   for (const date of dates) {
     if (date === todayKey) continue;
     const session = history[date];
@@ -1136,7 +1201,6 @@ function getLastSession(exIdOrName) {
       e.id === exIdOrName || e.name === exIdOrName
     );
     if (found && found.sets && found.sets.length) {
-      // Find best set
       let bestWeight = 0, bestReps = 0;
       found.sets.forEach(s => {
         if ((parseFloat(s.weight) || 0) >= bestWeight) {
@@ -1144,7 +1208,7 @@ function getLastSession(exIdOrName) {
           bestReps   = parseFloat(s.reps)   || 0;
         }
       });
-      return { bestWeight, bestReps, date };
+      return { bestWeight, bestReps, date, sets: found.sets };
     }
   }
   return null;
