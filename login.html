@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a1a">
+<title>LaroFit — Sign In</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="larofit.css?v=2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+html, body {
+  background: #1a1a1a;
+  color: #ffffff;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding-bottom: 0;
+  display: block;
+}
+
+button, a, input { touch-action: manipulation; }
+
+.login-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HERO ── */
+.login-hero {
+  background: #1a1a1a;
+  padding: 56px 24px 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.login-logo {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: #ffffff;
+  margin-bottom: 32px;
+}
+.login-logo span { color: var(--volt); }
+
+.login-title {
+  font-family: var(--font-display);
+  font-size: 40px;
+  letter-spacing: 1px;
+  color: #ffffff;
+  line-height: 1.05;
+  margin-bottom: 10px;
+}
+.login-title span { color: var(--volt); }
+
+.login-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+}
+
+/* ── FORM CARD ── */
+.login-form-wrap {
+  flex: 1;
+  background: var(--bg);
+  border-radius: 24px 24px 0 0;
+  padding: 28px 20px;
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+}
+
+.su-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.su-field { margin-bottom: 16px; }
+
+.su-input {
+  width: 100%;
+  padding: 13px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.su-input:focus { border-color: var(--volt-dark); }
+.su-input::placeholder { color: var(--text-3); }
+
+/* Password wrapper with show/hide toggle */
+.pass-wrap {
+  position: relative;
+}
+.pass-toggle {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  color: var(--text-3); font-size: 18px;
+  cursor: pointer; padding: 4px;
+  display: flex; align-items: center;
+}
+
+.su-error {
+  font-size: 13px;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  display: none;
+}
+
+/* Forgot password */
+.forgot-row {
+  text-align: right;
+  margin-top: -8px;
+  margin-bottom: 16px;
+}
+.forgot-link {
+  font-size: 12px;
+  color: var(--text-3);
+  text-decoration: none;
+}
+.forgot-link:active { color: var(--volt-dark); }
+
+/* Submit */
+.su-submit {
+  width: 100%;
+  padding: 16px;
+  background: var(--volt);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--bg-dark);
+  cursor: pointer;
+  font-family: var(--font-body);
+  letter-spacing: 0.02em;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.su-submit:active { transform: scale(0.98); background: #b8e020; }
+.su-submit:disabled { opacity: 0.6; cursor: default; transform: none; }
+
+.su-signup {
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: center;
+  margin-top: 20px;
+}
+.su-signup a { color: var(--volt-dark); font-weight: 600; text-decoration: none; }
+
+/* Divider */
+.or-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.or-divider::before,
+.or-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Demo shortcut */
+.demo-btn {
+  width: 100%;
+  padding: 13px;
+  background: transparent;
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.demo-btn:active { background: var(--bg-card); border-color: var(--volt-dark); color: var(--volt-dark); }
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+
+  <!-- HERO -->
+  <div class="login-hero">
+    <div class="login-logo">LARO<span>FIT</span></div>
+    <div class="login-title">WELCOME<br><span>BACK</span></div>
+    <div class="login-sub">Good to see you again.<br>Let's get to work.</div>
+  </div>
+
+  <!-- FORM -->
+  <div class="login-form-wrap">
+
+    <div id="su-error" class="su-error"></div>
+
+    <!-- Email -->
+    <div class="su-field">
+      <label class="su-label" for="f-email">Email address</label>
+      <input class="su-input" type="email" id="f-email"
+             placeholder="you@email.com"
+             autocomplete="email"
+             onkeydown="if(event.key==='Enter') document.getElementById('f-pass').focus()">
+    </div>
+
+    <!-- Password -->
+    <div class="su-field">
+      <label class="su-label" for="f-pass">Password</label>
+      <div class="pass-wrap">
+        <input class="su-input" type="password" id="f-pass"
+               placeholder="Your password"
+               autocomplete="current-password"
+               style="padding-right:44px;"
+               onkeydown="if(event.key==='Enter') handleLogin()">
+        <button class="pass-toggle" onclick="togglePass()" aria-label="Show/hide password" tabindex="-1">
+          <i class="ti ti-eye" id="pass-eye"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Forgot password -->
+    <div class="forgot-row">
+      <a href="#" class="forgot-link" onclick="showForgot(event)">Forgot password?</a>
+    </div>
+
+    <!-- Sign in button -->
+    <button class="su-submit" id="signin-btn" onclick="handleLogin()">
+      <i class="ti ti-login"></i> Sign in
+    </button>
+
+    <!-- Or divider -->
+    <div class="or-divider">or</div>
+
+    <!-- Demo / continue as guest -->
+    <button class="demo-btn" onclick="continueAsGuest()">
+      <i class="ti ti-user"></i> Continue with demo account
+    </button>
+
+    <div class="su-signup">
+      Don't have an account? <a href="signup.html">Sign up free</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function handleLogin() {
+  const email  = document.getElementById('f-email').value.trim().toLowerCase();
+  const pass   = document.getElementById('f-pass').value;
+  const errEl  = document.getElementById('su-error');
+  const btn    = document.getElementById('signin-btn');
+
+  errEl.style.display = 'none';
+
+  if (!email || !email.includes('@')) return showError('Please enter a valid email address.');
+  if (!pass)                          return showError('Please enter your password.');
+
+  // Loading state
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 0.8s linear infinite;"></i> Signing in…';
+
+  // localStorage-only auth — check lf_user
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-login"></i> Sign in';
+
+    const stored = JSON.parse(localStorage.getItem('lf_user') || 'null');
+
+    if (!stored) {
+      return showError('No account found. Please sign up first.');
+    }
+
+    if (stored.email && stored.email.toLowerCase() !== email) {
+      return showError('Email address not recognised.');
+    }
+
+    // Note: password isn't actually stored yet (no backend) —
+    // this will be replaced with Supabase auth before launch.
+    // For now, any password lets you in if the email matches.
+
+    // Mark as signed in
+    stored.signedIn = true;
+    localStorage.setItem('lf_user', JSON.stringify(stored));
+
+    // Redirect
+    const onboarded = stored.onboarded;
+    window.location.href = onboarded ? 'index.html' : 'onboarding.html';
+  }, 600);
+}
+
+function togglePass() {
+  const inp = document.getElementById('f-pass');
+  const ico = document.getElementById('pass-eye');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ico.className = 'ti ti-eye-off';
+  } else {
+    inp.type = 'password';
+    ico.className = 'ti ti-eye';
+  }
+}
+
+function showForgot(e) {
+  e.preventDefault();
+  showError('Password recovery will be available once account sync is set up. For now, your account data lives on this device.');
+}
+
+function continueAsGuest() {
+  // Use demo seed data
+  const demo = {
+    name: 'Demo',
+    fullName: 'Demo User',
+    email: 'demo@larofit.com',
+    initials: 'D',
+    onboarded: true,
+    signedIn: true,
+  };
+  localStorage.setItem('lf_user', JSON.stringify(demo));
+  localStorage.setItem('lf_seeded', JSON.stringify(true));
+  window.location.href = 'index.html';
+}
+
+function showError(msg) {
+  const el = document.getElementById('su-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Spinner keyframe
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+</script>
+
+</body>
+</html>
