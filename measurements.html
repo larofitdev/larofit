@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f0">
+<title>LaroFit — Measurements</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="larofit.css?v=2">
+<style>
+input, select { font-size: 16px !important; }
+button, input, select, a { touch-action: manipulation; }
+
+/* ── BODYWEIGHT HERO ── */
+.meas-bw-hero {
+  margin: 14px var(--page-pad) 0;
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.meas-bw-left { flex: 1; min-width: 0; }
+.meas-bw-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+}
+.meas-bw-val {
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--volt);
+  line-height: 1;
+  margin-top: 2px;
+}
+.meas-bw-unit {
+  font-size: 16px;
+  color: rgba(255,255,255,0.5);
+  font-family: var(--font-mono);
+  margin-left: 4px;
+}
+.meas-bw-delta {
+  font-size: 13px;
+  font-family: var(--font-mono);
+  margin-top: 4px;
+  min-height: 18px;
+}
+.meas-bw-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.meas-bw-last {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
+/* ── MEASUREMENT GRID ── */
+.meas-grid {
+  margin: 0 var(--page-pad);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.meas-card {
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+.meas-card-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.meas-card-val {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--text);
+  line-height: 1;
+  margin-top: 4px;
+}
+.meas-card-unit {
+  font-size: 12px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+}
+.meas-card-delta {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  margin-top: 5px;
+  min-height: 16px;
+}
+
+/* delta colors */
+.delta-good  { color: var(--success); }
+.delta-bad   { color: var(--danger); }
+.delta-same  { color: var(--text-3); }
+
+/* ── HISTORY LIST ── */
+.hist-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+.hist-row:last-child { border-bottom: none; }
+
+.hist-dot-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 3px;
+}
+.hist-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--volt);
+  flex-shrink: 0;
+}
+.hist-line {
+  width: 1px;
+  flex: 1;
+  background: var(--border);
+  margin-top: 5px;
+  min-height: 20px;
+}
+.hist-row:last-child .hist-line { display: none; }
+
+.hist-body { flex: 1; min-width: 0; }
+.hist-date {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+.hist-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.hist-pill {
+  padding: 3px 8px;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: 999px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.hist-pill.is-latest {
+  background: var(--volt-bg);
+  border-color: var(--volt-border);
+  color: var(--volt-dark);
+}
+
+.hist-del-btn {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 0.5px solid var(--border);
+  color: var(--text-3);
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── LOG SHEET ── */
+.log-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 400;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.log-backdrop.open { opacity: 1; pointer-events: all; }
+
+.log-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  z-index: 401;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  max-height: 92dvh;
+}
+.log-sheet.open { transform: translateY(0); }
+
+.log-sheet-handle {
+  width: 36px; height: 4px;
+  background: var(--border-md);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+
+.log-sheet-header {
+  padding: 10px 16px 12px;
+  border-bottom: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.log-sheet-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.log-sheet-date {
+  font-size: 11px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+}
+
+.log-sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Log section */
+.log-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+
+.log-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.log-field-full {
+  grid-column: 1 / -1;
+}
+
+.log-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.log-field label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.log-input-wrap {
+  position: relative;
+}
+.log-input {
+  width: 100%;
+  padding: 10px 38px 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-align: left;
+  outline: none;
+  transition: border-color 0.2s;
+  -moz-appearance: textfield;
+}
+.log-input::-webkit-inner-spin-button,
+.log-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.log-input:focus { border-color: var(--volt-dark); }
+.log-input-unit {
+  position: absolute;
+  right: 10px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  pointer-events: none;
+}
+
+.log-sheet-footer {
+  padding: 14px 16px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  border-top: 0.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ── EMPTY STATE ── */
+.meas-empty {
+  margin: 48px var(--page-pad) 0;
+  text-align: center;
+}
+.meas-empty-icon { font-size: 40px; opacity: 0.25; margin-bottom: 10px; }
+.meas-empty-title { font-size: 15px; font-weight: 600; color: var(--text-2); }
+.meas-empty-sub { font-size: 13px; color: var(--text-3); margin-top: 5px; line-height: 1.5; }
+
+/* ── TOAST ── */
+.lf-toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 12px); left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: var(--bg-dark); color: var(--volt);
+  padding: 10px 20px; border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+  font-family: var(--font-mono);
+  white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s; z-index: 500;
+  border: 1px solid var(--volt-border);
+}
+.lf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<script>window.LF_PAGE = 'progress';</script>
+<script src="larofit-nav.js"></script>
+
+<main class="lf-main-desktop" id="main">
+
+  <!-- HEADER -->
+  <div class="lf-header">
+    <div class="lf-header-inner">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="btn btn-ghost btn-sm" onclick="history.back()" style="padding:8px 4px;">
+          <i class="ti ti-arrow-left" style="font-size:20px;"></i>
+        </button>
+        <div class="lf-header-title">MEASUREMENTS</div>
+      </div>
+      <button class="btn btn-volt btn-sm" onclick="openLog()">+ Log</button>
+    </div>
+  </div>
+
+  <!-- BODYWEIGHT HERO -->
+  <div class="meas-bw-hero" id="bw-hero">
+    <div class="meas-bw-left">
+      <div class="meas-bw-label">Body Weight</div>
+      <div>
+        <span class="meas-bw-val" id="bw-val">—</span>
+        <span class="meas-bw-unit" id="bw-unit">lbs</span>
+      </div>
+      <div class="meas-bw-delta" id="bw-delta"></div>
+    </div>
+    <div class="meas-bw-right">
+      <div class="meas-bw-last" id="bw-last"></div>
+      <button class="btn btn-sm" style="border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-size:11px;" onclick="openLog()">Update</button>
+    </div>
+  </div>
+
+  <!-- MEASUREMENTS SECTION -->
+  <div class="lf-section-label" id="meas-section-label">Measurements</div>
+  <div class="meas-grid" id="meas-grid">
+    <!-- injected by JS -->
+  </div>
+
+  <!-- HISTORY -->
+  <div class="lf-section-label" id="hist-label" style="display:none;">History</div>
+  <div style="margin:0 var(--page-pad);background:var(--bg-card);border-radius:var(--radius);border:0.5px solid var(--border);overflow:hidden;margin-bottom:100px;" id="hist-wrap" style="display:none;">
+    <div id="hist-list"></div>
+  </div>
+
+  <!-- EMPTY STATE (shown when no logs) -->
+  <div class="meas-empty" id="empty-state" style="display:none;">
+    <div class="meas-empty-icon">📏</div>
+    <div class="meas-empty-title">No measurements yet</div>
+    <div class="meas-empty-sub">Tap "+ Log" to record your first measurements and start tracking your progress.</div>
+    <button class="btn btn-volt" style="margin-top:16px;" onclick="openLog()">+ Log measurements</button>
+  </div>
+
+</main>
+
+<!-- LOG SHEET BACKDROP -->
+<div class="log-backdrop" id="log-backdrop" onclick="closeLog()"></div>
+
+<!-- LOG SHEET -->
+<div class="log-sheet" id="log-sheet">
+  <div class="log-sheet-handle"></div>
+  <div class="log-sheet-header">
+    <div>
+      <div class="log-sheet-title">Log Measurements</div>
+      <div class="log-sheet-date" id="log-date-label"></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="closeLog()" style="font-size:20px;padding:4px 8px;">✕</button>
+  </div>
+
+  <div class="log-sheet-body">
+
+    <!-- Bodyweight -->
+    <div>
+      <div class="log-section-label">Body Weight</div>
+      <div class="log-fields-grid">
+        <div class="log-field log-field-full">
+          <label id="lbl-weight">Weight (lbs)</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-weight" placeholder="e.g. 180" min="50" max="600" step="0.1">
+            <span class="log-input-unit" id="unit-weight">lbs</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upper body -->
+    <div>
+      <div class="log-section-label">Upper Body</div>
+      <div class="log-fields-grid">
+        <div class="log-field">
+          <label id="lbl-neck">Neck</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-neck" placeholder="e.g. 15" min="5" max="30" step="0.1">
+            <span class="log-input-unit" id="unit-neck">in</span>
+          </div>
+        </div>
+        <div class="log-field">
+          <label id="lbl-chest">Chest</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-chest" placeholder="e.g. 42" min="20" max="80" step="0.1">
+            <span class="log-input-unit" id="unit-chest">in</span>
+          </div>
+        </div>
+        <div class="log-field">
+          <label id="lbl-waist">Waist</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-waist" placeholder="e.g. 34" min="15" max="70" step="0.1">
+            <span class="log-input-unit" id="unit-waist">in</span>
+          </div>
+        </div>
+        <div class="log-field">
+          <label id="lbl-hips">Hips</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-hips" placeholder="e.g. 38" min="15" max="70" step="0.1">
+            <span class="log-input-unit" id="unit-hips">in</span>
+          </div>
+        </div>
+        <div class="log-field">
+          <label id="lbl-leftArm">Left Arm</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-leftArm" placeholder="e.g. 14" min="5" max="30" step="0.1">
+            <span class="log-input-unit" id="unit-leftArm">in</span>
+          </div>
+        </div>
+        <div class="log-field">
+          <label id="lbl-rightArm">Right Arm</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-rightArm" placeholder="e.g. 14" min="5" max="30" step="0.1">
+            <span class="log-input-unit" id="unit-rightArm">in</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lower body -->
+    <div>
+      <div class="log-section-label">Lower Body</div>
+      <div class="log-fields-grid">
+        <div class="log-field">
+          <label id="lbl-leftThigh">Left Thigh</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-leftThigh" placeholder="e.g. 22" min="10" max="50" step="0.1">
+            <span class="log-input-unit" id="unit-leftThigh">in</span>
+          </div>
+        </div>
+        <div class="log-field">
+          <label id="lbl-rightThigh">Right Thigh</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-rightThigh" placeholder="e.g. 22" min="10" max="50" step="0.1">
+            <span class="log-input-unit" id="unit-rightThigh">in</span>
+          </div>
+        </div>
+        <div class="log-field">
+          <label id="lbl-leftCalf">Left Calf</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-leftCalf" placeholder="e.g. 14" min="5" max="30" step="0.1">
+            <span class="log-input-unit" id="unit-leftCalf">in</span>
+          </div>
+        </div>
+        <div class="log-field">
+          <label id="lbl-rightCalf">Right Calf</label>
+          <div class="log-input-wrap">
+            <input class="log-input" type="number" id="log-rightCalf" placeholder="e.g. 14" min="5" max="30" step="0.1">
+            <span class="log-input-unit" id="unit-rightCalf">in</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="log-sheet-footer">
+    <button class="btn btn-volt btn-full btn-lg" onclick="saveLog()">Save Measurements</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="lf-toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════
+const FIELDS = [
+  { id:'neck',       label:'Neck',        lowerIsBetter: false },
+  { id:'chest',      label:'Chest',       lowerIsBetter: false },
+  { id:'waist',      label:'Waist',       lowerIsBetter: true  },
+  { id:'hips',       label:'Hips',        lowerIsBetter: false },
+  { id:'leftArm',    label:'Left Arm',    lowerIsBetter: false },
+  { id:'rightArm',   label:'Right Arm',   lowerIsBetter: false },
+  { id:'leftThigh',  label:'Left Thigh',  lowerIsBetter: false },
+  { id:'rightThigh', label:'Right Thigh', lowerIsBetter: false },
+  { id:'leftCalf',   label:'Left Calf',   lowerIsBetter: false },
+  { id:'rightCalf',  label:'Right Calf',  lowerIsBetter: false },
+];
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+let log     = [];
+let units   = 'imperial'; // 'imperial' | 'metric'
+let wtUnit  = 'lbs';
+let measUnit= 'in';
+
+function init() {
+  const st = JSON.parse(localStorage.getItem('lf_settings') || '{}');
+  units     = st.units || 'imperial';
+  wtUnit    = units === 'metric' ? 'kg'  : 'lbs';
+  measUnit  = units === 'metric' ? 'cm'  : 'in';
+
+  log = JSON.parse(localStorage.getItem('lf_measurements_log') || '[]');
+  // Sort newest first
+  log.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  applyUnitLabels();
+  renderAll();
+}
+
+function applyUnitLabels() {
+  // Update sheet labels
+  document.getElementById('lbl-weight').textContent  = `Weight (${wtUnit})`;
+  document.getElementById('unit-weight').textContent = wtUnit;
+  FIELDS.forEach(f => {
+    const lbl = document.getElementById(`lbl-${f.id}`);
+    const unt = document.getElementById(`unit-${f.id}`);
+    if (lbl) lbl.textContent = `${f.label} (${measUnit})`;
+    if (unt) unt.textContent = measUnit;
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════
+function renderAll() {
+  const hasData = log.length > 0;
+  document.getElementById('empty-state').style.display    = hasData ? 'none'  : 'block';
+  document.getElementById('meas-section-label').style.display = hasData ? '' : 'none';
+
+  if (!hasData) {
+    renderBWHero(null, null);
+    document.getElementById('meas-grid').innerHTML = '';
+    document.getElementById('hist-label').style.display = 'none';
+    document.getElementById('hist-wrap').style.display  = 'none';
+    return;
+  }
+
+  const latest = log[0];
+  const prev   = log[1] || null;
+
+  renderBWHero(latest, prev);
+  renderMeasGrid(latest, prev);
+  renderHistory();
+}
+
+// ── BW HERO ──────────────────────────────────────────────
+function renderBWHero(latest, prev) {
+  const valEl   = document.getElementById('bw-val');
+  const unitEl  = document.getElementById('bw-unit');
+  const deltaEl = document.getElementById('bw-delta');
+  const lastEl  = document.getElementById('bw-last');
+
+  unitEl.textContent = wtUnit;
+
+  if (!latest || !latest.weight) {
+    valEl.textContent   = '—';
+    deltaEl.textContent = '';
+    lastEl.textContent  = '';
+    return;
+  }
+
+  valEl.textContent = latest.weight;
+
+  if (prev && prev.weight) {
+    const diff = parseFloat(latest.weight) - parseFloat(prev.weight);
+    const sign = diff > 0 ? '+' : '';
+    const cls  = diff < 0 ? 'delta-good' : diff > 0 ? 'delta-bad' : 'delta-same';
+    deltaEl.innerHTML = `<span class="${cls}">${sign}${diff.toFixed(1)} ${wtUnit} vs last</span>`;
+    lastEl.textContent = `Prev: ${prev.weight} ${wtUnit}`;
+  } else {
+    deltaEl.textContent = 'First entry';
+    lastEl.textContent  = formatDate(latest.date);
+  }
+}
+
+// ── MEASUREMENT GRID ─────────────────────────────────────
+function renderMeasGrid(latest, prev) {
+  const grid = document.getElementById('meas-grid');
+
+  const cards = FIELDS.map(f => {
+    const cur  = latest[f.id];
+    const prv  = prev ? prev[f.id] : undefined;
+
+    if (cur === undefined || cur === null || cur === '') {
+      return `
+        <div class="meas-card" style="opacity:0.45;">
+          <div class="meas-card-label">${f.label}</div>
+          <div class="meas-card-val" style="color:var(--text-3);">—</div>
+          <div class="meas-card-unit">${measUnit}</div>
+          <div class="meas-card-delta"></div>
+        </div>`;
+    }
+
+    let deltaHTML = '';
+    if (prv !== undefined && prv !== null && prv !== '') {
+      const diff = parseFloat(cur) - parseFloat(prv);
+      if (Math.abs(diff) >= 0.05) {
+        const sign = diff > 0 ? '+' : '';
+        const good = f.lowerIsBetter ? diff < 0 : diff > 0;
+        const cls  = good ? 'delta-good' : 'delta-bad';
+        const arrow = diff > 0 ? '↑' : '↓';
+        deltaHTML = `<span class="${cls}">${arrow} ${sign}${diff.toFixed(1)}</span>`;
+      } else {
+        deltaHTML = `<span class="delta-same">→ no change</span>`;
+      }
+    } else {
+      deltaHTML = `<span class="delta-same">First entry</span>`;
+    }
+
+    return `
+      <div class="meas-card">
+        <div class="meas-card-label">${f.label}</div>
+        <div class="meas-card-val">${cur}<span class="meas-card-unit"> ${measUnit}</span></div>
+        <div class="meas-card-delta">${deltaHTML}</div>
+      </div>`;
+  }).join('');
+
+  grid.innerHTML = cards;
+}
+
+// ── HISTORY ──────────────────────────────────────────────
+function renderHistory() {
+  if (log.length === 0) {
+    document.getElementById('hist-label').style.display = 'none';
+    document.getElementById('hist-wrap').style.display  = 'none';
+    return;
+  }
+
+  document.getElementById('hist-label').style.display = '';
+  document.getElementById('hist-wrap').style.display  = '';
+
+  const rows = log.map((entry, i) => {
+    const isLatest = i === 0;
+    // Build pills for non-empty fields
+    const pills = [];
+    if (entry.weight) pills.push({ label: `⚖️ ${entry.weight} ${wtUnit}`, latest: isLatest });
+    FIELDS.forEach(f => {
+      if (entry[f.id]) pills.push({ label: `${f.label}: ${entry[f.id]}`, latest: false });
+    });
+
+    const pillsHTML = pills.map(p =>
+      `<span class="hist-pill${p.latest ? ' is-latest' : ''}">${p.label}</span>`
+    ).join('');
+
+    return `
+      <div class="hist-row">
+        <div class="hist-dot-col">
+          <div class="hist-dot" style="${isLatest ? '' : 'background:var(--border-md);'}"></div>
+          <div class="hist-line"></div>
+        </div>
+        <div class="hist-body">
+          <div class="hist-date">${formatDate(entry.date)}${isLatest ? ' <span style="font-size:9px;color:var(--volt-dark);font-family:var(--font-mono);font-weight:700;background:var(--volt-bg);padding:2px 6px;border-radius:999px;border:0.5px solid var(--volt-border);">LATEST</span>' : ''}</div>
+          <div class="hist-pills">${pillsHTML}</div>
+        </div>
+        <button class="hist-del-btn" onclick="deleteEntry(${i})" aria-label="Delete entry">✕</button>
+      </div>`;
+  }).join('');
+
+  document.getElementById('hist-list').innerHTML = rows;
+}
+
+// ══════════════════════════════════════════════════════════
+// LOG SHEET
+// ══════════════════════════════════════════════════════════
+function openLog() {
+  // Pre-fill with latest values as placeholders
+  if (log.length > 0) {
+    const latest = log[0];
+    if (latest.weight)     document.getElementById('log-weight').value     = latest.weight;
+    FIELDS.forEach(f => {
+      const el = document.getElementById(`log-${f.id}`);
+      if (el && latest[f.id]) el.value = latest[f.id];
+    });
+  }
+
+  // Set date label
+  document.getElementById('log-date-label').textContent = new Date().toLocaleDateString('en-US', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+
+  document.getElementById('log-sheet').classList.add('open');
+  document.getElementById('log-backdrop').classList.add('open');
+}
+
+function closeLog() {
+  document.getElementById('log-sheet').classList.remove('open');
+  document.getElementById('log-backdrop').classList.remove('open');
+  clearLogFields();
+}
+
+function clearLogFields() {
+  document.getElementById('log-weight').value = '';
+  FIELDS.forEach(f => {
+    const el = document.getElementById(`log-${f.id}`);
+    if (el) el.value = '';
+  });
+}
+
+function saveLog() {
+  const today = new Date().toISOString().split('T')[0];
+
+  const entry = { date: today };
+  const w = document.getElementById('log-weight').value;
+  if (w) entry.weight = parseFloat(w);
+
+  FIELDS.forEach(f => {
+    const el = document.getElementById(`log-${f.id}`);
+    if (el && el.value) entry[f.id] = parseFloat(el.value);
+  });
+
+  // Check if there's already an entry for today — replace it
+  const existingIdx = log.findIndex(e => e.date === today);
+  if (existingIdx >= 0) {
+    log[existingIdx] = entry;
+  } else {
+    log.unshift(entry);
+  }
+
+  // Re-sort
+  log.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  localStorage.setItem('lf_measurements_log', JSON.stringify(log));
+
+  // Also update lf_measurements_log for progress.html BW chart
+  // Mirror latest weight into workout history if needed
+  syncBWToHistory(entry);
+
+  closeLog();
+  renderAll();
+  showToast('Measurements saved ✓');
+}
+
+function deleteEntry(i) {
+  if (!confirm('Delete this entry?')) return;
+  log.splice(i, 1);
+  localStorage.setItem('lf_measurements_log', JSON.stringify(log));
+  renderAll();
+  showToast('Entry deleted');
+}
+
+// Keep bodyweight synced so progress.html BW chart stays current
+function syncBWToHistory(entry) {
+  if (!entry.weight) return;
+  // lf_measurements_log is the single source — progress.html reads it directly
+  // Nothing extra needed here
+}
+
+// ══════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ── RUN ──
+init();
+</script>
+
+</body>
+</html>
