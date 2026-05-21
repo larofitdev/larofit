@@ -98,6 +98,20 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .prof-field textarea { resize: vertical; min-height: 72px; line-height: 1.5; }
 .prof-field-hint { font-size: 10px; color: var(--text-3); }
 
+/* ── DOB ROW ── */
+.dob-row {
+  display: flex; align-items: center; gap: 6px;
+}
+.dob-row input[type="number"] {
+  padding: 11px 8px; text-align: center;
+  -moz-appearance: textfield;
+}
+.dob-row input[type="number"]::-webkit-inner-spin-button,
+.dob-row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#p-dob-m, #p-dob-d { width: 64px; flex-shrink: 0; }
+#p-dob-y { flex: 1; }
+.dob-sep { color: var(--text-3); font-weight: 600; flex-shrink: 0; }
+
 /* ── TWO-COL GRID ── */
 .prof-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .prof-grid-full { grid-column: 1 / -1; }
@@ -317,7 +331,13 @@ button, input, select, a, textarea { touch-action: manipulation; }
         </div>
         <div class="prof-field">
           <label>Date of birth</label>
-          <input type="text" id="p-dob" placeholder="MM/DD/YYYY" oninput="updateHero()" maxlength="10">
+          <div class="dob-row">
+            <input type="number" id="p-dob-m" placeholder="MM" min="1" max="12" maxlength="2" oninput="dobAdvance(this,'p-dob-d',2)" aria-label="Month">
+            <span class="dob-sep">/</span>
+            <input type="number" id="p-dob-d" placeholder="DD" min="1" max="31" maxlength="2" oninput="dobAdvance(this,'p-dob-y',2)" aria-label="Day">
+            <span class="dob-sep">/</span>
+            <input type="number" id="p-dob-y" placeholder="YYYY" min="1900" max="2099" maxlength="4" oninput="updateHero()" aria-label="Year">
+          </div>
         </div>
         <div class="prof-field">
           <label>Sex</label>
@@ -675,8 +695,13 @@ function init() {
     if (parts.length > 1) document.getElementById('p-last').value = parts.slice(1).join(' ');
   }
   if (u.email) document.getElementById('p-email').value = u.email;
-  if (u.dob)   document.getElementById('p-dob').value   = u.dob;
-  if (u.sex)   document.getElementById('p-sex').value   = u.sex;
+  if (u.dob) {
+    const parts = u.dob.split('/');
+    if (parts[0]) document.getElementById('p-dob-m').value = parts[0];
+    if (parts[1]) document.getElementById('p-dob-d').value = parts[1];
+    if (parts[2]) document.getElementById('p-dob-y').value = parts[2];
+  }
+  if (u.sex) document.getElementById('p-sex').value = u.sex;
 
   // Fitness
   if (pr.weight)  document.getElementById('p-weight').value    = pr.weight;
@@ -721,11 +746,24 @@ function init() {
   calcNutrition();
 }
 
+// ── DOB AUTO-ADVANCE ───────────────────────────────────────────────────────
+function dobAdvance(el, nextId, maxLen) {
+  // Strip non-digits
+  el.value = el.value.replace(/\D/g, '');
+  if (el.value.length >= maxLen) {
+    document.getElementById(nextId)?.focus();
+  }
+  updateHero();
+}
+
 // ── HERO UPDATE ────────────────────────────────────────────────────────────
 function updateHero() {
   const first  = document.getElementById('p-first').value.trim();
   const last   = document.getElementById('p-last').value.trim();
-  const dob    = document.getElementById('p-dob').value.trim();
+  const dobM   = document.getElementById('p-dob-m').value.trim();
+  const dobD   = document.getElementById('p-dob-d').value.trim();
+  const dobY   = document.getElementById('p-dob-y').value.trim();
+  const dob    = dobM && dobD && dobY ? `${dobM}/${dobD}/${dobY}` : '';
   const weight = document.getElementById('p-weight').value;
   const ft     = document.getElementById('p-height-ft').value;
   const inches = document.getElementById('p-height-in').value;
@@ -842,7 +880,9 @@ function calcNutrition() {
   const weightRaw = parseFloat(document.getElementById('p-weight').value);
   const ft        = parseInt(document.getElementById('p-height-ft').value) || 0;
   const inchesVal = parseInt(document.getElementById('p-height-in').value) || 0;
-  const dob       = document.getElementById('p-dob').value.trim();
+  const dobM      = document.getElementById('p-dob-m').value.trim();
+  const dobY      = document.getElementById('p-dob-y').value.trim();
+  const dob       = dobM && dobY ? `${dobM}/01/${dobY}` : '';
   const activity  = document.getElementById('p-activity').value;
   const diet      = document.getElementById('p-diet').value;
   const nutgoal   = document.getElementById('p-nutgoal').value;
@@ -911,7 +951,10 @@ function saveProfile() {
   const first  = document.getElementById('p-first').value.trim();
   const last   = document.getElementById('p-last').value.trim();
   const email  = document.getElementById('p-email').value.trim();
-  const dob    = document.getElementById('p-dob').value.trim();
+  const dobM   = document.getElementById('p-dob-m').value.trim();
+  const dobD   = document.getElementById('p-dob-d').value.trim();
+  const dobY   = document.getElementById('p-dob-y').value.trim();
+  const dob    = dobM && dobD && dobY ? `${dobM}/${dobD}/${dobY}` : '';
   const sex    = document.getElementById('p-sex').value;
 
   // Update lf_user
@@ -944,6 +987,7 @@ function saveProfile() {
   localStorage.setItem('lf_profile', JSON.stringify(profile));
 
   showToast('Profile saved ✓');
+  setTimeout(() => { window.location.href = 'index.html'; }, 1000);
 }
 
 // ── SIGN OUT / DELETE ──────────────────────────────────────────────────────
