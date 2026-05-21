@@ -131,7 +131,7 @@ button, input, select, a { touch-action: manipulation; }
 }
 
 .log-btn {
-  padding: 7px 14px;
+  padding: 7px 10px;
   background: var(--bg-dark);
   color: var(--volt);
   border: none;
@@ -142,6 +142,7 @@ button, input, select, a { touch-action: manipulation; }
   font-family: var(--font-body);
   white-space: nowrap;
   transition: opacity 0.15s;
+  width: 100%;
 }
 
 .log-btn:active { opacity: 0.7; }
@@ -638,10 +639,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       <table class="sets-table" id="sets-table">
         <thead>
           <tr>
-            <th style="width:34px;">Set</th>
-            <th style="width:28%;">Last</th>
+            <th style="width:30px;">Set</th>
+            <th style="width:22%;">Last</th>
             <th style="width:26%;">Weight</th>
-            <th style="width:26%;">Reps</th>
+            <th style="width:22%;">Reps</th>
             <th style="width:18%;"></th>
           </tr>
         </thead>
@@ -827,10 +828,10 @@ function init() {
     restSec: ex.restSec || 90,
     type:    ex.type || lookupExType(ex.id),
     weight:  ex.weight || '',
-    // logged sets: array of { weight, reps, logged }
+    // logged sets: array of { weight, reps, logged } — always blank, voice/manual fills them
     loggedSets: Array.from({ length: ex.sets || 3 }, () => ({
-      weight: ex.weight || '',
-      reps:   ex.reps || '',
+      weight: '',
+      reps:   '',
       logged: false
     }))
   }));
@@ -950,10 +951,8 @@ function renderExercise() {
     prevEl.style.display = 'none';
   }
 
-  // Pre-fill weight from last session
-  if (lastSession && ex.loggedSets.every(s => !s.weight)) {
-    ex.loggedSets.forEach(s => { if (!s.weight) s.weight = lastSession.bestWeight; });
-  }
+  // Pre-fill removed — fields stay blank for voice/manual entry
+  // Last chip provides last session values on demand
 
   renderSets(ex, lastSession);
 }
@@ -1019,7 +1018,7 @@ function renderSets(ex, lastSession) {
         <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
                id="inp-w-${currentExIdx}-${i}"
                type="number" inputmode="decimal"
-               placeholder="lbs"
+               placeholder="wt"
                value="${set.weight || ''}"
                onchange="updateSet(${currentExIdx},${i},'weight',this.value)"
                ${!isActive && !isDone ? 'style="opacity:0.45;"' : ''}>
