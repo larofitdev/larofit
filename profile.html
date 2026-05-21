@@ -104,13 +104,14 @@ button, input, select, a, textarea { touch-action: manipulation; }
 }
 .dob-row input[type="number"] {
   padding: 11px 8px; text-align: center;
-  -moz-appearance: textfield;
+  -moz-appearance: textfield; min-width: 0;
 }
 .dob-row input[type="number"]::-webkit-inner-spin-button,
 .dob-row input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-#p-dob-m, #p-dob-d { width: 64px; flex-shrink: 0; }
-#p-dob-y { flex: 1; }
-.dob-sep { color: var(--text-3); font-weight: 600; flex-shrink: 0; }
+#p-dob-m { width: 68px; flex-shrink: 0; }
+#p-dob-d { width: 68px; flex-shrink: 0; }
+#p-dob-y { flex: 1; min-width: 80px; }
+.dob-sep { color: var(--text-3); font-weight: 600; flex-shrink: 0; font-size: 18px; }
 
 /* ── TWO-COL GRID ── */
 .prof-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -320,6 +321,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div class="lf-section-label" style="margin-top:22px;">Personal</div>
   <div class="prof-section">
     <div class="prof-section-body">
+      <!-- Name row: equal 50/50 -->
       <div class="prof-grid-2">
         <div class="prof-field">
           <label>First name</label>
@@ -329,29 +331,32 @@ button, input, select, a, textarea { touch-action: manipulation; }
           <label>Last name</label>
           <input type="text" id="p-last" placeholder="Last" oninput="updateHero()">
         </div>
-        <div class="prof-field">
-          <label>Date of birth</label>
-          <div class="dob-row">
-            <input type="number" id="p-dob-m" placeholder="MM" min="1" max="12" maxlength="2" oninput="dobAdvance(this,'p-dob-d',2)" aria-label="Month">
-            <span class="dob-sep">/</span>
-            <input type="number" id="p-dob-d" placeholder="DD" min="1" max="31" maxlength="2" oninput="dobAdvance(this,'p-dob-y',2)" aria-label="Day">
-            <span class="dob-sep">/</span>
-            <input type="number" id="p-dob-y" placeholder="YYYY" min="1900" max="2099" maxlength="4" oninput="updateHero()" aria-label="Year">
-          </div>
+      </div>
+      <!-- DOB full width -->
+      <div class="prof-field">
+        <label>Date of birth</label>
+        <div class="dob-row">
+          <input type="number" id="p-dob-m" placeholder="MM" min="1" max="12" oninput="dobAdvance(this,'p-dob-d',2)" aria-label="Month">
+          <span class="dob-sep">/</span>
+          <input type="number" id="p-dob-d" placeholder="DD" min="1" max="31" oninput="dobAdvance(this,'p-dob-y',2)" aria-label="Day">
+          <span class="dob-sep">/</span>
+          <input type="number" id="p-dob-y" placeholder="YYYY" min="1900" max="2099" oninput="updateHero()" aria-label="Year">
         </div>
-        <div class="prof-field">
-          <label>Sex</label>
-          <select id="p-sex">
-            <option value="">Select…</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other / prefer not to say</option>
-          </select>
-        </div>
-        <div class="prof-field prof-grid-full">
-          <label>Email</label>
-          <input type="email" id="p-email" placeholder="you@email.com">
-        </div>
+      </div>
+      <!-- Sex full width -->
+      <div class="prof-field">
+        <label>Sex</label>
+        <select id="p-sex">
+          <option value="">Select…</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other / prefer not to say</option>
+        </select>
+      </div>
+      <!-- Email full width -->
+      <div class="prof-field">
+        <label>Email</label>
+        <input type="email" id="p-email" placeholder="you@email.com">
       </div>
     </div>
   </div>
