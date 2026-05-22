@@ -1773,7 +1773,32 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
   const nextLine   = isLastSet ? 'This was the final set.' : 'Next: Set ' + nextSetNum + ' of ' + totalSets + '.';
   const profile = store.get('profile', {});
   const level   = profile.level || 'intermediate';
-  const prompt = 'You are a concise expert fitness coach giving real-time feedback during a workout rest period. Respond in 1-2 sentences max (under 35 words). Be specific and actionable.\n\nExercise: ' + ex.name + '\nAthlete level: ' + level + '\n' + lastLine + '\n' + setsLine + '\nJust logged - Set ' + setNum + ': ' + (weight||'?') + ' lbs x ' + (reps||'?') + ' reps\n' + nextLine + '\nTarget reps: ' + ex.reps + '\n\nGive brief feedback on this set and ' + (isLastSet ? 'summarize the exercise performance' : 'suggest weight for Set ' + nextSetNum) + '.';
+  const targetReps = ex.reps || 10;
+  const repCount   = parseInt(reps) || 0;
+  const wtNum      = parseFloat(weight) || 0;
+
+  // Equipment-based increment
+  const exData = lookupExData(ex.id);
+  const exEq   = exData ? exData.eq : 'db';
+  function getIncrement(currentWeight, eq) {
+    if (eq === 'bb' || eq === 'mc') return 5;
+    if (eq === 'db' || eq === 'kb') return currentWeight < 30 ? 2.5 : 5;
+    if (eq === 'cd' || eq === 'rc') return 5;
+    if (eq === 'band')              return 0; // bands don't have exact increments
+    return 5; // default
+  }
+  const increment  = getIncrement(wtNum, exEq);
+  const reduceAmt  = exEq === 'bb' ? 10 : (wtNum < 30 ? 5 : 10);
+  const newWeightUp   = wtNum + increment;
+  const newWeightDown = Math.max(5, wtNum - reduceAmt);
+
+  // Determine rep-based recommendation
+  let repRule;
+  if (repCount <= 5)      repRule = 'Rep count is LOW (<=5). Weight is too heavy. Recommend REDUCING to ' + newWeightDown + ' lbs next set. Be direct.';
+  else if (repCount <= 9) repRule = 'Rep count is MODERATE (6-9). Good working weight. Recommend HOLDING at ' + wtNum + ' lbs next set.';
+  else                    repRule = 'Rep count is HIGH (10+). Too easy. Recommend INCREASING to ' + newWeightUp + ' lbs next set.';
+
+  const prompt = 'You are a direct expert fitness coach giving real-time feedback during a rest period. Respond in 1-2 sentences max (under 35 words). Always give a specific weight recommendation.\n\nRULES YOU MUST FOLLOW:\n- <=5 reps = weight is too heavy, reduce it\n- 6-9 reps = good working weight, hold it\n- 10+ reps = too easy, increase weight\n\nExercise: ' + ex.name + '\nTarget reps: ' + targetReps + '\nAthlete level: ' + level + '\n' + lastLine + '\n' + setsLine + '\nJust logged - Set ' + setNum + ': ' + wtNum + ' lbs x ' + repCount + ' reps\n' + nextLine + '\n' + repRule + '\n\n' + (isLastSet ? 'Summarize this exercise performance and whether the weight was appropriate.' : 'State the exact weight to use for Set ' + nextSetNum + ' and why in one sentence.');
   try {
     const res = await fetch(SUPABASE_AI_URL, {
       method: 'POST',
