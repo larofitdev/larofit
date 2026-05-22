@@ -76,26 +76,67 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   min-height: 0;
 }
 
-/* Header row: name, meta, badge */
-.ex-card-header {
-  padding: 12px 16px 10px;
-  border-bottom: 0.5px solid var(--border);
+/* Exercise name bar — sits below GIF */
+.ex-name-bar {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px 8px;
+  border-bottom: 0.5px solid var(--border);
   flex-shrink: 0;
 }
-
-.ex-card-icon {
-  width: 40px; height: 40px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-dark);
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; color: var(--volt); font-size: 18px;
+.ex-name-bar-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ex-name-bar-1rm {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--volt-dark);
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.ex-card-title { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.2; flex: 1; }
-.ex-card-sub   { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+/* FMW prompt banner */
+.fmw-prompt {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(245,158,11,0.08);
+  border-bottom: 0.5px solid rgba(245,158,11,0.25);
+  flex-shrink: 0;
+}
+.fmw-prompt.show { display: flex; }
+.fmw-prompt-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-2);
+  line-height: 1.4;
+}
+.fmw-prompt-text strong { color: var(--warning); }
+.fmw-prompt-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.fmw-btn-yes {
+  padding: 6px 12px; background: var(--warning); color: #000;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 700; font-family: var(--font-body);
+  cursor: pointer; white-space: nowrap;
+}
+.fmw-btn-skip {
+  padding: 6px 12px; background: transparent; color: var(--text-3);
+  border: 1px solid var(--border-md); border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 600; font-family: var(--font-body);
+  cursor: pointer; white-space: nowrap;
+}
 
 /* ── GIF SLOT — flex grows to fill top half ── */
 .gif-slot {
@@ -180,7 +221,7 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   padding: 10px 8px;
   border-bottom: 0.5px solid var(--border);
   vertical-align: middle; text-align: center;
-  height: 64px; /* bigger rows, easier to tap */
+  height: 52px;
 }
 .sets-table td:first-child { text-align: left; padding-left: 12px; }
 .sets-table tr:last-child td { border-bottom: none; }
@@ -510,18 +551,6 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <!-- Exercise card — fills remaining height -->
     <div class="ex-card" id="ex-card">
 
-      <!-- Card header: icon · name · badge -->
-      <div class="ex-card-header">
-        <div class="ex-card-icon" aria-hidden="true" id="ex-card-icon">
-          <i class="ti ti-barbell"></i>
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div class="ex-card-title" id="ex-name">—</div>
-          <div class="ex-card-sub"   id="ex-meta">—</div>
-        </div>
-        <span class="badge badge-strength" id="ex-badge">STRENGTH</span>
-      </div>
-
       <!-- GIF slot — flexes to fill upper portion -->
       <div class="gif-slot" id="gif-slot" onclick="openGifFull()">
         <img id="gif-img" src="" alt="" style="display:none;">
@@ -530,6 +559,21 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
           <span>Animation coming soon</span>
         </div>
         <span class="gif-expand-hint" id="gif-expand-hint" style="display:none;">Tap to expand</span>
+      </div>
+
+      <!-- Exercise name + 1RM bar -->
+      <div class="ex-name-bar">
+        <div class="ex-name-bar-title" id="ex-name">—</div>
+        <div class="ex-name-bar-1rm"   id="ex-1rm" style="display:none;"></div>
+      </div>
+
+      <!-- FMW prompt — shown for first-time exercises -->
+      <div class="fmw-prompt" id="fmw-prompt">
+        <div class="fmw-prompt-text"><strong>⚡ First time?</strong> Want help finding your starting weight?</div>
+        <div class="fmw-prompt-actions">
+          <button class="fmw-btn-yes"  onclick="dismissFMW(true)">Yes</button>
+          <button class="fmw-btn-skip" onclick="dismissFMW(false)">Skip</button>
+        </div>
       </div>
 
       <!-- Previous best -->
@@ -787,7 +831,7 @@ function startWorkout(workoutName) {
   // Hide main lf-header, show slim workout topbar
   document.body.classList.add('workout-active');
   setHeader(workoutName || 'Workout', exercises.length + ' exercises · ' + new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}));
-  document.getElementById('workout-timer').style.display  = 'block';
+  document.getElementById('workout-timer').style.display  = 'none'; // internal only
   document.getElementById('btn-finish-top').style.display = 'block';
   document.getElementById('mode-toggle').style.display    = 'flex';
   workoutMode = getMode();
@@ -878,26 +922,26 @@ function goToEx(idx) {
 function renderExercise() {
   const ex          = exercises[currentExIdx];
   const lastSession = isStrength(ex) ? getLastSession(ex.id || ex.name) : null;
-  const t           = exTypeOf(ex);
 
-  // Header
+  // Name bar
   document.getElementById('ex-name').textContent = ex.name;
-  const badgeEl = document.getElementById('ex-badge');
-  badgeEl.className   = 'badge badge-' + t;
-  badgeEl.textContent = t.toUpperCase().replace('_', ' ');
-  const iconEl = document.getElementById('ex-card-icon');
-  iconEl.innerHTML = `<i class="ti ${typeIcon(ex)}"></i>`;
 
-  // Meta line
-  const metaEl   = document.getElementById('ex-meta');
-  let metaText   = '';
-  if (isCardio(ex))        metaText = 'Cardio · ' + formatRest(ex.restSec);
-  else if (isTimed(ex))    metaText = ex.sets + ' sets · hold ' + (ex.reps || 30) + 's · ' + formatRest(ex.restSec);
-  else if (isBW(ex))       metaText = ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec);
-  else                     metaText = ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec);
+  // 1RM display (strength only, if we have prior data)
+  const rmEl = document.getElementById('ex-1rm');
+  if (lastSession && lastSession.bestWeight && lastSession.bestReps && isStrength(ex)) {
+    const orm = calc1RM(parseFloat(lastSession.bestWeight), parseFloat(lastSession.bestReps));
+    if (orm) {
+      rmEl.textContent     = '1RM: ' + orm;
+      rmEl.style.display   = 'block';
+    } else {
+      rmEl.style.display   = 'none';
+    }
+  } else {
+    rmEl.style.display = 'none';
+  }
 
-  const chipHTML = isStrength(ex) ? renderSugChip(ex, currentExIdx) : '';
-  metaEl.innerHTML = metaText + (chipHTML ? ' &nbsp;' + chipHTML : '');
+  // FMW prompt — show for first-time strength exercises, hide otherwise
+  checkFMWPrompt(ex);
 
   // Previous best (strength only)
   const prevEl = document.getElementById('prev-best');
@@ -930,13 +974,20 @@ function renderExercise() {
   // Voice mode
   if (workoutMode === 'voice' && isStrength(ex)) {
     const isFMW = isFirstTime(ex);
+    const fmw   = getFMW(currentExIdx);
     const sug   = getSuggestedWeight(ex);
     const fmwW  = getFMWStartWeight(ex);
     let announcement;
-    if (isFMW) {
-      announcement = 'Starting Find My Weight for ' + ex.name + '. We will begin with ' + fmwW + ' pounds. Say yes to start or lighter to reduce.';
-      voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: fmwW };
-      prefillWeight(currentExIdx, 0, fmwW);
+    if (isFMW && !fmw.locked && !fmw.declined) {
+      // Ask the user if they want FMW help — don't auto-start
+      announcement = 'First time doing ' + ex.name + '. Would you like help finding your starting weight? Say yes or skip.';
+      voicePhase = 'fmw_offer';
+      updateVoiceHUD(announcement);
+    } else if (isFMW && fmw.active) {
+      const fmwW2 = getFMWStartWeight(ex);
+      announcement = 'Starting Find My Weight for ' + ex.name + '. We will begin with ' + fmwW2 + ' pounds. Say yes to start or lighter to reduce.';
+      voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: fmwW2 };
+      prefillWeight(currentExIdx, 0, fmwW2);
       voicePhase = 'confirm_weight';
       updateVoiceHUD(announcement);
     } else if (sug) {
@@ -1254,7 +1305,7 @@ function logSet(exIdx, setIdx) {
   renderDots(); updateOverallProgress();
 
   const fmw = getFMW(exIdx);
-  if (isFirstTime(ex) && !fmw.locked) {
+  if (isFirstTime(ex) && !fmw.locked && !fmw.declined && fmw.active) {
     fmw.active = true;
     fmw.sets.push({ weight: parseFloat(weight)||0, reps: parseInt(reps)||0 });
     if (fmw.sets.length >= 3) { fmw.locked = true; fmw.workingWeight = parseFloat(weight)||0; fmw.active = false; }
@@ -1749,8 +1800,35 @@ function isFirstTime(ex) { const l = getLastSession(ex.id||ex.name); return !l||
 
 const fmwState = {};
 function getFMW(exIdx) {
-  if (!fmwState[exIdx]) fmwState[exIdx] = { active:false, sets:[], locked:false, workingWeight:null };
+  if (!fmwState[exIdx]) fmwState[exIdx] = { active:false, sets:[], locked:false, workingWeight:null, declined:false };
   return fmwState[exIdx];
+}
+
+// Show FMW prompt for first-time strength exercises that haven't been declined/locked
+function checkFMWPrompt(ex) {
+  const prompt = document.getElementById('fmw-prompt');
+  const fmw    = getFMW(currentExIdx);
+  if (isStrength(ex) && isFirstTime(ex) && !fmw.locked && !fmw.declined && !fmw.active) {
+    prompt.classList.add('show');
+  } else {
+    prompt.classList.remove('show');
+  }
+}
+
+// Called when user taps Yes or Skip on the FMW prompt
+function dismissFMW(wantHelp) {
+  const prompt = document.getElementById('fmw-prompt');
+  prompt.classList.remove('show');
+  const fmw = getFMW(currentExIdx);
+  if (wantHelp) {
+    fmw.active = true;
+    const ex   = exercises[currentExIdx];
+    const fmwW = getFMWStartWeight(ex);
+    prefillWeight(currentExIdx, 0, fmwW);
+    showToast('⚡ Starting at ' + fmwW + ' lbs — log each set and we\'ll dial it in');
+  } else {
+    fmw.declined = true;
+  }
 }
 
 function renderSugChip(ex, exIdx) {
@@ -1878,6 +1956,23 @@ function stopListening() {
 }
 
 function handleVoiceResult(transcript) {
+  if (voicePhase === 'fmw_offer') {
+    const ex = exercises[currentExIdx];
+    if (/yes|yeah|yep|ok|okay|sure|help|find|weight/.test(transcript)) {
+      dismissFMW(true);
+      const fmwW = getFMWStartWeight(ex);
+      voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: fmwW };
+      voicePhase = 'confirm_weight';
+      const msg = 'Great! Starting at ' + fmwW + ' pounds. Say yes to start.';
+      updateVoiceHUD(msg); speakText(msg);
+    } else {
+      dismissFMW(false);
+      voicePhase = 'idle';
+      const msg = 'Got it. Enter your weight and reps manually.';
+      updateVoiceHUD(msg); speakText(msg);
+    }
+    return;
+  }
   if (voicePhase === 'confirm_weight') {
     if (/yes|yeah|yep|ok|okay|sure|go|start|correct|good/.test(transcript)) { voicePhase='count_reps'; const msg='Start your set. Count reps aloud or say the number when done.'; updateVoiceHUD(msg); speakText(msg); }
     else if (/lighter|less|too heavy|lower|reduce|down/.test(transcript)) { voicePending.sugWeight=Math.max(5,voicePending.sugWeight-10); const msg='Reduced to '+voicePending.sugWeight+' lbs. Say yes to start.'; updateVoiceHUD(msg); speakText(msg); prefillWeight(voicePending.exIdx,voicePending.setIdx,voicePending.sugWeight); }
