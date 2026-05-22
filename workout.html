@@ -12,16 +12,10 @@
 <link rel="stylesheet" href="larofit.css?v=2">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
-input[type="number"], input[type="text"], select, textarea {
-  font-size: 16px !important;
-}
-
-/* ── PREVENT DOUBLE-TAP ZOOM on interactive elements only ── */
+input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
 button, input, select, a { touch-action: manipulation; }
 
-/* ── WORKOUT-SPECIFIC STYLES ── */
-
-/* Exercise card */
+/* ── EXERCISE CARD ── */
 .ex-card {
   background: var(--bg-card);
   border-radius: var(--radius);
@@ -39,676 +33,308 @@ button, input, select, a { touch-action: manipulation; }
 }
 
 .ex-card-icon {
-  width: 44px;
-  height: 44px;
+  width: 44px; height: 44px;
   border-radius: var(--radius-sm);
   background: var(--bg-dark);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: var(--volt); font-size: 20px;
+}
+
+.ex-card-title { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.2; flex: 1; }
+.ex-card-sub   { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+
+/* ── GIF SLOT ── */
+.gif-slot {
+  margin: 0;
+  background: var(--bg-card2);
+  border-bottom: 0.5px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  color: var(--volt);
-  font-size: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  height: 160px;
+  -webkit-tap-highlight-color: transparent;
+}
+.gif-slot img {
+  width: 100%; height: 100%; object-fit: contain;
+  display: block;
+}
+.gif-slot-placeholder {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; color: var(--text-3);
+}
+.gif-slot-placeholder i { font-size: 28px; opacity: 0.4; }
+.gif-slot-placeholder span { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.4; }
+.gif-expand-hint {
+  position: absolute; bottom: 8px; right: 8px;
+  background: rgba(0,0,0,0.45); color: white;
+  font-size: 10px; padding: 3px 7px; border-radius: 999px;
+  font-family: var(--font-mono); pointer-events: none;
 }
 
-.ex-card-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--text);
-  line-height: 1.2;
-  flex: 1;
+/* ── NOTES SECTION ── */
+.ex-notes-wrap {
+  border-top: 0.5px solid var(--border);
+  padding: 0;
 }
-
-.ex-card-sub {
-  font-size: 11px;
-  color: var(--text-3);
-  margin-top: 3px;
+.ex-notes-toggle {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px;
+  background: none; border: none; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: var(--text-3);
+  font-family: var(--font-body); text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
-
-/* Sets table */
-.sets-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
+.ex-notes-toggle i { font-size: 14px; }
+.ex-notes-toggle .notes-chevron { margin-left: auto; font-size: 12px; transition: transform 0.2s; }
+.ex-notes-toggle.open .notes-chevron { transform: rotate(180deg); }
+.ex-notes-body { display: none; padding: 0 16px 12px; }
+.ex-notes-body.open { display: block; }
+.ex-notes-input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  font-size: 14px; color: var(--text); font-family: var(--font-body);
+  resize: none; outline: none; min-height: 64px; line-height: 1.5;
 }
+.ex-notes-input:focus { border-color: var(--volt-dark); }
+.ex-notes-input::placeholder { color: var(--text-3); }
 
+/* ── SETS TABLE ── */
+.sets-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .sets-table th {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 8px 8px 6px;
-  text-align: left;
+  font-size: 10px; font-weight: 600; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 8px 8px 6px; text-align: left;
   border-bottom: 0.5px solid var(--border);
 }
-
 .sets-table th:not(:first-child) { text-align: center; }
-
 .sets-table td {
-  padding: 8px 8px;
-  border-bottom: 0.5px solid var(--border);
-  vertical-align: middle;
-  text-align: center;
-  height: 58px;
+  padding: 8px; border-bottom: 0.5px solid var(--border);
+  vertical-align: middle; text-align: center; height: 58px;
 }
-
 .sets-table td:first-child { text-align: left; }
 .sets-table tr:last-child td { border-bottom: none; }
 
 .set-num {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--bg-card2);
-  color: var(--text-3);
-  font-size: 11px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg-card2); color: var(--text-3);
+  font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-
-.set-num.done {
-  background: var(--volt);
-  color: var(--bg-dark);
-}
-
-.set-num.active-set {
-  background: var(--bg-dark);
-  color: var(--volt);
-}
-
+.set-num.done   { background: var(--volt); color: var(--bg-dark); }
+.set-num.active-set { background: var(--bg-dark); color: var(--volt); }
 .sets-table td:not(:first-child) { text-align: center; }
 
-.last-val {
-  font-size: 11px;
-  color: var(--text-3);
-  display: block;
-  margin-top: 2px;
-  font-family: var(--font-mono);
-}
-
+.last-val { font-size: 11px; color: var(--text-3); display: block; margin-top: 2px; font-family: var(--font-mono); }
 .log-btn {
-  padding: 7px 10px;
-  background: var(--bg-dark);
-  color: var(--volt);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-  white-space: nowrap;
-  transition: opacity 0.15s;
-  width: 100%;
+  padding: 7px 10px; background: var(--bg-dark); color: var(--volt);
+  border: none; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font-body); white-space: nowrap;
+  transition: opacity 0.15s; width: 100%;
 }
-
 .log-btn:active { opacity: 0.7; }
+.log-btn.done-btn { background: var(--success-bg); color: var(--success); }
 
-.log-btn.done-btn {
-  background: var(--success-bg);
-  color: var(--success);
-}
-
-/* Last session chip */
+/* Last chip */
 .last-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 5px 8px;
-  background: var(--bg-dark);
-  color: var(--volt);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s, transform 0.1s;
-  line-height: 1;
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 5px 8px; background: var(--bg-dark); color: var(--volt);
+  border: none; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 700; font-family: var(--font-mono);
+  cursor: pointer; white-space: nowrap; transition: opacity 0.15s, transform 0.1s; line-height: 1;
 }
-.last-chip:active {
-  opacity: 0.7;
-  transform: scale(0.94);
-}
-.last-chip-x {
-  font-size: 10px;
-  opacity: 0.6;
-  margin: 0 1px;
-}
+.last-chip:active { opacity: 0.7; transform: scale(0.94); }
+.last-chip-x { font-size: 10px; opacity: 0.6; margin: 0 1px; }
 .last-chip-empty {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 5px 8px;
-  background: transparent;
-  color: var(--text-3);
-  font-size: 12px;
-  font-family: var(--font-mono);
-  cursor: default;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 5px 8px; background: transparent; color: var(--text-3);
+  font-size: 12px; font-family: var(--font-mono); cursor: default;
+}
+
+/* PR badge */
+.pr-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; background: rgba(245,158,11,0.15); color: var(--warning);
+  border-radius: 999px; font-size: 9px; font-weight: 700;
+  font-family: var(--font-mono); letter-spacing: 0.06em;
 }
 
 /* Previous best banner */
 .prev-best {
-  margin: 10px 16px;
-  padding: 8px 12px;
-  background: var(--bg-card2);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  color: var(--text-3);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin: 10px 16px; padding: 8px 12px;
+  background: var(--bg-card2); border-radius: var(--radius-sm);
+  font-size: 11px; color: var(--text-3);
+  display: flex; align-items: center; gap: 8px;
 }
-
-.prev-best i { font-size: 13px; color: var(--text-3); }
+.prev-best i { font-size: 13px; }
 .prev-best strong { color: var(--text-2); }
 
-/* PR badge */
-.pr-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  background: rgba(245,158,11,0.15);
-  color: var(--warning);
-  border-radius: 999px;
-  font-size: 9px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  letter-spacing: 0.06em;
-}
-
-/* Nav arrows */
-.ex-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px var(--page-pad);
-  gap: 12px;
-}
-
-.ex-nav-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--bg-card);
-  border: 0.5px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  color: var(--text-2);
-  cursor: pointer;
-  transition: all 0.15s;
-  flex-shrink: 0;
-}
-
-.ex-nav-btn:active { background: var(--bg-card2); }
-.ex-nav-btn:disabled { opacity: 0.3; cursor: default; }
-
-.ex-nav-info {
-  flex: 1;
-  text-align: center;
-}
-
-.ex-nav-label {
-  font-size: 12px;
-  color: var(--text-3);
-}
-
-.ex-nav-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 /* Progress dots */
-.ex-progress-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding: 8px 0 4px;
-}
-
+.ex-progress-dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0 4px; }
 .ex-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--bg-card2);
-  border: 1px solid var(--border-md);
-  transition: all 0.2s;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--bg-card2); border: 1px solid var(--border-md); transition: all 0.2s;
 }
-
-.ex-dot.done { background: var(--volt); border-color: var(--volt); }
+.ex-dot.done   { background: var(--volt); border-color: var(--volt); }
 .ex-dot.active { background: var(--bg-dark); border-color: var(--bg-dark); width: 18px; border-radius: 3px; }
 
-/* Rest timer popup */
+/* Rest timer */
 .rest-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  z-index: 500;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  /* iOS Safari: prevent touch bleed-through */
-  -webkit-overflow-scrolling: auto;
-  overscroll-behavior: contain;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+  z-index: 500; display: none; align-items: center; justify-content: center;
+  padding: 24px; overscroll-behavior: contain;
 }
-
 .rest-overlay.show { display: flex; }
-
-/* Body scroll lock when rest overlay is open */
 body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
-.rest-popup {
-  background: var(--bg-dark);
-  border-radius: var(--radius-lg);
-  padding: 32px 24px;
-  width: 100%;
-  max-width: 320px;
-  text-align: center;
-  border: 1px solid rgba(198,241,53,0.15);
-}
-
-.rest-popup-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.4);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-family: var(--font-mono);
-  margin-bottom: 16px;
-}
-
-.rest-popup-next {
-  font-size: 13px;
-  color: rgba(255,255,255,0.5);
-  margin-bottom: 8px;
-}
-
-.rest-popup-timer {
-  font-family: var(--font-display);
-  font-size: 80px;
-  color: var(--volt);
-  letter-spacing: 4px;
-  line-height: 1;
-  margin-bottom: 24px;
-}
-
-.rest-popup-timer.urgent { color: var(--danger); }
-
-.rest-popup-adj {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-.rest-popup-adj-btn {
-  padding: 12px 20px;
-  background: rgba(255,255,255,0.08);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: rgba(255,255,255,0.8);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-  min-width: 80px;
-  min-height: 48px;
-}
-
-.rest-popup-adj-btn:active { background: rgba(255,255,255,0.18); }
-
-.rest-popup-skip {
-  width: 100%;
-  padding: 14px;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: var(--radius-sm);
-  color: rgba(255,255,255,0.6);
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--font-body);
-  min-height: 48px;
-}
-
-.rest-popup-skip:active { background: rgba(255,255,255,0.06); }
-
-/* Finish button */
-.finish-bar {
-  padding: 12px var(--page-pad);
-  display: none;
-}
-
+/* Finish bar */
+.finish-bar { padding: 12px var(--page-pad); display: none; }
 .finish-bar.show { display: block; }
 
-/* No program screen */
+/* No program / rest screens */
 .no-program {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 32px 24px;
-  text-align: center;
-  gap: 12px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 60vh; padding: 32px 24px;
+  text-align: center; gap: 12px;
 }
 
 /* Completion card */
-.completion-wrap {
-  display: none;
-  flex-direction: column;
-  gap: 14px;
-  padding: 0 var(--page-pad) 24px;
-}
-
+.completion-wrap { display: none; flex-direction: column; gap: 14px; padding: 0 var(--page-pad) 24px; }
 .completion-wrap.show { display: flex; }
+.completion-hero { background: var(--bg-dark); border-radius: var(--radius); padding: 24px; text-align: center; color: var(--text-inv); }
+.completion-emoji { font-size: 48px; margin-bottom: 12px; }
+.completion-title { font-family: var(--font-display); font-size: 32px; letter-spacing: 1px; color: var(--volt); margin-bottom: 4px; }
+.completion-sub   { font-size: 13px; color: rgba(255,255,255,0.55); }
+.completion-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.completion-stat  { background: var(--bg-card); border-radius: var(--radius-sm); border: 0.5px solid var(--border); padding: 12px 8px; text-align: center; }
+.completion-stat-val   { font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--font-display); letter-spacing: 0.5px; }
+.completion-stat-label { font-size: 10px; color: var(--text-3); margin-top: 3px; }
 
-.completion-hero {
-  background: var(--bg-dark);
-  border-radius: var(--radius);
-  padding: 24px;
-  text-align: center;
-  color: var(--text-inv);
-}
-
-.completion-emoji {
-  font-size: 48px;
-  margin-bottom: 12px;
-}
-
-.completion-title {
-  font-family: var(--font-display);
-  font-size: 32px;
-  letter-spacing: 1px;
-  color: var(--volt);
-  margin-bottom: 4px;
-}
-
-.completion-sub {
-  font-size: 13px;
-  color: rgba(255,255,255,0.55);
-}
-
-.completion-stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-}
-
-.completion-stat {
-  background: var(--bg-card);
-  border-radius: var(--radius-sm);
-  border: 0.5px solid var(--border);
-  padding: 12px 8px;
-  text-align: center;
-}
-
-.completion-stat-val {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--text);
-  font-family: var(--font-display);
-  letter-spacing: 0.5px;
-}
-
-.completion-stat-label {
-  font-size: 10px;
-  color: var(--text-3);
-  margin-top: 3px;
-}
-
-/* AI analysis card */
-.ai-analysis {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 0.5px solid var(--border);
-  overflow: hidden;
-}
-
-.ai-analysis-header {
-  padding: 12px 16px;
-  background: var(--bg-dark);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ai-analysis-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--volt);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-family: var(--font-mono);
-}
-
-.ai-analysis-body {
-  padding: 14px 16px;
-  font-size: 14px;
-  color: var(--text-2);
-  line-height: 1.65;
-}
-
-.ai-loading {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-3);
-  font-size: 13px;
-}
-
+/* AI analysis */
+.ai-analysis { background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); overflow: hidden; }
+.ai-analysis-header { padding: 12px 16px; background: var(--bg-dark); display: flex; align-items: center; gap: 8px; }
+.ai-analysis-title  { font-size: 12px; font-weight: 700; color: var(--volt); letter-spacing: 0.08em; text-transform: uppercase; font-family: var(--font-mono); }
+.ai-analysis-body   { padding: 14px 16px; font-size: 14px; color: var(--text-2); line-height: 1.65; }
+.ai-loading { display: flex; align-items: center; gap: 8px; color: var(--text-3); font-size: 13px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.ai-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--border-md);
-  border-top-color: var(--volt-dark);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  flex-shrink: 0;
-}
+.ai-spinner { width: 16px; height: 16px; border: 2px solid var(--border-md); border-top-color: var(--volt-dark); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
 
 /* Toast */
 .lf-toast {
-  position: fixed;
-  bottom: calc(var(--nav-h) + 16px);
-  left: 50%;
+  position: fixed; bottom: calc(var(--nav-h) + 16px); left: 50%;
   transform: translateX(-50%) translateY(20px);
-  background: var(--bg-dark);
-  color: var(--text-inv);
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  opacity: 0;
-  transition: all 0.25s;
-  pointer-events: none;
-  white-space: nowrap;
-  z-index: 500;
+  background: var(--bg-dark); color: var(--text-inv);
+  padding: 10px 18px; border-radius: 999px;
+  font-size: 13px; font-weight: 500; opacity: 0; transition: all 0.25s;
+  pointer-events: none; white-space: nowrap; z-index: 600;
 }
+.lf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-.lf-toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
+/* Mode toggle */
+.mode-toggle { display: flex; background: var(--bg-card2); border-radius: 999px; padding: 3px; gap: 2px; border: 0.5px solid var(--border); }
+.mode-btn { padding: 5px 11px; border-radius: 999px; border: none; background: transparent; color: var(--text-3); font-size: 11px; font-weight: 700; font-family: var(--font-body); cursor: pointer; transition: all 0.18s; white-space: nowrap; letter-spacing: 0.03em; }
+.mode-btn.active { background: var(--bg-dark); color: var(--volt); }
 
-/* ── MODE TOGGLE PILL ── */
-.mode-toggle {
-  display: flex;
-  background: var(--bg-card2);
-  border-radius: 999px;
-  padding: 3px;
-  gap: 2px;
-  border: 0.5px solid var(--border);
-}
-.mode-btn {
-  padding: 5px 11px;
-  border-radius: 999px;
-  border: none;
-  background: transparent;
-  color: var(--text-3);
-  font-size: 11px;
-  font-weight: 700;
-  font-family: var(--font-body);
-  cursor: pointer;
-  transition: all 0.18s;
-  white-space: nowrap;
-  letter-spacing: 0.03em;
-}
-.mode-btn.active {
-  background: var(--bg-dark);
-  color: var(--volt);
-}
+/* Warm-up row */
+.warmup-row td { background: var(--bg-card2); opacity: 0.75; }
+.warmup-label  { font-size: 9px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-top: 2px; }
 
-/* ── WARM-UP ROW ── */
-.warmup-row td {
-  background: var(--bg-card2);
-  opacity: 0.75;
-}
-.warmup-label {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--text-3);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  display: block;
-  margin-top: 2px;
-}
-
-/* ── SUGGESTION CHIP ── */
-.sug-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  background: rgba(198,241,53,0.08);
-  border: 1px solid rgba(198,241,53,0.25);
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--volt-dark);
-  font-family: var(--font-mono);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
+/* Suggestion chip */
+.sug-chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(198,241,53,0.08); border: 1px solid rgba(198,241,53,0.25); border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--volt-dark); font-family: var(--font-mono); white-space: nowrap; cursor: pointer; transition: opacity 0.15s; }
 .sug-chip:active { opacity: 0.7; }
 .sug-chip-arrow { font-size: 10px; }
 
-/* ── FMW BADGE ── */
-.fmw-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  background: rgba(245,158,11,0.12);
-  border: 1px solid rgba(245,158,11,0.3);
-  border-radius: 999px;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--warning);
-  letter-spacing: 0.05em;
-  font-family: var(--font-mono);
-}
+/* FMW badge */
+.fmw-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); border-radius: 999px; font-size: 10px; font-weight: 700; color: var(--warning); letter-spacing: 0.05em; font-family: var(--font-mono); }
 
-/* ── REST OVERLAY AI SECTION ── */
-.rest-ai-section {
-  margin: 0 0 18px 0;
-  padding: 12px 14px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 10px;
-  border: 1px solid rgba(198,241,53,0.12);
-  text-align: left;
-  min-height: 54px;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.rest-ai-icon {
-  font-size: 14px;
-  color: var(--volt);
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-.rest-ai-text {
-  font-size: 13px;
-  color: rgba(255,255,255,0.75);
-  line-height: 1.55;
-  flex: 1;
-}
-.rest-ai-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255,255,255,0.15);
-  border-top-color: var(--volt);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
+/* Rest AI section */
+.rest-ai-section { margin: 0 0 18px 0; padding: 12px 14px; background: rgba(255,255,255,0.05); border-radius: 10px; border: 1px solid rgba(198,241,53,0.12); text-align: left; min-height: 54px; display: flex; align-items: flex-start; gap: 8px; }
+.rest-ai-icon    { font-size: 14px; color: var(--volt); flex-shrink: 0; margin-top: 1px; }
+.rest-ai-text    { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.55; flex: 1; }
+.rest-ai-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.15); border-top-color: var(--volt); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; margin-top: 2px; }
 
-/* ── VOICE HUD ── */
-.voice-hud {
-  position: fixed;
-  bottom: calc(var(--nav-h) + 12px);
-  left: 16px;
-  right: 16px;
-  background: var(--bg-dark);
-  border-radius: var(--radius);
-  border: 1px solid rgba(198,241,53,0.2);
-  padding: 14px 16px;
-  z-index: 200;
-  display: none;
-  align-items: center;
-  gap: 12px;
-}
+/* Voice HUD */
+.voice-hud { position: fixed; bottom: calc(var(--nav-h) + 12px); left: 16px; right: 16px; background: var(--bg-dark); border-radius: var(--radius); border: 1px solid rgba(198,241,53,0.2); padding: 14px 16px; z-index: 200; display: none; align-items: center; gap: 12px; }
 .voice-hud.show { display: flex; }
-.voice-pulse {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: rgba(198,241,53,0.12);
-  border: 2px solid var(--volt);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  font-size: 15px;
-  transition: all 0.2s;
+.voice-pulse { width: 32px; height: 32px; border-radius: 50%; background: rgba(198,241,53,0.12); border: 2px solid var(--volt); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; transition: all 0.2s; }
+.voice-pulse.listening { background: rgba(198,241,53,0.25); box-shadow: 0 0 0 6px rgba(198,241,53,0.12); animation: voicePulse 1.2s ease-in-out infinite; }
+@keyframes voicePulse { 0%,100% { box-shadow: 0 0 0 4px rgba(198,241,53,0.12); } 50% { box-shadow: 0 0 0 10px rgba(198,241,53,0.05); } }
+.voice-hud-text  { flex: 1; font-size: 13px; color: rgba(255,255,255,0.8); line-height: 1.4; }
+.voice-hud-heard { font-size: 11px; color: var(--volt-dark); font-family: var(--font-mono); margin-top: 2px; }
+
+/* ── FREE FORM WORKOUT ── */
+.free-add-bar {
+  padding: 10px var(--page-pad);
+  display: flex; gap: 8px; align-items: center;
 }
-.voice-pulse.listening {
-  background: rgba(198,241,53,0.25);
-  box-shadow: 0 0 0 6px rgba(198,241,53,0.12);
-  animation: voicePulse 1.2s ease-in-out infinite;
+.free-name-input {
+  flex: 1; background: var(--bg-card); border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  font-size: 16px; color: var(--text); font-family: var(--font-body); outline: none;
 }
-@keyframes voicePulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(198,241,53,0.12); }
-  50%       { box-shadow: 0 0 0 10px rgba(198,241,53,0.05); }
+.free-name-input:focus { border-color: var(--volt-dark); }
+
+/* Exercise picker sheet */
+.ex-picker-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 400; display: none; align-items: flex-end; justify-content: center;
 }
-.voice-hud-text {
-  flex: 1;
-  font-size: 13px;
-  color: rgba(255,255,255,0.8);
-  line-height: 1.4;
+.ex-picker-overlay.show { display: flex; }
+.ex-picker-sheet {
+  background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%; max-height: 85vh; display: flex; flex-direction: column;
+  overflow: hidden;
 }
-.voice-hud-heard {
-  font-size: 11px;
-  color: var(--volt-dark);
-  font-family: var(--font-mono);
-  margin-top: 2px;
+.ex-picker-header {
+  padding: 16px 16px 12px; border-bottom: 0.5px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
 }
+.ex-picker-search {
+  flex: 1; background: var(--bg-card2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px;
+  font-size: 16px; color: var(--text); font-family: var(--font-body); outline: none;
+}
+.ex-picker-search:focus { border-color: var(--volt-dark); }
+.ex-picker-cats {
+  display: flex; gap: 6px; padding: 10px 16px;
+  overflow-x: auto; flex-shrink: 0; scrollbar-width: none;
+}
+.ex-picker-cats::-webkit-scrollbar { display: none; }
+.ex-picker-cat {
+  padding: 6px 12px; background: var(--bg-card2); border: 0.5px solid var(--border);
+  border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--text-3);
+  white-space: nowrap; cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+}
+.ex-picker-cat.active { background: var(--bg-dark); color: var(--volt); border-color: var(--bg-dark); }
+.ex-picker-list { overflow-y: auto; flex: 1; padding: 0 0 24px; }
+.ex-picker-row {
+  display: flex; align-items: center; padding: 12px 16px; gap: 12px;
+  border-bottom: 0.5px solid var(--border); cursor: pointer;
+  transition: background 0.1s; -webkit-tap-highlight-color: transparent;
+}
+.ex-picker-row:active { background: var(--bg-card2); }
+.ex-picker-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); background: var(--bg-dark); display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--volt); flex-shrink: 0; }
+.ex-picker-name { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.ex-picker-sub  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+.ex-picker-add  { margin-left: auto; padding: 6px 14px; background: var(--bg-dark); color: var(--volt); border-radius: 999px; font-size: 12px; font-weight: 700; font-family: var(--font-mono); flex-shrink: 0; }
+
+/* GIF fullscreen overlay */
+.gif-full-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 700;
+  display: none; align-items: center; justify-content: center; padding: 24px;
+}
+.gif-full-overlay.show { display: flex; }
+.gif-full-img { max-width: 100%; max-height: 80vh; border-radius: var(--radius); }
+.gif-full-name { color: white; font-size: 16px; font-weight: 700; margin-top: 16px; text-align: center; }
+
+/* Active input highlight */
+.active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }
+
+/* Cardio / timed inputs */
+.cardio-row td { height: 62px; }
 </style>
 </head>
 <body>
@@ -724,29 +350,17 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div class="lf-header-inner">
       <div>
         <div id="header-title" style="font-size:18px;font-weight:700;color:var(--text);line-height:1.2;"></div>
-        <div id="header-sub" style="font-size:11px;color:var(--text-3);margin-top:2px;font-family:var(--font-mono);"></div>
+        <div id="header-sub"   style="font-size:11px;color:var(--text-3);margin-top:2px;font-family:var(--font-mono);"></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <div id="workout-timer"
-             style="font-size:14px;font-weight:700;color:var(--text);
-                    background:var(--bg-card2);padding:5px 10px;
-                    border-radius:var(--radius-sm);font-family:var(--font-mono);
-                    display:none;">
-          0:00
-        </div>
-        <!-- Mode toggle -->
+        <div id="workout-timer" style="font-size:14px;font-weight:700;color:var(--text);background:var(--bg-card2);padding:5px 10px;border-radius:var(--radius-sm);font-family:var(--font-mono);display:none;">0:00</div>
         <div class="mode-toggle" id="mode-toggle" style="display:none;">
           <button class="mode-btn active" id="mode-standard" onclick="setMode('standard')">Standard</button>
-          <button class="mode-btn" id="mode-voice" onclick="setMode('voice')">&#127908; Voice</button>
+          <button class="mode-btn"        id="mode-voice"    onclick="setMode('voice')">&#127908; Voice</button>
         </div>
-        <button class="btn btn-ghost btn-sm" id="btn-finish-top"
-                style="display:none;color:var(--volt-dark);font-weight:700;"
-                onclick="finishWorkout()">
-          Finish
-        </button>
+        <button class="btn btn-ghost btn-sm" id="btn-finish-top" style="display:none;color:var(--volt-dark);font-weight:700;" onclick="finishWorkout()">Finish</button>
       </div>
     </div>
-    <!-- Overall progress bar -->
     <div class="lf-prog-bar" style="margin-top:10px;" id="overall-prog-wrap">
       <div class="lf-prog-fill" id="overall-prog" style="width:0%"></div>
     </div>
@@ -756,47 +370,53 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
   <div class="no-program" id="no-program-state" style="display:none;">
     <div style="font-size:48px;" aria-hidden="true">🏋️</div>
     <div style="font-size:20px;font-weight:700;color:var(--text);">No active program</div>
-    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">
-      Choose or build a program to get your daily workouts here.
-    </div>
-    <button class="btn btn-dark lf-mt-sm btn-lg" onclick="location.href='programs.html'">
-      Go to programs <i class="ti ti-arrow-right" aria-hidden="true"></i>
-    </button>
-    <button class="btn btn-outline lf-mt-sm" onclick="location.href='programs.html?new=1'">
-      Build a new program
-    </button>
+    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">Choose or build a program to get your daily workouts here.</div>
+    <button class="btn btn-dark lf-mt-sm btn-lg" onclick="location.href='programs.html'">Go to programs <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+    <button class="btn btn-outline lf-mt-sm" onclick="startFreeForm()">Log a free workout</button>
   </div>
 
   <!-- REST DAY STATE -->
   <div class="no-program" id="rest-day-state" style="display:none;">
     <div style="font-size:48px;" aria-hidden="true">😴</div>
     <div style="font-size:20px;font-weight:700;color:var(--text);">Rest day</div>
-    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">
-      Recovery is part of the plan. Sleep well, eat well, come back stronger.
-    </div>
-    <button class="btn btn-outline lf-mt-sm" onclick="startAnyway()">
-      Log a workout anyway
-    </button>
+    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">Recovery is part of the plan. Sleep well, eat well, come back stronger.</div>
+    <button class="btn btn-outline lf-mt-sm" onclick="startFreeForm()">Log a workout anyway</button>
   </div>
 
   <!-- WORKOUT IN PROGRESS -->
   <div id="workout-state" style="display:none;padding-bottom:80px;">
 
-    <!-- Exercise progress dots -->
+    <!-- Free form name bar (only shown in free form mode) -->
+    <div id="free-name-bar" style="display:none;padding:12px var(--page-pad) 4px;">
+      <input class="free-name-input" id="free-workout-name" type="text"
+             placeholder="Workout name (e.g. Push Day)" maxlength="60"
+             value="Free Workout">
+    </div>
+
     <div class="ex-progress-dots" id="ex-dots"></div>
 
     <!-- Exercise card -->
     <div class="ex-card" id="ex-card">
 
       <div class="ex-card-header">
-        <div class="ex-card-icon" aria-hidden="true">
+        <div class="ex-card-icon" aria-hidden="true" id="ex-card-icon">
           <i class="ti ti-barbell"></i>
         </div>
         <div style="flex:1;min-width:0;">
           <div class="ex-card-title" id="ex-name">—</div>
-          <div class="ex-card-sub" id="ex-meta">—</div>
+          <div class="ex-card-sub"   id="ex-meta">—</div>
         </div>
         <span class="badge badge-strength" id="ex-badge">STRENGTH</span>
+      </div>
+
+      <!-- GIF slot -->
+      <div class="gif-slot" id="gif-slot" onclick="openGifFull()" style="display:none;">
+        <img id="gif-img" src="" alt="" style="display:none;">
+        <div class="gif-slot-placeholder" id="gif-placeholder">
+          <i class="ti ti-player-play"></i>
+          <span>Animation coming soon</span>
+        </div>
+        <span class="gif-expand-hint" id="gif-expand-hint" style="display:none;">Tap to expand</span>
       </div>
 
       <!-- Previous best -->
@@ -806,23 +426,33 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <span class="pr-badge" id="pr-badge" style="display:none;">🏆 PR</span>
       </div>
 
-      <!-- Sets table -->
-      <table class="sets-table" id="sets-table">
-        <thead>
-          <tr>
-            <th style="width:30px;">Set</th>
-            <th style="width:22%;">Last</th>
-            <th style="width:26%;">Weight</th>
-            <th style="width:22%;">Reps</th>
-            <th style="width:18%;"></th>
-          </tr>
-        </thead>
-        <tbody id="sets-body"></tbody>
-      </table>
+      <!-- Sets table (replaced per exercise type) -->
+      <div id="sets-container"></div>
+
+      <!-- Notes -->
+      <div class="ex-notes-wrap" id="ex-notes-wrap">
+        <button class="ex-notes-toggle" id="ex-notes-toggle" onclick="toggleNotes()">
+          <i class="ti ti-pencil"></i>
+          <span id="notes-toggle-label">Add notes</span>
+          <i class="ti ti-chevron-down notes-chevron"></i>
+        </button>
+        <div class="ex-notes-body" id="ex-notes-body">
+          <textarea class="ex-notes-input" id="ex-notes-input"
+                    placeholder="Form cues, how it felt, adjustments…"
+                    oninput="saveNote()" rows="3"></textarea>
+        </div>
+      </div>
 
     </div>
 
-    <!-- Finish button (shows when all sets logged) -->
+    <!-- Free form: Add exercise button -->
+    <div id="free-add-wrap" style="display:none;padding:12px var(--page-pad) 0;">
+      <button class="btn btn-dark btn-full" onclick="openExPicker()">
+        <i class="ti ti-plus" aria-hidden="true"></i> Add exercise
+      </button>
+    </div>
+
+    <!-- Finish bar -->
     <div class="finish-bar" id="finish-bar">
       <button class="btn btn-volt btn-full btn-lg" onclick="finishWorkout()">
         <i class="ti ti-check" aria-hidden="true"></i> Finish workout
@@ -833,47 +463,27 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
   <!-- COMPLETION SCREEN -->
   <div class="completion-wrap" id="completion-state">
-
     <div class="completion-hero">
       <div class="completion-emoji" aria-hidden="true">🏆</div>
       <div class="completion-title">WORKOUT DONE</div>
       <div class="completion-sub" id="completion-sub">Great session!</div>
     </div>
-
     <div class="completion-stats">
-      <div class="completion-stat">
-        <div class="completion-stat-val" id="c-duration">—</div>
-        <div class="completion-stat-label">Minutes</div>
-      </div>
-      <div class="completion-stat">
-        <div class="completion-stat-val" id="c-volume">—</div>
-        <div class="completion-stat-label">Lbs lifted</div>
-      </div>
-      <div class="completion-stat">
-        <div class="completion-stat-val" id="c-prs">—</div>
-        <div class="completion-stat-label">PRs</div>
-      </div>
+      <div class="completion-stat"><div class="completion-stat-val" id="c-duration">—</div><div class="completion-stat-label">Minutes</div></div>
+      <div class="completion-stat"><div class="completion-stat-val" id="c-volume">—</div><div class="completion-stat-label">Lbs lifted</div></div>
+      <div class="completion-stat"><div class="completion-stat-val" id="c-prs">—</div><div class="completion-stat-label">PRs</div></div>
     </div>
-
-    <!-- AI Analysis -->
     <div class="ai-analysis">
       <div class="ai-analysis-header">
         <i class="ti ti-sparkles" style="color:var(--volt);font-size:16px;" aria-hidden="true"></i>
         <div class="ai-analysis-title">AI Coach Analysis</div>
       </div>
       <div class="ai-analysis-body" id="ai-analysis-body">
-        <div class="ai-loading" id="ai-loading">
-          <div class="ai-spinner"></div>
-          Analyzing your session...
-        </div>
+        <div class="ai-loading" id="ai-loading"><div class="ai-spinner"></div>Analyzing your session...</div>
         <div id="ai-analysis-text" style="display:none;"></div>
       </div>
     </div>
-
-    <button class="btn btn-dark btn-full btn-lg" onclick="location.href='index.html'">
-      Back to home <i class="ti ti-home" aria-hidden="true"></i>
-    </button>
-
+    <button class="btn btn-dark btn-full btn-lg" onclick="location.href='index.html'">Back to home <i class="ti ti-home" aria-hidden="true"></i></button>
   </div>
 
 </main>
@@ -882,63 +492,50 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 <div class="voice-hud" id="voice-hud">
   <div class="voice-pulse" id="voice-pulse">🎤</div>
   <div>
-    <div class="voice-hud-text" id="voice-hud-text">Listening...</div>
+    <div class="voice-hud-text"  id="voice-hud-text">Listening...</div>
     <div class="voice-hud-heard" id="voice-hud-heard"></div>
   </div>
 </div>
 
 <!-- REST TIMER POPUP -->
-<div id="rest-overlay" class="rest-overlay" style="
-  pointer-events:all;
-">
-  <div id="rest-popup" style="
-    background:#1a1a1a;
-    border-radius:20px;
-    padding:32px 24px;
-    width:100%;
-    max-width:320px;
-    text-align:center;
-    border:1px solid rgba(198,241,53,0.15);
-    pointer-events:all;
-    position:relative;
-    z-index:501;
-  ">
+<div id="rest-overlay" class="rest-overlay" style="pointer-events:all;">
+  <div id="rest-popup" style="background:#1a1a1a;border-radius:20px;padding:32px 24px;width:100%;max-width:320px;text-align:center;border:1px solid rgba(198,241,53,0.15);pointer-events:all;position:relative;z-index:501;">
     <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.14em;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:8px;">Rest</div>
     <div id="rest-next-label" style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:6px;min-height:18px;"></div>
     <div id="rest-display" style="font-family:var(--font-display);font-size:72px;color:#c6f135;letter-spacing:4px;line-height:1;margin-bottom:14px;">1:30</div>
-    <!-- AI coaching section -->
     <div class="rest-ai-section" id="rest-ai-section" style="display:none;">
       <div class="rest-ai-spinner" id="rest-ai-spinner"></div>
-      <div class="rest-ai-text" id="rest-ai-text">Analyzing your set...</div>
+      <div class="rest-ai-text"    id="rest-ai-text">Analyzing your set...</div>
     </div>
     <div style="display:flex;gap:10px;justify-content:center;margin-bottom:14px;">
-      <button id="btn-minus" style="
-        padding:14px 0;width:120px;
-        background:rgba(255,255,255,0.1);
-        border:none;border-radius:10px;
-        color:white;font-size:16px;font-weight:700;
-        font-family:var(--font-body);cursor:pointer;
-        touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-      ">−15s</button>
-      <button id="btn-plus" style="
-        padding:14px 0;width:120px;
-        background:rgba(255,255,255,0.1);
-        border:none;border-radius:10px;
-        color:white;font-size:16px;font-weight:700;
-        font-family:var(--font-body);cursor:pointer;
-        touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-      ">+15s</button>
+      <button id="btn-minus" style="padding:14px 0;width:120px;background:rgba(255,255,255,0.1);border:none;border-radius:10px;color:white;font-size:16px;font-weight:700;font-family:var(--font-body);cursor:pointer;touch-action:manipulation;">−15s</button>
+      <button id="btn-plus"  style="padding:14px 0;width:120px;background:rgba(255,255,255,0.1);border:none;border-radius:10px;color:white;font-size:16px;font-weight:700;font-family:var(--font-body);cursor:pointer;touch-action:manipulation;">+15s</button>
     </div>
-    <button id="btn-skip" style="
-      width:100%;padding:14px;
-      background:transparent;
-      border:1px solid rgba(255,255,255,0.2);
-      border-radius:10px;
-      color:rgba(255,255,255,0.65);
-      font-size:16px;font-weight:600;
-      font-family:var(--font-body);cursor:pointer;
-      touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-    ">Skip rest</button>
+    <button id="btn-skip" style="width:100%;padding:14px;background:transparent;border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:rgba(255,255,255,0.65);font-size:16px;font-weight:600;font-family:var(--font-body);cursor:pointer;touch-action:manipulation;">Skip rest</button>
+  </div>
+</div>
+
+<!-- EXERCISE PICKER SHEET -->
+<div class="ex-picker-overlay" id="ex-picker-overlay" onclick="closeExPickerIfBackdrop(event)">
+  <div class="ex-picker-sheet" id="ex-picker-sheet">
+    <div class="ex-picker-header">
+      <input class="ex-picker-search" id="ex-picker-search" type="text"
+             placeholder="Search exercises…" oninput="filterPicker()" autocomplete="off">
+      <button style="padding:8px;color:var(--text-3);font-size:20px;" onclick="closeExPicker()">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+    <div class="ex-picker-cats" id="ex-picker-cats"></div>
+    <div class="ex-picker-list" id="ex-picker-list"></div>
+  </div>
+</div>
+
+<!-- GIF FULLSCREEN -->
+<div class="gif-full-overlay" id="gif-full-overlay" onclick="closeGifFull()">
+  <div style="text-align:center;">
+    <img class="gif-full-img" id="gif-full-img" src="" alt="">
+    <div class="gif-full-name" id="gif-full-name"></div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;">Tap anywhere to close</div>
   </div>
 </div>
 
@@ -947,36 +544,34 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
 <script>
 /* ============================================================
-   workout.js — LaroFit v2 workout page
+   workout.js — LaroFit v2
    ============================================================ */
 
 // ── STORAGE ──────────────────────────────────────────────────
 const store = {
   get(key, fallback = null) {
-    try {
-      const v = localStorage.getItem('lf_' + key);
-      return v === null ? fallback : JSON.parse(v);
-    } catch { return fallback; }
+    try { const v = localStorage.getItem('lf_' + key); return v === null ? fallback : JSON.parse(v); } catch { return fallback; }
   },
   set(key, value) {
     try { localStorage.setItem('lf_' + key, JSON.stringify(value)); } catch {}
   }
 };
 
-
 // ── SUPABASE CONFIG ───────────────────────────────────────────
-const SUPABASE_AI_URL  = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/ai-coach';
+const SUPABASE_AI_URL   = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/ai-coach';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkYXN3dW9rb2tveGdzdXdmanBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxMzAsImV4cCI6MjA5NDk3NjEzMH0.1j8Q9EOL5lbabDZGaux4yEgB9LcCJCacRiEIWMDeoKA';
 
 // ── STATE ─────────────────────────────────────────────────────
-let exercises      = [];   // today's exercise objects
+let exercises      = [];
 let currentExIdx   = 0;
 let workoutStarted = false;
+let isFreeForm     = false;
 let startTime      = null;
 let elapsedTimer   = null;
 let restInterval   = null;
 let restRemaining  = 0;
 let totalPRs       = 0;
+let exNotes        = {};   // { exIdx: noteText }
 const todayKey     = new Date().toISOString().slice(0, 10);
 
 // ── EPLEY 1RM ────────────────────────────────────────────────
@@ -986,183 +581,222 @@ function calc1RM(weight, reps) {
   return Math.round(weight * (1 + reps / 30));
 }
 
+// ── EXERCISE TYPE HELPERS ─────────────────────────────────────
+function exTypeOf(ex) {
+  return ex.type || lookupExType(ex.id) || 'strength';
+}
+
+function isCardio(ex)   { const t = exTypeOf(ex); return t === 'cardio'; }
+function isBW(ex)       { const t = exTypeOf(ex); return t === 'bodyweight'; }
+function isTimed(ex)    { const t = exTypeOf(ex); return t === 'timed_bodyweight' || t === 'hiit'; }
+function isStrength(ex) { return !isCardio(ex) && !isBW(ex) && !isTimed(ex); }
+
+function typeIcon(ex) {
+  if (isCardio(ex)) return 'ti-run';
+  if (isBW(ex) || isTimed(ex)) return 'ti-man';
+  return 'ti-barbell';
+}
+
 // ── INIT ─────────────────────────────────────────────────────
 function init() {
   const programs = store.get('programs', []);
   const activeId = store.get('active_program', null);
   const program  = programs.find(p => p.id === activeId);
 
-  if (!program) {
-    show('no-program-state');
-    document.getElementById('header-title').textContent = 'Workout';
-    document.getElementById('header-sub').textContent   = 'No active program';
-    return;
-  }
+  if (!program) { show('no-program-state'); setHeader('Workout', 'No active program'); return; }
 
-  const dayIndex = (new Date().getDay() + 6) % 7; // Mon=0
+  const dayIndex = (new Date().getDay() + 6) % 7;
   const dayPlan  = program.days && program.days[dayIndex];
 
-  if (!dayPlan || dayPlan.rest) {
-    show('rest-day-state');
-    document.getElementById('header-title').textContent = 'Rest day';
-    document.getElementById('header-sub').textContent   = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-    return;
-  }
+  if (!dayPlan || dayPlan.rest) { show('rest-day-state'); setHeader('Rest day', new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})); return; }
 
-  // Build exercise list
-  exercises = (dayPlan.exercises || []).map(ex => ({
-    id:      ex.id,
-    name:    ex.name || lookupExName(ex.id),
-    sets:    ex.sets || 3,
-    reps:    ex.reps || 10,
-    restSec: ex.restSec || 90,
-    type:    ex.type || lookupExType(ex.id),
-    weight:  ex.weight || '',
-    // logged sets: array of { weight, reps, logged } — always blank, voice/manual fills them
-    loggedSets: Array.from({ length: ex.sets || 3 }, () => ({
-      weight: '',
-      reps:   '',
-      logged: false
-    }))
+  buildExerciseList(dayPlan.exercises || [], dayPlan.name || program.name);
+}
+
+function buildExerciseList(exArr, workoutName) {
+  exercises = exArr.map(ex => ({
+    id:         ex.id,
+    name:       ex.name || lookupExName(ex.id),
+    sets:       ex.sets    || 3,
+    reps:       ex.reps    || 10,
+    restSec:    ex.restSec || 90,
+    type:       ex.type    || lookupExType(ex.id) || 'strength',
+    gifUrl:     ex.gifUrl  || lookupGifUrl(ex.id),
+    loggedSets: buildLoggedSets(ex)
   }));
 
-  if (!exercises.length) {
-    show('no-program-state');
-    return;
-  }
+  if (!exercises.length && !isFreeForm) { show('no-program-state'); return; }
 
-  // Start workout
+  startWorkout(workoutName);
+}
+
+function buildLoggedSets(ex) {
+  const t    = ex.type || lookupExType(ex.id) || 'strength';
+  const count = ex.sets || 3;
+
+  if (t === 'cardio') {
+    return Array.from({ length: 1 }, () => ({ duration: '', distance: '', logged: false }));
+  } else if (t === 'timed_bodyweight') {
+    return Array.from({ length: count }, () => ({ holdTime: '', logged: false }));
+  } else if (t === 'bodyweight') {
+    return Array.from({ length: count }, () => ({ weight: '', reps: '', logged: false }));
+  } else {
+    // strength — pre-fill from last session
+    const last = getLastSession(ex.id || ex.name);
+    return Array.from({ length: count }, (_, i) => {
+      const lastSet = last && last.sets ? last.sets[i] : null;
+      const fallback = last ? { weight: last.bestWeight, reps: last.bestReps } : null;
+      const src = lastSet || fallback;
+      return {
+        weight: (src && src.weight) ? String(src.weight) : '',
+        reps:   (src && src.reps)   ? String(src.reps)   : '',
+        logged: false
+      };
+    });
+  }
+}
+
+function startWorkout(workoutName) {
   workoutStarted = true;
   startTime      = Date.now();
   show('workout-state');
-
-  document.getElementById('header-title').textContent = dayPlan.name || program.name;
-  document.getElementById('header-sub').textContent   =
-    exercises.length + ' exercises · ' +
-    new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-
-  document.getElementById('workout-timer').style.display = 'block';
+  setHeader(workoutName || 'Workout', exercises.length + ' exercises · ' + new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}));
+  document.getElementById('workout-timer').style.display  = 'block';
   document.getElementById('btn-finish-top').style.display = 'block';
   document.getElementById('mode-toggle').style.display    = 'flex';
-  // Load saved mode preference
   workoutMode = getMode();
   document.getElementById('mode-standard').classList.toggle('active', workoutMode === 'standard');
-  document.getElementById('mode-voice').classList.toggle('active', workoutMode === 'voice');
+  document.getElementById('mode-voice').classList.toggle('active',    workoutMode === 'voice');
   if (workoutMode === 'voice') initVoice();
-
-  // Start elapsed timer
   elapsedTimer = setInterval(updateElapsed, 1000);
 
-  renderDots();
-  goToEx(0);
-}
-
-function lookupExName(id) {
-  if (!id) return 'Exercise';
-  if (typeof LAROFIT_EXERCISES !== 'undefined') {
-    const found = LAROFIT_EXERCISES.find(e => e.id === id);
-    if (found) return found.name;
+  if (isFreeForm) {
+    document.getElementById('free-name-bar').style.display   = 'block';
+    document.getElementById('free-add-wrap').style.display   = 'block';
+    document.getElementById('finish-bar').classList.add('show');
+    document.getElementById('mode-toggle').style.display = 'none';
   }
-  return id;
-}
 
-function lookupExType(id) {
-  if (!id) return 'strength';
-  if (typeof LAROFIT_EXERCISES !== 'undefined') {
-    const found = LAROFIT_EXERCISES.find(e => e.id === id);
-    if (found) return found.type || 'strength';
+  if (exercises.length > 0) {
+    renderDots();
+    goToEx(0);
+  } else {
+    document.getElementById('ex-card').style.display = 'none';
+    document.getElementById('ex-dots').style.display  = 'none';
   }
-  return 'strength';
 }
 
-// ── SHOW/HIDE STATES ─────────────────────────────────────────
+// ── FREE FORM ─────────────────────────────────────────────────
+function startFreeForm() {
+  isFreeForm = true;
+  exercises  = [];
+  buildExPicker();
+  startWorkout('Free Workout');
+}
+
+// ── SHOW/HIDE ─────────────────────────────────────────────────
 function show(id) {
-  ['no-program-state','rest-day-state','workout-state','completion-state']
-    .forEach(s => {
-      const el = document.getElementById(s);
-      if (el) {
-        el.style.display = s === id ? (s === 'completion-state' ? 'flex' : 'block') : 'none';
-      }
-    });
-  if (id === 'completion-state') {
-    document.getElementById('completion-state').classList.add('show');
-  }
+  ['no-program-state','rest-day-state','workout-state','completion-state'].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.style.display = s === id ? (s === 'completion-state' ? 'flex' : 'block') : 'none';
+  });
+  if (id === 'completion-state') document.getElementById('completion-state').classList.add('show');
+}
+
+function setHeader(title, sub) {
+  document.getElementById('header-title').textContent = title;
+  document.getElementById('header-sub').textContent   = sub || '';
 }
 
 // ── ELAPSED TIMER ────────────────────────────────────────────
 function updateElapsed() {
   if (!startTime) return;
   const secs = Math.floor((Date.now() - startTime) / 1000);
-  const m    = Math.floor(secs / 60);
-  const s    = secs % 60;
-  document.getElementById('workout-timer').textContent =
-    m + ':' + String(s).padStart(2, '0');
+  const m = Math.floor(secs / 60), s = secs % 60;
+  document.getElementById('workout-timer').textContent = m + ':' + String(s).padStart(2,'0');
 }
 
-// ── PROGRESS DOTS ────────────────────────────────────────────
+// ── PROGRESS DOTS ─────────────────────────────────────────────
 function renderDots() {
-  const container = document.getElementById('ex-dots');
-  container.innerHTML = exercises.map((ex, i) => {
+  if (!exercises.length) { document.getElementById('ex-dots').innerHTML = ''; return; }
+  document.getElementById('ex-dots').innerHTML = exercises.map((ex, i) => {
     const allLogged = ex.loggedSets.every(s => s.logged);
     let cls = 'ex-dot';
-    if (allLogged)          cls += ' done';
+    if (allLogged)              cls += ' done';
     else if (i === currentExIdx) cls += ' active';
     return `<div class="${cls}" aria-hidden="true"></div>`;
   }).join('');
 }
 
-// ── GO TO EXERCISE ───────────────────────────────────────────
+// ── GO TO EXERCISE ────────────────────────────────────────────
 function goToEx(idx) {
   if (idx < 0 || idx >= exercises.length) return;
   currentExIdx = idx;
   renderExercise();
   renderDots();
-  updateNavButtons();
   updateOverallProgress();
 }
 
 function renderExercise() {
-  const ex = exercises[currentExIdx];
-
-  // Find last session data for this exercise
-  const lastSession = getLastSession(ex.id || ex.name);
+  const ex          = exercises[currentExIdx];
+  const lastSession = isStrength(ex) ? getLastSession(ex.id || ex.name) : null;
+  const t           = exTypeOf(ex);
 
   // Header
   document.getElementById('ex-name').textContent = ex.name;
-  document.getElementById('ex-meta').textContent =
-    ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec);
-
-  // Badge
   const badgeEl = document.getElementById('ex-badge');
-  badgeEl.className   = 'badge badge-' + (ex.type || 'strength');
-  badgeEl.textContent = (ex.type || 'strength').toUpperCase();
+  badgeEl.className   = 'badge badge-' + t;
+  badgeEl.textContent = t.toUpperCase().replace('_', ' ');
+  const iconEl = document.getElementById('ex-card-icon');
+  iconEl.innerHTML = `<i class="ti ${typeIcon(ex)}"></i>`;
 
-  // Previous best
+  // Meta line
+  const metaEl   = document.getElementById('ex-meta');
+  let metaText   = '';
+  if (isCardio(ex))        metaText = 'Cardio · ' + formatRest(ex.restSec);
+  else if (isTimed(ex))    metaText = ex.sets + ' sets · hold ' + (ex.reps || 30) + 's · ' + formatRest(ex.restSec);
+  else if (isBW(ex))       metaText = ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec);
+  else                     metaText = ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec);
+
+  const chipHTML = isStrength(ex) ? renderSugChip(ex, currentExIdx) : '';
+  metaEl.innerHTML = metaText + (chipHTML ? ' &nbsp;' + chipHTML : '');
+
+  // Previous best (strength only)
   const prevEl = document.getElementById('prev-best');
-  if (lastSession) {
+  if (lastSession && isStrength(ex)) {
     prevEl.style.display = 'flex';
-    document.getElementById('prev-best-text').textContent =
-      'Last: ' + lastSession.bestWeight + ' lbs × ' + lastSession.bestReps + ' reps';
+    document.getElementById('prev-best-text').textContent = 'Last: ' + lastSession.bestWeight + ' lbs × ' + lastSession.bestReps + ' reps';
   } else {
     prevEl.style.display = 'none';
   }
 
-  // Show suggestion chip or FMW badge in header sub
-  const metaEl = document.getElementById('ex-meta');
-  const chipHTML = renderSugChip(ex, currentExIdx);
-  metaEl.innerHTML =
-    ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec) +
-    (chipHTML ? ' &nbsp;' + chipHTML : '');
+  // GIF slot
+  renderGifSlot(ex);
 
-  // In voice mode: announce the exercise and suggested weight
-  if (workoutMode === 'voice') {
+  // Notes
+  const savedNote = exNotes[currentExIdx] || '';
+  document.getElementById('ex-notes-input').value = savedNote;
+  const toggleEl = document.getElementById('ex-notes-toggle');
+  const bodyEl   = document.getElementById('ex-notes-body');
+  const labelEl  = document.getElementById('notes-toggle-label');
+  if (savedNote) {
+    toggleEl.classList.add('open');
+    bodyEl.classList.add('open');
+    labelEl.textContent = 'Notes';
+  } else {
+    toggleEl.classList.remove('open');
+    bodyEl.classList.remove('open');
+    labelEl.textContent = 'Add notes';
+  }
+
+  // Voice mode
+  if (workoutMode === 'voice' && isStrength(ex)) {
     const isFMW = isFirstTime(ex);
     const sug   = getSuggestedWeight(ex);
     const fmwW  = getFMWStartWeight(ex);
     let announcement;
     if (isFMW) {
-      announcement = 'Starting Find My Weight for ' + ex.name +
-        '. We will begin with ' + fmwW + ' pounds. Say yes to start or lighter to reduce.';
+      announcement = 'Starting Find My Weight for ' + ex.name + '. We will begin with ' + fmwW + ' pounds. Say yes to start or lighter to reduce.';
       voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: fmwW };
       prefillWeight(currentExIdx, 0, fmwW);
       voicePhase = 'confirm_weight';
@@ -1184,32 +818,79 @@ function renderExercise() {
   renderSets(ex, lastSession);
 }
 
-function renderSets(ex, lastSession) {
-  const tbody = document.getElementById('sets-body');
+// ── GIF SLOT ──────────────────────────────────────────────────
+function renderGifSlot(ex) {
+  const slot        = document.getElementById('gif-slot');
+  const img         = document.getElementById('gif-img');
+  const placeholder = document.getElementById('gif-placeholder');
+  const hint        = document.getElementById('gif-expand-hint');
 
-  // Warm-up row — only for exercises with a suggestion (not bodyweight/FMW)
-  let warmupHTML = '';
-  const fmw = getFMW(exercises.indexOf(ex));
-  const sugW = getSuggestedWeight(ex);
-  const isFMWEx = isFirstTime(ex) && !fmw.locked;
-  if (sugW && !isFMWEx) {
-    const warmupW = Math.max(5, Math.round((sugW * 0.55) / 5) * 5);
-    warmupHTML = `<tr class="warmup-row">
-      <td><span class="set-num" style="font-size:9px;width:28px;border-radius:4px;background:var(--bg-card2);color:var(--text-3);">WU</span></td>
-      <td colspan="3" style="text-align:left;padding-left:12px;">
-        <span style="font-size:13px;font-weight:600;color:var(--text-2);">${warmupW} lbs</span>
-        <span class="warmup-label">Warm-up · ~55% · optional</span>
-      </td>
-      <td></td>
-    </tr>`;
+  // Always show the slot
+  slot.style.display = 'flex';
+
+  if (ex.gifUrl) {
+    img.src           = ex.gifUrl;
+    img.alt           = ex.name;
+    img.style.display = 'block';
+    placeholder.style.display = 'none';
+    hint.style.display        = 'block';
+  } else {
+    img.style.display         = 'none';
+    placeholder.style.display = 'flex';
+    hint.style.display        = 'none';
   }
+}
 
-  tbody.innerHTML = warmupHTML + ex.loggedSets.map((set, i) => {
+function openGifFull() {
+  const ex = exercises[currentExIdx];
+  if (!ex || !ex.gifUrl) return;
+  document.getElementById('gif-full-img').src          = ex.gifUrl;
+  document.getElementById('gif-full-name').textContent = ex.name;
+  document.getElementById('gif-full-overlay').classList.add('show');
+}
+function closeGifFull() {
+  document.getElementById('gif-full-overlay').classList.remove('show');
+}
+
+// ── NOTES ─────────────────────────────────────────────────────
+function toggleNotes() {
+  const toggle = document.getElementById('ex-notes-toggle');
+  const body   = document.getElementById('ex-notes-body');
+  const label  = document.getElementById('notes-toggle-label');
+  const isOpen = toggle.classList.toggle('open');
+  body.classList.toggle('open', isOpen);
+  label.textContent = isOpen ? 'Notes' : 'Add notes';
+  if (isOpen) document.getElementById('ex-notes-input').focus();
+}
+
+function saveNote() {
+  exNotes[currentExIdx] = document.getElementById('ex-notes-input').value;
+}
+
+// ── SETS RENDERING ────────────────────────────────────────────
+function renderSets(ex, lastSession) {
+  const container = document.getElementById('sets-container');
+  const t = exTypeOf(ex);
+
+  if (isCardio(ex)) {
+    container.innerHTML = renderCardioTable(ex);
+  } else if (isTimed(ex)) {
+    container.innerHTML = renderTimedTable(ex);
+  } else if (isBW(ex)) {
+    container.innerHTML = renderBWTable(ex, lastSession);
+  } else {
+    container.innerHTML = renderStrengthTable(ex, lastSession);
+  }
+}
+
+function renderStrengthTable(ex, lastSession) {
+  const warmupHTML = buildWarmupRow(ex);
+
+  const rows = ex.loggedSets.map((set, i) => {
     const isDone   = set.logged;
     const isActive = !isDone && ex.loggedSets.slice(0, i).every(s => s.logged);
     const numCls   = isDone ? 'done' : isActive ? 'active-set' : '';
 
-    // Per-set last values — fall back to best if set index doesn't exist
     const lastSet     = lastSession && lastSession.sets ? lastSession.sets[i] : null;
     const lastFallback= lastSession ? { weight: lastSession.bestWeight, reps: lastSession.bestReps } : null;
     const lastData    = lastSet || lastFallback;
@@ -1217,270 +898,370 @@ function renderSets(ex, lastSession) {
     const lastR       = lastData && lastData.reps   ? lastData.reps   : null;
     const hasLast     = lastW !== null && lastW > 0;
 
-    // Last chip — tappable to copy values into inputs
     const lastChip = hasLast
-      ? `<button class="last-chip" onclick="fillSet(${currentExIdx},${i},${lastW},${lastR})"
-                 title="Tap to use these values" aria-label="Fill set with last session values">
-           ${lastW}<span class="last-chip-x">×</span>${lastR}
-         </button>`
+      ? `<button class="last-chip" onclick="fillSet(${currentExIdx},${i},${lastW},${lastR})" title="Tap to use last session values" aria-label="Fill with last session">${lastW}<span class="last-chip-x">×</span>${lastR}</button>`
       : `<span class="last-chip last-chip-empty">—</span>`;
 
-    // PR detection
     let isPR = false;
     if (isDone && lastSession && set.weight && set.reps) {
-      const cur1rm  = calc1RM(parseFloat(set.weight), parseFloat(set.reps));
-      const prev1rm = calc1RM(parseFloat(lastSession.bestWeight), parseFloat(lastSession.bestReps));
-      if (cur1rm && prev1rm && cur1rm > prev1rm) isPR = true;
+      const cur  = calc1RM(parseFloat(set.weight), parseFloat(set.reps));
+      const prev = calc1RM(parseFloat(lastSession.bestWeight), parseFloat(lastSession.bestReps));
+      if (cur && prev && cur > prev) isPR = true;
     }
 
     if (isDone) {
       const orm      = calc1RM(parseFloat(set.weight), parseFloat(set.reps));
       const ormLabel = orm ? `<span class="last-val" style="color:var(--volt-dark);">~${orm} 1RM</span>` : '';
       return `<tr>
-        <td><span class="set-num ${numCls}">${i + 1}</span></td>
+        <td><span class="set-num ${numCls}">${i+1}</span></td>
         <td style="text-align:center;">${lastChip}</td>
-        <td style="text-align:center;">
-          <span style="font-size:14px;font-weight:600;">${set.weight || '—'}</span>
-          <span class="last-val">lbs</span>
-          ${ormLabel}
-        </td>
-        <td style="text-align:center;">
-          <span style="font-size:14px;font-weight:600;">${set.reps || '—'}</span>
-          <span class="last-val">reps</span>
-        </td>
-        <td style="text-align:center;">
-          ${isPR
-            ? '<span class="pr-badge">🏆 PR</span>'
-            : '<span style="font-size:18px;color:var(--success);">✓</span>'}
-        </td>
+        <td style="text-align:center;"><span style="font-size:14px;font-weight:600;">${set.weight||'—'}</span><span class="last-val">lbs</span>${ormLabel}</td>
+        <td style="text-align:center;"><span style="font-size:14px;font-weight:600;">${set.reps||'—'}</span><span class="last-val">reps</span></td>
+        <td style="text-align:center;">${isPR ? '<span class="pr-badge">🏆 PR</span>' : '<span style="font-size:18px;color:var(--success);">✓</span>'}</td>
       </tr>`;
     }
 
     return `<tr>
-      <td><span class="set-num ${numCls}">${i + 1}</span></td>
+      <td><span class="set-num ${numCls}">${i+1}</span></td>
       <td style="text-align:center;">${lastChip}</td>
       <td style="text-align:center;">
         <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
-               id="inp-w-${currentExIdx}-${i}"
-               type="number" inputmode="decimal"
-               placeholder="wt"
-               value="${set.weight || ''}"
+               id="inp-w-${currentExIdx}-${i}" type="number" inputmode="decimal"
+               placeholder="wt" value="${set.weight || ''}"
                onchange="updateSet(${currentExIdx},${i},'weight',this.value)"
-               ${!isActive && !isDone ? 'style="opacity:0.45;"' : ''}>
+               ${!isActive ? 'style="opacity:0.45;"' : ''}>
       </td>
       <td style="text-align:center;">
         <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
-               id="inp-r-${currentExIdx}-${i}"
-               type="number" inputmode="numeric"
-               placeholder="reps"
-               value="${set.reps || ''}"
+               id="inp-r-${currentExIdx}-${i}" type="number" inputmode="numeric"
+               placeholder="reps" value="${set.reps || ''}"
                onchange="updateSet(${currentExIdx},${i},'reps',this.value)"
-               ${!isActive && !isDone ? 'style="opacity:0.45;"' : ''}>
+               ${!isActive ? 'style="opacity:0.45;"' : ''}>
       </td>
       <td style="text-align:center;">
-        ${isActive
-          ? `<button class="log-btn" onclick="logSet(${currentExIdx},${i})">Log</button>`
-          : ''}
+        ${isActive ? `<button class="log-btn" onclick="logSet(${currentExIdx},${i})">Log</button>` : ''}
       </td>
     </tr>`;
   }).join('');
+
+  return `<table class="sets-table">
+    <thead><tr>
+      <th style="width:30px;">Set</th>
+      <th style="width:22%;">Last</th>
+      <th style="width:26%;">Weight</th>
+      <th style="width:22%;">Reps</th>
+      <th style="width:18%;"></th>
+    </tr></thead>
+    <tbody>${warmupHTML}${rows}</tbody>
+  </table>`;
 }
 
-// ── LOG A SET ────────────────────────────────────────────────
+function renderBWTable(ex, lastSession) {
+  const rows = ex.loggedSets.map((set, i) => {
+    const isDone   = set.logged;
+    const isActive = !isDone && ex.loggedSets.slice(0, i).every(s => s.logged);
+    const numCls   = isDone ? 'done' : isActive ? 'active-set' : '';
+
+    const lastSet  = lastSession && lastSession.sets ? lastSession.sets[i] : null;
+    const lastR    = lastSet ? lastSet.reps : (lastSession ? lastSession.bestReps : null);
+    const hasLast  = lastR !== null && lastR > 0;
+    const lastChip = hasLast
+      ? `<button class="last-chip" onclick="fillBWSet(${currentExIdx},${i},${lastR})">${lastR} reps</button>`
+      : `<span class="last-chip last-chip-empty">—</span>`;
+
+    if (isDone) {
+      return `<tr>
+        <td><span class="set-num ${numCls}">${i+1}</span></td>
+        <td style="text-align:center;">${lastChip}</td>
+        <td style="text-align:center;"><span style="font-size:14px;font-weight:600;">${set.reps||'—'}</span><span class="last-val">reps</span></td>
+        <td style="text-align:center;"><span style="font-size:18px;color:var(--success);">✓</span></td>
+      </tr>`;
+    }
+    return `<tr>
+      <td><span class="set-num ${numCls}">${i+1}</span></td>
+      <td style="text-align:center;">${lastChip}</td>
+      <td style="text-align:center;">
+        <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
+               id="inp-r-${currentExIdx}-${i}" type="number" inputmode="numeric"
+               placeholder="reps" value="${set.reps || ''}"
+               onchange="updateSet(${currentExIdx},${i},'reps',this.value)"
+               ${!isActive ? 'style="opacity:0.45;"' : ''}>
+      </td>
+      <td style="text-align:center;">
+        ${isActive ? `<button class="log-btn" onclick="logBWSet(${currentExIdx},${i})">Log</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `<table class="sets-table">
+    <thead><tr>
+      <th style="width:30px;">Set</th>
+      <th style="width:30%;">Last</th>
+      <th style="width:35%;">Reps</th>
+      <th style="width:20%;"></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderTimedTable(ex) {
+  const targetSecs = ex.reps || 30;
+
+  const rows = ex.loggedSets.map((set, i) => {
+    const isDone   = set.logged;
+    const isActive = !isDone && ex.loggedSets.slice(0, i).every(s => s.logged);
+    const numCls   = isDone ? 'done' : isActive ? 'active-set' : '';
+
+    if (isDone) {
+      return `<tr>
+        <td><span class="set-num ${numCls}">${i+1}</span></td>
+        <td style="text-align:center;"><span style="font-size:14px;font-weight:600;">${set.holdTime||'—'}</span><span class="last-val">sec</span></td>
+        <td style="text-align:center;"><span style="font-size:18px;color:var(--success);">✓</span></td>
+      </tr>`;
+    }
+    return `<tr>
+      <td><span class="set-num ${numCls}">${i+1}</span></td>
+      <td style="text-align:center;">
+        <input class="lf-num-input${isActive ? ' active-inp-highlight' : ''}"
+               id="inp-t-${currentExIdx}-${i}" type="number" inputmode="numeric"
+               placeholder="${targetSecs}s" value="${set.holdTime || ''}"
+               onchange="updateSet(${currentExIdx},${i},'holdTime',this.value)"
+               ${!isActive ? 'style="opacity:0.45;"' : ''}>
+      </td>
+      <td style="text-align:center;">
+        ${isActive ? `<button class="log-btn" onclick="logTimedSet(${currentExIdx},${i})">Log</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+
+  return `<table class="sets-table">
+    <thead><tr>
+      <th style="width:30px;">Set</th>
+      <th style="width:55%;">Hold time (sec)</th>
+      <th style="width:25%;"></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderCardioTable(ex) {
+  const set    = ex.loggedSets[0];
+  const isDone = set.logged;
+
+  if (isDone) {
+    return `<div style="padding:16px;display:flex;gap:24px;align-items:center;justify-content:center;">
+      <div style="text-align:center;"><div style="font-size:24px;font-weight:700;color:var(--text);">${set.duration||'—'}</div><div style="font-size:11px;color:var(--text-3);">minutes</div></div>
+      ${set.distance ? `<div style="text-align:center;"><div style="font-size:24px;font-weight:700;color:var(--text);">${set.distance}</div><div style="font-size:11px;color:var(--text-3);">miles</div></div>` : ''}
+      <div style="font-size:24px;color:var(--success);">✓</div>
+    </div>`;
+  }
+
+  return `<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;gap:12px;">
+      <div style="flex:1;">
+        <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Duration (min)</div>
+        <input class="lf-num-input active-inp-highlight" id="inp-cd-dur-${currentExIdx}"
+               type="number" inputmode="decimal" placeholder="20"
+               value="${set.duration || ''}" style="width:100%;"
+               onchange="updateSet(${currentExIdx},0,'duration',this.value)">
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Distance (mi) <span style="font-weight:400;text-transform:none;">optional</span></div>
+        <input class="lf-num-input" id="inp-cd-dist-${currentExIdx}"
+               type="number" inputmode="decimal" placeholder="0.0"
+               value="${set.distance || ''}" style="width:100%;"
+               onchange="updateSet(${currentExIdx},0,'distance',this.value)">
+      </div>
+    </div>
+    <button class="btn btn-volt btn-full" onclick="logCardioSet(${currentExIdx})">Log cardio</button>
+  </div>`;
+}
+
+function buildWarmupRow(ex) {
+  const fmw  = getFMW(exercises.indexOf(ex));
+  const sugW = getSuggestedWeight(ex);
+  const isFMWEx = isFirstTime(ex) && !fmw.locked;
+  if (!sugW || isFMWEx) return '';
+  const warmupW = Math.max(5, Math.round((sugW * 0.55) / 5) * 5);
+  return `<tr class="warmup-row">
+    <td><span class="set-num" style="font-size:9px;width:28px;border-radius:4px;background:var(--bg-card2);color:var(--text-3);">WU</span></td>
+    <td colspan="3" style="text-align:left;padding-left:12px;">
+      <span style="font-size:13px;font-weight:600;color:var(--text-2);">${warmupW} lbs</span>
+      <span class="warmup-label">Warm-up · ~55% · optional</span>
+    </td>
+    <td></td>
+  </tr>`;
+}
+
+// ── LOG FUNCTIONS ─────────────────────────────────────────────
 function logSet(exIdx, setIdx) {
   const ex  = exercises[exIdx];
   const set = ex.loggedSets[setIdx];
-
   const wEl = document.getElementById(`inp-w-${exIdx}-${setIdx}`);
   const rEl = document.getElementById(`inp-r-${exIdx}-${setIdx}`);
-
   const weight = wEl ? wEl.value.trim() : set.weight;
   const reps   = rEl ? rEl.value.trim() : set.reps;
-
   if (!reps) { showToast('Enter reps first'); return; }
-
-  set.weight = weight;
-  set.reps   = reps;
-  set.logged = true;
+  set.weight = weight; set.reps = reps; set.logged = true;
 
   // PR check
   const lastSession = getLastSession(ex.id || ex.name);
   if (lastSession && weight && reps) {
     const cur  = calc1RM(parseFloat(weight), parseFloat(reps));
     const prev = calc1RM(parseFloat(lastSession.bestWeight), parseFloat(lastSession.bestReps));
-    if (cur && prev && cur > prev) {
-      totalPRs++;
-      showToast('🏆 New personal record!');
-    }
+    if (cur && prev && cur > prev) { totalPRs++; showToast('🏆 New personal record!'); }
   }
 
-  // Check if all sets done for this exercise
   const allDone = ex.loggedSets.every(s => s.logged);
-
-  // Re-render sets
   renderSets(ex, lastSession);
-  renderDots();
-  updateOverallProgress();
+  renderDots(); updateOverallProgress();
 
-  // ── FMW tracking ──
   const fmw = getFMW(exIdx);
   if (isFirstTime(ex) && !fmw.locked) {
     fmw.active = true;
     fmw.sets.push({ weight: parseFloat(weight)||0, reps: parseInt(reps)||0 });
-    if (fmw.sets.length >= 3) {
-      // Lock working weight after 3rd FMW set
-      fmw.locked       = true;
-      fmw.workingWeight = parseFloat(weight) || 0;
-      fmw.active        = false;
-    }
+    if (fmw.sets.length >= 3) { fmw.locked = true; fmw.workingWeight = parseFloat(weight)||0; fmw.active = false; }
   }
 
-  // ── Voice mode: prepare next set ──
-  if (workoutMode === 'voice' && !allDone) {
-    const nextSetIdx = setIdx + 1;
-    voicePending = {
-      exIdx,
-      setIdx: nextSetIdx,
-      sugWeight: parseFloat(weight) || 0
-    };
-  }
+  if (workoutMode === 'voice' && !allDone) voicePending = { exIdx, setIdx: setIdx+1, sugWeight: parseFloat(weight)||0 };
 
-  // ── Auto-advance or start rest ──
   if (allDone) {
     const nextIdx = exIdx + 1;
-    if (nextIdx < exercises.length) {
-      const nextName = exercises[nextIdx].name;
-      startRest(ex.restSec, () => {
-        goToEx(nextIdx);
-      }, 'Next: ' + nextName);
-    } else {
-      startRest(ex.restSec, null, 'Last exercise done!');
-      checkAllDone();
-    }
-    // Trigger AI coaching
+    if (nextIdx < exercises.length) startRest(ex.restSec, () => goToEx(nextIdx), 'Next: ' + exercises[nextIdx].name);
+    else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
     fetchSetCoaching(ex, setIdx, weight, reps);
   } else {
     const nextSetNum = setIdx + 2;
     startRest(ex.restSec, async () => {
-      // FMW: get AI suggestion for next weight
       if (fmw.active && fmw.sets.length > 0 && fmw.sets.length < 3) {
         const nextW = await fetchFMWReasoning(ex, fmw, parseFloat(weight)||0);
-        fmw.sets[fmw.sets.length - 1].nextSuggest = nextW;
-        prefillWeight(exIdx, setIdx + 1, nextW);
-        // In voice mode: announce
-        if (workoutMode === 'voice') {
-          voicePending.sugWeight = nextW;
-          voicePhase = 'confirm_weight';
-          const msg = 'Try ' + nextW + ' pounds for this set. Say yes to start.';
-          updateVoiceHUD(msg);
-          startListening();
-        }
+        fmw.sets[fmw.sets.length-1].nextSuggest = nextW;
+        prefillWeight(exIdx, setIdx+1, nextW);
+        if (workoutMode === 'voice') { voicePending.sugWeight = nextW; voicePhase = 'confirm_weight'; updateVoiceHUD('Try ' + nextW + ' pounds for this set. Say yes to start.'); startListening(); }
       } else if (workoutMode === 'voice') {
-        // Standard returning exercise — voice confirms same/new weight
         voicePhase = 'confirm_weight';
-        const msg = 'Ready for Set ' + nextSetNum + '. Say yes to start, or lighter or heavier.';
-        updateVoiceHUD(msg);
+        updateVoiceHUD('Ready for Set ' + nextSetNum + '. Say yes to start, or lighter or heavier.');
         startListening();
       }
       renderSets(ex, getLastSession(ex.id || ex.name));
     }, 'Set ' + nextSetNum + ' of ' + ex.sets + ' up next');
-    // Trigger AI coaching
     fetchSetCoaching(ex, setIdx, weight, reps);
   }
+}
+
+function logBWSet(exIdx, setIdx) {
+  const ex  = exercises[exIdx];
+  const set = ex.loggedSets[setIdx];
+  const rEl = document.getElementById(`inp-r-${exIdx}-${setIdx}`);
+  const reps = rEl ? rEl.value.trim() : set.reps;
+  if (!reps) { showToast('Enter reps first'); return; }
+  set.reps = reps; set.logged = true;
+  const allDone = ex.loggedSets.every(s => s.logged);
+  renderSets(ex, null); renderDots(); updateOverallProgress();
+  if (allDone) { const ni = exIdx+1; if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
+  else { startRest(ex.restSec, () => renderSets(ex, null), 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
+}
+
+function fillBWSet(exIdx, setIdx, reps) {
+  const rEl = document.getElementById(`inp-r-${exIdx}-${setIdx}`);
+  if (rEl) { rEl.value = reps; updateSet(exIdx, setIdx, 'reps', reps); }
+}
+
+function logTimedSet(exIdx, setIdx) {
+  const ex  = exercises[exIdx];
+  const set = ex.loggedSets[setIdx];
+  const tEl = document.getElementById(`inp-t-${exIdx}-${setIdx}`);
+  const t   = tEl ? tEl.value.trim() : set.holdTime;
+  if (!t) { showToast('Enter hold time first'); return; }
+  set.holdTime = t; set.logged = true;
+  const allDone = ex.loggedSets.every(s => s.logged);
+  renderSets(ex, null); renderDots(); updateOverallProgress();
+  if (allDone) { const ni = exIdx+1; if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
+  else { startRest(ex.restSec, () => renderSets(ex, null), 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
+}
+
+function logCardioSet(exIdx) {
+  const ex  = exercises[exIdx];
+  const set = ex.loggedSets[0];
+  const dEl = document.getElementById(`inp-cd-dur-${exIdx}`);
+  const dur = dEl ? dEl.value.trim() : set.duration;
+  if (!dur) { showToast('Enter duration first'); return; }
+  const distEl = document.getElementById(`inp-cd-dist-${exIdx}`);
+  set.duration = dur;
+  set.distance = distEl ? distEl.value.trim() : '';
+  set.logged   = true;
+  renderSets(ex, null); renderDots(); updateOverallProgress();
+  const ni = exIdx+1;
+  if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name);
+  else { checkAllDone(); }
 }
 
 function updateSet(exIdx, setIdx, field, value) {
   exercises[exIdx].loggedSets[setIdx][field] = value;
 }
 
-// ── FILL SET FROM LAST SESSION ────────────────────────────────
 function fillSet(exIdx, setIdx, weight, reps) {
   const wEl = document.getElementById(`inp-w-${exIdx}-${setIdx}`);
   const rEl = document.getElementById(`inp-r-${exIdx}-${setIdx}`);
   if (wEl) { wEl.value = weight; updateSet(exIdx, setIdx, 'weight', weight); }
   if (rEl) { rEl.value = reps;   updateSet(exIdx, setIdx, 'reps',   reps);   }
-  // Brief visual feedback
   [wEl, rEl].forEach(el => {
     if (!el) return;
-    el.style.borderColor = 'var(--volt-dark)';
-    el.style.background  = 'var(--volt-bg)';
-    setTimeout(() => {
-      el.style.borderColor = '';
-      el.style.background  = '';
-    }, 600);
+    el.style.borderColor = 'var(--volt-dark)'; el.style.background = 'var(--volt-bg)';
+    setTimeout(() => { el.style.borderColor = ''; el.style.background = ''; }, 600);
   });
 }
 
-// ── REST TIMER ───────────────────────────────────────────────
+// ── REST TIMER ────────────────────────────────────────────────
 let restCallback = null;
 
 function startRest(seconds, onComplete, nextLabel) {
-  restCallback  = onComplete;
-  restRemaining = seconds || 90;
+  restCallback = onComplete; restRemaining = seconds || 90;
   updateRestDisplay();
   const overlay = document.getElementById('rest-overlay');
-  const nextEl  = document.getElementById('rest-next-label');
-  if (nextEl) nextEl.textContent = nextLabel || '';
+  document.getElementById('rest-next-label').textContent = nextLabel || '';
   overlay.classList.add('show');
   document.body.classList.add('rest-open');
   clearInterval(restInterval);
   restInterval = setInterval(() => {
     restRemaining--;
-    if (restRemaining <= 0) {
-      restRemaining = 0;
-      updateRestDisplay();
-      stopRest();
-      if (restCallback) { restCallback(); restCallback = null; }
-    } else {
-      updateRestDisplay();
-    }
+    if (restRemaining <= 0) { restRemaining = 0; updateRestDisplay(); stopRest(); if (restCallback) { restCallback(); restCallback = null; } }
+    else updateRestDisplay();
   }, 1000);
 }
 
 function stopRest() {
-  clearInterval(restInterval);
-  restInterval = null;
+  clearInterval(restInterval); restInterval = null;
   document.getElementById('rest-overlay').classList.remove('show');
   document.body.classList.remove('rest-open');
 }
 
-function skipRest() {
-  stopRest();
-  if (restCallback) { restCallback(); restCallback = null; }
-}
-
-function adjustRest(delta) {
-  restRemaining = Math.max(5, restRemaining + delta);
-  updateRestDisplay();
-}
-
+function skipRest() { stopRest(); if (restCallback) { restCallback(); restCallback = null; } }
+function adjustRest(delta) { restRemaining = Math.max(5, restRemaining + delta); updateRestDisplay(); }
 function updateRestDisplay() {
-  const m  = Math.floor(restRemaining / 60);
-  const s  = restRemaining % 60;
+  const m = Math.floor(restRemaining/60), s = restRemaining%60;
   const el = document.getElementById('rest-display');
-  el.textContent = m + ':' + String(s).padStart(2, '0');
+  el.textContent = m + ':' + String(s).padStart(2,'0');
   el.style.color = restRemaining <= 10 ? '#ef4444' : '#c6f135';
 }
 
-// ── NAVIGATION ───────────────────────────────────────────────
-function updateNavButtons() {
-  // Nav arrows removed — auto-advance only
-}
-
+// ── OVERALL PROGRESS ──────────────────────────────────────────
 function updateOverallProgress() {
-  const total  = exercises.reduce((acc, ex) => acc + ex.loggedSets.length, 0);
-  const done   = exercises.reduce((acc, ex) => acc + ex.loggedSets.filter(s => s.logged).length, 0);
-  const pct    = total ? Math.round((done / total) * 100) : 0;
+  if (isFreeForm) { checkAllDone(); return; }
+  const total = exercises.reduce((a,ex) => a + ex.loggedSets.length, 0);
+  const done  = exercises.reduce((a,ex) => a + ex.loggedSets.filter(s => s.logged).length, 0);
+  const pct   = total ? Math.round((done/total)*100) : 0;
   document.getElementById('overall-prog').style.width = pct + '%';
   checkAllDone();
 }
 
 function checkAllDone() {
-  const allDone = exercises.every(ex => ex.loggedSets.every(s => s.logged));
+  if (isFreeForm) return; // free form always shows finish button
+  const allDone = exercises.length > 0 && exercises.every(ex => ex.loggedSets.every(s => s.logged));
   document.getElementById('finish-bar').classList.toggle('show', allDone);
 }
 
-// ── LAST SESSION LOOKUP ──────────────────────────────────────
+// ── LAST SESSION LOOKUP ───────────────────────────────────────
 function getLastSession(exIdOrName) {
   const history = store.get('workout_history', {});
   const dates   = Object.keys(history).sort().reverse();
@@ -1488,16 +1269,11 @@ function getLastSession(exIdOrName) {
     if (date === todayKey) continue;
     const session = history[date];
     if (!session || !session.exercises) continue;
-    const found = session.exercises.find(e =>
-      e.id === exIdOrName || e.name === exIdOrName
-    );
+    const found = session.exercises.find(e => e.id === exIdOrName || e.name === exIdOrName);
     if (found && found.sets && found.sets.length) {
       let bestWeight = 0, bestReps = 0;
       found.sets.forEach(s => {
-        if ((parseFloat(s.weight) || 0) >= bestWeight) {
-          bestWeight = parseFloat(s.weight) || 0;
-          bestReps   = parseFloat(s.reps)   || 0;
-        }
+        if ((parseFloat(s.weight)||0) >= bestWeight) { bestWeight = parseFloat(s.weight)||0; bestReps = parseFloat(s.reps)||0; }
       });
       return { bestWeight, bestReps, date, sets: found.sets };
     }
@@ -1505,251 +1281,304 @@ function getLastSession(exIdOrName) {
   return null;
 }
 
-// ── FINISH WORKOUT ───────────────────────────────────────────
+// ── FINISH WORKOUT ────────────────────────────────────────────
 function finishWorkout() {
-  stopRest();
-  clearInterval(elapsedTimer);
-
+  stopRest(); clearInterval(elapsedTimer);
   const durationMs  = startTime ? Date.now() - startTime : 0;
   const durationMin = Math.round(durationMs / 60000);
 
-  // Calculate total volume
   let totalVolume = 0;
   exercises.forEach(ex => {
-    ex.loggedSets.forEach(s => {
-      if (s.logged) {
-        totalVolume += (parseFloat(s.weight) || 0) * (parseFloat(s.reps) || 0);
-      }
-    });
+    if (isStrength(ex) || isBW(ex)) {
+      ex.loggedSets.forEach(s => {
+        if (s.logged) totalVolume += (parseFloat(s.weight)||0) * (parseFloat(s.reps)||0);
+      });
+    }
   });
 
-  // Save to history
-  const history = store.get('workout_history', {});
+  const history  = store.get('workout_history', {});
   const programs = store.get('programs', []);
   const activeId = store.get('active_program', null);
   const program  = programs.find(p => p.id === activeId);
   const dayIndex = (new Date().getDay() + 6) % 7;
-  const dayPlan  = program && program.days && program.days[dayIndex];
+  const dayPlan  = !isFreeForm && program && program.days && program.days[dayIndex];
+  const wName    = isFreeForm
+    ? (document.getElementById('free-workout-name').value.trim() || 'Free Workout')
+    : (dayPlan ? dayPlan.name : 'Workout');
 
   history[todayKey] = {
-    name:        dayPlan ? dayPlan.name : 'Workout',
+    name:        wName,
     durationMin,
     totalVolume: Math.round(totalVolume),
     prs:         totalPRs,
+    freeForm:    isFreeForm,
+    notes:       Object.values(exNotes).filter(Boolean),
     exercises:   exercises.map(ex => {
       const loggedSets = ex.loggedSets.filter(s => s.logged).map(s => ({
-        weight: parseFloat(s.weight) || 0,
-        reps:   parseFloat(s.reps)   || 0
+        weight:   parseFloat(s.weight)   || 0,
+        reps:     parseFloat(s.reps)     || 0,
+        holdTime: parseFloat(s.holdTime) || 0,
+        duration: parseFloat(s.duration) || 0,
+        distance: parseFloat(s.distance) || 0
       }));
       const best1RM = loggedSets.reduce((best, s) => {
         const orm = calc1RM(s.weight, s.reps);
-        return orm > best ? orm : best;
+        return (orm && orm > best) ? orm : best;
       }, 0);
-      return {
-        id:      ex.id,
-        name:    ex.name,
-        sets:    loggedSets,
-        best1RM: best1RM || null
-      };
+      return { id: ex.id, name: ex.name, type: exTypeOf(ex), sets: loggedSets, best1RM: best1RM||null, note: exNotes[exercises.indexOf(ex)] || '' };
     })
   };
   store.set('workout_history', history);
 
-  // Show completion screen
+  // Completion screen
   show('completion-state');
   document.getElementById('overall-prog-wrap').style.display = 'none';
   document.getElementById('btn-finish-top').style.display    = 'none';
   document.getElementById('workout-timer').style.display     = 'none';
-  document.getElementById('header-title').textContent = 'Workout complete';
-  document.getElementById('header-sub').textContent   = '';
-
+  setHeader('Workout complete', '');
   document.getElementById('c-duration').textContent = durationMin || '—';
-  document.getElementById('c-volume').textContent   =
-    totalVolume >= 1000 ? (totalVolume / 1000).toFixed(1) + 'k' : Math.round(totalVolume) || '—';
+  document.getElementById('c-volume').textContent   = totalVolume >= 1000 ? (totalVolume/1000).toFixed(1)+'k' : Math.round(totalVolume)||'—';
   document.getElementById('c-prs').textContent      = totalPRs || '0';
-
-  const setsLogged = exercises.reduce((acc, ex) =>
-    acc + ex.loggedSets.filter(s => s.logged).length, 0);
-  document.getElementById('completion-sub').textContent =
-    setsLogged + ' sets logged · ' + exercises.length + ' exercises';
-
-  // Fetch AI analysis
+  const setsLogged = exercises.reduce((a,ex) => a + ex.loggedSets.filter(s=>s.logged).length, 0);
+  document.getElementById('completion-sub').textContent = setsLogged + ' sets logged · ' + exercises.length + ' exercises';
   fetchAIAnalysis(durationMin, totalVolume, totalPRs, exercises);
 }
 
-// ── AI ANALYSIS ──────────────────────────────────────────────
+// ── AI ANALYSIS ───────────────────────────────────────────────
 async function fetchAIAnalysis(durationMin, totalVolume, prs, exList) {
-  // Build workout summary for prompt
   const summary = exList.map(ex => {
     const sets = ex.loggedSets.filter(s => s.logged);
     if (!sets.length) return null;
-    const best = sets.reduce((b, s) =>
-      (parseFloat(s.weight) || 0) > (parseFloat(b.weight) || 0) ? s : b, sets[0]);
-    return `${ex.name}: ${sets.length} sets, best set ${best.weight || '—'} lbs × ${best.reps || '—'} reps`;
+    if (isCardio(ex)) return `${ex.name}: ${sets[0].duration||'?'} min, ${sets[0].distance||'0'} mi`;
+    if (isTimed(ex))  return `${ex.name}: ${sets.length} sets, best hold ${Math.max(...sets.map(s=>parseFloat(s.holdTime)||0))}s`;
+    const best = sets.reduce((b,s) => (parseFloat(s.weight)||0) > (parseFloat(b.weight)||0) ? s : b, sets[0]);
+    return `${ex.name}: ${sets.length} sets, best ${best.weight||'—'} lbs × ${best.reps||'—'} reps`;
   }).filter(Boolean).join('\n');
 
-  const prompt = `You are a supportive, expert fitness coach. Analyze this workout and give brief, personalized feedback in 3-4 sentences. Be specific, encouraging, and practical. Mention what went well, one area to focus on next time, and one actionable tip.
-
-Workout summary:
-- Duration: ${durationMin} minutes
-- Total volume: ${Math.round(totalVolume)} lbs
-- Personal records: ${prs}
-- Exercises:
-${summary}
-
-Keep response under 80 words. Be direct and coach-like, not generic.`;
+  const prompt = `You are a supportive, expert fitness coach. Analyze this workout and give brief, personalized feedback in 3-4 sentences. Be specific, encouraging, and practical.\n\nWorkout:\n- Duration: ${durationMin} minutes\n- Total volume: ${Math.round(totalVolume)} lbs\n- PRs: ${prs}\n- Exercises:\n${summary}\n\nUnder 80 words. Be direct and coach-like.`;
 
   try {
-    const res = await fetch(SUPABASE_AI_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-        'apikey': SUPABASE_ANON_KEY
-      },
-      body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 200,
-        messages:   [{ role: 'user', content: prompt }]
-      })
-    });
-
+    const res  = await fetch(SUPABASE_AI_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON_KEY,'apikey':SUPABASE_ANON_KEY}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:200, messages:[{role:'user',content:prompt}] }) });
     const data = await res.json();
-    const text = data.content && data.content[0] && data.content[0].text
-      ? data.content[0].text
-      : 'Great workout! Keep up the consistency.';
-
-    document.getElementById('ai-loading').style.display      = 'none';
+    const text = data.content && data.content[0] && data.content[0].text ? data.content[0].text : 'Great workout! Keep up the consistency.';
+    document.getElementById('ai-loading').style.display       = 'none';
     document.getElementById('ai-analysis-text').style.display = 'block';
     document.getElementById('ai-analysis-text').textContent   = text;
-
-    // Save insight to dashboard
     store.set('ai_insight', { date: todayKey, text });
-
-  } catch (err) {
-    document.getElementById('ai-loading').style.display      = 'none';
+  } catch {
+    document.getElementById('ai-loading').style.display       = 'none';
     document.getElementById('ai-analysis-text').style.display = 'block';
-    document.getElementById('ai-analysis-text').textContent   =
-      'Great work finishing your workout! Stay consistent and you\'ll see results.';
+    document.getElementById('ai-analysis-text').textContent   = "Great work finishing your workout! Stay consistent and you'll see results.";
   }
 }
 
-// ── START ANYWAY (rest day override) ─────────────────────────
-function startAnyway() {
-  // Build a blank workout with no exercises — user can log freely
-  // For now redirect to programs to pick a day
-  location.href = 'programs.html';
-}
-
-// ── REST TIME FORMAT ─────────────────────────────────────────
+// ── FORMAT HELPERS ─────────────────────────────────────────────
 function formatRest(secs) {
   if (!secs) return '60s rest';
   if (secs < 60) return secs + 's rest';
-  if (secs % 60 === 0) return Math.floor(secs / 60) + 'm rest';
+  if (secs % 60 === 0) return Math.floor(secs/60) + 'm rest';
   return secs + 's rest';
 }
 
-// ── TOAST ────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── TOAST ─────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg) {
   const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
+  el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
 }
 
-// ── ACTIVE INPUT HIGHLIGHT ───────────────────────────────────
-// Add a style for active inputs
-const style = document.createElement('style');
-style.textContent = `.active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }`;
-document.head.appendChild(style);
+// ── EXERCISE LOOKUP ───────────────────────────────────────────
+function lookupExName(id) {
+  if (!id || typeof LAROFIT_EXERCISES === 'undefined') return 'Exercise';
+  const f = LAROFIT_EXERCISES.find(e => e.id === id);
+  return f ? f.name : id;
+}
+function lookupExType(id) {
+  if (!id || typeof LAROFIT_EXERCISES === 'undefined') return 'strength';
+  const f = LAROFIT_EXERCISES.find(e => e.id === id);
+  return f ? (f.type || 'strength') : 'strength';
+}
+function lookupGifUrl(id) {
+  if (!id || typeof LAROFIT_EXERCISES === 'undefined') return null;
+  const f = LAROFIT_EXERCISES.find(e => e.id === id);
+  return f ? (f.gifUrl || null) : null;
+}
 
+// ── FREE FORM EXERCISE PICKER ─────────────────────────────────
+let pickerCat = 'all';
+
+function buildExPicker() {
+  // Build category pills
+  const cats = [
+    { id:'all', name:'All' },
+    { id:'chest', name:'Chest' }, { id:'back', name:'Back' },
+    { id:'shoulders', name:'Shoulders' }, { id:'biceps', name:'Biceps' },
+    { id:'triceps', name:'Triceps' }, { id:'legs', name:'Legs' },
+    { id:'core', name:'Core' }, { id:'cardio', name:'Cardio' },
+    { id:'fullbody', name:'Full body' },
+  ];
+  const catsEl = document.getElementById('ex-picker-cats');
+  catsEl.innerHTML = cats.map(c =>
+    `<button class="ex-picker-cat${c.id===pickerCat?' active':''}" onclick="setPickerCat('${c.id}')">${c.name}</button>`
+  ).join('');
+}
+
+function openExPicker() {
+  buildExPicker();
+  filterPicker();
+  document.getElementById('ex-picker-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('ex-picker-search').focus(), 200);
+}
+
+function closeExPicker() {
+  document.getElementById('ex-picker-overlay').classList.remove('show');
+  document.getElementById('ex-picker-search').value = '';
+  filterPicker();
+}
+
+function closeExPickerIfBackdrop(e) {
+  if (e.target === document.getElementById('ex-picker-overlay')) closeExPicker();
+}
+
+function setPickerCat(cat) {
+  pickerCat = cat;
+  buildExPicker();
+  filterPicker();
+}
+
+function filterPicker() {
+  const q = (document.getElementById('ex-picker-search').value || '').toLowerCase().trim();
+  if (typeof LAROFIT_EXERCISES === 'undefined') return;
+
+  const results = LAROFIT_EXERCISES.filter(ex => {
+    const catMatch = pickerCat === 'all' || ex.category === pickerCat;
+    const qMatch   = !q || ex.name.toLowerCase().includes(q);
+    return catMatch && qMatch;
+  }).slice(0, 80);
+
+  const catIcons = { chest:'🏋️', back:'🔙', shoulders:'💪', biceps:'💪', triceps:'💪', legs:'🦵', core:'⭕', cardio:'🏃', fullbody:'⚡', yoga:'🧘', stretching:'🤸', recovery:'💆' };
+
+  document.getElementById('ex-picker-list').innerHTML = results.length
+    ? results.map(ex => `
+        <div class="ex-picker-row" onclick="addExerciseFreeForm('${ex.id}')">
+          <div class="ex-picker-icon">${catIcons[ex.category]||'💪'}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="ex-picker-name">${escHtml(ex.name)}</div>
+            <div class="ex-picker-sub">${ex.category||''} · ${(ex.eq||'').toUpperCase()}</div>
+          </div>
+          <span class="ex-picker-add">+ Add</span>
+        </div>`).join('')
+    : `<div style="padding:40px 16px;text-align:center;color:var(--text-3);font-size:14px;">No exercises found</div>`;
+}
+
+function addExerciseFreeForm(exId) {
+  if (typeof LAROFIT_EXERCISES === 'undefined') return;
+  const data = LAROFIT_EXERCISES.find(e => e.id === exId);
+  if (!data) return;
+
+  const newEx = {
+    id:         data.id,
+    name:       data.name,
+    sets:       3,
+    reps:       10,
+    restSec:    90,
+    type:       data.type || 'strength',
+    gifUrl:     data.gifUrl || null,
+    loggedSets: buildLoggedSets({ id: data.id, sets: 3, reps: 10, type: data.type })
+  };
+
+  exercises.push(newEx);
+  closeExPicker();
+
+  // Show the exercise card if this is the first exercise
+  if (exercises.length === 1) {
+    document.getElementById('ex-card').style.display = 'block';
+    document.getElementById('ex-dots').style.display  = 'block';
+  }
+
+  goToEx(exercises.length - 1);
+  renderDots();
+  showToast(data.name + ' added');
+}
 
 // ══════════════════════════════════════════════════════════════
 //  AI COACH LAYER
 // ══════════════════════════════════════════════════════════════
 
-// ── MODE ──────────────────────────────────────────────────────
 let workoutMode = 'standard';
 
-function getMode() {
-  const settings = store.get('settings', {});
-  return settings.workoutMode || 'standard';
-}
+function getMode() { const s = store.get('settings', {}); return s.workoutMode || 'standard'; }
 
 function setMode(mode) {
   workoutMode = mode;
-  const settings = store.get('settings', {});
-  settings.workoutMode = mode;
-  store.set('settings', settings);
+  const s = store.get('settings', {}); s.workoutMode = mode; store.set('settings', s);
   document.getElementById('mode-standard').classList.toggle('active', mode === 'standard');
-  document.getElementById('mode-voice').classList.toggle('active', mode === 'voice');
-  if (mode === 'voice') {
-    initVoice();
-  } else {
-    stopListening();
-    document.getElementById('voice-hud').classList.remove('show');
-  }
+  document.getElementById('mode-voice').classList.toggle('active',    mode === 'voice');
+  if (mode === 'voice') initVoice();
+  else { stopListening(); document.getElementById('voice-hud').classList.remove('show'); }
 }
 
-// ── EXERCISE DATA LOOKUP ──────────────────────────────────────
 function lookupExData(id) {
   if (!id || typeof LAROFIT_EXERCISES === 'undefined') return null;
   return LAROFIT_EXERCISES.find(e => e.id === id) || null;
 }
 
-// ── CATEGORY MULTIPLIERS FOR FMW ─────────────────────────────
-const EQ_MULTIPLIER = {
-  bb:0.35, db:0.12, mc:0.20, cd:0.12,
-  band:0.05, rc:0.12, kb:0.12, bw:0, yoga:0
-};
+const EQ_MULTIPLIER = { bb:0.35, db:0.12, mc:0.20, cd:0.12, band:0.05, rc:0.12, kb:0.12, bw:0, yoga:0 };
 const ISOLATION_CATEGORIES = ['shoulders','arms','core'];
 
 function getFMWStartWeight(ex) {
   const data = lookupExData(ex.id);
-  const eq   = data ? data.eq   : 'db';
+  const eq   = data ? data.eq : 'db';
   const cat  = data ? data.category : '';
-  const profile = store.get('profile', {});
-  const bw  = parseFloat(profile.weight) || 160;
-  let mult = EQ_MULTIPLIER[eq] !== undefined ? EQ_MULTIPLIER[eq] : 0.12;
+  const bw   = parseFloat((store.get('profile',{})).weight) || 160;
+  let mult   = EQ_MULTIPLIER[eq] !== undefined ? EQ_MULTIPLIER[eq] : 0.12;
   if (mult > 0 && ISOLATION_CATEGORIES.includes(cat)) mult = Math.min(mult, 0.05);
   if (mult === 0) return 0;
-  const raw = bw * mult;
-  return Math.max(5, Math.round(raw / 5) * 5);
+  return Math.max(5, Math.round((bw * mult) / 5) * 5);
 }
 
-// ── PROGRESSION FORMULA (returning exercise) ─────────────────
 function getSuggestedWeight(ex) {
   const last = getLastSession(ex.id || ex.name);
   if (!last || !last.bestWeight) return null;
-  const data = lookupExData(ex.id);
-  const eq   = data ? data.eq : 'db';
-  const lowerBodyCats = ['legs','glutes'];
-  const cat = data ? data.category : '';
-  const isLower = lowerBodyCats.includes(cat) && eq === 'bb';
+  const data      = lookupExData(ex.id);
+  const eq        = data ? data.eq : 'db';
+  const cat       = data ? data.category : '';
+  const isLower   = ['legs','glutes'].includes(cat) && eq === 'bb';
   const increment = isLower ? 10 : 5;
-  const targetReps = ex.reps || 10;
-  if (last.bestReps >= targetReps) return last.bestWeight + increment;
-  return last.bestWeight;
+  return last.bestReps >= (ex.reps||10) ? last.bestWeight + increment : last.bestWeight;
 }
 
-// ── IS FIRST TIME ─────────────────────────────────────────────
-function isFirstTime(ex) {
-  const last = getLastSession(ex.id || ex.name);
-  return !last || !last.bestWeight;
-}
+function isFirstTime(ex) { const l = getLastSession(ex.id||ex.name); return !l||!l.bestWeight; }
 
-// ── FMW STATE ─────────────────────────────────────────────────
 const fmwState = {};
 function getFMW(exIdx) {
-  if (!fmwState[exIdx]) {
-    fmwState[exIdx] = { active:false, sets:[], locked:false, workingWeight:null };
-  }
+  if (!fmwState[exIdx]) fmwState[exIdx] = { active:false, sets:[], locked:false, workingWeight:null };
   return fmwState[exIdx];
 }
 
-// ── API CALL: PER-SET COACHING ────────────────────────────────
+function renderSugChip(ex, exIdx) {
+  const fmw = getFMW(exIdx);
+  if (isFirstTime(ex) && !fmw.locked) return '<span class="fmw-badge">⚡ FIND MY WEIGHT</span>';
+  const sug = getSuggestedWeight(ex);
+  if (!sug) return '';
+  return `<button class="sug-chip" onclick="applySuggestion(${exIdx},${sug})" title="Tap to apply suggested weight"><span class="sug-chip-arrow">↑</span> ${sug} lbs</button>`;
+}
+
+function applySuggestion(exIdx, weight) {
+  const ex = exercises[exIdx];
+  ex.loggedSets.forEach((s,i) => {
+    if (!s.logged) { s.weight = weight; const el = document.getElementById('inp-w-'+exIdx+'-'+i); if (el) el.value = weight; }
+  });
+  showToast('Applied ' + weight + ' lbs to remaining sets');
+  renderSets(ex, getLastSession(ex.id||ex.name));
+}
+
 async function fetchSetCoaching(ex, setIdx, weight, reps) {
   const restAiSection = document.getElementById('rest-ai-section');
   const restAiSpinner = document.getElementById('rest-ai-spinner');
@@ -1758,156 +1587,94 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
   restAiSection.style.display = 'flex';
   restAiSpinner.style.display = 'block';
   restAiText.textContent      = 'Analyzing your set...';
-  const last    = getLastSession(ex.id || ex.name);
-  const allSets = ex.loggedSets.filter(s => s.logged);
-  const setNum  = setIdx + 1;
-  const totalSets = ex.sets;
-  const lastLine = last
-    ? 'Last session best: ' + last.bestWeight + ' lbs x ' + last.bestReps + ' reps'
-    : 'First time doing this exercise';
-  const setsLine = allSets.length > 1
-    ? 'Sets this session: ' + allSets.map((s,i) => 'Set '+(i+1)+': '+(s.weight||'?')+' lbs x '+(s.reps||'?')+' reps').join(', ')
-    : '';
-  const nextSetNum = setIdx + 2;
-  const isLastSet  = nextSetNum > totalSets;
-  const nextLine   = isLastSet ? 'This was the final set.' : 'Next: Set ' + nextSetNum + ' of ' + totalSets + '.';
-  const profile = store.get('profile', {});
-  const level   = profile.level || 'intermediate';
-  const targetReps = ex.reps || 10;
-  const repCount   = parseInt(reps) || 0;
-  const wtNum      = parseFloat(weight) || 0;
 
-  // Equipment-based increment
-  const exData = lookupExData(ex.id);
-  const exEq   = exData ? exData.eq : 'db';
-  function getIncrement(currentWeight, eq) {
-    if (eq === 'bb' || eq === 'mc') return 5;
-    if (eq === 'db' || eq === 'kb') return currentWeight < 30 ? 2.5 : 5;
-    if (eq === 'cd' || eq === 'rc') return 5;
-    if (eq === 'band')              return 0; // bands don't have exact increments
-    return 5; // default
-  }
-  const increment  = getIncrement(wtNum, exEq);
-  const reduceAmt  = exEq === 'bb' ? 10 : (wtNum < 30 ? 5 : 10);
-  const newWeightUp   = wtNum + increment;
-  const newWeightDown = Math.max(5, wtNum - reduceAmt);
-
-  // Determine rep-based recommendation
+  const last      = getLastSession(ex.id||ex.name);
+  const allSets   = ex.loggedSets.filter(s => s.logged);
+  const setNum    = setIdx + 1;
+  const lastLine  = last ? 'Last session best: '+last.bestWeight+' lbs x '+last.bestReps+' reps' : 'First time doing this exercise';
+  const setsLine  = allSets.length > 1 ? 'Sets this session: '+allSets.map((s,i)=>'Set '+(i+1)+': '+(s.weight||'?')+' lbs x '+(s.reps||'?')+' reps').join(', ') : '';
+  const isLastSet = setIdx + 2 > ex.sets;
+  const nextLine  = isLastSet ? 'This was the final set.' : 'Next: Set '+(setIdx+2)+' of '+ex.sets+'.';
+  const profile   = store.get('profile', {});
+  const level     = profile.level || 'intermediate';
+  const repCount  = parseInt(reps)||0;
+  const wtNum     = parseFloat(weight)||0;
+  const exData    = lookupExData(ex.id);
+  const exEq      = exData ? exData.eq : 'db';
+  const increment = (exEq==='bb'||exEq==='mc') ? 5 : (wtNum<30 ? 2.5 : 5);
+  const reduceAmt = exEq==='bb' ? 10 : (wtNum<30 ? 5 : 10);
   let repRule;
-  if (repCount <= 5)      repRule = 'Rep count is LOW (<=5). Weight is too heavy. Recommend REDUCING to ' + newWeightDown + ' lbs next set. Be direct.';
-  else if (repCount <= 9) repRule = 'Rep count is MODERATE (6-9). Good working weight. Recommend HOLDING at ' + wtNum + ' lbs next set.';
-  else                    repRule = 'Rep count is HIGH (10+). Too easy. Recommend INCREASING to ' + newWeightUp + ' lbs next set.';
-
-  const prompt = 'You are a direct expert fitness coach giving real-time feedback during a rest period. Respond in 1-2 sentences max (under 35 words). Always give a specific weight recommendation.\n\nRULES YOU MUST FOLLOW:\n- <=5 reps = weight is too heavy, reduce it\n- 6-9 reps = good working weight, hold it\n- 10+ reps = too easy, increase weight\n\nExercise: ' + ex.name + '\nTarget reps: ' + targetReps + '\nAthlete level: ' + level + '\n' + lastLine + '\n' + setsLine + '\nJust logged - Set ' + setNum + ': ' + wtNum + ' lbs x ' + repCount + ' reps\n' + nextLine + '\n' + repRule + '\n\n' + (isLastSet ? 'Summarize this exercise performance and whether the weight was appropriate.' : 'State the exact weight to use for Set ' + nextSetNum + ' and why in one sentence.');
+  if (repCount<=5)      repRule = 'Rep count LOW (<=5). Weight too heavy. Recommend REDUCING to '+(wtNum-reduceAmt)+' lbs next set.';
+  else if (repCount<=9) repRule = 'Rep count MODERATE (6-9). Good weight. Recommend HOLDING at '+wtNum+' lbs next set.';
+  else                  repRule = 'Rep count HIGH (10+). Weight manageable. Recommend INCREASING to '+(wtNum+increment)+' lbs next set.';
+  const prompt = 'You are an expert fitness coach giving real-time set feedback. Be concise (max 20 words), direct, and actionable.\n\nExercise: '+ex.name+'\nAthlete level: '+level+'\nSet '+setNum+': '+weight+' lbs x '+reps+' reps\n'+lastLine+'\n'+(setsLine||'')+'\n'+nextLine+'\n'+repRule+'\n\nGive one sentence of coaching advice for their next set (or rest if last set).';
   try {
-    const res = await fetch(SUPABASE_AI_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-        'apikey': SUPABASE_ANON_KEY
-      },
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:80,
-        messages:[{ role:'user', content:prompt }]
-      })
-    });
+    const res  = await fetch(SUPABASE_AI_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON_KEY,'apikey':SUPABASE_ANON_KEY}, body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:60,messages:[{role:'user',content:prompt}]}) });
     const data = await res.json();
-    const text = data.content && data.content[0] && data.content[0].text
-      ? data.content[0].text.trim() : 'Good set - keep pushing!';
+    const text = data.content&&data.content[0]&&data.content[0].text ? data.content[0].text.trim() : 'Good set — keep that form tight.';
     restAiSpinner.style.display = 'none';
     restAiText.textContent      = text;
     if (workoutMode === 'voice') speakText(text);
-  } catch(err) {
+  } catch {
     restAiSpinner.style.display = 'none';
-    restAiText.textContent      = 'Good set - stay focused!';
+    restAiText.textContent      = 'Good set — rest up for the next one.';
   }
 }
 
-// ── API CALL: FMW REASONING ───────────────────────────────────
 async function fetchFMWReasoning(ex, fmw, currentWeight) {
   const restAiSection = document.getElementById('rest-ai-section');
   const restAiSpinner = document.getElementById('rest-ai-spinner');
   const restAiText    = document.getElementById('rest-ai-text');
   if (!restAiSection) return currentWeight;
-  restAiSection.style.display = 'flex';
-  restAiSpinner.style.display = 'block';
-  restAiText.textContent      = 'Finding your working weight...';
-  const setHistory = fmw.sets.map((s,i) => 'Set '+(i+1)+': '+s.weight+' lbs x '+s.reps+' reps').join(', ');
-  const lastSet  = fmw.sets[fmw.sets.length - 1];
-  const lastReps = lastSet ? parseInt(lastSet.reps)||0 : 0;
-  const isLastFMW = fmw.sets.length >= 2;
-  const profile = store.get('profile', {});
-  const level   = profile.level || 'intermediate';
-  const prompt = 'You are an expert fitness coach running a Find My Weight session. Rep rules: <=5 reps = reduce weight 20-40%, 6-9 reps = working weight found, 10+ reps = increase weight.\n\nExercise: '+ex.name+'\nAthlete level: '+level+'\nSets so far: '+setHistory+'\nLast set reps: '+lastReps+'\n\n'+(isLastFMW ? 'This is the final FMW set. Declare the working weight.' : 'Suggest weight for next FMW set.')+'\n\nReply ONLY: number|brief reasoning (under 25 words). Example: 45|Good starting point.';
+  restAiSection.style.display = 'flex'; restAiSpinner.style.display = 'block';
+  restAiText.textContent = 'Finding your working weight...';
+  const setHistory = fmw.sets.map((s,i)=>'Set '+(i+1)+': '+s.weight+' lbs x '+s.reps+' reps').join(', ');
+  const lastReps   = fmw.sets[fmw.sets.length-1] ? parseInt(fmw.sets[fmw.sets.length-1].reps)||0 : 0;
+  const isLastFMW  = fmw.sets.length >= 2;
+  const profile    = store.get('profile', {});
+  const prompt     = 'You are an expert fitness coach running a Find My Weight session. Rep rules: <=5 reps = reduce weight 20-40%, 6-9 reps = working weight found, 10+ reps = increase weight.\n\nExercise: '+ex.name+'\nAthlete level: '+(profile.level||'intermediate')+'\nSets so far: '+setHistory+'\nLast set reps: '+lastReps+'\n\n'+(isLastFMW?'This is the final FMW set. Declare the working weight.':'Suggest weight for next FMW set.')+'\n\nReply ONLY: number|brief reasoning (under 25 words). Example: 45|Good starting point.';
   try {
-    const res = await fetch(SUPABASE_AI_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-        'apikey': SUPABASE_ANON_KEY
-      },
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:80,
-        messages:[{ role:'user', content:prompt }]
-      })
-    });
+    const res  = await fetch(SUPABASE_AI_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_ANON_KEY,'apikey':SUPABASE_ANON_KEY}, body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:80,messages:[{role:'user',content:prompt}]}) });
     const data = await res.json();
-    const raw  = data.content && data.content[0] && data.content[0].text
-      ? data.content[0].text.trim() : '';
-    const parts     = raw.split('|');
-    const sugWeight = parseFloat(parts[0]) || currentWeight;
+    const raw  = data.content&&data.content[0]&&data.content[0].text ? data.content[0].text.trim() : '';
+    const parts = raw.split('|');
+    const sugWeight = parseFloat(parts[0])||currentWeight;
     const reasoning = parts[1] ? parts[1].trim() : 'Adjust based on how that felt.';
-    restAiSpinner.style.display = 'none';
-    restAiText.textContent      = reasoning;
-    if (workoutMode === 'voice') speakText(reasoning);
-    return Math.max(5, Math.round(sugWeight / 5) * 5);
-  } catch(err) {
-    restAiSpinner.style.display = 'none';
-    restAiText.textContent      = 'Good effort - adjust based on how that felt.';
+    restAiSpinner.style.display = 'none'; restAiText.textContent = reasoning;
+    if (workoutMode==='voice') speakText(reasoning);
+    return Math.max(5, Math.round(sugWeight/5)*5);
+  } catch {
+    restAiSpinner.style.display = 'none'; restAiText.textContent = 'Good effort — adjust based on how that felt.';
     return currentWeight;
   }
 }
 
-// ── VOICE: SPEECH RECOGNITION ────────────────────────────────
-let recognition   = null;
-let isListening   = false;
-let voicePhase    = 'idle';
-let voicePending  = { exIdx:0, setIdx:0, sugWeight:0 };
+// ── VOICE ─────────────────────────────────────────────────────
+let recognition = null, isListening = false, voicePhase = 'idle';
+let voicePending = { exIdx:0, setIdx:0, sugWeight:0 };
 
 function initVoice() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) { showToast('Voice not supported on this browser'); setMode('standard'); return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('Voice not supported on this browser'); setMode('standard'); return; }
   if (recognition) return;
-  recognition = new SpeechRecognition();
-  recognition.continuous     = false;
-  recognition.interimResults = false;
-  recognition.lang           = 'en-US';
+  recognition = new SR();
+  recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'en-US';
   recognition.onresult = e => {
-    const transcript = e.results[0][0].transcript.toLowerCase().trim();
-    document.getElementById('voice-hud-heard').textContent = '"' + transcript + '"';
-    handleVoiceResult(transcript);
+    const t = e.results[0][0].transcript.toLowerCase().trim();
+    document.getElementById('voice-hud-heard').textContent = '"' + t + '"';
+    handleVoiceResult(t);
   };
   recognition.onend = () => {
     isListening = false;
     document.getElementById('voice-pulse').classList.remove('listening');
     if (voicePhase !== 'idle' && workoutMode === 'voice') setTimeout(startListening, 400);
   };
-  recognition.onerror = () => {
-    isListening = false;
-    document.getElementById('voice-pulse').classList.remove('listening');
-  };
+  recognition.onerror = () => { isListening = false; document.getElementById('voice-pulse').classList.remove('listening'); };
 }
 
 function startListening() {
   if (!recognition || isListening) return;
-  try {
-    recognition.start();
-    isListening = true;
-    document.getElementById('voice-hud').classList.add('show');
-    document.getElementById('voice-pulse').classList.add('listening');
-  } catch(e) {}
+  try { recognition.start(); isListening = true; document.getElementById('voice-hud').classList.add('show'); document.getElementById('voice-pulse').classList.add('listening'); } catch(e) {}
 }
 
 function stopListening() {
@@ -1921,44 +1688,27 @@ function stopListening() {
 
 function handleVoiceResult(transcript) {
   if (voicePhase === 'confirm_weight') {
-    if (/yes|yeah|yep|ok|okay|sure|go|start|correct|good/.test(transcript)) {
-      voicePhase = 'count_reps';
-      const msg  = 'Start your set. Count reps aloud or say the number when done.';
-      updateVoiceHUD(msg); speakText(msg);
-    } else if (/lighter|less|too heavy|lower|reduce|down/.test(transcript)) {
-      voicePending.sugWeight = Math.max(5, voicePending.sugWeight - 10);
-      const msg = 'Reduced to ' + voicePending.sugWeight + ' lbs. Say yes to start.';
-      updateVoiceHUD(msg); speakText(msg);
-      prefillWeight(voicePending.exIdx, voicePending.setIdx, voicePending.sugWeight);
-    } else if (/heavier|more|too light|higher|increase|up/.test(transcript)) {
-      voicePending.sugWeight += 10;
-      const msg = 'Increased to ' + voicePending.sugWeight + ' lbs. Say yes to start.';
-      updateVoiceHUD(msg); speakText(msg);
-      prefillWeight(voicePending.exIdx, voicePending.setIdx, voicePending.sugWeight);
-    }
+    if (/yes|yeah|yep|ok|okay|sure|go|start|correct|good/.test(transcript)) { voicePhase='count_reps'; const msg='Start your set. Count reps aloud or say the number when done.'; updateVoiceHUD(msg); speakText(msg); }
+    else if (/lighter|less|too heavy|lower|reduce|down/.test(transcript)) { voicePending.sugWeight=Math.max(5,voicePending.sugWeight-10); const msg='Reduced to '+voicePending.sugWeight+' lbs. Say yes to start.'; updateVoiceHUD(msg); speakText(msg); prefillWeight(voicePending.exIdx,voicePending.setIdx,voicePending.sugWeight); }
+    else if (/heavier|more|too light|higher|increase|up/.test(transcript)) { voicePending.sugWeight+=10; const msg='Increased to '+voicePending.sugWeight+' lbs. Say yes to start.'; updateVoiceHUD(msg); speakText(msg); prefillWeight(voicePending.exIdx,voicePending.setIdx,voicePending.sugWeight); }
     return;
   }
   if (voicePhase === 'count_reps') {
     const num = extractNumber(transcript);
     if (num !== null) {
       voicePhase = 'idle';
-      const exIdx  = voicePending.exIdx;
-      const setIdx = voicePending.setIdx;
-      prefillReps(exIdx, setIdx, num);
-      updateVoiceHUD('Logging ' + num + ' reps at ' + voicePending.sugWeight + ' lbs...');
+      prefillReps(voicePending.exIdx, voicePending.setIdx, num);
+      updateVoiceHUD('Logging '+num+' reps at '+voicePending.sugWeight+' lbs...');
       stopListening();
-      setTimeout(() => logSet(exIdx, setIdx), 300);
+      setTimeout(() => logSet(voicePending.exIdx, voicePending.setIdx), 300);
     }
   }
 }
 
 function extractNumber(text) {
-  const words = {zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,
-    nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,
-    sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20};
+  const words={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20};
   for (const [w,n] of Object.entries(words)) { if (text.includes(w)) return n; }
-  const match = text.match(/\d+/);
-  return match ? parseInt(match[0]) : null;
+  const m = text.match(/\d+/); return m ? parseInt(m[0]) : null;
 }
 
 function prefillWeight(exIdx, setIdx, weight) {
@@ -1973,47 +1723,18 @@ function prefillReps(exIdx, setIdx, reps) {
   if (el) el.value = reps;
 }
 
-function updateVoiceHUD(msg) {
-  const el = document.getElementById('voice-hud-text');
-  if (el) el.textContent = msg;
-}
+function updateVoiceHUD(msg) { const el=document.getElementById('voice-hud-text'); if(el) el.textContent=msg; }
 
-// ── SPEECH SYNTHESIS ──────────────────────────────────────────
 function speakText(text) {
   if (!window.speechSynthesis || workoutMode !== 'voice') return;
   window.speechSynthesis.cancel();
-  const utt  = new SpeechSynthesisUtterance(text);
-  utt.rate   = 1.05; utt.pitch = 1.0; utt.volume = 1.0;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.rate=1.05; utt.pitch=1.0; utt.volume=1.0;
   window.speechSynthesis.speak(utt);
 }
 
-// ── SUGGESTION CHIP ───────────────────────────────────────────
-function renderSugChip(ex, exIdx) {
-  const fmw = getFMW(exIdx);
-  if (isFirstTime(ex) && !fmw.locked) {
-    return '<span class="fmw-badge">\u26a1 FIND MY WEIGHT</span>';
-  }
-  const sug = getSuggestedWeight(ex);
-  if (!sug) return '';
-  return '<button class="sug-chip" onclick="applySuggestion('+exIdx+','+sug+')" title="Tap to apply suggested weight"><span class="sug-chip-arrow">\u2191</span> '+sug+' lbs</button>';
-}
-
-function applySuggestion(exIdx, weight) {
-  const ex = exercises[exIdx];
-  ex.loggedSets.forEach((s,i) => {
-    if (!s.logged) {
-      s.weight = weight;
-      const el = document.getElementById('inp-w-'+exIdx+'-'+i);
-      if (el) el.value = weight;
-    }
-  });
-  showToast('Applied ' + weight + ' lbs to remaining sets');
-  renderSets(ex, getLastSession(ex.id || ex.name));
-}
-
-// ── INIT ────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Wire rest buttons with simple onclick — no touch event complexity
   document.getElementById('btn-minus').onclick = () => adjustRest(-15);
   document.getElementById('btn-plus').onclick  = () => adjustRest(15);
   document.getElementById('btn-skip').onclick  = () => skipRest();

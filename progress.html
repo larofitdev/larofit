@@ -337,6 +337,68 @@ canvas {
   font-size: 12px;
   color: var(--text-3);
 }
+
+/* ── PR ROW TAPPABLE ── */
+.pr-row {
+  cursor: pointer;
+  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.pr-row:active { background: var(--bg-card2); }
+.pr-row-chevron { font-size: 14px; color: var(--text-3); flex-shrink: 0; }
+
+/* ── EXERCISE HISTORY SHEET ── */
+.ex-hist-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 400; display: none; align-items: flex-end; justify-content: center;
+}
+.ex-hist-overlay.show { display: flex; }
+.ex-hist-sheet {
+  background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden;
+}
+.ex-hist-header {
+  padding: 16px 16px 12px; border-bottom: 0.5px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.ex-hist-name {
+  flex: 1; font-size: 17px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ex-hist-close {
+  padding: 6px; color: var(--text-3); font-size: 20px; flex-shrink: 0;
+}
+.ex-hist-body { overflow-y: auto; flex: 1; padding: 0 0 24px; }
+.ex-hist-chart-wrap {
+  margin: 14px 16px 0;
+  background: var(--bg-card2);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.ex-hist-chart-title { font-size: 11px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; font-family: var(--font-mono); }
+.ex-hist-stats {
+  display: flex; gap: 10px; margin: 12px 16px 0;
+}
+.ex-hist-stat {
+  flex: 1; background: var(--bg-card2); border-radius: var(--radius-sm);
+  padding: 10px; text-align: center;
+}
+.ex-hist-stat-val   { font-family: var(--font-display); font-size: 22px; color: var(--volt-dark); letter-spacing: 0.5px; line-height: 1; }
+.ex-hist-stat-label { font-size: 10px; color: var(--text-3); margin-top: 3px; }
+.ex-hist-section-label {
+  font-size: 10px; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 14px 16px 6px; font-family: var(--font-mono);
+}
+.ex-hist-log-row {
+  display: flex; align-items: center; padding: 10px 16px; gap: 12px;
+  border-bottom: 0.5px solid var(--border);
+}
+.ex-hist-log-row:last-child { border-bottom: none; }
+.ex-hist-log-date { font-size: 12px; font-weight: 600; color: var(--text); width: 72px; flex-shrink: 0; font-family: var(--font-mono); }
+.ex-hist-log-sets { flex: 1; font-size: 12px; color: var(--text-3); line-height: 1.5; }
+.ex-hist-log-best { font-size: 13px; font-weight: 700; color: var(--text); text-align: right; flex-shrink: 0; font-family: var(--font-mono); }
+.ex-hist-log-orm  { font-size: 10px; color: var(--volt-dark); text-align: right; font-family: var(--font-mono); margin-top: 1px; }
 </style>
 </head>
 <body>
@@ -445,6 +507,19 @@ canvas {
   </div>
 
 </main>
+
+<!-- EXERCISE HISTORY DRILL-IN SHEET -->
+<div class="ex-hist-overlay" id="ex-hist-overlay" onclick="closeExHistIfBackdrop(event)">
+  <div class="ex-hist-sheet" id="ex-hist-sheet">
+    <div class="ex-hist-header">
+      <div class="ex-hist-name" id="ex-hist-name">Exercise History</div>
+      <button class="ex-hist-close" onclick="closeExHist()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="ex-hist-body" id="ex-hist-body">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</div>
 
 <script>
 /* ============================================================
@@ -868,7 +943,7 @@ function renderPRs() {
   }
 
   listEl.innerHTML = rows.map(([name, data], i) => `
-    <div class="pr-row">
+    <div class="pr-row" onclick="openExHist(${JSON.stringify(esc(name))})" role="button" tabindex="0" aria-label="View history for ${esc(name)}">
       <div class="pr-rank">${i + 1}</div>
       <div class="pr-name">${esc(name)}</div>
       <div class="pr-vals">
@@ -876,6 +951,7 @@ function renderPRs() {
         <div class="pr-orm-label">Est. 1RM</div>
         <div class="pr-best">${data.weight}×${data.reps} · ${fmtDate(data.date)}</div>
       </div>
+      <i class="ti ti-chevron-right pr-row-chevron"></i>
     </div>`).join('');
 }
 
@@ -931,13 +1007,120 @@ function esc(str) {
   const log = JSON.parse(localStorage.getItem('lf_measurements_log') || '[]');
   const el  = document.getElementById('meas-summary');
   if (!el) return;
-  if (!log.length) return; // keep default text
+  if (!log.length) return;
   const latest = log.sort((a,b) => new Date(b.date) - new Date(a.date))[0];
   const d = new Date(latest.date + 'T12:00:00');
   const label = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
   const wt = latest.weight ? ` · ${latest.weight} lbs` : '';
   el.textContent = `Last logged ${label}${wt}`;
 })();
+
+// ── EXERCISE HISTORY DRILL-IN ─────────────────────────────────
+function openExHist(exName) {
+  document.getElementById('ex-hist-name').textContent = exName;
+  document.getElementById('ex-hist-overlay').classList.add('show');
+  renderExHist(exName);
+}
+
+function closeExHist() {
+  document.getElementById('ex-hist-overlay').classList.remove('show');
+}
+
+function closeExHistIfBackdrop(e) {
+  if (e.target === document.getElementById('ex-hist-overlay')) closeExHist();
+}
+
+function renderExHist(exName) {
+  const body = document.getElementById('ex-hist-body');
+
+  // Gather all sessions for this exercise, sorted oldest → newest
+  const sessions = [];
+  allEntries()
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([dateStr, session]) => {
+      const ex = (session.exercises || []).find(e => e.name === exName);
+      if (!ex || !ex.sets || !ex.sets.length) return;
+      let bestWeight = 0, bestReps = 0, best1RM = 0;
+      ex.sets.forEach(s => {
+        const w = parseFloat(s.weight) || 0;
+        const r = parseFloat(s.reps)   || 0;
+        const orm = calc1RM(w, r);
+        if (w > bestWeight || (w === bestWeight && r > bestReps)) { bestWeight = w; bestReps = r; }
+        if (orm && orm > best1RM) best1RM = orm;
+      });
+      sessions.push({ dateStr, sets: ex.sets, bestWeight, bestReps, best1RM });
+    });
+
+  if (!sessions.length) {
+    body.innerHTML = `<div style="padding:48px 24px;text-align:center;color:var(--text-3);font-size:14px;">No history found for this exercise.</div>`;
+    return;
+  }
+
+  // Summary stats
+  const totalSessions = sessions.length;
+  const allTimeBest1RM = Math.max(...sessions.map(s => s.best1RM || 0));
+  const allTimeBestW   = Math.max(...sessions.map(s => s.bestWeight || 0));
+  const firstDate      = fmtDate(sessions[0].dateStr);
+
+  // Weight over time data for chart
+  const chartLabels = sessions.map(s => fmtDate(s.dateStr));
+  const chartValues = sessions.map(s => s.best1RM || s.bestWeight || 0);
+
+  // Build HTML
+  let html = '';
+
+  // Stats row
+  html += `<div class="ex-hist-stats">
+    <div class="ex-hist-stat">
+      <div class="ex-hist-stat-val">${allTimeBest1RM || allTimeBestW}</div>
+      <div class="ex-hist-stat-label">Best Est. 1RM</div>
+    </div>
+    <div class="ex-hist-stat">
+      <div class="ex-hist-stat-val">${allTimeBestW}</div>
+      <div class="ex-hist-stat-label">Best weight</div>
+    </div>
+    <div class="ex-hist-stat">
+      <div class="ex-hist-stat-val">${totalSessions}</div>
+      <div class="ex-hist-stat-label">Sessions</div>
+    </div>
+  </div>`;
+
+  // Chart (if enough data)
+  if (sessions.length >= 2) {
+    html += `<div class="ex-hist-chart-wrap">
+      <div class="ex-hist-chart-title">Estimated 1RM over time</div>
+      <canvas id="ex-hist-chart" height="100" style="width:100%;"></canvas>
+    </div>`;
+  }
+
+  // Session log
+  html += `<div class="ex-hist-section-label">Session log</div>`;
+  html += sessions.slice().reverse().map(s => {
+    const setsStr = s.sets.map((set, i) =>
+      `${set.weight || '—'}×${set.reps || '—'}`
+    ).join(' · ');
+    const orm = s.best1RM ? `~${s.best1RM} 1RM` : '';
+    return `<div class="ex-hist-log-row">
+      <div class="ex-hist-log-date">${fmtDate(s.dateStr)}</div>
+      <div class="ex-hist-log-sets">${setsStr}</div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div class="ex-hist-log-best">${s.bestWeight} lbs</div>
+        ${orm ? `<div class="ex-hist-log-orm">${orm}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = html;
+
+  // Draw chart after DOM insertion
+  if (sessions.length >= 2) {
+    requestAnimationFrame(() => {
+      const canvas = document.getElementById('ex-hist-chart');
+      if (canvas) drawLineChart(canvas, chartLabels, chartValues, '#c6f135');
+    });
+  }
+}
+
 </script>
 
 </body>
