@@ -543,6 +543,172 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ── MODE TOGGLE PILL ── */
+.mode-toggle {
+  display: flex;
+  background: var(--bg-card2);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+  border: 0.5px solid var(--border);
+}
+.mode-btn {
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.18s;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+.mode-btn.active {
+  background: var(--bg-dark);
+  color: var(--volt);
+}
+
+/* ── WARM-UP ROW ── */
+.warmup-row td {
+  background: var(--bg-card2);
+  opacity: 0.75;
+}
+.warmup-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── SUGGESTION CHIP ── */
+.sug-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(198,241,53,0.08);
+  border: 1px solid rgba(198,241,53,0.25);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--volt-dark);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.sug-chip:active { opacity: 0.7; }
+.sug-chip-arrow { font-size: 10px; }
+
+/* ── FMW BADGE ── */
+.fmw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.3);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--warning);
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+
+/* ── REST OVERLAY AI SECTION ── */
+.rest-ai-section {
+  margin: 0 0 18px 0;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  border: 1px solid rgba(198,241,53,0.12);
+  text-align: left;
+  min-height: 54px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.rest-ai-icon {
+  font-size: 14px;
+  color: var(--volt);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.rest-ai-text {
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.55;
+  flex: 1;
+}
+.rest-ai-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.15);
+  border-top-color: var(--volt);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* ── VOICE HUD ── */
+.voice-hud {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 12px);
+  left: 16px;
+  right: 16px;
+  background: var(--bg-dark);
+  border-radius: var(--radius);
+  border: 1px solid rgba(198,241,53,0.2);
+  padding: 14px 16px;
+  z-index: 200;
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+.voice-hud.show { display: flex; }
+.voice-pulse {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(198,241,53,0.12);
+  border: 2px solid var(--volt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 15px;
+  transition: all 0.2s;
+}
+.voice-pulse.listening {
+  background: rgba(198,241,53,0.25);
+  box-shadow: 0 0 0 6px rgba(198,241,53,0.12);
+  animation: voicePulse 1.2s ease-in-out infinite;
+}
+@keyframes voicePulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(198,241,53,0.12); }
+  50%       { box-shadow: 0 0 0 10px rgba(198,241,53,0.05); }
+}
+.voice-hud-text {
+  flex: 1;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  line-height: 1.4;
+}
+.voice-hud-heard {
+  font-size: 11px;
+  color: var(--volt-dark);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
 </style>
 </head>
 <body>
@@ -567,6 +733,11 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
                     border-radius:var(--radius-sm);font-family:var(--font-mono);
                     display:none;">
           0:00
+        </div>
+        <!-- Mode toggle -->
+        <div class="mode-toggle" id="mode-toggle" style="display:none;">
+          <button class="mode-btn active" id="mode-standard" onclick="setMode('standard')">Standard</button>
+          <button class="mode-btn" id="mode-voice" onclick="setMode('voice')">&#127908; Voice</button>
         </div>
         <button class="btn btn-ghost btn-sm" id="btn-finish-top"
                 style="display:none;color:var(--volt-dark);font-weight:700;"
@@ -707,6 +878,15 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
 </main>
 
+<!-- VOICE HUD -->
+<div class="voice-hud" id="voice-hud">
+  <div class="voice-pulse" id="voice-pulse">🎤</div>
+  <div>
+    <div class="voice-hud-text" id="voice-hud-text">Listening...</div>
+    <div class="voice-hud-heard" id="voice-hud-heard"></div>
+  </div>
+</div>
+
 <!-- REST TIMER POPUP -->
 <div id="rest-overlay" class="rest-overlay" style="
   pointer-events:all;
@@ -723,9 +903,14 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     position:relative;
     z-index:501;
   ">
-    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.14em;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:12px;">Rest</div>
-    <div id="rest-next-label" style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:8px;min-height:20px;"></div>
-    <div id="rest-display" style="font-family:var(--font-display);font-size:80px;color:#c6f135;letter-spacing:4px;line-height:1;margin-bottom:28px;">1:30</div>
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.14em;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:8px;">Rest</div>
+    <div id="rest-next-label" style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:6px;min-height:18px;"></div>
+    <div id="rest-display" style="font-family:var(--font-display);font-size:72px;color:#c6f135;letter-spacing:4px;line-height:1;margin-bottom:14px;">1:30</div>
+    <!-- AI coaching section -->
+    <div class="rest-ai-section" id="rest-ai-section" style="display:none;">
+      <div class="rest-ai-spinner" id="rest-ai-spinner"></div>
+      <div class="rest-ai-text" id="rest-ai-text">Analyzing your set...</div>
+    </div>
     <div style="display:flex;gap:10px;justify-content:center;margin-bottom:14px;">
       <button id="btn-minus" style="
         padding:14px 0;width:120px;
@@ -853,6 +1038,12 @@ function init() {
 
   document.getElementById('workout-timer').style.display = 'block';
   document.getElementById('btn-finish-top').style.display = 'block';
+  document.getElementById('mode-toggle').style.display    = 'flex';
+  // Load saved mode preference
+  workoutMode = getMode();
+  document.getElementById('mode-standard').classList.toggle('active', workoutMode === 'standard');
+  document.getElementById('mode-voice').classList.toggle('active', workoutMode === 'voice');
+  if (workoutMode === 'voice') initVoice();
 
   // Start elapsed timer
   elapsedTimer = setInterval(updateElapsed, 1000);
@@ -951,15 +1142,64 @@ function renderExercise() {
     prevEl.style.display = 'none';
   }
 
-  // Pre-fill removed — fields stay blank for voice/manual entry
-  // Last chip provides last session values on demand
+  // Show suggestion chip or FMW badge in header sub
+  const metaEl = document.getElementById('ex-meta');
+  const chipHTML = renderSugChip(ex, currentExIdx);
+  metaEl.innerHTML =
+    ex.sets + ' sets · ' + ex.reps + ' reps · ' + formatRest(ex.restSec) +
+    (chipHTML ? ' &nbsp;' + chipHTML : '');
+
+  // In voice mode: announce the exercise and suggested weight
+  if (workoutMode === 'voice') {
+    const isFMW = isFirstTime(ex);
+    const sug   = getSuggestedWeight(ex);
+    const fmwW  = getFMWStartWeight(ex);
+    let announcement;
+    if (isFMW) {
+      announcement = 'Starting Find My Weight for ' + ex.name +
+        '. We will begin with ' + fmwW + ' pounds. Say yes to start or lighter to reduce.';
+      voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: fmwW };
+      prefillWeight(currentExIdx, 0, fmwW);
+      voicePhase = 'confirm_weight';
+      updateVoiceHUD(announcement);
+    } else if (sug) {
+      announcement = ex.name + '. Suggested weight: ' + sug + ' pounds. Say yes to start, or lighter or heavier to adjust.';
+      voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: sug };
+      prefillWeight(currentExIdx, 0, sug);
+      voicePhase = 'confirm_weight';
+      updateVoiceHUD(announcement);
+    } else {
+      announcement = 'Starting ' + ex.name + '. ' + ex.sets + ' sets of ' + ex.reps + ' reps.';
+      updateVoiceHUD(announcement);
+    }
+    setTimeout(() => speakText(announcement), 300);
+    startListening();
+  }
 
   renderSets(ex, lastSession);
 }
 
 function renderSets(ex, lastSession) {
   const tbody = document.getElementById('sets-body');
-  tbody.innerHTML = ex.loggedSets.map((set, i) => {
+
+  // Warm-up row — only for exercises with a suggestion (not bodyweight/FMW)
+  let warmupHTML = '';
+  const fmw = getFMW(exercises.indexOf(ex));
+  const sugW = getSuggestedWeight(ex);
+  const isFMWEx = isFirstTime(ex) && !fmw.locked;
+  if (sugW && !isFMWEx) {
+    const warmupW = Math.max(5, Math.round((sugW * 0.55) / 5) * 5);
+    warmupHTML = `<tr class="warmup-row">
+      <td><span class="set-num" style="font-size:9px;width:28px;border-radius:4px;background:var(--bg-card2);color:var(--text-3);">WU</span></td>
+      <td colspan="3" style="text-align:left;padding-left:12px;">
+        <span style="font-size:13px;font-weight:600;color:var(--text-2);">${warmupW} lbs</span>
+        <span class="warmup-label">Warm-up · ~55% · optional</span>
+      </td>
+      <td></td>
+    </tr>`;
+  }
+
+  tbody.innerHTML = warmupHTML + ex.loggedSets.map((set, i) => {
     const isDone   = set.logged;
     const isActive = !isDone && ex.loggedSets.slice(0, i).every(s => s.logged);
     const numCls   = isDone ? 'done' : isActive ? 'active-set' : '';
@@ -1077,7 +1317,30 @@ function logSet(exIdx, setIdx) {
   renderDots();
   updateOverallProgress();
 
-  // Auto-advance or start rest
+  // ── FMW tracking ──
+  const fmw = getFMW(exIdx);
+  if (isFirstTime(ex) && !fmw.locked) {
+    fmw.active = true;
+    fmw.sets.push({ weight: parseFloat(weight)||0, reps: parseInt(reps)||0 });
+    if (fmw.sets.length >= 3) {
+      // Lock working weight after 3rd FMW set
+      fmw.locked       = true;
+      fmw.workingWeight = parseFloat(weight) || 0;
+      fmw.active        = false;
+    }
+  }
+
+  // ── Voice mode: prepare next set ──
+  if (workoutMode === 'voice' && !allDone) {
+    const nextSetIdx = setIdx + 1;
+    voicePending = {
+      exIdx,
+      setIdx: nextSetIdx,
+      sugWeight: parseFloat(weight) || 0
+    };
+  }
+
+  // ── Auto-advance or start rest ──
   if (allDone) {
     const nextIdx = exIdx + 1;
     if (nextIdx < exercises.length) {
@@ -1089,11 +1352,35 @@ function logSet(exIdx, setIdx) {
       startRest(ex.restSec, null, 'Last exercise done!');
       checkAllDone();
     }
+    // Trigger AI coaching
+    fetchSetCoaching(ex, setIdx, weight, reps);
   } else {
     const nextSetNum = setIdx + 2;
-    startRest(ex.restSec, () => {
+    startRest(ex.restSec, async () => {
+      // FMW: get AI suggestion for next weight
+      if (fmw.active && fmw.sets.length > 0 && fmw.sets.length < 3) {
+        const nextW = await fetchFMWReasoning(ex, fmw, parseFloat(weight)||0);
+        fmw.sets[fmw.sets.length - 1].nextSuggest = nextW;
+        prefillWeight(exIdx, setIdx + 1, nextW);
+        // In voice mode: announce
+        if (workoutMode === 'voice') {
+          voicePending.sugWeight = nextW;
+          voicePhase = 'confirm_weight';
+          const msg = 'Try ' + nextW + ' pounds for this set. Say yes to start.';
+          updateVoiceHUD(msg);
+          startListening();
+        }
+      } else if (workoutMode === 'voice') {
+        // Standard returning exercise — voice confirms same/new weight
+        voicePhase = 'confirm_weight';
+        const msg = 'Ready for Set ' + nextSetNum + '. Say yes to start, or lighter or heavier.';
+        updateVoiceHUD(msg);
+        startListening();
+      }
       renderSets(ex, getLastSession(ex.id || ex.name));
     }, 'Set ' + nextSetNum + ' of ' + ex.sets + ' up next');
+    // Trigger AI coaching
+    fetchSetCoaching(ex, setIdx, weight, reps);
   }
 }
 
@@ -1323,7 +1610,12 @@ Keep response under 80 words. Be direct and coach-like, not generic.`;
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model:      'claude-sonnet-4-20250514',
         max_tokens: 200,
@@ -1381,6 +1673,341 @@ function showToast(msg) {
 const style = document.createElement('style');
 style.textContent = `.active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }`;
 document.head.appendChild(style);
+
+
+// ══════════════════════════════════════════════════════════════
+//  AI COACH LAYER
+// ══════════════════════════════════════════════════════════════
+
+// ── MODE ──────────────────────────────────────────────────────
+let workoutMode = 'standard';
+
+function getMode() {
+  const settings = store.get('settings', {});
+  return settings.workoutMode || 'standard';
+}
+
+function setMode(mode) {
+  workoutMode = mode;
+  const settings = store.get('settings', {});
+  settings.workoutMode = mode;
+  store.set('settings', settings);
+  document.getElementById('mode-standard').classList.toggle('active', mode === 'standard');
+  document.getElementById('mode-voice').classList.toggle('active', mode === 'voice');
+  if (mode === 'voice') {
+    initVoice();
+  } else {
+    stopListening();
+    document.getElementById('voice-hud').classList.remove('show');
+  }
+}
+
+// ── EXERCISE DATA LOOKUP ──────────────────────────────────────
+function lookupExData(id) {
+  if (!id || typeof LAROFIT_EXERCISES === 'undefined') return null;
+  return LAROFIT_EXERCISES.find(e => e.id === id) || null;
+}
+
+// ── CATEGORY MULTIPLIERS FOR FMW ─────────────────────────────
+const EQ_MULTIPLIER = {
+  bb:0.35, db:0.12, mc:0.20, cd:0.12,
+  band:0.05, rc:0.12, kb:0.12, bw:0, yoga:0
+};
+const ISOLATION_CATEGORIES = ['shoulders','arms','core'];
+
+function getFMWStartWeight(ex) {
+  const data = lookupExData(ex.id);
+  const eq   = data ? data.eq   : 'db';
+  const cat  = data ? data.category : '';
+  const profile = store.get('profile', {});
+  const bw  = parseFloat(profile.weight) || 160;
+  let mult = EQ_MULTIPLIER[eq] !== undefined ? EQ_MULTIPLIER[eq] : 0.12;
+  if (mult > 0 && ISOLATION_CATEGORIES.includes(cat)) mult = Math.min(mult, 0.05);
+  if (mult === 0) return 0;
+  const raw = bw * mult;
+  return Math.max(5, Math.round(raw / 5) * 5);
+}
+
+// ── PROGRESSION FORMULA (returning exercise) ─────────────────
+function getSuggestedWeight(ex) {
+  const last = getLastSession(ex.id || ex.name);
+  if (!last || !last.bestWeight) return null;
+  const data = lookupExData(ex.id);
+  const eq   = data ? data.eq : 'db';
+  const lowerBodyCats = ['legs','glutes'];
+  const cat = data ? data.category : '';
+  const isLower = lowerBodyCats.includes(cat) && eq === 'bb';
+  const increment = isLower ? 10 : 5;
+  const targetReps = ex.reps || 10;
+  if (last.bestReps >= targetReps) return last.bestWeight + increment;
+  return last.bestWeight;
+}
+
+// ── IS FIRST TIME ─────────────────────────────────────────────
+function isFirstTime(ex) {
+  const last = getLastSession(ex.id || ex.name);
+  return !last || !last.bestWeight;
+}
+
+// ── FMW STATE ─────────────────────────────────────────────────
+const fmwState = {};
+function getFMW(exIdx) {
+  if (!fmwState[exIdx]) {
+    fmwState[exIdx] = { active:false, sets:[], locked:false, workingWeight:null };
+  }
+  return fmwState[exIdx];
+}
+
+// ── API CALL: PER-SET COACHING ────────────────────────────────
+async function fetchSetCoaching(ex, setIdx, weight, reps) {
+  const apiKey = store.get('anthropic_key', null);
+  const restAiSection = document.getElementById('rest-ai-section');
+  const restAiSpinner = document.getElementById('rest-ai-spinner');
+  const restAiText    = document.getElementById('rest-ai-text');
+  if (!restAiSection) return;
+  restAiSection.style.display = 'flex';
+  restAiSpinner.style.display = 'block';
+  restAiText.textContent      = 'Analyzing your set...';
+  if (!apiKey) {
+    restAiSpinner.style.display = 'none';
+    restAiText.textContent = 'Add your API key in Profile \u2192 Settings to get AI coaching.';
+    return;
+  }
+  const last    = getLastSession(ex.id || ex.name);
+  const allSets = ex.loggedSets.filter(s => s.logged);
+  const setNum  = setIdx + 1;
+  const totalSets = ex.sets;
+  const lastLine = last
+    ? 'Last session best: ' + last.bestWeight + ' lbs x ' + last.bestReps + ' reps'
+    : 'First time doing this exercise';
+  const setsLine = allSets.length > 1
+    ? 'Sets this session: ' + allSets.map((s,i) => 'Set '+(i+1)+': '+(s.weight||'?')+' lbs x '+(s.reps||'?')+' reps').join(', ')
+    : '';
+  const nextSetNum = setIdx + 2;
+  const isLastSet  = nextSetNum > totalSets;
+  const nextLine   = isLastSet ? 'This was the final set.' : 'Next: Set ' + nextSetNum + ' of ' + totalSets + '.';
+  const profile = store.get('profile', {});
+  const level   = profile.level || 'intermediate';
+  const prompt = 'You are a concise expert fitness coach giving real-time feedback during a workout rest period. Respond in 1-2 sentences max (under 35 words). Be specific and actionable.\n\nExercise: ' + ex.name + '\nAthlete level: ' + level + '\n' + lastLine + '\n' + setsLine + '\nJust logged - Set ' + setNum + ': ' + (weight||'?') + ' lbs x ' + (reps||'?') + ' reps\n' + nextLine + '\nTarget reps: ' + ex.reps + '\n\nGive brief feedback on this set and ' + (isLastSet ? 'summarize the exercise performance' : 'suggest weight for Set ' + nextSetNum) + '.';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:80,
+        messages:[{ role:'user', content:prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content && data.content[0] && data.content[0].text
+      ? data.content[0].text.trim() : 'Good set - keep pushing!';
+    restAiSpinner.style.display = 'none';
+    restAiText.textContent      = text;
+    if (workoutMode === 'voice') speakText(text);
+  } catch(err) {
+    restAiSpinner.style.display = 'none';
+    restAiText.textContent      = 'Good set - stay focused!';
+  }
+}
+
+// ── API CALL: FMW REASONING ───────────────────────────────────
+async function fetchFMWReasoning(ex, fmw, currentWeight) {
+  const apiKey = store.get('anthropic_key', null);
+  const restAiSection = document.getElementById('rest-ai-section');
+  const restAiSpinner = document.getElementById('rest-ai-spinner');
+  const restAiText    = document.getElementById('rest-ai-text');
+  if (!restAiSection) return currentWeight;
+  restAiSection.style.display = 'flex';
+  restAiSpinner.style.display = 'block';
+  restAiText.textContent      = 'Finding your working weight...';
+  if (!apiKey) {
+    restAiSpinner.style.display = 'none';
+    restAiText.textContent = 'Add your API key in Profile for FMW AI guidance.';
+    return currentWeight;
+  }
+  const setHistory = fmw.sets.map((s,i) => 'Set '+(i+1)+': '+s.weight+' lbs x '+s.reps+' reps').join(', ');
+  const lastSet  = fmw.sets[fmw.sets.length - 1];
+  const lastReps = lastSet ? parseInt(lastSet.reps)||0 : 0;
+  const isLastFMW = fmw.sets.length >= 2;
+  const profile = store.get('profile', {});
+  const level   = profile.level || 'intermediate';
+  const prompt = 'You are an expert fitness coach running a Find My Weight session. Rep rules: <=5 reps = reduce weight 20-40%, 6-9 reps = working weight found, 10+ reps = increase weight.\n\nExercise: '+ex.name+'\nAthlete level: '+level+'\nSets so far: '+setHistory+'\nLast set reps: '+lastReps+'\n\n'+(isLastFMW ? 'This is the final FMW set. Declare the working weight.' : 'Suggest weight for next FMW set.')+'\n\nReply ONLY: number|brief reasoning (under 25 words). Example: 45|Good starting point.';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:80,
+        messages:[{ role:'user', content:prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw  = data.content && data.content[0] && data.content[0].text
+      ? data.content[0].text.trim() : '';
+    const parts     = raw.split('|');
+    const sugWeight = parseFloat(parts[0]) || currentWeight;
+    const reasoning = parts[1] ? parts[1].trim() : 'Adjust based on how that felt.';
+    restAiSpinner.style.display = 'none';
+    restAiText.textContent      = reasoning;
+    if (workoutMode === 'voice') speakText(reasoning);
+    return Math.max(5, Math.round(sugWeight / 5) * 5);
+  } catch(err) {
+    restAiSpinner.style.display = 'none';
+    restAiText.textContent      = 'Good effort - adjust based on how that felt.';
+    return currentWeight;
+  }
+}
+
+// ── VOICE: SPEECH RECOGNITION ────────────────────────────────
+let recognition   = null;
+let isListening   = false;
+let voicePhase    = 'idle';
+let voicePending  = { exIdx:0, setIdx:0, sugWeight:0 };
+
+function initVoice() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { showToast('Voice not supported on this browser'); setMode('standard'); return; }
+  if (recognition) return;
+  recognition = new SpeechRecognition();
+  recognition.continuous     = false;
+  recognition.interimResults = false;
+  recognition.lang           = 'en-US';
+  recognition.onresult = e => {
+    const transcript = e.results[0][0].transcript.toLowerCase().trim();
+    document.getElementById('voice-hud-heard').textContent = '"' + transcript + '"';
+    handleVoiceResult(transcript);
+  };
+  recognition.onend = () => {
+    isListening = false;
+    document.getElementById('voice-pulse').classList.remove('listening');
+    if (voicePhase !== 'idle' && workoutMode === 'voice') setTimeout(startListening, 400);
+  };
+  recognition.onerror = () => {
+    isListening = false;
+    document.getElementById('voice-pulse').classList.remove('listening');
+  };
+}
+
+function startListening() {
+  if (!recognition || isListening) return;
+  try {
+    recognition.start();
+    isListening = true;
+    document.getElementById('voice-hud').classList.add('show');
+    document.getElementById('voice-pulse').classList.add('listening');
+  } catch(e) {}
+}
+
+function stopListening() {
+  voicePhase = 'idle';
+  if (!recognition || !isListening) return;
+  try { recognition.stop(); } catch(e) {}
+  isListening = false;
+  document.getElementById('voice-hud').classList.remove('show');
+  document.getElementById('voice-pulse').classList.remove('listening');
+}
+
+function handleVoiceResult(transcript) {
+  if (voicePhase === 'confirm_weight') {
+    if (/yes|yeah|yep|ok|okay|sure|go|start|correct|good/.test(transcript)) {
+      voicePhase = 'count_reps';
+      const msg  = 'Start your set. Count reps aloud or say the number when done.';
+      updateVoiceHUD(msg); speakText(msg);
+    } else if (/lighter|less|too heavy|lower|reduce|down/.test(transcript)) {
+      voicePending.sugWeight = Math.max(5, voicePending.sugWeight - 10);
+      const msg = 'Reduced to ' + voicePending.sugWeight + ' lbs. Say yes to start.';
+      updateVoiceHUD(msg); speakText(msg);
+      prefillWeight(voicePending.exIdx, voicePending.setIdx, voicePending.sugWeight);
+    } else if (/heavier|more|too light|higher|increase|up/.test(transcript)) {
+      voicePending.sugWeight += 10;
+      const msg = 'Increased to ' + voicePending.sugWeight + ' lbs. Say yes to start.';
+      updateVoiceHUD(msg); speakText(msg);
+      prefillWeight(voicePending.exIdx, voicePending.setIdx, voicePending.sugWeight);
+    }
+    return;
+  }
+  if (voicePhase === 'count_reps') {
+    const num = extractNumber(transcript);
+    if (num !== null) {
+      voicePhase = 'idle';
+      const exIdx  = voicePending.exIdx;
+      const setIdx = voicePending.setIdx;
+      prefillReps(exIdx, setIdx, num);
+      updateVoiceHUD('Logging ' + num + ' reps at ' + voicePending.sugWeight + ' lbs...');
+      stopListening();
+      setTimeout(() => logSet(exIdx, setIdx), 300);
+    }
+  }
+}
+
+function extractNumber(text) {
+  const words = {zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,
+    nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,
+    sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20};
+  for (const [w,n] of Object.entries(words)) { if (text.includes(w)) return n; }
+  const match = text.match(/\d+/);
+  return match ? parseInt(match[0]) : null;
+}
+
+function prefillWeight(exIdx, setIdx, weight) {
+  exercises[exIdx].loggedSets[setIdx].weight = weight;
+  const el = document.getElementById('inp-w-'+exIdx+'-'+setIdx);
+  if (el) el.value = weight;
+}
+
+function prefillReps(exIdx, setIdx, reps) {
+  exercises[exIdx].loggedSets[setIdx].reps = reps;
+  const el = document.getElementById('inp-r-'+exIdx+'-'+setIdx);
+  if (el) el.value = reps;
+}
+
+function updateVoiceHUD(msg) {
+  const el = document.getElementById('voice-hud-text');
+  if (el) el.textContent = msg;
+}
+
+// ── SPEECH SYNTHESIS ──────────────────────────────────────────
+function speakText(text) {
+  if (!window.speechSynthesis || workoutMode !== 'voice') return;
+  window.speechSynthesis.cancel();
+  const utt  = new SpeechSynthesisUtterance(text);
+  utt.rate   = 1.05; utt.pitch = 1.0; utt.volume = 1.0;
+  window.speechSynthesis.speak(utt);
+}
+
+// ── SUGGESTION CHIP ───────────────────────────────────────────
+function renderSugChip(ex, exIdx) {
+  const fmw = getFMW(exIdx);
+  if (isFirstTime(ex) && !fmw.locked) {
+    return '<span class="fmw-badge">\u26a1 FIND MY WEIGHT</span>';
+  }
+  const sug = getSuggestedWeight(ex);
+  if (!sug) return '';
+  return '<button class="sug-chip" onclick="applySuggestion('+exIdx+','+sug+')" title="Tap to apply suggested weight"><span class="sug-chip-arrow">\u2191</span> '+sug+' lbs</button>';
+}
+
+function applySuggestion(exIdx, weight) {
+  const ex = exercises[exIdx];
+  ex.loggedSets.forEach((s,i) => {
+    if (!s.logged) {
+      s.weight = weight;
+      const el = document.getElementById('inp-w-'+exIdx+'-'+i);
+      if (el) el.value = weight;
+    }
+  });
+  showToast('Applied ' + weight + ' lbs to remaining sets');
+  renderSets(ex, getLastSession(ex.id || ex.name));
+}
 
 // ── INIT ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
