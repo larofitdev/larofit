@@ -963,6 +963,11 @@ const store = {
   }
 };
 
+
+// ── SUPABASE CONFIG ───────────────────────────────────────────
+const SUPABASE_AI_URL  = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/ai-coach';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkYXN3dW9rb2tveGdzdXdmanBnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxMzAsImV4cCI6MjA5NDk3NjEzMH0.1j8Q9EOL5lbabDZGaux4yEgB9LcCJCacRiEIWMDeoKA';
+
 // ── STATE ─────────────────────────────────────────────────────
 let exercises      = [];   // today's exercise objects
 let currentExIdx   = 0;
@@ -1574,8 +1579,6 @@ function finishWorkout() {
 
 // ── AI ANALYSIS ──────────────────────────────────────────────
 async function fetchAIAnalysis(durationMin, totalVolume, prs, exList) {
-  const apiKey = store.get('anthropic_key', null);
-
   // Build workout summary for prompt
   const summary = exList.map(ex => {
     const sets = ex.loggedSets.filter(s => s.logged);
@@ -1596,25 +1599,13 @@ ${summary}
 
 Keep response under 80 words. Be direct and coach-like, not generic.`;
 
-  if (!apiKey) {
-    // No API key — show placeholder
-    document.getElementById('ai-loading').style.display = 'none';
-    document.getElementById('ai-analysis-text').style.display = 'block';
-    document.getElementById('ai-analysis-text').innerHTML =
-      `<p style="color:var(--text-3);font-style:italic;">
-        AI analysis requires an API key. Add yours in Profile → Settings to get personalized coaching after every workout.
-      </p>`;
-    return;
-  }
-
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(SUPABASE_AI_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({
         model:      'claude-sonnet-4-20250514',
@@ -1760,7 +1751,6 @@ function getFMW(exIdx) {
 
 // ── API CALL: PER-SET COACHING ────────────────────────────────
 async function fetchSetCoaching(ex, setIdx, weight, reps) {
-  const apiKey = store.get('anthropic_key', null);
   const restAiSection = document.getElementById('rest-ai-section');
   const restAiSpinner = document.getElementById('rest-ai-spinner');
   const restAiText    = document.getElementById('rest-ai-text');
@@ -1768,11 +1758,6 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
   restAiSection.style.display = 'flex';
   restAiSpinner.style.display = 'block';
   restAiText.textContent      = 'Analyzing your set...';
-  if (!apiKey) {
-    restAiSpinner.style.display = 'none';
-    restAiText.textContent = 'Add your API key in Profile \u2192 Settings to get AI coaching.';
-    return;
-  }
   const last    = getLastSession(ex.id || ex.name);
   const allSets = ex.loggedSets.filter(s => s.logged);
   const setNum  = setIdx + 1;
@@ -1790,13 +1775,12 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
   const level   = profile.level || 'intermediate';
   const prompt = 'You are a concise expert fitness coach giving real-time feedback during a workout rest period. Respond in 1-2 sentences max (under 35 words). Be specific and actionable.\n\nExercise: ' + ex.name + '\nAthlete level: ' + level + '\n' + lastLine + '\n' + setsLine + '\nJust logged - Set ' + setNum + ': ' + (weight||'?') + ' lbs x ' + (reps||'?') + ' reps\n' + nextLine + '\nTarget reps: ' + ex.reps + '\n\nGive brief feedback on this set and ' + (isLastSet ? 'summarize the exercise performance' : 'suggest weight for Set ' + nextSetNum) + '.';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(SUPABASE_AI_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:80,
@@ -1817,7 +1801,6 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
 
 // ── API CALL: FMW REASONING ───────────────────────────────────
 async function fetchFMWReasoning(ex, fmw, currentWeight) {
-  const apiKey = store.get('anthropic_key', null);
   const restAiSection = document.getElementById('rest-ai-section');
   const restAiSpinner = document.getElementById('rest-ai-spinner');
   const restAiText    = document.getElementById('rest-ai-text');
@@ -1825,11 +1808,6 @@ async function fetchFMWReasoning(ex, fmw, currentWeight) {
   restAiSection.style.display = 'flex';
   restAiSpinner.style.display = 'block';
   restAiText.textContent      = 'Finding your working weight...';
-  if (!apiKey) {
-    restAiSpinner.style.display = 'none';
-    restAiText.textContent = 'Add your API key in Profile for FMW AI guidance.';
-    return currentWeight;
-  }
   const setHistory = fmw.sets.map((s,i) => 'Set '+(i+1)+': '+s.weight+' lbs x '+s.reps+' reps').join(', ');
   const lastSet  = fmw.sets[fmw.sets.length - 1];
   const lastReps = lastSet ? parseInt(lastSet.reps)||0 : 0;
@@ -1838,13 +1816,12 @@ async function fetchFMWReasoning(ex, fmw, currentWeight) {
   const level   = profile.level || 'intermediate';
   const prompt = 'You are an expert fitness coach running a Find My Weight session. Rep rules: <=5 reps = reduce weight 20-40%, 6-9 reps = working weight found, 10+ reps = increase weight.\n\nExercise: '+ex.name+'\nAthlete level: '+level+'\nSets so far: '+setHistory+'\nLast set reps: '+lastReps+'\n\n'+(isLastFMW ? 'This is the final FMW set. Declare the working weight.' : 'Suggest weight for next FMW set.')+'\n\nReply ONLY: number|brief reasoning (under 25 words). Example: 45|Good starting point.';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(SUPABASE_AI_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:80,
