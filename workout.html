@@ -16,7 +16,11 @@ input[type="number"], input[type="text"], select, textarea { font-size: 16px !im
 button, input, select, a { touch-action: manipulation; }
 
 /* ── FULL SCREEN WORKOUT LAYOUT ── */
-/* The workout state fills the entire screen between header and nav */
+/* Hide the main lf-header during active workout */
+body.workout-active .lf-header { display: none !important; }
+body.workout-active .lf-main-desktop { padding-top: 0 !important; }
+
+/* The workout state fills entire screen top to bottom */
 #workout-state {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -26,13 +30,40 @@ button, input, select, a { touch-action: manipulation; }
   overflow: hidden;
   background: var(--bg);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 10;
 }
 #workout-state.active { display: flex; }
 
-/* Header sits at top, fixed height */
-#workout-header {
+/* Slim workout top bar — replaces the full lf-header */
+.workout-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 16px;
+  height: 48px;
   flex-shrink: 0;
-  z-index: 10;
+  background: var(--bg);
+  border-bottom: 0.5px solid var(--border);
+}
+.workout-topbar-left {
+  flex: 1;
+  min-width: 0;
+}
+.workout-topbar-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
+}
+.workout-topbar-sub {
+  font-size: 10px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  margin-top: 2px;
 }
 
 /* Exercise card fills remaining space as a flex column */
@@ -424,27 +455,6 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
 <main class="lf-main-desktop" id="main">
 
-  <!-- HEADER -->
-  <div class="lf-header" id="workout-header">
-    <div class="lf-header-inner">
-      <div>
-        <div id="header-title" style="font-size:18px;font-weight:700;color:var(--text);line-height:1.2;"></div>
-        <div id="header-sub"   style="font-size:11px;color:var(--text-3);margin-top:2px;font-family:var(--font-mono);"></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div id="workout-timer" style="font-size:14px;font-weight:700;color:var(--text);background:var(--bg-card2);padding:5px 10px;border-radius:var(--radius-sm);font-family:var(--font-mono);display:none;">0:00</div>
-        <div class="mode-toggle" id="mode-toggle" style="display:none;">
-          <button class="mode-btn active" id="mode-standard" onclick="setMode('standard')">Standard</button>
-          <button class="mode-btn"        id="mode-voice"    onclick="setMode('voice')">&#127908; Voice</button>
-        </div>
-        <button class="btn btn-ghost btn-sm" id="btn-finish-top" style="display:none;color:var(--volt-dark);font-weight:700;" onclick="finishWorkout()">Finish</button>
-      </div>
-    </div>
-    <div class="lf-prog-bar" style="margin-top:10px;" id="overall-prog-wrap">
-      <div class="lf-prog-fill" id="overall-prog" style="width:0%"></div>
-    </div>
-  </div>
-
   <!-- NO PROGRAM STATE -->
   <div class="no-program" id="no-program-state" style="display:none;">
     <div style="font-size:48px;" aria-hidden="true">🏋️</div>
@@ -464,6 +474,28 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
   <!-- WORKOUT IN PROGRESS — full screen flex column -->
   <div id="workout-state">
+
+    <!-- Slim top bar — replaces lf-header during workout -->
+    <div class="workout-topbar" id="workout-topbar">
+      <div class="workout-topbar-left">
+        <div class="workout-topbar-name" id="header-title">Workout</div>
+        <div class="workout-topbar-sub"  id="header-sub"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div id="workout-timer" style="display:none;">0:00</div>
+        <div class="mode-toggle" id="mode-toggle" style="display:none;">
+          <button class="mode-btn active" id="mode-manual" onclick="setMode('manual')">Manual</button>
+          <button class="mode-btn"        id="mode-voice"  onclick="setMode('voice')">&#127908; Voice</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-finish-top"
+                style="display:none;color:var(--volt-dark);font-weight:700;font-size:13px;"
+                onclick="finishWorkout()">Finish</button>
+      </div>
+    </div>
+    <!-- Progress bar sits just below topbar -->
+    <div class="lf-prog-bar" id="overall-prog-wrap" style="flex-shrink:0;">
+      <div class="lf-prog-fill" id="overall-prog" style="width:0%"></div>
+    </div>
 
     <!-- Progress dots row -->
     <div class="ex-progress-dots" id="ex-dots"></div>
@@ -752,12 +784,14 @@ function startWorkout(workoutName) {
   workoutStarted = true;
   startTime      = Date.now();
   show('workout-state');
+  // Hide main lf-header, show slim workout topbar
+  document.body.classList.add('workout-active');
   setHeader(workoutName || 'Workout', exercises.length + ' exercises · ' + new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}));
   document.getElementById('workout-timer').style.display  = 'block';
   document.getElementById('btn-finish-top').style.display = 'block';
   document.getElementById('mode-toggle').style.display    = 'flex';
   workoutMode = getMode();
-  document.getElementById('mode-standard').classList.toggle('active', workoutMode === 'standard');
+  document.getElementById('mode-manual').classList.toggle('active', workoutMode === 'manual');
   document.getElementById('mode-voice').classList.toggle('active',    workoutMode === 'voice');
   if (workoutMode === 'voice') initVoice();
   elapsedTimer = setInterval(updateElapsed, 1000);
@@ -1486,6 +1520,7 @@ function finishWorkout() {
 
   // Completion screen
   show('completion-state');
+  document.body.classList.remove('workout-active');
   document.getElementById('log-btn-fixed').classList.remove('show');
   document.getElementById('finish-bar').classList.remove('show');
   document.getElementById('overall-prog-wrap').style.display = 'none';
@@ -1667,14 +1702,14 @@ function addExerciseFreeForm(exId) {
 //  AI COACH LAYER
 // ══════════════════════════════════════════════════════════════
 
-let workoutMode = 'standard';
+let workoutMode = 'manual';
 
-function getMode() { const s = store.get('settings', {}); return s.workoutMode || 'standard'; }
+function getMode() { const s = store.get('settings', {}); return s.workoutMode || 'manual'; }
 
 function setMode(mode) {
   workoutMode = mode;
   const s = store.get('settings', {}); s.workoutMode = mode; store.set('settings', s);
-  document.getElementById('mode-standard').classList.toggle('active', mode === 'standard');
+  document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
   document.getElementById('mode-voice').classList.toggle('active',    mode === 'voice');
   if (mode === 'voice') initVoice();
   else { stopListening(); document.getElementById('voice-hud').classList.remove('show'); }
@@ -1811,7 +1846,7 @@ let voicePending = { exIdx:0, setIdx:0, sugWeight:0 };
 
 function initVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showToast('Voice not supported on this browser'); setMode('standard'); return; }
+  if (!SR) { showToast('Voice not supported on this browser'); setMode('manual'); return; }
   if (recognition) return;
   recognition = new SR();
   recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'en-US';
