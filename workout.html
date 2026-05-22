@@ -59,12 +59,6 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   text-overflow: ellipsis;
   line-height: 1;
 }
-.workout-topbar-sub {
-  font-size: 10px;
-  color: var(--text-3);
-  font-family: var(--font-mono);
-  margin-top: 2px;
-}
 
 /* Exercise card fills remaining space as a flex column */
 .ex-card {
@@ -221,7 +215,7 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   padding: 10px 8px;
   border-bottom: 0.5px solid var(--border);
   vertical-align: middle; text-align: center;
-  height: 52px;
+  height: 44px;
 }
 .sets-table td:first-child { text-align: left; padding-left: 12px; }
 .sets-table tr:last-child td { border-bottom: none; }
@@ -485,7 +479,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 .active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }
 
 /* Cardio / timed inputs */
-.cardio-row td { height: 62px; }
+.cardio-row td { height: 42px; }
+
+/* Tighter input padding for compact rows */
+.sets-table .lf-num-input { padding: 5px 4px; }
 </style>
 </head>
 <body>
@@ -520,7 +517,6 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div class="workout-topbar" id="workout-topbar">
       <div class="workout-topbar-left">
         <div class="workout-topbar-name" id="header-title">Workout</div>
-        <div class="workout-topbar-sub"  id="header-sub"></div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <div id="workout-timer" style="display:none;">0:00</div>
@@ -771,12 +767,12 @@ function init() {
   const activeId = store.get('active_program', null);
   const program  = programs.find(p => p.id === activeId);
 
-  if (!program) { show('no-program-state'); setHeader('Workout', 'No active program'); return; }
+  if (!program) { show('no-program-state'); setHeader('Workout'); return; }
 
   const dayIndex = (new Date().getDay() + 6) % 7;
   const dayPlan  = program.days && program.days[dayIndex];
 
-  if (!dayPlan || dayPlan.rest) { show('rest-day-state'); setHeader('Rest day', new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})); return; }
+  if (!dayPlan || dayPlan.rest) { show('rest-day-state'); setHeader('Rest day'); return; }
 
   buildExerciseList(dayPlan.exercises || [], dayPlan.name || program.name);
 }
@@ -830,7 +826,7 @@ function startWorkout(workoutName) {
   show('workout-state');
   // Hide main lf-header, show slim workout topbar
   document.body.classList.add('workout-active');
-  setHeader(workoutName || 'Workout', exercises.length + ' exercises · ' + new Date().toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'}));
+  setHeader(workoutName || 'Workout');
   document.getElementById('workout-timer').style.display  = 'none'; // internal only
   document.getElementById('btn-finish-top').style.display = 'block';
   document.getElementById('mode-toggle').style.display    = 'flex';
@@ -885,9 +881,8 @@ function show(id) {
   }
 }
 
-function setHeader(title, sub) {
+function setHeader(title) {
   document.getElementById('header-title').textContent = title;
-  document.getElementById('header-sub').textContent   = sub || '';
 }
 
 // ── ELAPSED TIMER ────────────────────────────────────────────
@@ -1320,20 +1315,31 @@ function logSet(exIdx, setIdx) {
     fetchSetCoaching(ex, setIdx, weight, reps);
   } else {
     const nextSetNum = setIdx + 2;
-    startRest(ex.restSec, async () => {
-      if (fmw.active && fmw.sets.length > 0 && fmw.sets.length < 3) {
-        const nextW = await fetchFMWReasoning(ex, fmw, parseFloat(weight)||0);
+    // Fire FMW reasoning immediately at rest start so it shows during rest
+    let fmwNextWeight = null;
+    if (fmw.active && fmw.sets.length > 0 && fmw.sets.length < 3) {
+      fetchFMWReasoning(ex, fmw, parseFloat(weight)||0).then(nextW => {
+        fmwNextWeight = nextW;
         fmw.sets[fmw.sets.length-1].nextSuggest = nextW;
         prefillWeight(exIdx, setIdx+1, nextW);
-        if (workoutMode === 'voice') { voicePending.sugWeight = nextW; voicePhase = 'confirm_weight'; updateVoiceHUD('Try ' + nextW + ' pounds for this set. Say yes to start.'); startListening(); }
-      } else if (workoutMode === 'voice') {
+        if (workoutMode === 'voice') {
+          voicePending.sugWeight = nextW;
+          voicePhase = 'confirm_weight';
+          updateVoiceHUD('Try ' + nextW + ' pounds for this set. Say yes to start.');
+          startListening();
+        }
+      });
+    } else {
+      fetchSetCoaching(ex, setIdx, weight, reps);
+    }
+    startRest(ex.restSec, async () => {
+      if (workoutMode === 'voice' && !fmw.active) {
         voicePhase = 'confirm_weight';
         updateVoiceHUD('Ready for Set ' + nextSetNum + '. Say yes to start, or lighter or heavier.');
         startListening();
       }
       renderSets(ex, getLastSession(ex.id || ex.name));
     }, 'Set ' + nextSetNum + ' of ' + ex.sets + ' up next');
-    fetchSetCoaching(ex, setIdx, weight, reps);
   }
 }
 
@@ -1577,7 +1583,7 @@ function finishWorkout() {
   document.getElementById('overall-prog-wrap').style.display = 'none';
   document.getElementById('btn-finish-top').style.display    = 'none';
   document.getElementById('workout-timer').style.display     = 'none';
-  setHeader('Workout complete', '');
+  setHeader('Workout complete');
   document.getElementById('c-duration').textContent = durationMin || '—';
   document.getElementById('c-volume').textContent   = totalVolume >= 1000 ? (totalVolume/1000).toFixed(1)+'k' : Math.round(totalVolume)||'—';
   document.getElementById('c-prs').textContent      = totalPRs || '0';
@@ -1810,6 +1816,17 @@ function checkFMWPrompt(ex) {
   const fmw    = getFMW(currentExIdx);
   if (isStrength(ex) && isFirstTime(ex) && !fmw.locked && !fmw.declined && !fmw.active) {
     prompt.classList.add('show');
+    // Pre-fill all set weight inputs with calculated start weight immediately
+    const startW = getFMWStartWeight(ex);
+    if (startW > 0) {
+      ex.loggedSets.forEach((set, i) => {
+        if (!set.logged) {
+          set.weight = startW;
+          const el = document.getElementById('inp-w-' + currentExIdx + '-' + i);
+          if (el) el.value = startW;
+        }
+      });
+    }
   } else {
     prompt.classList.remove('show');
   }
