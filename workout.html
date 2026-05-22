@@ -15,38 +15,62 @@
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
 button, input, select, a { touch-action: manipulation; }
 
-/* ── EXERCISE CARD ── */
-.ex-card {
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 0.5px solid var(--border);
-  margin: 0 var(--page-pad);
+/* ── FULL SCREEN WORKOUT LAYOUT ── */
+/* The workout state fills the entire screen between header and nav */
+#workout-state {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  bottom: var(--nav-h);
+  display: none;
+  flex-direction: column;
   overflow: hidden;
+  background: var(--bg);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+#workout-state.active { display: flex; }
+
+/* Header sits at top, fixed height */
+#workout-header {
+  flex-shrink: 0;
+  z-index: 10;
 }
 
+/* Exercise card fills remaining space as a flex column */
+.ex-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Header row: name, meta, badge */
 .ex-card-header {
-  padding: 14px 16px 12px;
+  padding: 12px 16px 10px;
   border-bottom: 0.5px solid var(--border);
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .ex-card-icon {
-  width: 44px; height: 44px;
+  width: 40px; height: 40px;
   border-radius: var(--radius-sm);
   background: var(--bg-dark);
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; color: var(--volt); font-size: 20px;
+  flex-shrink: 0; color: var(--volt); font-size: 18px;
 }
 
 .ex-card-title { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1.2; flex: 1; }
 .ex-card-sub   { font-size: 11px; color: var(--text-3); margin-top: 3px; }
 
-/* ── GIF SLOT ── */
+/* ── GIF SLOT — flex grows to fill top half ── */
 .gif-slot {
-  margin: 0;
-  background: var(--bg-card2);
+  flex: 1;
+  min-height: 0;
+  background: var(--bg-dark);
   border-bottom: 0.5px solid var(--border);
   display: flex;
   align-items: center;
@@ -54,7 +78,6 @@ button, input, select, a { touch-action: manipulation; }
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  height: 160px;
   -webkit-tap-highlight-color: transparent;
 }
 .gif-slot img {
@@ -64,71 +87,123 @@ button, input, select, a { touch-action: manipulation; }
 .gif-slot-placeholder {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  gap: 6px; color: var(--text-3);
+  gap: 8px; color: var(--text-3);
 }
-.gif-slot-placeholder i { font-size: 28px; opacity: 0.4; }
-.gif-slot-placeholder span { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.4; }
+.gif-slot-placeholder i    { font-size: 32px; color: rgba(198,241,53,0.25); }
+.gif-slot-placeholder span { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.18); }
 .gif-expand-hint {
-  position: absolute; bottom: 8px; right: 8px;
-  background: rgba(0,0,0,0.45); color: white;
-  font-size: 10px; padding: 3px 7px; border-radius: 999px;
+  position: absolute; bottom: 10px; right: 10px;
+  background: rgba(0,0,0,0.55); color: rgba(255,255,255,0.7);
+  font-size: 10px; padding: 4px 8px; border-radius: 999px;
   font-family: var(--font-mono); pointer-events: none;
+  border: 0.5px solid rgba(255,255,255,0.12);
 }
 
 /* ── NOTES SECTION ── */
 .ex-notes-wrap {
   border-top: 0.5px solid var(--border);
-  padding: 0;
+  flex-shrink: 0;
 }
 .ex-notes-toggle {
   width: 100%; display: flex; align-items: center; gap: 8px;
-  padding: 10px 16px;
+  padding: 9px 16px;
   background: none; border: none; cursor: pointer;
   font-size: 12px; font-weight: 600; color: var(--text-3);
   font-family: var(--font-body); text-align: left;
   -webkit-tap-highlight-color: transparent;
 }
-.ex-notes-toggle i { font-size: 14px; }
+.ex-notes-toggle i { font-size: 13px; }
 .ex-notes-toggle .notes-chevron { margin-left: auto; font-size: 12px; transition: transform 0.2s; }
 .ex-notes-toggle.open .notes-chevron { transform: rotate(180deg); }
-.ex-notes-body { display: none; padding: 0 16px 12px; }
+.ex-notes-body { display: none; padding: 0 16px 10px; }
 .ex-notes-body.open { display: block; }
 .ex-notes-input {
   width: 100%; background: var(--bg); border: 1px solid var(--border-md);
-  border-radius: var(--radius-sm); padding: 10px 12px;
+  border-radius: var(--radius-sm); padding: 9px 12px;
   font-size: 14px; color: var(--text); font-family: var(--font-body);
-  resize: none; outline: none; min-height: 64px; line-height: 1.5;
+  resize: none; outline: none; min-height: 56px; line-height: 1.5;
 }
 .ex-notes-input:focus { border-color: var(--volt-dark); }
 .ex-notes-input::placeholder { color: var(--text-3); }
 
-/* ── SETS TABLE ── */
+/* ── SETS TABLE — fixed bottom half of card ── */
+/* Wrapper scrolls if too many sets */
+#sets-container {
+  flex-shrink: 0;
+  overflow-y: auto;
+  max-height: 45vh;
+  border-top: 0.5px solid var(--border);
+}
+
 .sets-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .sets-table th {
-  font-size: 10px; font-weight: 600; color: var(--text-3);
-  text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 10px; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.08em;
   padding: 8px 8px 6px; text-align: left;
+  background: var(--bg-card2);
   border-bottom: 0.5px solid var(--border);
+  position: sticky; top: 0; z-index: 1;
 }
 .sets-table th:not(:first-child) { text-align: center; }
 .sets-table td {
-  padding: 8px; border-bottom: 0.5px solid var(--border);
-  vertical-align: middle; text-align: center; height: 58px;
+  padding: 10px 8px;
+  border-bottom: 0.5px solid var(--border);
+  vertical-align: middle; text-align: center;
+  height: 64px; /* bigger rows, easier to tap */
 }
-.sets-table td:first-child { text-align: left; }
+.sets-table td:first-child { text-align: left; padding-left: 12px; }
 .sets-table tr:last-child td { border-bottom: none; }
 
 .set-num {
-  width: 24px; height: 24px; border-radius: 50%;
+  width: 26px; height: 26px; border-radius: 50%;
   background: var(--bg-card2); color: var(--text-3);
-  font-size: 11px; font-weight: 700;
+  font-size: 12px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.set-num.done   { background: var(--volt); color: var(--bg-dark); }
+.set-num.done      { background: var(--volt); color: var(--bg-dark); }
 .set-num.active-set { background: var(--bg-dark); color: var(--volt); }
 .sets-table td:not(:first-child) { text-align: center; }
 
 .last-val { font-size: 11px; color: var(--text-3); display: block; margin-top: 2px; font-family: var(--font-mono); }
+
+/* ── LOG BUTTON — pinned to bottom, above nav ── */
+.log-btn-fixed {
+  position: fixed;
+  bottom: var(--nav-h);
+  left: 0; right: 0;
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg-card);
+  border-top: 0.5px solid var(--border);
+  z-index: 50;
+  display: none;
+}
+.log-btn-fixed.show { display: block; }
+.log-btn-fixed-inner {
+  display: flex; gap: 10px; align-items: center;
+}
+.log-btn-notes-trigger {
+  width: 48px; height: 52px; flex-shrink: 0;
+  background: var(--bg-card2); border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); display: flex; align-items: center;
+  justify-content: center; font-size: 18px; color: var(--text-3); cursor: pointer;
+}
+.log-btn-notes-trigger.has-note { color: var(--volt-dark); background: var(--volt-bg); border-color: var(--volt-border); }
+.log-btn-main {
+  flex: 1; height: 52px;
+  background: var(--bg-dark); color: var(--volt);
+  border: none; border-radius: var(--radius-sm);
+  font-size: 17px; font-weight: 700; font-family: var(--font-display);
+  letter-spacing: 1px; cursor: pointer;
+  transition: opacity 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.log-btn-main:active { opacity: 0.8; }
+.log-btn-main.done-state {
+  background: var(--success-bg); color: var(--success);
+}
+
+/* Keep old inline log-btn for logged rows */
 .log-btn {
   padding: 7px 10px; background: var(--bg-dark); color: var(--volt);
   border: none; border-radius: var(--radius-sm); font-size: 12px; font-weight: 700;
@@ -136,7 +211,6 @@ button, input, select, a { touch-action: manipulation; }
   transition: opacity 0.15s; width: 100%;
 }
 .log-btn:active { opacity: 0.7; }
-.log-btn.done-btn { background: var(--success-bg); color: var(--success); }
 
 /* Last chip */
 .last-chip {
@@ -164,16 +238,21 @@ button, input, select, a { touch-action: manipulation; }
 
 /* Previous best banner */
 .prev-best {
-  margin: 10px 16px; padding: 8px 12px;
-  background: var(--bg-card2); border-radius: var(--radius-sm);
+  padding: 7px 16px; background: var(--bg-card2);
+  border-bottom: 0.5px solid var(--border);
   font-size: 11px; color: var(--text-3);
   display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
 }
 .prev-best i { font-size: 13px; }
 .prev-best strong { color: var(--text-2); }
 
 /* Progress dots */
-.ex-progress-dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0 4px; }
+.ex-progress-dots {
+  display: flex; justify-content: center; gap: 6px;
+  padding: 6px 0 4px; flex-shrink: 0;
+  background: var(--bg);
+}
 .ex-dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--bg-card2); border: 1px solid var(--border-md); transition: all 0.2s;
@@ -383,21 +462,23 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <button class="btn btn-outline lf-mt-sm" onclick="startFreeForm()">Log a workout anyway</button>
   </div>
 
-  <!-- WORKOUT IN PROGRESS -->
-  <div id="workout-state" style="display:none;padding-bottom:80px;">
+  <!-- WORKOUT IN PROGRESS — full screen flex column -->
+  <div id="workout-state">
 
-    <!-- Free form name bar (only shown in free form mode) -->
-    <div id="free-name-bar" style="display:none;padding:12px var(--page-pad) 4px;">
+    <!-- Progress dots row -->
+    <div class="ex-progress-dots" id="ex-dots"></div>
+
+    <!-- Free form name bar -->
+    <div id="free-name-bar" style="display:none;padding:6px var(--page-pad) 4px;flex-shrink:0;">
       <input class="free-name-input" id="free-workout-name" type="text"
              placeholder="Workout name (e.g. Push Day)" maxlength="60"
              value="Free Workout">
     </div>
 
-    <div class="ex-progress-dots" id="ex-dots"></div>
-
-    <!-- Exercise card -->
+    <!-- Exercise card — fills remaining height -->
     <div class="ex-card" id="ex-card">
 
+      <!-- Card header: icon · name · badge -->
       <div class="ex-card-header">
         <div class="ex-card-icon" aria-hidden="true" id="ex-card-icon">
           <i class="ti ti-barbell"></i>
@@ -409,8 +490,8 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <span class="badge badge-strength" id="ex-badge">STRENGTH</span>
       </div>
 
-      <!-- GIF slot -->
-      <div class="gif-slot" id="gif-slot" onclick="openGifFull()" style="display:none;">
+      <!-- GIF slot — flexes to fill upper portion -->
+      <div class="gif-slot" id="gif-slot" onclick="openGifFull()">
         <img id="gif-img" src="" alt="" style="display:none;">
         <div class="gif-slot-placeholder" id="gif-placeholder">
           <i class="ti ti-player-play"></i>
@@ -423,13 +504,12 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       <div class="prev-best" id="prev-best" style="display:none;">
         <i class="ti ti-history" aria-hidden="true"></i>
         <span id="prev-best-text">Last session: —</span>
-        <span class="pr-badge" id="pr-badge" style="display:none;">🏆 PR</span>
       </div>
 
-      <!-- Sets table (replaced per exercise type) -->
+      <!-- Sets table -->
       <div id="sets-container"></div>
 
-      <!-- Notes -->
+      <!-- Notes (collapsible, at bottom of card) -->
       <div class="ex-notes-wrap" id="ex-notes-wrap">
         <button class="ex-notes-toggle" id="ex-notes-toggle" onclick="toggleNotes()">
           <i class="ti ti-pencil"></i>
@@ -439,26 +519,19 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div class="ex-notes-body" id="ex-notes-body">
           <textarea class="ex-notes-input" id="ex-notes-input"
                     placeholder="Form cues, how it felt, adjustments…"
-                    oninput="saveNote()" rows="3"></textarea>
+                    oninput="saveNote()" rows="2"></textarea>
         </div>
       </div>
 
     </div>
 
-    <!-- Free form: Add exercise button -->
-    <div id="free-add-wrap" style="display:none;padding:12px var(--page-pad) 0;">
-      <button class="btn btn-dark btn-full" onclick="openExPicker()">
-        <i class="ti ti-plus" aria-hidden="true"></i> Add exercise
-      </button>
-    </div>
+  </div>
 
-    <!-- Finish bar -->
-    <div class="finish-bar" id="finish-bar">
-      <button class="btn btn-volt btn-full btn-lg" onclick="finishWorkout()">
-        <i class="ti ti-check" aria-hidden="true"></i> Finish workout
-      </button>
-    </div>
-
+  <!-- Free form: Add exercise button (shown below card in free form) -->
+  <div id="free-add-wrap" style="display:none;position:fixed;bottom:calc(var(--nav-h) + 72px);left:16px;right:16px;z-index:51;">
+    <button class="btn btn-outline btn-full" onclick="openExPicker()" style="background:var(--bg-card);">
+      <i class="ti ti-plus" aria-hidden="true"></i> Add exercise
+    </button>
   </div>
 
   <!-- COMPLETION SCREEN -->
@@ -487,6 +560,25 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
   </div>
 
 </main>
+
+<!-- FIXED LOG BUTTON — pinned above nav bar, shown during active set -->
+<div class="log-btn-fixed" id="log-btn-fixed">
+  <div class="log-btn-fixed-inner">
+    <button class="log-btn-notes-trigger" id="log-btn-notes-icon" onclick="toggleNotes()" title="Notes">
+      <i class="ti ti-pencil"></i>
+    </button>
+    <button class="log-btn-main" id="log-btn-main" onclick="handleLogBtnTap()">
+      LOG SET
+    </button>
+  </div>
+</div>
+
+<!-- FIXED FINISH BUTTON — shown when all sets done -->
+<div class="log-btn-fixed" id="finish-bar">
+  <button class="btn btn-volt btn-full btn-lg" style="height:52px;" onclick="finishWorkout()">
+    <i class="ti ti-check" aria-hidden="true"></i> Finish workout
+  </button>
+</div>
 
 <!-- VOICE HUD -->
 <div class="voice-hud" id="voice-hud">
@@ -698,9 +790,21 @@ function startFreeForm() {
 function show(id) {
   ['no-program-state','rest-day-state','workout-state','completion-state'].forEach(s => {
     const el = document.getElementById(s);
-    if (el) el.style.display = s === id ? (s === 'completion-state' ? 'flex' : 'block') : 'none';
+    if (!el) return;
+    if (s === 'workout-state') {
+      el.classList.toggle('active', s === id);
+    } else {
+      el.style.display = s === id ? (s === 'completion-state' ? 'flex' : 'block') : 'none';
+    }
   });
   if (id === 'completion-state') document.getElementById('completion-state').classList.add('show');
+  // Hide fixed buttons when not in workout
+  const logFixed    = document.getElementById('log-btn-fixed');
+  const finishFixed = document.getElementById('finish-bar');
+  if (id !== 'workout-state') {
+    if (logFixed)    logFixed.classList.remove('show');
+    if (finishFixed) finishFixed.classList.remove('show');
+  }
 }
 
 function setHeader(title, sub) {
@@ -816,22 +920,19 @@ function renderExercise() {
   }
 
   renderSets(ex, lastSession);
+  updateLogBtn();
 }
 
 // ── GIF SLOT ──────────────────────────────────────────────────
 function renderGifSlot(ex) {
-  const slot        = document.getElementById('gif-slot');
   const img         = document.getElementById('gif-img');
   const placeholder = document.getElementById('gif-placeholder');
   const hint        = document.getElementById('gif-expand-hint');
 
-  // Always show the slot
-  slot.style.display = 'flex';
-
   if (ex.gifUrl) {
-    img.src           = ex.gifUrl;
-    img.alt           = ex.name;
-    img.style.display = 'block';
+    img.src                   = ex.gifUrl;
+    img.alt                   = ex.name;
+    img.style.display         = 'block';
     placeholder.style.display = 'none';
     hint.style.display        = 'block';
   } else {
@@ -865,6 +966,9 @@ function toggleNotes() {
 
 function saveNote() {
   exNotes[currentExIdx] = document.getElementById('ex-notes-input').value;
+  // Refresh notes icon
+  const notesIcon = document.getElementById('log-btn-notes-icon');
+  if (notesIcon) notesIcon.classList.toggle('has-note', !!(exNotes[currentExIdx] && exNotes[currentExIdx].trim()));
 }
 
 // ── SETS RENDERING ────────────────────────────────────────────
@@ -881,6 +985,7 @@ function renderSets(ex, lastSession) {
   } else {
     container.innerHTML = renderStrengthTable(ex, lastSession);
   }
+  updateLogBtn();
 }
 
 function renderStrengthTable(ex, lastSession) {
@@ -915,8 +1020,8 @@ function renderStrengthTable(ex, lastSession) {
       return `<tr>
         <td><span class="set-num ${numCls}">${i+1}</span></td>
         <td style="text-align:center;">${lastChip}</td>
-        <td style="text-align:center;"><span style="font-size:14px;font-weight:600;">${set.weight||'—'}</span><span class="last-val">lbs</span>${ormLabel}</td>
-        <td style="text-align:center;"><span style="font-size:14px;font-weight:600;">${set.reps||'—'}</span><span class="last-val">reps</span></td>
+        <td style="text-align:center;"><span style="font-size:15px;font-weight:700;">${set.weight||'—'}</span><span class="last-val">lbs</span>${ormLabel}</td>
+        <td style="text-align:center;"><span style="font-size:15px;font-weight:700;">${set.reps||'—'}</span><span class="last-val">reps</span></td>
         <td style="text-align:center;">${isPR ? '<span class="pr-badge">🏆 PR</span>' : '<span style="font-size:18px;color:var(--success);">✓</span>'}</td>
       </tr>`;
     }
@@ -938,9 +1043,7 @@ function renderStrengthTable(ex, lastSession) {
                onchange="updateSet(${currentExIdx},${i},'reps',this.value)"
                ${!isActive ? 'style="opacity:0.45;"' : ''}>
       </td>
-      <td style="text-align:center;">
-        ${isActive ? `<button class="log-btn" onclick="logSet(${currentExIdx},${i})">Log</button>` : ''}
-      </td>
+      <td></td>
     </tr>`;
   }).join('');
 
@@ -948,9 +1051,9 @@ function renderStrengthTable(ex, lastSession) {
     <thead><tr>
       <th style="width:30px;">Set</th>
       <th style="width:22%;">Last</th>
-      <th style="width:26%;">Weight</th>
-      <th style="width:22%;">Reps</th>
-      <th style="width:18%;"></th>
+      <th style="width:28%;">Weight</th>
+      <th style="width:24%;">Reps</th>
+      <th style="width:16%;"></th>
     </tr></thead>
     <tbody>${warmupHTML}${rows}</tbody>
   </table>`;
@@ -1256,9 +1359,14 @@ function updateOverallProgress() {
 }
 
 function checkAllDone() {
-  if (isFreeForm) return; // free form always shows finish button
+  if (isFreeForm) {
+    document.getElementById('finish-bar').classList.add('show');
+    document.getElementById('log-btn-fixed').classList.remove('show');
+    return;
+  }
   const allDone = exercises.length > 0 && exercises.every(ex => ex.loggedSets.every(s => s.logged));
   document.getElementById('finish-bar').classList.toggle('show', allDone);
+  if (allDone) document.getElementById('log-btn-fixed').classList.remove('show');
 }
 
 // ── LAST SESSION LOOKUP ───────────────────────────────────────
@@ -1279,6 +1387,52 @@ function getLastSession(exIdOrName) {
     }
   }
   return null;
+}
+
+// ── FIXED LOG BUTTON LOGIC ────────────────────────────────────
+let activeSetIdx = 0; // tracks which set is currently active
+
+function handleLogBtnTap() {
+  const ex = exercises[currentExIdx];
+  if (!ex) return;
+  if (isCardio(ex))    { logCardioSet(currentExIdx); return; }
+  if (isTimed(ex))     { logTimedSet(currentExIdx, activeSetIdx); return; }
+  if (isBW(ex))        { logBWSet(currentExIdx, activeSetIdx); return; }
+  logSet(currentExIdx, activeSetIdx);
+}
+
+function updateLogBtn() {
+  const logFixed = document.getElementById('log-btn-fixed');
+  const logMain  = document.getElementById('log-btn-main');
+  const notesIcon= document.getElementById('log-btn-notes-icon');
+  if (!logFixed || !logMain) return;
+
+  const ex = exercises[currentExIdx];
+  if (!ex || isFreeForm && exercises.length === 0) {
+    logFixed.classList.remove('show');
+    return;
+  }
+
+  // Find active set index
+  const activeIdx = ex.loggedSets.findIndex(s => !s.logged);
+  activeSetIdx = activeIdx >= 0 ? activeIdx : ex.loggedSets.length - 1;
+
+  const allDone = ex.loggedSets.every(s => s.logged);
+
+  if (allDone) {
+    logFixed.classList.remove('show');
+  } else {
+    logFixed.classList.add('show');
+    const setNum = activeIdx + 1;
+    if (isCardio(ex)) logMain.textContent = 'LOG CARDIO';
+    else if (isTimed(ex)) logMain.textContent = 'LOG SET ' + setNum;
+    else logMain.textContent = 'LOG SET ' + setNum;
+  }
+
+  // Notes icon state
+  if (notesIcon) {
+    notesIcon.classList.toggle('has-note', !!(exNotes[currentExIdx] && exNotes[currentExIdx].trim()));
+  }
 }
 
 // ── FINISH WORKOUT ────────────────────────────────────────────
@@ -1332,6 +1486,8 @@ function finishWorkout() {
 
   // Completion screen
   show('completion-state');
+  document.getElementById('log-btn-fixed').classList.remove('show');
+  document.getElementById('finish-bar').classList.remove('show');
   document.getElementById('overall-prog-wrap').style.display = 'none';
   document.getElementById('btn-finish-top').style.display    = 'none';
   document.getElementById('workout-timer').style.display     = 'none';
