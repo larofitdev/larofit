@@ -325,6 +325,66 @@ button, a { touch-action: manipulation; }
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
+
+/* ── IMPORT SHEET ── */
+.import-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 510;
+}
+.import-backdrop.show { display: block; }
+.import-sheet {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg-card); border-radius: 20px 20px 0 0;
+  z-index: 511; padding: 0 0 env(safe-area-inset-bottom, 20px);
+}
+.import-sheet.show { display: block; }
+.import-handle {
+  width: 36px; height: 4px; background: var(--border-md);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.import-body { padding: 20px 16px 16px; }
+.import-icon {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--volt-bg); border: 1px solid var(--volt-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; margin: 0 auto 14px;
+}
+.import-title {
+  font-size: 18px; font-weight: 800; color: var(--text);
+  text-align: center; margin-bottom: 4px;
+}
+.import-sub {
+  font-size: 13px; color: var(--text-3);
+  text-align: center; margin-bottom: 20px; line-height: 1.5;
+}
+.import-prog-card {
+  background: var(--bg-card2); border-radius: var(--radius-sm);
+  border: 1px solid var(--border-md); padding: 14px 16px; margin-bottom: 16px;
+}
+.import-prog-name { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.import-prog-meta { font-size: 12px; color: var(--text-3); font-family: var(--font-mono); }
+.import-btn-add {
+  width: 100%; padding: 14px;
+  background: var(--volt); color: #000;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 800; font-family: var(--font-body);
+  cursor: pointer; margin-bottom: 10px;
+}
+.import-btn-cancel {
+  width: 100%; padding: 12px;
+  background: transparent; color: var(--text-3);
+  border: 1px solid var(--border-md); border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; font-family: var(--font-body);
+  cursor: pointer;
+}
+/* Share button in detail sheet */
+.btn-share {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 14px; background: var(--bg-card2);
+  border: 1px solid var(--border-md); border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700; color: var(--text-2);
+  font-family: var(--font-body); cursor: pointer; white-space: nowrap;
+}
 </style>
 </head>
 <body>
@@ -383,12 +443,32 @@ button, a { touch-action: manipulation; }
   <div class="lf-sheet-title" id="detail-title">Program</div>
   <div class="lf-sheet-body" id="detail-body"></div>
   <div style="padding:14px 16px;border-top:0.5px solid var(--border);display:flex;gap:8px;flex-shrink:0;">
+    <button class="btn-share" onclick="shareProgram()">
+      <i class="ti ti-share"></i> Share
+    </button>
     <button class="btn btn-outline btn-sm" id="detail-edit-btn" onclick="editFromDetail()">
       <i class="ti ti-edit" aria-hidden="true"></i> Edit
     </button>
     <button class="btn btn-volt btn-full" id="detail-activate-btn" onclick="activateFromDetail()">
       <i class="ti ti-player-play" aria-hidden="true"></i> Set as active
     </button>
+  </div>
+</div>
+
+<!-- ── IMPORT SHEET ── -->
+<div class="import-backdrop" id="import-backdrop" onclick="closeImport()"></div>
+<div class="import-sheet" id="import-sheet">
+  <div class="import-handle"></div>
+  <div class="import-body">
+    <div class="import-icon">📥</div>
+    <div class="import-title" id="import-title">Add Program</div>
+    <div class="import-sub" id="import-sub">Someone shared a program with you.</div>
+    <div class="import-prog-card" id="import-prog-card">
+      <div class="import-prog-name" id="import-prog-name">—</div>
+      <div class="import-prog-meta" id="import-prog-meta">—</div>
+    </div>
+    <button class="import-btn-add" onclick="confirmImport()">Add to my programs</button>
+    <button class="import-btn-cancel" onclick="closeImport()">Not now</button>
   </div>
 </div>
 
@@ -441,6 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
   programs = store.get('programs', []);
   activeId = store.get('active_program', null);
   render();
+  checkImportParam();
 });
 
 // ── RENDER ───────────────────────────────────────────────────
@@ -709,6 +790,99 @@ function formatDate(iso) {
   try {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   } catch { return '—'; }
+}
+
+// ── SHARE / IMPORT ───────────────────────────────────────────
+
+function shareProgram() {
+  const p = programs.find(x => x.id === detailId);
+  if (!p) return;
+  try {
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(p))));
+    const url     = location.origin + location.pathname + '?import=' + encoded;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => showToast('Share link copied!'));
+    } else {
+      // Fallback for older mobile browsers
+      const ta = document.createElement('textarea');
+      ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Share link copied!');
+    }
+  } catch(e) {
+    showToast('Could not copy link');
+  }
+}
+
+let pendingImport = null;
+
+function checkImportParam() {
+  const params  = new URLSearchParams(location.search);
+  const encoded = params.get('import');
+  if (!encoded) return;
+
+  // Clean URL immediately so refresh doesn't re-trigger
+  history.replaceState({}, '', location.pathname);
+
+  try {
+    const p = JSON.parse(decodeURIComponent(escape(atob(encoded))));
+    if (!p || !p.name || !p.days) { showToast('Invalid program link'); return; }
+    pendingImport = p;
+
+    // Populate import sheet
+    const goalLabels = {
+      hypertrophy:'Muscle Growth', strength:'Strength', fat_loss:'Fat Loss',
+      endurance:'Endurance', general:'General Fitness'
+    };
+    const dayCount = (p.days || []).filter(d => !d.rest).length;
+    document.getElementById('import-prog-name').textContent = p.name;
+    document.getElementById('import-prog-meta').textContent =
+      (goalLabels[p.goal] || p.goal || 'General') + ' · ' +
+      (p.weeks || '—') + ' weeks · ' +
+      dayCount + ' training day' + (dayCount !== 1 ? 's' : '');
+
+    const existing = programs.find(x => x.id === p.id);
+    if (existing) {
+      document.getElementById('import-title').textContent = 'Update Program?';
+      document.getElementById('import-sub').textContent =
+        'You already have this program. Replace it with the shared version?';
+    } else {
+      document.getElementById('import-title').textContent = 'Add Program';
+      document.getElementById('import-sub').textContent =
+        'Someone shared a program with you.';
+    }
+
+    document.getElementById('import-backdrop').classList.add('show');
+    document.getElementById('import-sheet').classList.add('show');
+  } catch(e) {
+    showToast('Could not read program link');
+  }
+}
+
+function confirmImport() {
+  if (!pendingImport) return;
+  const p = pendingImport;
+
+  // Give it a fresh savedAt; preserve id so duplicate detection works
+  p.savedAt = new Date().toISOString();
+
+  const idx = programs.findIndex(x => x.id === p.id);
+  if (idx >= 0) programs[idx] = p;
+  else programs.push(p);
+
+  store.set('programs', programs);
+  pendingImport = null;
+  closeImport();
+  render();
+  showToast('✓ ' + p.name + ' added');
+}
+
+function closeImport() {
+  document.getElementById('import-backdrop').classList.remove('show');
+  document.getElementById('import-sheet').classList.remove('show');
+  pendingImport = null;
 }
 
 function esc(str) {
