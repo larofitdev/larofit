@@ -890,16 +890,21 @@ let libEq     = 'all';
 // ══════════════════════════════════════════════════════════════════════
 function init() {
   const params = new URLSearchParams(location.search);
-  const id     = params.get('id');
+  const id     = params.get('id') || (() => {
+    // programs.html passes id via localStorage store (lf_editing_program_id)
+    try {
+      const v = localStorage.getItem('lf_editing_program_id');
+      if (v) { localStorage.removeItem('lf_editing_program_id'); return JSON.parse(v); }
+    } catch {}
+    return null;
+  })();
 
   if (id) {
-    // Edit existing program
     const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
     program = programs.find(p => p.id === id);
     if (!program) { showToast('Program not found'); goBack(); return; }
     loadProgramIntoForm();
   } else {
-    // New program — blank slate
     program = makeBlankProgram();
   }
 
@@ -1398,7 +1403,7 @@ function saveCustomExercise() {
 }
 
 // ── RUN ──
-init();
+document.addEventListener('DOMContentLoaded', init);
 </script>
 
 </body>
