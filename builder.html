@@ -364,6 +364,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .lib-sheet-top {
   padding: 10px 16px 0;
   flex-shrink: 0;
+  border-bottom: 0.5px solid var(--border);
 }
 
 .lib-sheet-title {
@@ -565,13 +566,13 @@ button, input, select, a, textarea { touch-action: manipulation; }
 /* ── CREATE CUSTOM EXERCISE SHEET ── */
 .custom-ex-backdrop {
   display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.5); z-index: 310;
+  background: rgba(0,0,0,0.5); z-index: 450;
 }
 .custom-ex-backdrop.show { display: block; }
 .custom-ex-sheet {
   display: none; position: fixed; bottom: 0; left: 0; right: 0;
   background: var(--bg-card); border-radius: 20px 20px 0 0;
-  z-index: 311; max-height: 92vh; overflow-y: auto;
+  z-index: 451; max-height: 92vh; overflow-y: auto;
   padding: 0 0 env(safe-area-inset-bottom,16px);
 }
 .custom-ex-sheet.show { display: block; }
@@ -598,7 +599,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 }
 .custom-ex-input, .custom-ex-select, .custom-ex-textarea {
   width: 100%; padding: 10px 12px;
-  background: var(--bg-dark); border: 1px solid var(--border-md);
+  background: var(--bg-card2); border: 1px solid var(--border-md);
   border-radius: var(--radius-sm); color: var(--text);
   font-size: 15px; font-family: var(--font-body);
   outline: none; box-sizing: border-box;
@@ -612,7 +613,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .custom-ex-muscle-chip {
   padding: 4px 10px; border-radius: 999px;
   border: 1px solid var(--border-md);
-  background: var(--bg-dark); color: var(--text-2);
+  background: var(--bg-card2); color: var(--text-2);
   font-size: 12px; font-weight: 600; cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
@@ -779,6 +780,15 @@ button, input, select, a, textarea { touch-action: manipulation; }
     <!-- Equipment chips -->
     <div class="lib-eq-row" id="lib-eq-row">
       <!-- injected by JS -->
+    </div>
+
+    <!-- Create custom — always visible, pinned below filters -->
+    <div class="lib-create-row" onclick="openCustomExSheet()">
+      <div class="lib-create-icon">+</div>
+      <div>
+        <div class="lib-create-label">Create custom exercise</div>
+        <div class="lib-create-sub">Can't find it? Add your own</div>
+      </div>
     </div>
   </div>
 
@@ -1227,14 +1237,7 @@ function renderLibrary() {
           </div>`;
       }).join('');
 
-  container.innerHTML = rowsHTML + `
-    <div class="lib-create-row" onclick="openCustomExSheet()">
-      <div class="lib-create-icon">+</div>
-      <div>
-        <div class="lib-create-label">Create custom exercise</div>
-        <div class="lib-create-sub">Can't find it? Add your own</div>
-      </div>
-    </div>`;
+  container.innerHTML = rowsHTML;
 }
 
 function addExercise(exId) {
@@ -1327,7 +1330,8 @@ function showToast(msg) {
 }
 
 // ── CUSTOM EXERCISES ──────────────────────────────────────────
-// MUSCLES_ALL is already declared in larofit-exercises.js
+const MUSCLES_ALL = ['Chest','Back','Shoulders','Biceps','Triceps','Legs','Glutes',
+  'Hamstrings','Quads','Calves','Core','Abs','Lower back','Hip flexors','Full body'];
 
 function getCustomExercises() {
   try { return JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]'); } catch { return []; }
