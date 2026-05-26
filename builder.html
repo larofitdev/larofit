@@ -1327,8 +1327,7 @@ function showToast(msg) {
 }
 
 // ── CUSTOM EXERCISES ──────────────────────────────────────────
-const MUSCLES_ALL = ['Chest','Back','Shoulders','Biceps','Triceps','Legs','Glutes',
-  'Hamstrings','Quads','Calves','Core','Abs','Lower back','Hip flexors','Full body'];
+// MUSCLES_ALL is already declared in larofit-exercises.js
 
 function getCustomExercises() {
   try { return JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]'); } catch { return []; }
