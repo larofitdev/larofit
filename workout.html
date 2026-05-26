@@ -132,7 +132,94 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   cursor: pointer; white-space: nowrap;
 }
 
-/* ── GIF SLOT — flex grows to fill top half ── */
+/* ── CREATE CUSTOM EXERCISE SHEET ── */
+.custom-ex-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5); z-index: 310;
+}
+.custom-ex-backdrop.show { display: block; }
+.custom-ex-sheet {
+  display: none; position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg-card); border-radius: 20px 20px 0 0;
+  z-index: 311; max-height: 92vh; overflow-y: auto;
+  padding: 0 0 env(safe-area-inset-bottom,16px);
+}
+.custom-ex-sheet.show { display: block; }
+.custom-ex-handle {
+  width: 36px; height: 4px; background: var(--border-md);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.custom-ex-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 0.5px solid var(--border);
+}
+.custom-ex-header-title { font-size: 16px; font-weight: 700; color: var(--text); }
+.custom-ex-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--bg-dark); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2); font-size: 16px;
+}
+.custom-ex-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.custom-ex-field { display: flex; flex-direction: column; gap: 4px; }
+.custom-ex-label {
+  font-size: 11px; font-weight: 700; color: var(--text-3);
+  text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono);
+}
+.custom-ex-input, .custom-ex-select, .custom-ex-textarea {
+  width: 100%; padding: 10px 12px;
+  background: var(--bg-dark); border: 1px solid var(--border-md);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-size: 15px; font-family: var(--font-body);
+  outline: none; box-sizing: border-box;
+}
+.custom-ex-input:focus, .custom-ex-select:focus, .custom-ex-textarea:focus {
+  border-color: var(--volt-dark);
+}
+.custom-ex-select { appearance: none; -webkit-appearance: none; }
+.custom-ex-textarea { resize: none; height: 72px; line-height: 1.5; }
+.custom-ex-muscles {
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0 2px;
+}
+.custom-ex-muscle-chip {
+  padding: 4px 10px; border-radius: 999px;
+  border: 1px solid var(--border-md);
+  background: var(--bg-dark); color: var(--text-2);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.custom-ex-muscle-chip.sel {
+  background: var(--volt-bg); border-color: var(--volt-dark); color: var(--volt-dark);
+}
+.custom-ex-save-btn {
+  margin: 4px 16px 16px; padding: 14px;
+  background: var(--volt); color: #000;
+  border: none; border-radius: var(--radius-sm);
+  font-size: 15px; font-weight: 800; font-family: var(--font-body);
+  cursor: pointer; letter-spacing: 0.04em;
+}
+.ex-picker-create-row {
+  padding: 14px 16px; border-top: 0.5px solid var(--border);
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+}
+.ex-picker-create-row:active { background: var(--bg-dark); }
+.ex-picker-create-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--volt-bg); border: 1px solid var(--volt-dark);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--volt-dark); font-size: 18px; flex-shrink: 0;
+}
+.ex-picker-create-label { font-size: 14px; font-weight: 600; color: var(--volt-dark); }
+.ex-picker-create-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.custom-badge {
+  font-size: 10px; font-weight: 700; color: var(--volt-dark);
+  background: var(--volt-bg); border: 1px solid var(--volt-dark);
+  border-radius: 4px; padding: 1px 5px; margin-left: 6px;
+  font-family: var(--font-mono); vertical-align: middle;
+}
+
+
 .gif-slot {
   flex: 1;
   min-height: 0;
@@ -705,6 +792,87 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
 <!-- TOAST -->
 <div class="lf-toast" id="toast" aria-live="polite"></div>
+
+<!-- ══════════════════════════════════════
+     CUSTOM EXERCISE SHEET
+══════════════════════════════════════ -->
+<div class="custom-ex-backdrop" id="custom-ex-backdrop" onclick="closeCustomExSheet()"></div>
+<div class="custom-ex-sheet" id="custom-ex-sheet">
+  <div class="custom-ex-handle"></div>
+  <div class="custom-ex-header">
+    <div class="custom-ex-header-title">Create Custom Exercise</div>
+    <button class="custom-ex-close" onclick="closeCustomExSheet()">✕</button>
+  </div>
+  <div class="custom-ex-body">
+    <div class="custom-ex-field">
+      <label class="custom-ex-label">Exercise Name *</label>
+      <input class="custom-ex-input" id="cx-name" type="text" placeholder="e.g. Banded Hip Thrust" autocomplete="off">
+    </div>
+    <div class="custom-ex-field">
+      <label class="custom-ex-label">Category</label>
+      <select class="custom-ex-select" id="cx-category">
+        <option value="chest">Chest</option>
+        <option value="back">Back</option>
+        <option value="shoulders">Shoulders</option>
+        <option value="biceps">Biceps</option>
+        <option value="triceps">Triceps</option>
+        <option value="legs" selected>Legs</option>
+        <option value="core">Core</option>
+        <option value="fullbody">Full body</option>
+        <option value="cardio">Cardio</option>
+        <option value="yoga">Yoga</option>
+        <option value="stretching">Stretching</option>
+        <option value="recovery">Recovery</option>
+      </select>
+    </div>
+    <div class="custom-ex-field">
+      <label class="custom-ex-label">Equipment</label>
+      <select class="custom-ex-select" id="cx-eq">
+        <option value="db">Dumbbell</option>
+        <option value="bb">Barbell</option>
+        <option value="mc">Machine / Cable</option>
+        <option value="bw" selected>Bodyweight</option>
+        <option value="kb">Kettlebell</option>
+        <option value="band">Resistance Band</option>
+        <option value="cd">Cardio Machine</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="custom-ex-field">
+      <label class="custom-ex-label">Type</label>
+      <select class="custom-ex-select" id="cx-type">
+        <option value="strength" selected>Strength</option>
+        <option value="cardio">Cardio</option>
+        <option value="timed_bodyweight">Timed / Bodyweight</option>
+        <option value="hiit">HIIT</option>
+        <option value="yoga">Yoga</option>
+        <option value="stretch">Stretch</option>
+        <option value="recovery">Recovery</option>
+      </select>
+    </div>
+    <div class="custom-ex-field">
+      <label class="custom-ex-label">Difficulty</label>
+      <select class="custom-ex-select" id="cx-difficulty">
+        <option value="beginner">Beginner</option>
+        <option value="intermediate" selected>Intermediate</option>
+        <option value="advanced">Advanced</option>
+      </select>
+    </div>
+    <div class="custom-ex-field">
+      <label class="custom-ex-label">Muscles Targeted</label>
+      <div class="custom-ex-muscles" id="cx-muscles"></div>
+    </div>
+    <div class="custom-ex-field">
+      <label class="custom-ex-label">Video URL (optional)</label>
+      <input class="custom-ex-input" id="cx-video" type="url" placeholder="https://youtube.com/...">
+    </div>
+    <div class="custom-ex-field">
+      <label class="custom-ex-label">Notes (optional)</label>
+      <textarea class="custom-ex-textarea" id="cx-notes" placeholder="Form cues, tips, variations…"></textarea>
+    </div>
+  </div>
+  <button class="custom-ex-save-btn" onclick="saveCustomExercise()">Save Exercise</button>
+</div>
 
 <script>
 /* ============================================================
@@ -1632,6 +1800,86 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── CUSTOM EXERCISES ──────────────────────────────────────────
+const MUSCLES_ALL = ['Chest','Back','Shoulders','Biceps','Triceps','Legs','Glutes',
+  'Hamstrings','Quads','Calves','Core','Abs','Lower back','Hip flexors','Full body'];
+
+function getCustomExercises() {
+  try { return JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]'); } catch { return []; }
+}
+
+function saveCustomExercises(arr) {
+  localStorage.setItem('lf_custom_exercises', JSON.stringify(arr));
+}
+
+let cxSelectedMuscles = [];
+
+function openCustomExSheet() {
+  cxSelectedMuscles = [];
+  document.getElementById('cx-name').value        = '';
+  document.getElementById('cx-video').value       = '';
+  document.getElementById('cx-notes').value       = '';
+  document.getElementById('cx-category').value    = 'legs';
+  document.getElementById('cx-eq').value          = 'bw';
+  document.getElementById('cx-type').value        = 'strength';
+  document.getElementById('cx-difficulty').value  = 'intermediate';
+  buildMuscleChips('cx-muscles', cxSelectedMuscles);
+  document.getElementById('custom-ex-backdrop').classList.add('show');
+  document.getElementById('custom-ex-sheet').classList.add('show');
+  setTimeout(() => document.getElementById('cx-name').focus(), 300);
+}
+
+function closeCustomExSheet() {
+  document.getElementById('custom-ex-backdrop').classList.remove('show');
+  document.getElementById('custom-ex-sheet').classList.remove('show');
+}
+
+function buildMuscleChips(containerId, selectedArr) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = MUSCLES_ALL.map(m => `
+    <div class="custom-ex-muscle-chip${selectedArr.includes(m) ? ' sel' : ''}"
+         onclick="toggleMuscleChip(this,'${m}','${containerId}',cxSelectedMuscles)">
+      ${m}
+    </div>`).join('');
+}
+
+function toggleMuscleChip(el, muscle, containerId, arr) {
+  const idx = arr.indexOf(muscle);
+  if (idx >= 0) { arr.splice(idx, 1); el.classList.remove('sel'); }
+  else          { arr.push(muscle);   el.classList.add('sel'); }
+}
+
+function saveCustomExercise() {
+  const name = document.getElementById('cx-name').value.trim();
+  if (!name) { showToast('Exercise name is required'); return; }
+
+  const ex = {
+    id:         'cx-' + Date.now(),
+    name,
+    category:   document.getElementById('cx-category').value,
+    eq:         document.getElementById('cx-eq').value,
+    type:       document.getElementById('cx-type').value,
+    difficulty: document.getElementById('cx-difficulty').value,
+    muscles:    [...cxSelectedMuscles],
+    video:      document.getElementById('cx-video').value.trim(),
+    notes:      document.getElementById('cx-notes').value.trim(),
+    custom:     true,
+  };
+
+  const arr = getCustomExercises();
+  arr.push(ex);
+  saveCustomExercises(arr);
+  closeCustomExSheet();
+  showToast(name + ' saved');
+
+  // Immediately add to workout if picker is open
+  if (document.getElementById('ex-picker') && document.getElementById('ex-picker').style.display !== 'none') {
+    addExerciseFreeForm(ex.id);
+  }
+  filterPicker();
+}
+
 // ── TOAST ─────────────────────────────────────────────────────
 let toastTimer;
 function showToast(msg) {
@@ -1704,30 +1952,42 @@ function filterPicker() {
   const q = (document.getElementById('ex-picker-search').value || '').toLowerCase().trim();
   if (typeof LAROFIT_EXERCISES === 'undefined') return;
 
-  const results = LAROFIT_EXERCISES.filter(ex => {
+  const customs  = getCustomExercises();
+  const allEx    = [...customs, ...LAROFIT_EXERCISES];
+
+  const results = allEx.filter(ex => {
     const catMatch = pickerCat === 'all' || ex.category === pickerCat;
     const qMatch   = !q || ex.name.toLowerCase().includes(q);
     return catMatch && qMatch;
   }).slice(0, 80);
 
   const catIcons = { chest:'🏋️', back:'🔙', shoulders:'💪', biceps:'💪', triceps:'💪', legs:'🦵', core:'⭕', cardio:'🏃', fullbody:'⚡', yoga:'🧘', stretching:'🤸', recovery:'💆' };
+  const isCustom = id => id && id.startsWith('cx-');
 
-  document.getElementById('ex-picker-list').innerHTML = results.length
+  document.getElementById('ex-picker-list').innerHTML = (results.length
     ? results.map(ex => `
         <div class="ex-picker-row" onclick="addExerciseFreeForm('${ex.id}')">
           <div class="ex-picker-icon">${catIcons[ex.category]||'💪'}</div>
           <div style="flex:1;min-width:0;">
-            <div class="ex-picker-name">${escHtml(ex.name)}</div>
+            <div class="ex-picker-name">${escHtml(ex.name)}${isCustom(ex.id) ? '<span class="custom-badge">CUSTOM</span>' : ''}</div>
             <div class="ex-picker-sub">${ex.category||''} · ${(ex.eq||'').toUpperCase()}</div>
           </div>
           <span class="ex-picker-add">+ Add</span>
         </div>`).join('')
-    : `<div style="padding:40px 16px;text-align:center;color:var(--text-3);font-size:14px;">No exercises found</div>`;
+    : `<div style="padding:40px 16px;text-align:center;color:var(--text-3);font-size:14px;">No exercises found</div>`)
+  + `<div class="ex-picker-create-row" onclick="openCustomExSheet()">
+      <div class="ex-picker-create-icon">+</div>
+      <div>
+        <div class="ex-picker-create-label">Create custom exercise</div>
+        <div class="ex-picker-create-sub">Can't find it? Add your own</div>
+      </div>
+    </div>`;
 }
 
 function addExerciseFreeForm(exId) {
   if (typeof LAROFIT_EXERCISES === 'undefined') return;
-  const data = LAROFIT_EXERCISES.find(e => e.id === exId);
+  const customs = getCustomExercises();
+  const data = customs.find(e => e.id === exId) || LAROFIT_EXERCISES.find(e => e.id === exId);
   if (!data) return;
 
   const newEx = {
