@@ -11,16 +11,13 @@
 <link rel="apple-touch-icon" href="appletouchicon.png">
 <link rel="stylesheet" href="larofit.css?v=2">
 <style>
-/* ── BASE ── */
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
 
 /* ══════════════════════════════════════════
-   SCREEN 1 — PROGRAM OVERVIEW
+   SCREEN 1 — PROGRAM SETUP
 ══════════════════════════════════════════ */
-
-/* Meta card (name, goal, weeks) */
-.bldr-meta {
+.setup-card {
   margin: 14px var(--page-pad) 0;
   background: var(--bg-card);
   border-radius: var(--radius);
@@ -30,8 +27,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
   flex-direction: column;
   gap: 14px;
 }
-
-.bldr-name-input {
+.setup-name-input {
   width: 100%;
   background: var(--bg);
   border: 1px solid var(--border-md);
@@ -43,28 +39,24 @@ button, input, select, a, textarea { touch-action: manipulation; }
   outline: none;
   transition: border-color 0.2s;
 }
-.bldr-name-input:focus { border-color: var(--volt-dark); }
-.bldr-name-input::placeholder { color: var(--text-3); font-weight: 400; }
-
-.bldr-meta-row {
-  display: flex;
-  gap: 10px;
-}
-
-.bldr-meta-field {
+.setup-name-input:focus { border-color: var(--volt-dark); }
+.setup-name-input::placeholder { color: var(--text-3); font-weight: 400; }
+.setup-row { display: flex; gap: 10px; }
+.setup-field {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 5px;
 }
-.bldr-meta-label {
+.setup-label {
   font-size: 10px;
   font-weight: 600;
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
-.bldr-meta-field select {
+.setup-field select,
+.setup-field input[type="date"] {
   padding: 9px 10px;
   background: var(--bg);
   border: 1px solid var(--border-md);
@@ -72,88 +64,182 @@ button, input, select, a, textarea { touch-action: manipulation; }
   color: var(--text);
   outline: none;
   width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
 }
-.bldr-meta-field select:focus { border-color: var(--volt-dark); }
-
-/* Day list */
-.bldr-days {
-  margin: 14px var(--page-pad) 0;
-  background: var(--bg-card);
-  border-radius: var(--radius);
-  border: 0.5px solid var(--border);
-  overflow: hidden;
-}
-
-.bldr-day-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 16px;
-  border-bottom: 0.5px solid var(--border);
-  cursor: pointer;
-  transition: background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.bldr-day-row:last-child { border-bottom: none; }
-.bldr-day-row:active { background: var(--bg); }
-.bldr-day-row.is-rest { opacity: 0.55; cursor: default; }
-.bldr-day-row.is-rest:active { background: transparent; }
-
-.bldr-day-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: var(--volt);
-  flex-shrink: 0;
-}
-.bldr-day-row.is-rest .bldr-day-dot { background: var(--border-md); }
-
-.bldr-day-info { flex: 1; min-width: 0; }
-.bldr-day-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.bldr-day-sub {
-  font-size: 11px;
-  color: var(--text-3);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bldr-day-rest-toggle {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-3);
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border-md);
-  background: transparent;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.bldr-day-rest-toggle.is-rest {
-  color: var(--volt-dark);
-  border-color: var(--volt-border);
-  background: var(--volt-bg);
-}
-
-.bldr-day-arrow {
-  color: var(--text-3);
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.bldr-day-row.is-rest .bldr-day-arrow { display: none; }
+.setup-field select:focus,
+.setup-field input[type="date"]:focus { border-color: var(--volt-dark); }
 
 /* ══════════════════════════════════════════
-   SCREEN 2 — DAY EDITOR
+   SCREEN 2 — CALENDAR
 ══════════════════════════════════════════ */
-#screen-day { display: none; }
+.cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--page-pad) 8px;
+}
+.cal-nav-btn {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 0.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--text-2);
+  cursor: pointer;
+}
+.cal-nav-btn:disabled { opacity: 0.3; cursor: default; }
+.cal-month-label {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 1px;
+  color: var(--text);
+}
 
+/* Day-of-week header */
+.cal-dow-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  padding: 0 var(--page-pad);
+  margin-bottom: 4px;
+}
+.cal-dow {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  padding: 4px 0;
+  font-family: var(--font-mono);
+}
+
+/* Calendar grid */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+  padding: 0 var(--page-pad);
+}
+
+.cal-cell {
+  aspect-ratio: 1 / 1.15;
+  border-radius: var(--radius-sm);
+  border: 0.5px solid var(--border);
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  padding: 4px 5px 3px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 52px;
+}
+.cal-cell:active { background: var(--bg-card2); }
+.cal-cell.empty {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+.cal-cell.out-of-range {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+.cal-cell.is-today {
+  border-color: var(--volt-dark);
+  border-width: 1.5px;
+}
+.cal-cell.has-workout {
+  background: var(--bg-dark);
+  border-color: var(--bg-dark);
+}
+.cal-cell.paste-target {
+  border-color: var(--volt);
+  border-width: 1.5px;
+  animation: calPulse 1s ease infinite;
+}
+@keyframes calPulse {
+  0%, 100% { border-color: var(--volt); }
+  50%       { border-color: var(--volt-dark); }
+}
+
+.cal-date-num {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.cal-cell.has-workout .cal-date-num { color: rgba(255,255,255,0.5); }
+.cal-cell.is-today .cal-date-num    { color: var(--volt-dark); }
+
+.cal-workout-name {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--volt);
+  line-height: 1.2;
+  margin-top: 3px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
+}
+
+.cal-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--volt);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+/* Paste mode banner */
+.paste-banner {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 60px);
+  left: var(--page-pad);
+  right: var(--page-pad);
+  background: var(--bg-dark);
+  border: 1px solid var(--volt);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  z-index: 150;
+  box-shadow: var(--shadow-lg);
+  animation: slideDown 0.25s ease;
+}
+@keyframes slideDown {
+  from { transform: translateY(-12px); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+.paste-banner-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-inv);
+  flex: 1;
+}
+.paste-banner-text span { color: var(--volt); }
+.paste-cancel-btn {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 4px 0;
+}
+
+/* ══════════════════════════════════════════
+   SCREEN 3 — DAY EDITOR (kept from v1)
+══════════════════════════════════════════ */
 .bldr-day-header {
   display: flex;
   align-items: center;
@@ -165,7 +251,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   top: 0;
   z-index: 100;
 }
-
 .bldr-back-btn {
   width: 36px; height: 36px;
   border-radius: var(--radius-sm);
@@ -175,7 +260,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   font-size: 20px; color: var(--text-2);
   flex-shrink: 0;
 }
-
 .bldr-day-title-input {
   flex: 1;
   background: transparent;
@@ -187,15 +271,12 @@ button, input, select, a, textarea { touch-action: manipulation; }
   min-width: 0;
 }
 .bldr-day-title-input::placeholder { color: var(--text-3); }
-
-/* Exercise cards */
 .bldr-ex-list {
   padding: 12px var(--page-pad);
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-
 .bldr-ex-card {
   background: var(--bg-card);
   border-radius: var(--radius);
@@ -207,7 +288,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 .bldr-ex-card-header {
   display: flex;
   align-items: center;
@@ -215,7 +295,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   padding: 12px 14px 10px;
   border-bottom: 0.5px solid var(--border);
 }
-
 .bldr-ex-drag {
   color: var(--text-3);
   font-size: 16px;
@@ -224,7 +303,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   padding: 4px;
   touch-action: none;
 }
-
 .bldr-ex-name {
   flex: 1;
   font-size: 14px;
@@ -235,14 +313,12 @@ button, input, select, a, textarea { touch-action: manipulation; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 .bldr-ex-muscle {
   font-size: 10px;
   color: var(--text-3);
   font-family: var(--font-mono);
   white-space: nowrap;
 }
-
 .bldr-ex-del {
   width: 28px; height: 28px;
   border-radius: var(--radius-sm);
@@ -251,15 +327,14 @@ button, input, select, a, textarea { touch-action: manipulation; }
   display: flex; align-items: center; justify-content: center;
   font-size: 14px;
   flex-shrink: 0;
+  border: none;
+  cursor: pointer;
 }
-
-/* Sets/reps/rest row */
 .bldr-ex-params {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0;
 }
-
 .bldr-param {
   display: flex;
   flex-direction: column;
@@ -268,7 +343,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   border-right: 0.5px solid var(--border);
 }
 .bldr-param:last-child { border-right: none; }
-
 .bldr-param-label {
   font-size: 9px;
   font-weight: 600;
@@ -277,7 +351,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   letter-spacing: 0.08em;
   margin-bottom: 5px;
 }
-
 .bldr-param-input {
   width: 100%;
   max-width: 72px;
@@ -296,14 +369,11 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .bldr-param-input::-webkit-inner-spin-button,
 .bldr-param-input::-webkit-outer-spin-button { -webkit-appearance: none; }
 .bldr-param-input:focus { border-color: var(--volt-dark); background: var(--volt-bg); }
-
 .bldr-param-unit {
   font-size: 9px;
   color: var(--text-3);
   margin-top: 3px;
 }
-
-/* Add exercise button */
 .bldr-add-ex-btn {
   margin: 4px var(--page-pad) 100px;
   display: flex;
@@ -318,6 +388,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
   font-size: 14px;
   font-weight: 600;
   width: calc(100% - (var(--page-pad) * 2));
+  cursor: pointer;
   transition: all 0.15s;
 }
 .bldr-add-ex-btn:active {
@@ -343,7 +414,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   height: 88dvh;
 }
 .lib-sheet.open { transform: translateY(0); }
-
 .lib-backdrop {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.45);
@@ -352,7 +422,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   transition: opacity 0.25s;
 }
 .lib-backdrop.open { opacity: 1; pointer-events: all; }
-
 .lib-sheet-handle {
   width: 36px; height: 4px;
   background: var(--border-md);
@@ -360,32 +429,17 @@ button, input, select, a, textarea { touch-action: manipulation; }
   margin: 12px auto 0;
   flex-shrink: 0;
 }
-
 .lib-sheet-top {
   padding: 10px 16px 0;
   flex-shrink: 0;
   border-bottom: 0.5px solid var(--border);
 }
-
-.lib-sheet-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 10px;
-}
-
-/* Search */
-.lib-search-wrap {
-  position: relative;
-  margin-bottom: 10px;
-}
+.lib-sheet-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.lib-search-wrap { position: relative; margin-bottom: 10px; }
 .lib-search-icon {
-  position: absolute;
-  left: 12px; top: 50%;
+  position: absolute; left: 12px; top: 50%;
   transform: translateY(-50%);
-  color: var(--text-3);
-  font-size: 16px;
-  pointer-events: none;
+  color: var(--text-3); font-size: 16px; pointer-events: none;
 }
 .lib-search {
   width: 100%;
@@ -393,165 +447,142 @@ button, input, select, a, textarea { touch-action: manipulation; }
   background: var(--bg);
   border: 1px solid var(--border-md);
   border-radius: var(--radius-sm);
-  color: var(--text);
-  outline: none;
+  color: var(--text); outline: none;
 }
 .lib-search:focus { border-color: var(--volt-dark); }
-
-/* Filter row: muscle group tabs */
 .lib-filter-row {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 10px;
-  scrollbar-width: none;
+  display: flex; gap: 6px; overflow-x: auto;
+  padding-bottom: 10px; scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   border-bottom: 0.5px solid var(--border);
-  margin: 0 -16px;
-  padding-left: 16px;
-  padding-right: 16px;
+  margin: 0 -16px; padding-left: 16px; padding-right: 16px;
 }
 .lib-filter-row::-webkit-scrollbar { display: none; }
-
 .lib-filter-chip {
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 6px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 600;
   border: 1px solid var(--border-md);
-  background: transparent;
-  color: var(--text-2);
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.15s;
+  background: transparent; color: var(--text-2);
+  white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
 }
 .lib-filter-chip.active {
-  background: var(--bg-dark);
-  color: var(--volt);
-  border-color: var(--bg-dark);
+  background: var(--bg-dark); color: var(--volt); border-color: var(--bg-dark);
 }
-
-/* Equipment filter */
 .lib-eq-row {
-  display: flex;
-  gap: 6px;
-  padding: 8px 16px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  display: flex; gap: 6px; padding: 8px 16px;
+  overflow-x: auto; scrollbar-width: none;
   border-bottom: 0.5px solid var(--border);
-  margin: 0 -16px;
-  flex-shrink: 0;
+  margin: 0 -16px; flex-shrink: 0;
 }
 .lib-eq-row::-webkit-scrollbar { display: none; }
-
 .lib-eq-chip {
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
+  padding: 5px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600;
   border: 1px solid var(--border-md);
-  background: transparent;
-  color: var(--text-3);
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: all 0.15s;
+  background: transparent; color: var(--text-3);
+  white-space: nowrap; flex-shrink: 0; transition: all 0.15s;
 }
 .lib-eq-chip.active {
-  background: var(--volt-bg);
-  color: var(--volt-dark);
-  border-color: var(--volt-border);
+  background: var(--volt-bg); color: var(--volt-dark); border-color: var(--volt-border);
 }
-
-/* Exercise list */
 .lib-ex-list {
-  flex: 1;
-  overflow-y: auto;
+  flex: 1; overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
-
 .lib-ex-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-bottom: 0.5px solid var(--border);
-  cursor: pointer;
-  transition: background 0.1s;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 0.5px solid var(--border);
+  cursor: pointer; transition: background 0.1s;
   -webkit-tap-highlight-color: transparent;
 }
 .lib-ex-row:last-child { border-bottom: none; }
 .lib-ex-row:active { background: var(--bg); }
-
 .lib-ex-icon {
-  width: 36px; height: 36px;
-  border-radius: var(--radius-sm);
-  background: var(--bg);
-  border: 0.5px solid var(--border);
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  background: var(--bg); border: 0.5px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; flex-shrink: 0;
-  color: var(--text-3);
+  font-size: 15px; flex-shrink: 0; color: var(--text-3);
 }
-
 .lib-ex-body { flex: 1; min-width: 0; }
 .lib-ex-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 14px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.lib-ex-meta {
-  font-size: 10px;
-  color: var(--text-3);
-  margin-top: 2px;
-  font-family: var(--font-mono);
-}
-
+.lib-ex-meta { font-size: 10px; color: var(--text-3); margin-top: 2px; font-family: var(--font-mono); }
 .lib-ex-add {
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  background: var(--volt);
-  color: var(--bg-dark);
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--volt); color: var(--bg-dark);
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 700;
-  flex-shrink: 0;
-  transition: transform 0.15s;
+  font-size: 18px; font-weight: 700; flex-shrink: 0; transition: transform 0.15s;
 }
 .lib-ex-row:active .lib-ex-add { transform: scale(0.88); }
-
 .lib-ex-row.already-added .lib-ex-add {
-  background: var(--success-bg);
-  color: var(--success);
-  font-size: 14px;
+  background: var(--success-bg); color: var(--success); font-size: 14px;
 }
+.lib-empty { padding: 48px 24px; text-align: center; color: var(--text-3); font-size: 14px; }
+.lib-create-row {
+  padding: 14px 16px; border-top: 0.5px solid var(--border);
+  display: flex; align-items: center; gap: 10px; cursor: pointer;
+}
+.lib-create-row:active { background: var(--bg-dark); }
+.lib-create-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--volt-bg); border: 1px solid var(--volt-dark);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--volt-dark); font-size: 18px; flex-shrink: 0;
+}
+.lib-create-label { font-size: 14px; font-weight: 600; color: var(--volt-dark); }
+.lib-create-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
 
-.lib-empty {
-  padding: 48px 24px;
-  text-align: center;
-  color: var(--text-3);
-  font-size: 14px;
+/* ── DAY ACTION SHEET ── */
+.day-action-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 300; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
 }
-
-/* ── TOAST ── */
-.lf-toast {
-  position: fixed;
-  bottom: calc(var(--nav-h) + 12px);
-  left: 50%;
-  transform: translateX(-50%) translateY(8px);
-  background: var(--bg-dark); color: var(--volt);
-  padding: 10px 20px;
-  border-radius: 999px;
-  font-size: 13px; font-weight: 600;
-  font-family: var(--font-mono);
-  white-space: nowrap;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.25s, transform 0.25s;
-  z-index: 500;
-  border: 1px solid var(--volt-border);
+.day-action-overlay.open { opacity: 1; pointer-events: all; }
+.day-action-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  z-index: 301;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+  padding: 0 var(--page-pad) calc(env(safe-area-inset-bottom, 0px) + 20px);
 }
-.lf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.day-action-sheet.open { transform: translateY(0); }
+.day-action-handle {
+  width: 36px; height: 4px; background: var(--border-md);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.day-action-date {
+  font-size: 12px; font-weight: 700; color: var(--text-3);
+  text-align: center; padding: 12px 0 4px;
+  font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase;
+}
+.day-action-name {
+  font-size: 18px; font-weight: 700; color: var(--text);
+  text-align: center; padding-bottom: 14px;
+  border-bottom: 0.5px solid var(--border); margin-bottom: 10px;
+}
+.day-action-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0; border-bottom: 0.5px solid var(--border);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  background: none; border: none; width: 100%;
+  border-bottom: 0.5px solid var(--border);
+}
+.day-action-btn:last-child { border-bottom: none; }
+.day-action-btn:active { opacity: 0.6; }
+.day-action-icon {
+  width: 38px; height: 38px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.day-action-label { font-size: 15px; font-weight: 600; color: var(--text); }
+.day-action-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
 
 /* ── SAVE FOOTER ── */
 .bldr-save-footer {
@@ -563,7 +594,22 @@ button, input, select, a, textarea { touch-action: manipulation; }
   bottom: var(--nav-h);
   z-index: 50;
 }
-/* ── CREATE CUSTOM EXERCISE SHEET ── */
+
+/* ── TOAST ── */
+.lf-toast {
+  position: fixed;
+  bottom: calc(var(--nav-h) + 12px);
+  left: 50%; transform: translateX(-50%) translateY(8px);
+  background: var(--bg-dark); color: var(--volt);
+  padding: 10px 20px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; font-family: var(--font-mono);
+  white-space: nowrap; opacity: 0; pointer-events: none;
+  transition: opacity 0.25s, transform 0.25s;
+  z-index: 500; border: 1px solid var(--volt-border);
+}
+.lf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── CUSTOM EXERCISE SHEET ── */
 .custom-ex-backdrop {
   display: none; position: fixed; inset: 0;
   background: rgba(0,0,0,0.5); z-index: 450;
@@ -625,21 +671,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
   background: var(--volt); color: #000;
   border: none; border-radius: var(--radius-sm);
   font-size: 15px; font-weight: 800; font-family: var(--font-body);
-  cursor: pointer; letter-spacing: 0.04em;
+  cursor: pointer; letter-spacing: 0.04em; width: calc(100% - 32px);
 }
-.lib-create-row {
-  padding: 14px 16px; border-top: 0.5px solid var(--border);
-  display: flex; align-items: center; gap: 10px; cursor: pointer;
-}
-.lib-create-row:active { background: var(--bg-dark); }
-.lib-create-icon {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: var(--volt-bg); border: 1px solid var(--volt-dark);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--volt-dark); font-size: 18px; flex-shrink: 0;
-}
-.lib-create-label { font-size: 14px; font-weight: 600; color: var(--volt-dark); }
-.lib-create-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
 .custom-badge {
   font-size: 10px; font-weight: 700; color: var(--volt-dark);
   background: var(--volt-bg); border: 1px solid var(--volt-dark);
@@ -656,33 +689,30 @@ button, input, select, a, textarea { touch-action: manipulation; }
 <script src="larofit-nav.js"></script>
 
 <!-- ══════════════════════════════════════
-     SCREEN 1 — PROGRAM OVERVIEW
+     SCREEN 1 — PROGRAM SETUP
 ══════════════════════════════════════ -->
-<main id="screen-overview">
-
+<main id="screen-setup">
   <div class="lf-header">
     <div class="lf-header-inner">
       <button class="btn btn-ghost btn-sm" onclick="goBack()" style="padding:8px 4px;">
         <i class="ti ti-arrow-left" style="font-size:20px;"></i>
       </button>
-      <div class="lf-header-title" id="overview-title">NEW PROGRAM</div>
-      <button class="btn btn-volt btn-sm" onclick="saveProgram()">Save</button>
+      <div class="lf-header-title">NEW PROGRAM</div>
+      <div style="width:60px;"></div>
     </div>
   </div>
 
-  <!-- Program metadata -->
-  <div class="bldr-meta">
+  <div class="setup-card">
     <input
-      class="bldr-name-input"
+      class="setup-name-input"
       type="text"
       id="prog-name"
       placeholder="Program name…"
       maxlength="60"
-      oninput="updateOverviewTitle()"
     >
-    <div class="bldr-meta-row">
-      <div class="bldr-meta-field">
-        <div class="bldr-meta-label">Goal</div>
+    <div class="setup-row">
+      <div class="setup-field">
+        <div class="setup-label">Goal</div>
         <select id="prog-goal">
           <option value="strength">💪 Strength</option>
           <option value="hypertrophy" selected>🏋️ Muscle Growth</option>
@@ -692,8 +722,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
           <option value="athletic">🏅 Athletic Performance</option>
         </select>
       </div>
-      <div class="bldr-meta-field">
-        <div class="bldr-meta-label">Weeks</div>
+      <div class="setup-field">
+        <div class="setup-label">Weeks</div>
         <select id="prog-weeks">
           <option value="4">4 weeks</option>
           <option value="6">6 weeks</option>
@@ -704,43 +734,113 @@ button, input, select, a, textarea { touch-action: manipulation; }
         </select>
       </div>
     </div>
+    <div class="setup-field">
+      <div class="setup-label">Start Date</div>
+      <input type="date" id="prog-start">
+    </div>
   </div>
 
-  <!-- Section label -->
-  <div class="lf-section-label">Schedule</div>
-
-  <!-- Day rows -->
-  <div class="bldr-days" id="day-list">
-    <!-- injected by JS -->
+  <div style="padding: 20px var(--page-pad) 0;">
+    <button class="btn btn-volt btn-full btn-lg" onclick="goToCalendar()">
+      Build schedule <i class="ti ti-calendar" aria-hidden="true"></i>
+    </button>
   </div>
-
-  <!-- Save footer -->
-  <div class="bldr-save-footer">
-    <button class="btn btn-volt btn-full btn-lg" onclick="saveProgram()">Save Program</button>
+  <div style="padding: 10px var(--page-pad) 0;">
+    <button class="btn btn-outline btn-full" onclick="saveProgram(true)">
+      Save without schedule
+    </button>
   </div>
-
 </main>
 
 <!-- ══════════════════════════════════════
-     SCREEN 2 — DAY EDITOR
+     SCREEN 2 — CALENDAR
+══════════════════════════════════════ -->
+<main id="screen-calendar" style="display:none;">
+
+  <div class="lf-header">
+    <div class="lf-header-inner">
+      <button class="btn btn-ghost btn-sm" onclick="showScreen('setup')" style="padding:8px 4px;">
+        <i class="ti ti-arrow-left" style="font-size:20px;"></i>
+      </button>
+      <div class="lf-header-title" id="cal-header-title">SCHEDULE</div>
+      <button class="btn btn-volt btn-sm" onclick="saveProgram(false)">Save</button>
+    </div>
+  </div>
+
+  <!-- Paste mode banner -->
+  <div class="paste-banner" id="paste-banner" style="display:none;">
+    <div class="paste-banner-text">
+      Tap a date to paste <span id="paste-banner-name"></span>
+    </div>
+    <button class="paste-cancel-btn" onclick="cancelPaste()">Cancel</button>
+  </div>
+
+  <!-- Month nav -->
+  <div class="cal-nav">
+    <button class="cal-nav-btn" id="cal-prev" onclick="prevMonth()">
+      <i class="ti ti-chevron-left"></i>
+    </button>
+    <div class="cal-month-label" id="cal-month-label">—</div>
+    <button class="cal-nav-btn" id="cal-next" onclick="nextMonth()">
+      <i class="ti ti-chevron-right"></i>
+    </button>
+  </div>
+
+  <!-- Day-of-week headers (Sun–Sat) -->
+  <div class="cal-dow-row">
+    <div class="cal-dow">Sun</div>
+    <div class="cal-dow">Mon</div>
+    <div class="cal-dow">Tue</div>
+    <div class="cal-dow">Wed</div>
+    <div class="cal-dow">Thu</div>
+    <div class="cal-dow">Fri</div>
+    <div class="cal-dow">Sat</div>
+  </div>
+
+  <!-- Calendar grid injected by JS -->
+  <div class="cal-grid" id="cal-grid"></div>
+
+  <!-- Legend -->
+  <div style="display:flex;gap:16px;padding:10px var(--page-pad) 0;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div style="width:12px;height:12px;border-radius:3px;background:var(--bg-dark);"></div>
+      <span style="font-size:11px;color:var(--text-3);">Workout</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div style="width:12px;height:12px;border-radius:3px;border:1.5px solid var(--volt-dark);"></div>
+      <span style="font-size:11px;color:var(--text-3);">Today</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div style="width:12px;height:12px;border-radius:3px;background:var(--bg-card);border:0.5px solid var(--border);opacity:0.4;"></div>
+      <span style="font-size:11px;color:var(--text-3);">Out of range</span>
+    </div>
+  </div>
+
+  <div style="height:80px;"></div>
+</main>
+
+<!-- ══════════════════════════════════════
+     SCREEN 3 — DAY EDITOR
 ══════════════════════════════════════ -->
 <main id="screen-day" style="display:none;">
 
   <div class="bldr-day-header">
-    <button class="bldr-back-btn" onclick="backToOverview()">‹</button>
+    <button class="bldr-back-btn" onclick="backToCalendar()">‹</button>
     <input
       class="bldr-day-title-input"
       type="text"
       id="day-title-input"
-      placeholder="Day name…"
+      placeholder="Day name e.g. Chest & Triceps"
       maxlength="40"
     >
-    <button class="btn btn-volt btn-sm" onclick="saveProgram()">Save</button>
+    <button class="btn btn-volt btn-sm" onclick="saveDayAndBack()">Done</button>
   </div>
 
-  <div class="bldr-ex-list" id="ex-list">
-    <!-- injected by JS -->
+  <div style="padding:8px var(--page-pad) 4px;">
+    <div id="day-date-label" style="font-size:11px;font-weight:600;color:var(--text-3);font-family:var(--font-mono);letter-spacing:0.06em;text-transform:uppercase;"></div>
   </div>
+
+  <div class="bldr-ex-list" id="ex-list"></div>
 
   <button class="bldr-add-ex-btn" onclick="openLibrary()">
     <i class="ti ti-plus" style="font-size:18px;"></i>
@@ -750,6 +850,46 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </main>
 
 <!-- ══════════════════════════════════════
+     DAY ACTION SHEET
+══════════════════════════════════════ -->
+<div class="day-action-overlay" id="day-action-overlay" onclick="closeDayAction()"></div>
+<div class="day-action-sheet" id="day-action-sheet">
+  <div class="day-action-handle"></div>
+  <div class="day-action-date" id="day-action-date"></div>
+  <div class="day-action-name" id="day-action-name"></div>
+
+  <button class="day-action-btn" onclick="dayActionEdit()">
+    <div class="day-action-icon" style="background:var(--volt-bg);">
+      <i class="ti ti-pencil" style="color:var(--volt-dark);font-size:18px;"></i>
+    </div>
+    <div>
+      <div class="day-action-label">Edit workout</div>
+      <div class="day-action-sub">Add, remove or reorder exercises</div>
+    </div>
+  </button>
+
+  <button class="day-action-btn" onclick="dayActionCopy()">
+    <div class="day-action-icon" style="background:var(--blue-bg);">
+      <i class="ti ti-copy" style="color:var(--blue);font-size:18px;"></i>
+    </div>
+    <div>
+      <div class="day-action-label">Copy to another date</div>
+      <div class="day-action-sub">Tap any date on the calendar to paste</div>
+    </div>
+  </button>
+
+  <button class="day-action-btn" onclick="dayActionClear()">
+    <div class="day-action-icon" style="background:var(--danger-bg);">
+      <i class="ti ti-trash" style="color:var(--danger);font-size:18px;"></i>
+    </div>
+    <div>
+      <div class="day-action-label">Clear this day</div>
+      <div class="day-action-sub">Remove all exercises from this date</div>
+    </div>
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════
      LIBRARY BOTTOM SHEET
 ══════════════════════════════════════ -->
 <div class="lib-backdrop" id="lib-backdrop" onclick="closeLibrary()"></div>
@@ -757,33 +897,17 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div class="lib-sheet-handle"></div>
   <div class="lib-sheet-top">
     <div class="lib-sheet-title">Add Exercise</div>
-
-    <!-- Search -->
     <div class="lib-search-wrap">
       <i class="ti ti-search lib-search-icon"></i>
       <input
-        class="lib-search"
-        type="text"
-        id="lib-search"
+        class="lib-search" type="text" id="lib-search"
         placeholder="Search exercises…"
         oninput="renderLibrary()"
-        autocomplete="off"
-        autocorrect="off"
-        spellcheck="false"
+        autocomplete="off" autocorrect="off" spellcheck="false"
       >
     </div>
-
-    <!-- Muscle group chips -->
-    <div class="lib-filter-row" id="lib-muscle-row">
-      <!-- injected by JS -->
-    </div>
-
-    <!-- Equipment chips -->
-    <div class="lib-eq-row" id="lib-eq-row">
-      <!-- injected by JS -->
-    </div>
-
-    <!-- Create custom — always visible, pinned below filters -->
+    <div class="lib-filter-row" id="lib-muscle-row"></div>
+    <div class="lib-eq-row" id="lib-eq-row"></div>
     <div class="lib-create-row" onclick="openCustomExSheet()">
       <div class="lib-create-icon">+</div>
       <div>
@@ -792,15 +916,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
       </div>
     </div>
   </div>
-
-  <!-- Results -->
-  <div class="lib-ex-list" id="lib-results">
-    <!-- injected by JS -->
-  </div>
+  <div class="lib-ex-list" id="lib-results"></div>
 </div>
-
-<!-- TOAST -->
-<div class="lf-toast" id="toast"></div>
 
 <!-- ══════════════════════════════════════
      CUSTOM EXERCISE SHEET
@@ -813,11 +930,11 @@ button, input, select, a, textarea { touch-action: manipulation; }
     <button class="custom-ex-close" onclick="closeCustomExSheet()">✕</button>
   </div>
   <div class="custom-ex-body">
-    <div class="custom-ex-field">
+    <div>
       <label class="custom-ex-label">Exercise Name *</label>
       <input class="custom-ex-input" id="cx-name" type="text" placeholder="e.g. Banded Hip Thrust" autocomplete="off">
     </div>
-    <div class="custom-ex-field">
+    <div>
       <label class="custom-ex-label">Category</label>
       <select class="custom-ex-select" id="cx-category">
         <option value="chest">Chest</option>
@@ -829,12 +946,9 @@ button, input, select, a, textarea { touch-action: manipulation; }
         <option value="core">Core</option>
         <option value="fullbody">Full body</option>
         <option value="cardio">Cardio</option>
-        <option value="yoga">Yoga</option>
-        <option value="stretching">Stretching</option>
-        <option value="recovery">Recovery</option>
       </select>
     </div>
-    <div class="custom-ex-field">
+    <div>
       <label class="custom-ex-label">Equipment</label>
       <select class="custom-ex-select" id="cx-eq">
         <option value="db">Dumbbell</option>
@@ -847,19 +961,18 @@ button, input, select, a, textarea { touch-action: manipulation; }
         <option value="other">Other</option>
       </select>
     </div>
-    <div class="custom-ex-field">
+    <div>
       <label class="custom-ex-label">Type</label>
       <select class="custom-ex-select" id="cx-type">
         <option value="strength" selected>Strength</option>
         <option value="cardio">Cardio</option>
         <option value="timed_bodyweight">Timed / Bodyweight</option>
         <option value="hiit">HIIT</option>
-        <option value="yoga">Yoga</option>
         <option value="stretch">Stretch</option>
         <option value="recovery">Recovery</option>
       </select>
     </div>
-    <div class="custom-ex-field">
+    <div>
       <label class="custom-ex-label">Difficulty</label>
       <select class="custom-ex-select" id="cx-difficulty">
         <option value="beginner">Beginner</option>
@@ -867,15 +980,15 @@ button, input, select, a, textarea { touch-action: manipulation; }
         <option value="advanced">Advanced</option>
       </select>
     </div>
-    <div class="custom-ex-field">
+    <div>
       <label class="custom-ex-label">Muscles Targeted</label>
       <div class="custom-ex-muscles" id="cx-muscles"></div>
     </div>
-    <div class="custom-ex-field">
+    <div>
       <label class="custom-ex-label">Video URL (optional)</label>
       <input class="custom-ex-input" id="cx-video" type="url" placeholder="https://youtube.com/...">
     </div>
-    <div class="custom-ex-field">
+    <div>
       <label class="custom-ex-label">Notes (optional)</label>
       <textarea class="custom-ex-textarea" id="cx-notes" placeholder="Form cues, tips, variations…"></textarea>
     </div>
@@ -883,28 +996,42 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <button class="custom-ex-save-btn" onclick="saveCustomExercise()">Save Exercise</button>
 </div>
 
+<!-- TOAST -->
+<div class="lf-toast" id="toast"></div>
+
 <script>
 LF.ready().then(() => LF.guard());
 
 // ══════════════════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════════════════
-const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+let program      = null;   // program object being built
+let editingDate  = null;   // 'YYYY-MM-DD' string of day being edited
+let pasteMode    = false;  // true when user has copied a day
+let copiedDate   = null;   // source date for copy
+let libMuscle    = 'all';
+let libEq        = 'all';
+let cxSelectedMuscles = [];
 
-let program = null;   // the program object being edited
-let editingDay = -1;  // index of the day currently being edited (Screen 2)
+// Viewing month on calendar
+let calYear  = 0;
+let calMonth = 0; // 0=Jan
 
-// Library filter state
-let libMuscle = 'all';
-let libEq     = 'all';
+const MONTH_NAMES = ['January','February','March','April','May','June',
+                     'July','August','September','October','November','December'];
+const todayStr = new Date().toISOString().slice(0,10);
 
 // ══════════════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════════════
 function init() {
+  // Default start date = today
+  const todayInput = new Date().toISOString().slice(0,10);
+  document.getElementById('prog-start').value = todayInput;
+
+  // Load existing program if editing
   const params = new URLSearchParams(location.search);
-  const id     = params.get('id') || (() => {
-    // programs.html passes id via localStorage store (lf_editing_program_id)
+  const id = params.get('id') || (() => {
     try {
       const v = localStorage.getItem('lf_editing_program_id');
       if (v) { localStorage.removeItem('lf_editing_program_id'); return JSON.parse(v); }
@@ -916,12 +1043,17 @@ function init() {
     const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
     program = programs.find(p => p.id === id);
     if (!program) { showToast('Program not found'); goBack(); return; }
-    loadProgramIntoForm();
+    loadProgramIntoSetup();
+    // Go straight to calendar if program already has a startDate
+    if (program.startDate) {
+      initCalendarView();
+      showScreen('calendar');
+      return;
+    }
   } else {
     program = makeBlankProgram();
   }
 
-  renderDayList();
   buildLibraryFilters();
 }
 
@@ -931,94 +1063,285 @@ function makeBlankProgram() {
     name:        '',
     goal:        'hypertrophy',
     weeks:       8,
+    startDate:   new Date().toISOString().slice(0,10),
     aiGenerated: false,
     savedAt:     null,
-    days: DAY_NAMES.map((name, i) => ({
-      name,
-      rest: i >= 5, // Sat+Sun default rest
-      exercises: [],
-    })),
+    days:        {},  // keyed by 'YYYY-MM-DD'
   };
 }
 
-function loadProgramIntoForm() {
+function loadProgramIntoSetup() {
   document.getElementById('prog-name').value  = program.name  || '';
   document.getElementById('prog-goal').value  = program.goal  || 'hypertrophy';
   document.getElementById('prog-weeks').value = program.weeks || 8;
-  updateOverviewTitle();
-}
-
-function updateOverviewTitle() {
-  const val = document.getElementById('prog-name').value.trim();
-  document.getElementById('overview-title').textContent = val || 'NEW PROGRAM';
+  document.getElementById('prog-start').value = program.startDate || new Date().toISOString().slice(0,10);
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// SCREEN 1 — DAY LIST
+// SCREEN MANAGEMENT
 // ══════════════════════════════════════════════════════════════════════
-function renderDayList() {
-  const list = document.getElementById('day-list');
-  list.innerHTML = program.days.map((day, i) => {
-    const exCount  = day.exercises.length;
-    const subText  = day.rest
-      ? 'Rest day'
-      : exCount === 0
-        ? 'No exercises yet — tap to add'
-        : exCount + ' exercise' + (exCount !== 1 ? 's' : '');
-
-    return `
-      <div class="bldr-day-row${day.rest ? ' is-rest' : ''}"
-           onclick="${day.rest ? '' : `editDay(${i})`}"
-           id="day-row-${i}">
-        <div class="bldr-day-dot"></div>
-        <div class="bldr-day-info">
-          <div class="bldr-day-name">${escHtml(day.name)}</div>
-          <div class="bldr-day-sub">${subText}</div>
-        </div>
-        <button class="bldr-day-rest-toggle${day.rest ? ' is-rest' : ''}"
-                onclick="event.stopPropagation(); toggleRest(${i})"
-                aria-label="${day.rest ? 'Mark as workout' : 'Mark as rest'}">
-          ${day.rest ? '+ Workout' : 'Rest'}
-        </button>
-        ${day.rest ? '' : '<div class="bldr-day-arrow">›</div>'}
-      </div>`;
-  }).join('');
-}
-
-function toggleRest(i) {
-  program.days[i].rest = !program.days[i].rest;
-  renderDayList();
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// SCREEN 2 — DAY EDITOR
-// ══════════════════════════════════════════════════════════════════════
-function editDay(i) {
-  editingDay = i;
-  const day  = program.days[i];
-
-  document.getElementById('day-title-input').value = day.name || '';
-  document.getElementById('screen-overview').style.display = 'none';
-  document.getElementById('screen-day').style.display      = 'block';
+function showScreen(name) {
+  document.getElementById('screen-setup').style.display    = name === 'setup'    ? '' : 'none';
+  document.getElementById('screen-calendar').style.display = name === 'calendar' ? '' : 'none';
+  document.getElementById('screen-day').style.display      = name === 'day'      ? '' : 'none';
   window.scrollTo(0, 0);
-  renderExList();
 }
 
-function backToOverview() {
-  // Flush day name edits back to program
-  if (editingDay >= 0) {
-    const nameVal = document.getElementById('day-title-input').value.trim();
-    if (nameVal) program.days[editingDay].name = nameVal;
+function goBack() {
+  window.location.href = 'programs.html';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SCREEN 1 → SCREEN 2
+// ══════════════════════════════════════════════════════════════════════
+function goToCalendar() {
+  const name = document.getElementById('prog-name').value.trim();
+  if (!name) {
+    showToast('Give your program a name first');
+    document.getElementById('prog-name').focus();
+    return;
   }
-  editingDay = -1;
-  document.getElementById('screen-day').style.display      = 'none';
-  document.getElementById('screen-overview').style.display = 'block';
-  window.scrollTo(0, 0);
-  renderDayList();
+  flushSetupToProgram();
+  initCalendarView();
+  showScreen('calendar');
 }
 
+function flushSetupToProgram() {
+  program.name      = document.getElementById('prog-name').value.trim();
+  program.goal      = document.getElementById('prog-goal').value;
+  program.weeks     = parseInt(document.getElementById('prog-weeks').value);
+  program.startDate = document.getElementById('prog-start').value;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════════════════════════════════════
+function programDateRange() {
+  const start = new Date(program.startDate + 'T00:00:00');
+  const end   = new Date(start);
+  end.setDate(end.getDate() + program.weeks * 7 - 1);
+  return {
+    startStr: program.startDate,
+    endStr:   end.toISOString().slice(0,10),
+    start,
+    end,
+  };
+}
+
+function initCalendarView() {
+  const { start } = programDateRange();
+  calYear  = start.getFullYear();
+  calMonth = start.getMonth();
+  document.getElementById('cal-header-title').textContent =
+    (program.name || 'SCHEDULE').toUpperCase();
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const range = programDateRange();
+  const label = MONTH_NAMES[calMonth] + ' ' + calYear;
+  document.getElementById('cal-month-label').textContent = label;
+
+  // Disable prev if this month is before start month
+  const startM = new Date(range.startStr + 'T00:00:00');
+  const endM   = new Date(range.endStr   + 'T00:00:00');
+  const thisFirst = new Date(calYear, calMonth, 1);
+  const thisLast  = new Date(calYear, calMonth + 1, 0);
+
+  document.getElementById('cal-prev').disabled =
+    thisFirst <= new Date(startM.getFullYear(), startM.getMonth(), 1);
+  document.getElementById('cal-next').disabled =
+    thisFirst >= new Date(endM.getFullYear(), endM.getMonth(), 1);
+
+  // Build grid
+  const firstDow = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+  let html = '';
+
+  // Leading empty cells
+  for (let i = 0; i < firstDow; i++) {
+    html += `<div class="cal-cell empty"></div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const inRange = dateStr >= range.startStr && dateStr <= range.endStr;
+    const isToday = dateStr === todayStr;
+    const workout = program.days[dateStr];
+    const isPaste = pasteMode && inRange;
+
+    let cls = 'cal-cell';
+    if (!inRange) cls += ' out-of-range';
+    if (isToday)  cls += ' is-today';
+    if (workout)  cls += ' has-workout';
+    if (isPaste && inRange)  cls += ' paste-target';
+
+    const clickFn = inRange
+      ? `onclick="handleDayTap('${dateStr}')"`
+      : '';
+
+    html += `
+      <div class="${cls}" ${clickFn} data-date="${dateStr}">
+        <div class="cal-date-num">${d}</div>
+        ${workout ? `<div class="cal-workout-name">${escHtml(workout.name || 'Workout')}</div>` : ''}
+        ${workout ? `<div class="cal-dot"></div>` : ''}
+      </div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function prevMonth() {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function nextMonth() {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// DAY TAP LOGIC
+// ══════════════════════════════════════════════════════════════════════
+function handleDayTap(dateStr) {
+  if (pasteMode) {
+    pasteWorkout(dateStr);
+    return;
+  }
+
+  const workout = program.days[dateStr];
+  if (workout) {
+    openDayAction(dateStr);
+  } else {
+    openDayEditor(dateStr);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// DAY ACTION SHEET (for days that already have a workout)
+// ══════════════════════════════════════════════════════════════════════
+let actionDate = null;
+
+function openDayAction(dateStr) {
+  actionDate = dateStr;
+  const workout = program.days[dateStr];
+  const d = new Date(dateStr + 'T00:00:00');
+  const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('day-action-date').textContent = label;
+  document.getElementById('day-action-name').textContent = workout.name || 'Workout';
+  document.getElementById('day-action-overlay').classList.add('open');
+  document.getElementById('day-action-sheet').classList.add('open');
+}
+
+function closeDayAction() {
+  document.getElementById('day-action-overlay').classList.remove('open');
+  document.getElementById('day-action-sheet').classList.remove('open');
+  actionDate = null;
+}
+
+function dayActionEdit() {
+  const date = actionDate;
+  closeDayAction();
+  openDayEditor(date);
+}
+
+function dayActionCopy() {
+  copiedDate = actionDate;
+  const workout = program.days[copiedDate];
+  document.getElementById('paste-banner-name').textContent = workout.name || 'Workout';
+  document.getElementById('paste-banner').style.display = 'flex';
+  pasteMode = true;
+  closeDayAction();
+  renderCalendar();
+}
+
+function dayActionClear() {
+  if (confirm('Remove this workout from ' + actionDate + '?')) {
+    delete program.days[actionDate];
+    closeDayAction();
+    renderCalendar();
+    showToast('Day cleared');
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// PASTE
+// ══════════════════════════════════════════════════════════════════════
+function pasteWorkout(targetDate) {
+  const source = program.days[copiedDate];
+  if (!source) { cancelPaste(); return; }
+
+  if (program.days[targetDate]) {
+    if (!confirm('This day already has a workout. Replace it?')) return;
+  }
+
+  // Deep copy
+  program.days[targetDate] = JSON.parse(JSON.stringify(source));
+  cancelPaste();
+  renderCalendar();
+  showToast('Workout pasted to ' + formatDateShort(targetDate));
+}
+
+function cancelPaste() {
+  pasteMode  = false;
+  copiedDate = null;
+  document.getElementById('paste-banner').style.display = 'none';
+  renderCalendar();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SCREEN 3 — DAY EDITOR
+// ══════════════════════════════════════════════════════════════════════
+function openDayEditor(dateStr) {
+  editingDate = dateStr;
+
+  // Ensure a day object exists
+  if (!program.days[dateStr]) {
+    program.days[dateStr] = { name: '', exercises: [] };
+  }
+
+  const day = program.days[dateStr];
+  document.getElementById('day-title-input').value = day.name || '';
+
+  const d = new Date(dateStr + 'T00:00:00');
+  document.getElementById('day-date-label').textContent =
+    d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
+  showScreen('day');
+  renderExList();
+  buildLibraryFilters();
+}
+
+function saveDayAndBack() {
+  if (editingDate) {
+    const nameVal = document.getElementById('day-title-input').value.trim();
+    if (!program.days[editingDate]) program.days[editingDate] = { name: '', exercises: [] };
+
+    // If no name and no exercises, remove the day entirely (treat as rest)
+    if (!nameVal && program.days[editingDate].exercises.length === 0) {
+      delete program.days[editingDate];
+    } else {
+      program.days[editingDate].name = nameVal || 'Workout';
+    }
+  }
+  editingDate = null;
+  showScreen('calendar');
+  renderCalendar();
+}
+
+function backToCalendar() {
+  saveDayAndBack();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// EXERCISE LIST
+// ══════════════════════════════════════════════════════════════════════
 function renderExList() {
-  const day  = program.days[editingDay];
+  const day  = program.days[editingDate];
   const list = document.getElementById('ex-list');
 
   if (!day || day.exercises.length === 0) {
@@ -1035,35 +1358,32 @@ function renderExList() {
     <div class="bldr-ex-card" id="ex-card-${ei}">
       <div class="bldr-ex-card-header">
         <span class="bldr-ex-drag" title="Drag to reorder">⠿</span>
-        <div class="bldr-ex-info" style="flex:1;min-width:0;">
+        <div style="flex:1;min-width:0;">
           <div class="bldr-ex-name">${escHtml(ex.name)}</div>
           <div class="bldr-ex-muscle">${(ex.muscles || []).slice(0,2).join(' · ')}</div>
         </div>
-        <button class="bldr-ex-del" onclick="removeExercise(${ei})" aria-label="Remove exercise">✕</button>
+        <button class="bldr-ex-del" onclick="removeExercise(${ei})" aria-label="Remove">✕</button>
       </div>
       <div class="bldr-ex-params">
         <div class="bldr-param">
           <div class="bldr-param-label">Sets</div>
           <input class="bldr-param-input" type="number"
             value="${ex.sets}" min="1" max="20"
-            onchange="updateExParam(${ei},'sets',this.value)"
-            aria-label="Sets">
+            onchange="updateExParam(${ei},'sets',this.value)">
           <div class="bldr-param-unit">sets</div>
         </div>
         <div class="bldr-param">
           <div class="bldr-param-label">Reps</div>
           <input class="bldr-param-input" type="number"
             value="${ex.reps}" min="1" max="100"
-            onchange="updateExParam(${ei},'reps',this.value)"
-            aria-label="Reps">
+            onchange="updateExParam(${ei},'reps',this.value)">
           <div class="bldr-param-unit">reps</div>
         </div>
         <div class="bldr-param">
           <div class="bldr-param-label">Rest</div>
           <input class="bldr-param-input" type="number"
             value="${ex.restSec}" min="0" max="600" step="15"
-            onchange="updateExParam(${ei},'restSec',this.value)"
-            aria-label="Rest seconds">
+            onchange="updateExParam(${ei},'restSec',this.value)">
           <div class="bldr-param-unit">sec</div>
         </div>
       </div>
@@ -1073,18 +1393,18 @@ function renderExList() {
 }
 
 function updateExParam(ei, key, val) {
-  const day = program.days[editingDay];
+  const day = program.days[editingDate];
   if (!day || !day.exercises[ei]) return;
   day.exercises[ei][key] = parseInt(val) || 0;
 }
 
 function removeExercise(ei) {
-  program.days[editingDay].exercises.splice(ei, 1);
+  program.days[editingDate].exercises.splice(ei, 1);
   renderExList();
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// DRAG TO REORDER (touch-friendly)
+// DRAG TO REORDER
 // ══════════════════════════════════════════════════════════════════════
 function initDrag() {
   const list = document.getElementById('ex-list');
@@ -1103,18 +1423,16 @@ function initDrag() {
 
   list.addEventListener('touchmove', e => {
     if (!dragEl) return;
-    const dy    = e.touches[0].clientY - startY;
-    const cards = [...list.querySelectorAll('.bldr-ex-card')];
-    const cardH = dragEl.offsetHeight + 10;
+    const dy     = e.touches[0].clientY - startY;
+    const cards  = [...list.querySelectorAll('.bldr-ex-card')];
+    const cardH  = dragEl.offsetHeight + 10;
     const newIdx = Math.max(0, Math.min(cards.length - 1, startIdx + Math.round(dy / cardH)));
-
     if (newIdx !== curIdx) {
-      const exes = program.days[editingDay].exercises;
+      const exes  = program.days[editingDate].exercises;
       const moved = exes.splice(curIdx, 1)[0];
       exes.splice(newIdx, 0, moved);
       curIdx = newIdx;
       renderExList();
-      // Re-bind — new elements
       initDrag();
     }
     e.preventDefault();
@@ -1144,7 +1462,6 @@ const MUSCLE_FILTERS = [
   { id:'fullbody',  label:'Full body' },
   { id:'cardio',    label:'Cardio' },
 ];
-
 const EQ_FILTERS = [
   { id:'all',  label:'All equipment' },
   { id:'db',   label:'Dumbbells' },
@@ -1157,30 +1474,21 @@ const EQ_FILTERS = [
 ];
 
 function buildLibraryFilters() {
-  // Muscle chips
-  document.getElementById('lib-muscle-row').innerHTML = MUSCLE_FILTERS.map(f =>
-    `<button class="lib-filter-chip${f.id === libMuscle ? ' active' : ''}"
+  const mRow = document.getElementById('lib-muscle-row');
+  const eRow = document.getElementById('lib-eq-row');
+  if (!mRow || !eRow) return;
+  mRow.innerHTML = MUSCLE_FILTERS.map(f =>
+    `<button class="lib-filter-chip${f.id===libMuscle?' active':''}"
              onclick="setLibMuscle('${f.id}')">${f.label}</button>`
   ).join('');
-
-  // Equipment chips
-  document.getElementById('lib-eq-row').innerHTML = EQ_FILTERS.map(f =>
-    `<button class="lib-eq-chip${f.id === libEq ? ' active' : ''}"
+  eRow.innerHTML = EQ_FILTERS.map(f =>
+    `<button class="lib-eq-chip${f.id===libEq?' active':''}"
              onclick="setLibEq('${f.id}')">${f.label}</button>`
   ).join('');
 }
 
-function setLibMuscle(val) {
-  libMuscle = val;
-  buildLibraryFilters();
-  renderLibrary();
-}
-
-function setLibEq(val) {
-  libEq = val;
-  buildLibraryFilters();
-  renderLibrary();
-}
+function setLibMuscle(val) { libMuscle = val; buildLibraryFilters(); renderLibrary(); }
+function setLibEq(val)     { libEq     = val; buildLibraryFilters(); renderLibrary(); }
 
 function openLibrary() {
   document.getElementById('lib-sheet').classList.add('open');
@@ -1196,24 +1504,14 @@ function closeLibrary() {
 }
 
 function renderLibrary() {
-  const q      = (document.getElementById('lib-search').value || '').toLowerCase().trim();
-  const day    = program.days[editingDay];
+  const q       = (document.getElementById('lib-search').value || '').toLowerCase().trim();
+  const day     = program.days[editingDate];
   const addedIds = new Set((day?.exercises || []).map(e => e.id));
-
   const customs  = getCustomExercises();
   let exercises  = [...customs, ...(LAROFIT_EXERCISES || [])];
 
-  // Filter by muscle/category
-  if (libMuscle !== 'all') {
-    exercises = exercises.filter(e => e.category === libMuscle);
-  }
-
-  // Filter by equipment
-  if (libEq !== 'all') {
-    exercises = exercises.filter(e => e.eq === libEq);
-  }
-
-  // Filter by search
+  if (libMuscle !== 'all') exercises = exercises.filter(e => e.category === libMuscle);
+  if (libEq     !== 'all') exercises = exercises.filter(e => e.eq === libEq);
   if (q) {
     exercises = exercises.filter(e =>
       e.name.toLowerCase().includes(q) ||
@@ -1221,79 +1519,57 @@ function renderLibrary() {
     );
   }
 
-  const container = document.getElementById('lib-results');
-  const EQ_ICONS  = { db:'🏋️', bb:'🏗️', mc:'⚙️', bw:'🤸', kb:'🔔', band:'🎽', cd:'🔗', yoga:'🧘', rc:'🏃' };
-  const isCustom  = id => id && id.startsWith('cx-');
+  const EQ_ICONS = { db:'🏋️', bb:'🏗️', mc:'⚙️', bw:'🤸', kb:'🔔', band:'🎽', cd:'🔗' };
+  const isCustom = id => id && id.startsWith('cx-');
 
-  const rowsHTML = exercises.length === 0
+  document.getElementById('lib-results').innerHTML = exercises.length === 0
     ? `<div class="lib-empty">No exercises found.<br>Try a different search or filter.</div>`
     : exercises.map(ex => {
         const added = addedIds.has(ex.id);
         return `
-          <div class="lib-ex-row${added ? ' already-added' : ''}" onclick="addExercise('${ex.id}')">
+          <div class="lib-ex-row${added?' already-added':''}" onclick="addExercise('${ex.id}')">
             <div class="lib-ex-icon">${EQ_ICONS[ex.eq] || '🏋️'}</div>
             <div class="lib-ex-body">
-              <div class="lib-ex-name">${escHtml(ex.name)}${isCustom(ex.id) ? '<span class="custom-badge">CUSTOM</span>' : ''}</div>
-              <div class="lib-ex-meta">${(ex.muscles || []).slice(0,2).join(' · ')}</div>
+              <div class="lib-ex-name">${escHtml(ex.name)}${isCustom(ex.id)?'<span class="custom-badge">CUSTOM</span>':''}</div>
+              <div class="lib-ex-meta">${(ex.muscles||[]).slice(0,2).join(' · ')}</div>
             </div>
             <div class="lib-ex-add">${added ? '✓' : '+'}</div>
           </div>`;
       }).join('');
-
-  container.innerHTML = rowsHTML;
 }
 
 function addExercise(exId) {
-  const customs = getCustomExercises();
-  const ex      = customs.find(e => e.id === exId) || (LAROFIT_EXERCISES || []).find(e => e.id === exId);
+  const customs  = getCustomExercises();
+  const ex       = customs.find(e => e.id === exId) || (LAROFIT_EXERCISES || []).find(e => e.id === exId);
   if (!ex) return;
-
-  const day = program.days[editingDay];
+  const day = program.days[editingDate];
   if (!day) return;
 
-  // Already added — remove it (toggle)
   const existing = day.exercises.findIndex(e => e.id === exId);
   if (existing >= 0) {
     day.exercises.splice(existing, 1);
-    renderLibrary();
-    renderExList();
-    return;
+    renderLibrary(); renderExList(); return;
   }
 
-  day.exercises.push({
-    id:      ex.id,
-    name:    ex.name,
-    muscles: ex.muscles || [],
-    sets:    3,
-    reps:    10,
-    restSec: 60,
-  });
-
+  day.exercises.push({ id: ex.id, name: ex.name, muscles: ex.muscles || [], sets: 3, reps: 10, restSec: 60 });
   renderLibrary();
   renderExList();
   showToast(ex.name + ' added');
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// SAVE
+// SAVE PROGRAM
 // ══════════════════════════════════════════════════════════════════════
-function saveProgram() {
-  // Flush any in-progress day edit
-  if (editingDay >= 0) {
-    const nameVal = document.getElementById('day-title-input').value.trim();
-    if (nameVal) program.days[editingDay].name = nameVal;
-  }
+function saveProgram(skipSchedule) {
+  flushSetupToProgram();
 
-  const name = document.getElementById('prog-name').value.trim();
-  if (!name) {
+  if (!program.name) {
     showToast('Give your program a name first');
+    showScreen('setup');
     document.getElementById('prog-name').focus();
     return;
   }
 
-  program.name    = name;
-  program.goal    = document.getElementById('prog-goal').value;
-  program.weeks   = parseInt(document.getElementById('prog-weeks').value);
   program.savedAt = new Date().toISOString();
 
   const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
@@ -1307,54 +1583,22 @@ function saveProgram() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// NAV
+// CUSTOM EXERCISES
 // ══════════════════════════════════════════════════════════════════════
-function goBack() {
-  if (editingDay >= 0) { backToOverview(); return; }
-  window.location.href = 'programs.html';
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════════════════════════════════
-function escHtml(str) {
-  return String(str)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-let toastTimer;
-function showToast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
-}
-
-// ── CUSTOM EXERCISES ──────────────────────────────────────────
-// MUSCLES_ALL already declared in larofit-exercises.js
-
 function getCustomExercises() {
   try { return JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]'); } catch { return []; }
 }
 
-function saveCustomExercises(arr) {
-  localStorage.setItem('lf_custom_exercises', JSON.stringify(arr));
-}
-
-let cxSelectedMuscles = [];
-
 function openCustomExSheet() {
   cxSelectedMuscles = [];
-  document.getElementById('cx-name').value        = '';
-  document.getElementById('cx-video').value       = '';
-  document.getElementById('cx-notes').value       = '';
-  document.getElementById('cx-category').value    = 'legs';
-  document.getElementById('cx-eq').value          = 'bw';
-  document.getElementById('cx-type').value        = 'strength';
-  document.getElementById('cx-difficulty').value  = 'intermediate';
-  buildMuscleChips('cx-muscles', cxSelectedMuscles);
+  document.getElementById('cx-name').value       = '';
+  document.getElementById('cx-video').value      = '';
+  document.getElementById('cx-notes').value      = '';
+  document.getElementById('cx-category').value   = 'legs';
+  document.getElementById('cx-eq').value         = 'bw';
+  document.getElementById('cx-type').value       = 'strength';
+  document.getElementById('cx-difficulty').value = 'intermediate';
+  buildMuscleChips();
   document.getElementById('custom-ex-backdrop').classList.add('show');
   document.getElementById('custom-ex-sheet').classList.add('show');
   setTimeout(() => document.getElementById('cx-name').focus(), 300);
@@ -1365,20 +1609,20 @@ function closeCustomExSheet() {
   document.getElementById('custom-ex-sheet').classList.remove('show');
 }
 
-function buildMuscleChips(containerId, selectedArr) {
-  const el = document.getElementById(containerId);
+function buildMuscleChips() {
+  const el = document.getElementById('cx-muscles');
   if (!el) return;
   el.innerHTML = MUSCLES_ALL.map(m => `
-    <div class="custom-ex-muscle-chip${selectedArr.includes(m) ? ' sel' : ''}"
-         onclick="toggleMuscleChip(this,'${m}',cxSelectedMuscles)">
+    <div class="custom-ex-muscle-chip${cxSelectedMuscles.includes(m)?' sel':''}"
+         onclick="toggleMuscleChip(this,'${m}')">
       ${m}
     </div>`).join('');
 }
 
-function toggleMuscleChip(el, muscle, arr) {
-  const idx = arr.indexOf(muscle);
-  if (idx >= 0) { arr.splice(idx, 1); el.classList.remove('sel'); }
-  else          { arr.push(muscle);   el.classList.add('sel'); }
+function toggleMuscleChip(el, muscle) {
+  const idx = cxSelectedMuscles.indexOf(muscle);
+  if (idx >= 0) { cxSelectedMuscles.splice(idx, 1); el.classList.remove('sel'); }
+  else          { cxSelectedMuscles.push(muscle);   el.classList.add('sel'); }
 }
 
 function saveCustomExercise() {
@@ -1400,11 +1644,34 @@ function saveCustomExercise() {
 
   const arr = getCustomExercises();
   arr.push(ex);
-  saveCustomExercises(arr);
+  localStorage.setItem('lf_custom_exercises', JSON.stringify(arr));
   closeCustomExSheet();
   addExercise(ex.id);
   renderLibrary();
-  showToast(name + ' created and added');
+  showToast(ex.name + ' created and added');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════════════════
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function formatDateShort(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
 // ── RUN ──
