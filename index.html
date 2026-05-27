@@ -31,8 +31,14 @@
         <div id="username" style="font-size:20px;font-weight:700;color:var(--text);line-height:1.2;margin-top:1px;"></div>
       </div>
       <div style="display:flex;align-items:center;gap:10px;">
-        <button class="btn btn-ghost btn-sm" id="notif-btn" aria-label="Notifications" style="padding:8px;">
-          <i class="ti ti-bell" style="font-size:20px;" aria-hidden="true"></i>
+        <button onclick="handleSignOut()" aria-label="Sign out"
+                style="display:flex;align-items:center;gap:5px;padding:7px 12px;
+                       background:var(--bg-card);border:1px solid var(--border-md);
+                       border-radius:999px;font-size:12px;font-weight:600;
+                       color:var(--text-2);cursor:pointer;font-family:var(--font-body);
+                       touch-action:manipulation;">
+          <i class="ti ti-logout" style="font-size:14px;" aria-hidden="true"></i>
+          Sign out
         </button>
         <div id="avatar"
              style="width:38px;height:38px;border-radius:50%;background:var(--bg-dark);
@@ -489,6 +495,14 @@ function escHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+// ── SIGN OUT ─────────────────────────────────────────────────
+async function handleSignOut() {
+  if (confirm('Sign out of LaroFit?')) {
+    await LF.auth.signOut();
+    window.location.href = 'login.html';
+  }
 }
 
 // ── INIT ─────────────────────────────────────────────────────
