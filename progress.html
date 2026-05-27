@@ -403,6 +403,7 @@ canvas {
 </head>
 <body>
 
+<script src="supabase-client.js"></script>
 <script>window.LF_PAGE = 'progress';</script>
 <script src="larofit-nav.js"></script>
 
@@ -522,6 +523,8 @@ canvas {
 </div>
 
 <script>
+LF.ready().then(() => LF.guard());
+
 /* ============================================================
    progress.js — LaroFit v2
    ============================================================ */

@@ -520,8 +520,11 @@ button, a { touch-action: manipulation; }
   </div>
 </div>
 
+<script src="supabase-client.js"></script>
 <script src="larofit-exercises.js"></script>
 <script>
+LF.ready().then(() => LF.guard());
+
 /* ============================================================
    onboarding.js — LaroFit v2 AI-first onboarding
    ============================================================ */

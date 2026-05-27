@@ -280,6 +280,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
+<script src="supabase-client.js"></script>
 <script src="larofit-exercises.js"></script>
 <script>window.LF_PAGE = 'profile';</script>
 <script src="larofit-nav.js"></script>
@@ -681,6 +682,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
 <div class="lf-toast" id="toast"></div>
 
 <script>
+LF.ready().then(() => LF.guard());
+
 // ── STATE ──────────────────────────────────────────────────────────────────
 let selectedGoals = [];
 let selectedDiets = [];

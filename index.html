@@ -15,6 +15,7 @@
 <body>
 
 <!-- Nav injected by larofit-nav.js -->
+<script src="supabase-client.js"></script>
 <script src="larofit-exercises.js"></script>
 <script>window.LF_PAGE = 'home';</script>
 <script src="larofit-nav.js"></script>
@@ -183,6 +184,8 @@
 </main>
 
 <script>
+LF.ready().then(() => LF.guard());
+
 /* ============================================================
    dashboard.js — inline script for dashboard.html
    All data lives in localStorage under 'lf_' keys.
