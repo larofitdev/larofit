@@ -1025,6 +1025,18 @@ function init() {
 
   buildLibraryFilters();
   initCalendarView();
+
+  // Attach calendar tap listener exactly once
+  let lastTap = 0;
+  const grid = document.getElementById('cal-grid');
+  grid.addEventListener('touchend', e => {
+    lastTap = Date.now();
+    calGridTap(e);
+  }, { passive: true });
+  grid.addEventListener('click', e => {
+    if (Date.now() - lastTap < 400) return;
+    calGridTap(e);
+  });
 }
 
 // Live-update calendar when setup fields change
@@ -1087,19 +1099,6 @@ function initCalendarView() {
   document.getElementById('cal-header-title').textContent =
     (program.name || 'NEW PROGRAM').toUpperCase();
   renderCalendar();
-
-  // Attach delegated tap listener once — handles both browser click and PWA touch
-  const grid = document.getElementById('cal-grid');
-  let lastTap = 0;
-  grid.addEventListener('touchend', e => {
-    lastTap = Date.now();
-    calGridTap(e);
-  }, { passive: true });
-  grid.addEventListener('click', e => {
-    // Suppress click if touchend already fired within 400ms (same tap)
-    if (Date.now() - lastTap < 400) return;
-    calGridTap(e);
-  });
 }
 
 function renderCalendar() {
