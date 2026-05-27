@@ -854,7 +854,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
     </div>
   </button>
 
-  <button class="day-action-btn" onclick="dayActionClear()">
+  <button class="day-action-btn" id="clear-btn" onclick="dayActionClear()">
     <div class="day-action-icon" style="background:var(--danger-bg);">
       <i class="ti ti-trash" style="color:var(--danger);font-size:18px;"></i>
     </div>
@@ -1129,12 +1129,10 @@ function renderCalendar() {
     if (workout)  cls += ' has-workout';
     if (isPaste && inRange)  cls += ' paste-target';
 
-    const clickFn = inRange
-      ? `onclick="handleDayTap('${dateStr}')"`
-      : '';
+    const clickFn = inRange ? `data-date="${dateStr}"` : '';
 
     html += `
-      <div class="${cls}" ${clickFn} data-date="${dateStr}">
+      <div class="${cls}" ${inRange ? `data-date="${dateStr}"` : ''}>
         <div class="cal-date-num">${d}</div>
         ${workout ? `<div class="cal-workout-name">${escHtml(workout.name || 'Workout')}</div>` : ''}
         ${workout ? `<div class="cal-dot"></div>` : ''}
@@ -1142,6 +1140,21 @@ function renderCalendar() {
   }
 
   document.getElementById('cal-grid').innerHTML = html;
+
+  // Delegated tap handler — works on both browser and PWA without 300ms delay
+  const grid = document.getElementById('cal-grid');
+  grid.addEventListener('touchend', calGridTap, { passive: true });
+  grid.addEventListener('click',    calGridTap);
+}
+
+function calGridTap(e) {
+  // Prevent double-firing on mobile (touchend then click)
+  if (e.type === 'click' && e._handled) return;
+  const cell = e.target.closest('[data-date]');
+  if (!cell) return;
+  if (e.type === 'touchend') e._handled = true;
+  const dateStr = cell.dataset.date;
+  if (dateStr) handleDayTap(dateStr);
 }
 
 function prevMonth() {
@@ -1192,6 +1205,13 @@ function openDayAction(dateStr) {
 function closeDayAction() {
   document.getElementById('day-action-overlay').classList.remove('open');
   document.getElementById('day-action-sheet').classList.remove('open');
+  // Reset clear button state
+  const btn = document.getElementById('clear-btn');
+  if (btn) {
+    btn.dataset.confirming = '';
+    btn.querySelector('.day-action-label').textContent = 'Clear this day';
+    btn.querySelector('.day-action-sub').textContent   = 'Remove all exercises from this date';
+  }
   actionDate = null;
 }
 
@@ -1212,11 +1232,24 @@ function dayActionCopy() {
 }
 
 function dayActionClear() {
-  if (confirm('Remove this workout from ' + actionDate + '?')) {
+  // Show confirm state directly in the sheet — avoid confirm() which is unreliable in PWAs
+  const btn = document.getElementById('clear-btn');
+  if (btn.dataset.confirming === 'true') {
     delete program.days[actionDate];
     closeDayAction();
     renderCalendar();
     showToast('Day cleared');
+  } else {
+    btn.dataset.confirming = 'true';
+    btn.querySelector('.day-action-label').textContent = 'Tap again to confirm';
+    btn.querySelector('.day-action-sub').textContent   = 'This will remove all exercises';
+    setTimeout(() => {
+      if (btn.dataset.confirming) {
+        btn.dataset.confirming = '';
+        btn.querySelector('.day-action-label').textContent = 'Clear this day';
+        btn.querySelector('.day-action-sub').textContent   = 'Remove all exercises from this date';
+      }
+    }, 3000);
   }
 }
 
@@ -1227,11 +1260,7 @@ function pasteWorkout(targetDate) {
   const source = program.days[copiedDate];
   if (!source) { cancelPaste(); return; }
 
-  if (program.days[targetDate]) {
-    if (!confirm('This day already has a workout. Replace it?')) return;
-  }
-
-  // Deep copy
+  // If target already has a workout, just overwrite — user chose to paste here
   program.days[targetDate] = JSON.parse(JSON.stringify(source));
   cancelPaste();
   renderCalendar();
@@ -1251,19 +1280,15 @@ function cancelPaste() {
 function openDayEditor(dateStr) {
   editingDate = dateStr;
 
-  // Ensure a day object exists
-  if (!program.days[dateStr]) {
-    program.days[dateStr] = { name: '', exercises: [] };
-  }
-
   const day = program.days[dateStr];
-  document.getElementById('day-title-input').value = day.name || '';
+  document.getElementById('day-title-input').value = day ? (day.name || '') : '';
 
   const d = new Date(dateStr + 'T00:00:00');
   document.getElementById('day-date-label').textContent =
     d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
   showScreen('day');
+  buildLibraryFilters();
   renderExList();
 }
 
@@ -1292,7 +1317,7 @@ function backToCalendar() {
 // EXERCISE LIST
 // ══════════════════════════════════════════════════════════════════════
 function renderExList() {
-  const day  = program.days[editingDate];
+  const day  = editingDate ? program.days[editingDate] : null;
   const list = document.getElementById('ex-list');
 
   if (!day || day.exercises.length === 0) {
@@ -1493,6 +1518,11 @@ function addExercise(exId) {
   const customs  = getCustomExercises();
   const ex       = customs.find(e => e.id === exId) || (LAROFIT_EXERCISES || []).find(e => e.id === exId);
   if (!ex) return;
+
+  // Lazily create the day object only when first exercise is added
+  if (!program.days[editingDate]) {
+    program.days[editingDate] = { name: '', exercises: [] };
+  }
   const day = program.days[editingDate];
   if (!day) return;
 
