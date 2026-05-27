@@ -184,25 +184,11 @@
 </main>
 
 <script>
-LF.ready().then(() => LF.guard());
-
 /* ============================================================
-   dashboard.js — inline script for dashboard.html
-   All data lives in localStorage under 'lf_' keys.
+   index.js — LaroFit v2 dashboard
+   Data reads from Supabase via LF.db, falls back to localStorage
+   when offline.
    ============================================================ */
-
-// ── STORAGE HELPERS ──────────────────────────────────────────
-const store = {
-  get(key, fallback = null) {
-    try {
-      const v = localStorage.getItem('lf_' + key);
-      return v === null ? fallback : JSON.parse(v);
-    } catch { return fallback; }
-  },
-  set(key, value) {
-    try { localStorage.setItem('lf_' + key, JSON.stringify(value)); } catch {}
-  }
-};
 
 // ── DATE HELPERS ─────────────────────────────────────────────
 const today = new Date();
@@ -231,43 +217,51 @@ function getGreeting() {
 }
 
 // ── LOAD USER ────────────────────────────────────────────────
-function loadUser() {
-  const user = store.get('user', { name: 'Athlete', initials: 'A' });
-  const name = user.name || 'Athlete';
-  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+async function loadUser() {
+  // Try Supabase profile first, fall back to cached lf_user
+  let name     = 'Athlete';
+  let initials = 'A';
+
+  const profile = await LF.db.getProfile();
+  if (profile && profile.name) {
+    name     = profile.name;
+    initials = (profile.initials || name.charAt(0)).toUpperCase();
+  } else {
+    const cached = (() => { try { return JSON.parse(localStorage.getItem('lf_user') || '{}'); } catch { return {}; } })();
+    if (cached.name) {
+      name     = cached.name;
+      initials = (cached.initials || name.charAt(0)).toUpperCase();
+    }
+  }
 
   document.getElementById('greeting').textContent = getGreeting();
   document.getElementById('username').textContent = name;
-  document.getElementById('avatar').textContent = initials;
-
-  return user;
+  document.getElementById('avatar').textContent   = initials;
 }
 
 // ── TODAY'S WORKOUT ──────────────────────────────────────────
-function loadTodayCard() {
-  const programs  = store.get('programs', []);
-  const activeId  = store.get('active_program', null);
-  const program   = programs.find(p => p.id === activeId);
+async function loadTodayCard() {
+  const programs = await LF.db.getPrograms();
+  const activeId = (() => { try { return JSON.parse(localStorage.getItem('lf_active_program')); } catch { return null; } })();
+  const program  = programs.find(p => p.id === activeId || p.isActive);
 
-  const hasCard    = document.getElementById('today-has-workout');
-  const restCard   = document.getElementById('today-rest-day');
-  const noProg     = document.getElementById('today-no-program');
+  const hasCard  = document.getElementById('today-has-workout');
+  const restCard = document.getElementById('today-rest-day');
+  const noProg   = document.getElementById('today-no-program');
 
   if (!program) {
     noProg.style.display = 'block';
     return;
   }
 
-  const dayIndex  = today.getDay(); // 0=Sun, need Mon=0
-  const lf_day   = (dayIndex + 6) % 7; // Mon=0 … Sun=6
-  const dayPlan  = program.days && program.days[lf_day];
+  const lf_day  = (today.getDay() + 6) % 7; // Mon=0 … Sun=6
+  const dayPlan = program.days && program.days[lf_day];
 
   if (!dayPlan || dayPlan.rest) {
     restCard.style.display = 'block';
     return;
   }
 
-  // Has a workout today
   hasCard.style.display = 'block';
   document.getElementById('today-name').textContent =
     dayPlan.name || program.name + ' — Day ' + (lf_day + 1);
@@ -283,8 +277,8 @@ function loadTodayCard() {
 }
 
 // ── STREAK ───────────────────────────────────────────────────
-function loadStreak() {
-  const history = store.get('workout_history', {}); // { 'YYYY-MM-DD': {...} }
+async function loadStreak() {
+  const history = await LF.db.getWorkoutHistory();
   const week    = weekDates();
   const todayDow = (today.getDay() + 6) % 7; // Mon=0
 
@@ -343,11 +337,11 @@ function loadStreak() {
 }
 
 // ── WEEK STATS ───────────────────────────────────────────────
-function loadStats() {
-  const history  = store.get('workout_history', {});
-  const programs = store.get('programs', []);
-  const activeId = store.get('active_program', null);
-  const program  = programs.find(p => p.id === activeId);
+async function loadStats() {
+  const history  = await LF.db.getWorkoutHistory();
+  const programs = await LF.db.getPrograms();
+  const activeId = (() => { try { return JSON.parse(localStorage.getItem('lf_active_program')); } catch { return null; } })();
+  const program  = programs.find(p => p.id === activeId || p.isActive);
   const week     = weekDates();
 
   let workouts = 0, volume = 0, prs = 0, activeDays = 0;
@@ -377,7 +371,8 @@ function loadStats() {
 
 // ── AI INSIGHT ───────────────────────────────────────────────
 function loadAIInsight() {
-  const insight = store.get('ai_insight', null);
+  // AI insight still uses localStorage — no Supabase table yet
+  const insight = (() => { try { return JSON.parse(localStorage.getItem('lf_ai_insight')); } catch { return null; } })();
   if (!insight || !insight.text) return;
 
   // Only show if insight is from today
@@ -388,9 +383,9 @@ function loadAIInsight() {
 }
 
 // ── PROGRAMS LIST ────────────────────────────────────────────
-function loadPrograms() {
-  const programs = store.get('programs', []);
-  const activeId = store.get('active_program', null);
+async function loadPrograms() {
+  const programs = await LF.db.getPrograms();
+  const activeId = (() => { try { return JSON.parse(localStorage.getItem('lf_active_program')); } catch { return null; } })();
   const el       = document.getElementById('programs-list');
 
   if (!programs.length) {
@@ -407,7 +402,7 @@ function loadPrograms() {
   }
 
   el.innerHTML = programs.slice(0, 3).map(p => {
-    const isActive = p.id === activeId;
+    const isActive = p.id === activeId || p.isActive;
     const days = p.days ? p.days.filter(d => !d.rest).length : 0;
     return `
       <div class="lf-list-row" style="cursor:pointer;"
@@ -439,8 +434,8 @@ function loadPrograms() {
 }
 
 // ── RECENT HISTORY ───────────────────────────────────────────
-function loadHistory() {
-  const history = store.get('workout_history', {});
+async function loadHistory() {
+  const history = await LF.db.getWorkoutHistory();
   const el      = document.getElementById('history-list');
   const entries = Object.entries(history)
     .sort((a, b) => b[0].localeCompare(a[0]))
@@ -496,89 +491,25 @@ function escHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
-// ── DEMO DATA (first run only) ───────────────────────────────
-function seedDemoData() {
-  if (store.get('seeded')) return;
+// ── INIT ─────────────────────────────────────────────────────
+async function init() {
+  await LF.ready();
+  const ok = await LF.guard();
+  if (!ok) return;
 
-  store.set('user', { name: 'Lyndon', initials: 'L' });
-
-  const today0 = new Date();
-  const hist = {};
-  // Seed 3 recent workout days
-  [-3, -2, -1].forEach(offset => {
-    const d = new Date(today0);
-    d.setDate(today0.getDate() + offset);
-    const key = d.toISOString().slice(0, 10);
-    hist[key] = {
-      name: 'Push Day A',
-      totalVolume: Math.round(8000 + Math.random() * 6000),
-      prs: Math.floor(Math.random() * 3),
-      durationMin: 42
-    };
-  });
-  store.set('workout_history', hist);
-
-  store.set('programs', [{
-    id: 'p1',
-    name: 'Strength Block A',
-    weeks: 6,
-    days: [
-      { name: 'Push — Chest & Shoulders', rest: false, exercises: [
-          { id: 'b7',  sets: 4, reps: 8,  restSec: 90 },
-          { id: 'b2',  sets: 3, reps: 10, restSec: 60 },
-          { id: 'b11', sets: 3, reps: 12, restSec: 60 },
-        ]},
-      { name: 'Pull — Back & Biceps', rest: false, exercises: [
-          { id: 'b23', sets: 4, reps: 8,  restSec: 90 },
-          { id: 'b45', sets: 3, reps: 10, restSec: 60 },
-          { id: 'b46', sets: 3, reps: 10, restSec: 60 },
-        ]},
-      { name: 'Legs', rest: false, exercises: [
-          { id: 'b65', sets: 4, reps: 8,  restSec: 90 },
-          { id: 'b66', sets: 3, reps: 10, restSec: 60 },
-          { id: 'b68', sets: 3, reps: 10, restSec: 90 },
-        ]},
-      { rest: true },
-      { name: 'Push — Chest & Shoulders', rest: false, exercises: [
-          { id: 'b7',  sets: 4, reps: 8,  restSec: 90 },
-          { id: 'b2',  sets: 3, reps: 10, restSec: 60 },
-          { id: 'b11', sets: 3, reps: 12, restSec: 60 },
-        ]},
-      { name: 'Pull — Back & Biceps', rest: false, exercises: [
-          { id: 'b23', sets: 4, reps: 8,  restSec: 90 },
-          { id: 'b45', sets: 3, reps: 10, restSec: 60 },
-        ]},
-      { rest: true }
-    ]
-  }]);
-  store.set('active_program', 'p1');
-
-  store.set('ai_insight', {
-    date: new Date().toISOString().slice(0, 10),
-    text: 'Your push day volume has increased 14% over the last 3 weeks. Consider adding a deload next week to maximize recovery and continue progressing.'
-  });
-
-  store.set('seeded', true);
+  // Run all data loads in parallel for speed
+  await Promise.all([
+    loadUser(),
+    loadTodayCard(),
+    loadStreak(),
+    loadStats(),
+    loadPrograms(),
+    loadHistory(),
+  ]);
+  loadAIInsight();
 }
 
-// ── INIT ─────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  // Force re-seed if demo data has bad exercise IDs
-  const progs = store.get('programs', []);
-  const hasOldIds = progs.some(p => p.days && p.days.some(d =>
-    d.exercises && d.exercises.some(e => ['l1','bk1','bi1'].includes(e.id))
-  ));
-  if (hasOldIds) store.set('seeded', false);
-
-  seedDemoData();
-  loadUser();
-  loadTodayCard();
-  loadStreak();
-  loadStats();
-  loadAIInsight();
-  loadPrograms();
-  loadHistory();
-});
+document.addEventListener('DOMContentLoaded', init);
 </script>
 
 </body>

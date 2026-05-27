@@ -691,32 +691,69 @@ let selectedTS    = '';
 let units         = 'imperial'; // 'imperial' | 'metric'
 
 // ── INIT ───────────────────────────────────────────────────────────────────
-function init() {
-  const u  = JSON.parse(localStorage.getItem('lf_user')    || '{}');
-  const pr = JSON.parse(localStorage.getItem('lf_profile') || '{}');
-  const st = JSON.parse(localStorage.getItem('lf_settings')|| '{}');
+async function init() {
+  await LF.ready();
+  const ok = await LF.guard();
+  if (!ok) return;
 
-  // Personal
-  if (u.name)     document.getElementById('p-first').value = u.name;
-  if (u.fullName) {
-    const parts = u.fullName.split(' ');
+  // Load from Supabase, fall back to localStorage
+  const profile  = await LF.db.getProfile() || {};
+  const authUser = await LF.auth.user();
+  const cached   = (() => { try { return JSON.parse(localStorage.getItem('lf_user') || '{}'); } catch { return {}; } })();
+  const st       = (() => { try { return JSON.parse(localStorage.getItem('lf_settings') || '{}'); } catch { return {}; } })();
+
+  // Personal — prefer Supabase profile, fall back to cached lf_user
+  const firstName = profile.name     || cached.name     || '';
+  const fullName  = profile.full_name|| cached.fullName || '';
+  const email     = profile.email    || authUser?.email  || cached.email || '';
+  const dob       = profile.dob      || cached.dob      || '';
+  const sex       = profile.sex      || cached.sex      || '';
+
+  if (firstName) document.getElementById('p-first').value = firstName;
+  if (fullName) {
+    const parts = fullName.split(' ');
     if (parts.length > 1) document.getElementById('p-last').value = parts.slice(1).join(' ');
   }
-  if (u.email) document.getElementById('p-email').value = u.email;
-  if (u.dob) {
-    const parts = u.dob.split('/');
-    if (parts[0]) document.getElementById('p-dob-m').value = parts[0];
-    if (parts[1]) document.getElementById('p-dob-d').value = parts[1];
-    if (parts[2]) document.getElementById('p-dob-y').value = parts[2];
-  }
-  if (u.sex) document.getElementById('p-sex').value = u.sex;
+  if (email) document.getElementById('p-email').value = email;
 
-  // Fitness
-  if (pr.weight)  document.getElementById('p-weight').value    = pr.weight;
-  if (pr.gym)     document.getElementById('p-gym').value       = pr.gym;
-  if (pr.level)   document.getElementById('p-level').value     = pr.level;
-  if (pr.heightFt) document.getElementById('p-height-ft').value = pr.heightFt;
-  if (pr.heightIn) document.getElementById('p-height-in').value = pr.heightIn;
+  // DOB — stored as YYYY-MM-DD in Supabase
+  if (dob) {
+    // Handle both YYYY-MM-DD (Supabase) and MM/DD/YYYY (old localStorage)
+    if (dob.includes('-') && dob.length === 10) {
+      const [y, m, d] = dob.split('-');
+      document.getElementById('p-dob-m').value = m;
+      document.getElementById('p-dob-d').value = d;
+      document.getElementById('p-dob-y').value = y;
+    } else if (dob.includes('/')) {
+      const parts = dob.split('/');
+      if (parts[0]) document.getElementById('p-dob-m').value = parts[0];
+      if (parts[1]) document.getElementById('p-dob-d').value = parts[1];
+      if (parts[2]) document.getElementById('p-dob-y').value = parts[2];
+    }
+  }
+  if (sex) document.getElementById('p-sex').value = sex;
+
+  // Fitness details from Supabase profile
+  const weightLbs = profile.weight_lbs || '';
+  const heightIn  = profile.height_in  || '';
+  const level     = profile.level      || '';
+
+  if (weightLbs) document.getElementById('p-weight').value = weightLbs;
+  if (level)     document.getElementById('p-level').value  = level;
+
+  // Convert height_in to ft/in for display
+  if (heightIn) {
+    const ft  = Math.floor(heightIn / 12);
+    const ins = Math.round(heightIn % 12);
+    document.getElementById('p-height-ft').value = ft;
+    document.getElementById('p-height-in').value = ins;
+  }
+
+  // Extended profile fields — stored in lf_profile localStorage
+  // (will move to Supabase JSONB column in a future pass)
+  const pr = (() => { try { return JSON.parse(localStorage.getItem('lf_profile') || '{}'); } catch { return {}; } })();
+
+  if (pr.gym)     document.getElementById('p-gym').value      = pr.gym;
 
   // Goals
   selectedGoals = pr.goals || [];
@@ -803,7 +840,6 @@ function updateHero() {
   document.getElementById('hero-height').textContent = ft ? `${ft}'${inches || 0}"` : '—';
 
   // Member since
-  const u = JSON.parse(localStorage.getItem('lf_user') || '{}');
   const gym = document.getElementById('p-gym').value.trim();
   let meta = 'Member since 2026';
   if (gym) meta += ` · ${gym}`;
@@ -955,33 +991,53 @@ function saveSetting(key, val) {
 }
 
 // ── SAVE PROFILE ───────────────────────────────────────────────────────────
-function saveProfile() {
+async function saveProfile() {
   const first  = document.getElementById('p-first').value.trim();
   const last   = document.getElementById('p-last').value.trim();
-  const email  = document.getElementById('p-email').value.trim();
   const dobM   = document.getElementById('p-dob-m').value.trim();
   const dobD   = document.getElementById('p-dob-d').value.trim();
   const dobY   = document.getElementById('p-dob-y').value.trim();
-  const dob    = dobM && dobD && dobY ? `${dobM}/${dobD}/${dobY}` : '';
   const sex    = document.getElementById('p-sex').value;
+  const ft     = parseInt(document.getElementById('p-height-ft').value) || 0;
+  const ins    = parseInt(document.getElementById('p-height-in').value) || 0;
 
-  // Update lf_user
-  const u = JSON.parse(localStorage.getItem('lf_user') || '{}');
-  u.name      = first;
-  u.fullName  = [first, last].filter(Boolean).join(' ');
-  u.initials  = [first[0], last[0]].filter(Boolean).join('').toUpperCase();
-  u.email     = email;
-  u.dob       = dob;
-  u.sex       = sex;
-  localStorage.setItem('lf_user', JSON.stringify(u));
+  // Convert to Supabase format
+  const fullName  = [first, last].filter(Boolean).join(' ');
+  const dobStr    = dobM && dobD && dobY
+    ? `${dobY}-${dobM.padStart(2,'0')}-${dobD.padStart(2,'0')}`
+    : null;
+  const heightIn  = ft ? (ft * 12) + ins : null;
+  const weightLbs = parseFloat(document.getElementById('p-weight').value) || null;
+  const level     = document.getElementById('p-level').value || null;
 
-  // Save lf_profile
-  const profile = {
-    weight:           document.getElementById('p-weight').value,
-    heightFt:         document.getElementById('p-height-ft').value,
-    heightIn:         document.getElementById('p-height-in').value,
+  // Save core fields to Supabase
+  const { error } = await LF.db.saveProfile({
+    name:       first,
+    full_name:  fullName,
+    initials:   [first[0], last ? last[0] : ''].filter(Boolean).join('').toUpperCase(),
+    dob:        dobStr,
+    sex:        sex || null,
+    height_in:  heightIn,
+    weight_lbs: weightLbs,
+    level:      level,
+    goal:       selectedGoals[0] || null,
+    onboarded:  true,
+  });
+
+  // Also keep lf_user in sync for offline use
+  const cached = (() => { try { return JSON.parse(localStorage.getItem('lf_user') || '{}'); } catch { return {}; } })();
+  localStorage.setItem('lf_user', JSON.stringify({
+    ...cached,
+    name:      first,
+    fullName,
+    initials:  [first[0], last ? last[0] : ''].filter(Boolean).join('').toUpperCase(),
+    dob:       dobStr,
+    sex,
+  }));
+
+  // Extended profile fields still go to localStorage for now
+  const pr = {
     gym:              document.getElementById('p-gym').value.trim(),
-    level:            document.getElementById('p-level').value,
     goals:            selectedGoals,
     goalNotes:        document.getElementById('p-goal-notes').value.trim(),
     trainingStyle:    selectedTS,
@@ -992,25 +1048,32 @@ function saveProfile() {
     dietRestrictions: selectedDiets,
     savedAt:          new Date().toISOString(),
   };
-  localStorage.setItem('lf_profile', JSON.stringify(profile));
+  localStorage.setItem('lf_profile', JSON.stringify(pr));
+
+  if (error) {
+    showToast('Save failed — check connection');
+    return;
+  }
 
   showToast('Profile saved ✓');
   setTimeout(() => { window.location.href = 'index.html'; }, 1000);
 }
 
 // ── SIGN OUT / DELETE ──────────────────────────────────────────────────────
-function confirmSignOut() {
+async function confirmSignOut() {
   if (confirm('Sign out of LaroFit?')) {
-    // No auth backend yet — just redirect to signup
-    window.location.href = 'signup.html';
+    await LF.auth.signOut();
+    window.location.href = 'login.html';
   }
 }
 
-function confirmDelete() {
+async function confirmDelete() {
   if (confirm('Delete your account? This will erase ALL your data and cannot be undone.')) {
     if (confirm('Are you sure? This is permanent.')) {
-      const keys = Object.keys(localStorage).filter(k => k.startsWith('lf_'));
-      keys.forEach(k => localStorage.removeItem(k));
+      // Clear localStorage
+      Object.keys(localStorage).filter(k => k.startsWith('lf_')).forEach(k => localStorage.removeItem(k));
+      // Sign out (Supabase account deletion requires service key — for now sign out and redirect)
+      await LF.auth.signOut();
       window.location.href = 'signup.html';
     }
   }
@@ -1027,7 +1090,7 @@ function showToast(msg) {
 }
 
 // ── RUN ────────────────────────────────────────────────────────────────────
-init();
+document.addEventListener('DOMContentLoaded', init);
 </script>
 
 </body>
