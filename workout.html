@@ -600,22 +600,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
   <!-- WORKOUT IN PROGRESS — full screen flex column -->
   <div id="workout-state">
 
-    <!-- Slim top bar — replaces lf-header during workout -->
-    <div class="workout-topbar" id="workout-topbar">
-      <div class="workout-topbar-left">
-        <div class="workout-topbar-name" id="header-title">Workout</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div id="workout-timer" style="display:none;">0:00</div>
-        <div class="mode-toggle" id="mode-toggle" style="display:none;">
-          <button class="mode-btn active" id="mode-manual" onclick="setMode('manual')">Manual</button>
-          <button class="mode-btn"        id="mode-voice"  onclick="setMode('voice')">&#127908; Voice</button>
-        </div>
-        <button class="btn btn-ghost btn-sm" id="btn-finish-top"
-                style="display:none;color:var(--volt-dark);font-weight:700;font-size:13px;"
-                onclick="finishWorkout()">Finish</button>
-      </div>
-    </div>
+
     <!-- Progress bar sits just below topbar -->
     <div class="lf-prog-bar" id="overall-prog-wrap" style="flex-shrink:0;">
       <div class="lf-prog-fill" id="overall-prog" style="width:0%"></div>
@@ -650,14 +635,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div class="ex-name-bar-1rm"   id="ex-1rm" style="display:none;"></div>
       </div>
 
-      <!-- FMW prompt — shown for first-time exercises -->
-      <div class="fmw-prompt" id="fmw-prompt">
-        <div class="fmw-prompt-text"><strong>⚡ First time?</strong> Want help finding your starting weight?</div>
-        <div class="fmw-prompt-actions">
-          <button class="fmw-btn-yes"  onclick="dismissFMW(true)">Yes</button>
-          <button class="fmw-btn-skip" onclick="dismissFMW(false)">Skip</button>
-        </div>
-      </div>
+
 
       <!-- Previous best -->
       <div class="prev-best" id="prev-best" style="display:none;">
@@ -1000,23 +978,15 @@ function startWorkout(workoutName) {
   workoutStarted = true;
   startTime      = Date.now();
   show('workout-state');
-  // Hide main lf-header, show slim workout topbar
+  // Hide main lf-header during workout
   document.body.classList.add('workout-active');
-  setHeader(workoutName || 'Workout');
-  document.getElementById('workout-timer').style.display  = 'none'; // internal only
-  document.getElementById('btn-finish-top').style.display = 'block';
-  document.getElementById('mode-toggle').style.display    = 'flex';
-  workoutMode = getMode();
-  document.getElementById('mode-manual').classList.toggle('active', workoutMode === 'manual');
-  document.getElementById('mode-voice').classList.toggle('active',    workoutMode === 'voice');
-  if (workoutMode === 'voice') initVoice();
+  workoutMode = 'manual';
   elapsedTimer = setInterval(updateElapsed, 1000);
 
   if (isFreeForm) {
-    document.getElementById('free-name-bar').style.display   = 'block';
-    document.getElementById('free-add-wrap').style.display   = 'block';
+    document.getElementById('free-name-bar').style.display = 'block';
+    document.getElementById('free-add-wrap').style.display = 'block';
     document.getElementById('finish-bar').classList.add('show');
-    document.getElementById('mode-toggle').style.display = 'none';
   }
 
   if (exercises.length > 0) {
@@ -1063,10 +1033,8 @@ function setHeader(title) {
 
 // ── ELAPSED TIMER ────────────────────────────────────────────
 function updateElapsed() {
+  // Timer runs silently for analytics — display removed from topbar
   if (!startTime) return;
-  const secs = Math.floor((Date.now() - startTime) / 1000);
-  const m = Math.floor(secs / 60), s = secs % 60;
-  document.getElementById('workout-timer').textContent = m + ':' + String(s).padStart(2,'0');
 }
 
 // ── PROGRESS DOTS ─────────────────────────────────────────────
@@ -1757,8 +1725,6 @@ function finishWorkout() {
   document.getElementById('log-btn-fixed').classList.remove('show');
   document.getElementById('finish-bar').classList.remove('show');
   document.getElementById('overall-prog-wrap').style.display = 'none';
-  document.getElementById('btn-finish-top').style.display    = 'none';
-  document.getElementById('workout-timer').style.display     = 'none';
   setHeader('Workout complete');
   document.getElementById('c-duration').textContent = durationMin || '—';
   document.getElementById('c-volume').textContent   = totalVolume >= 1000 ? (totalVolume/1000).toFixed(1)+'k' : Math.round(totalVolume)||'—';
@@ -2026,8 +1992,6 @@ function getMode() { const s = store.get('settings', {}); return s.workoutMode |
 function setMode(mode) {
   workoutMode = mode;
   const s = store.get('settings', {}); s.workoutMode = mode; store.set('settings', s);
-  document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
-  document.getElementById('mode-voice').classList.toggle('active',    mode === 'voice');
   if (mode === 'voice') initVoice();
   else { stopListening(); document.getElementById('voice-hud').classList.remove('show'); }
 }
@@ -2072,37 +2036,17 @@ function getFMW(exIdx) {
 
 // Show FMW prompt for first-time strength exercises that haven't been declined/locked
 function checkFMWPrompt(ex) {
-  const prompt = document.getElementById('fmw-prompt');
-  const fmw    = getFMW(currentExIdx);
-  if (isStrength(ex) && isFirstTime(ex) && !fmw.locked && !fmw.declined && !fmw.active) {
-    prompt.classList.add('show');
-    // Pre-fill all set weight inputs with calculated start weight immediately
-    const startW = getFMWStartWeight(ex);
-    if (startW > 0) {
-      ex.loggedSets.forEach((set, i) => {
-        if (!set.logged) {
-          set.weight = startW;
-          const el = document.getElementById('inp-w-' + currentExIdx + '-' + i);
-          if (el) el.value = startW;
-        }
-      });
-    }
-  } else {
-    prompt.classList.remove('show');
-  }
+  // FMW prompt removed — deferred feature
 }
 
-// Called when user taps Yes or Skip on the FMW prompt
+// FMW prompt removed — deferred feature
 function dismissFMW(wantHelp) {
-  const prompt = document.getElementById('fmw-prompt');
-  prompt.classList.remove('show');
   const fmw = getFMW(currentExIdx);
   if (wantHelp) {
     fmw.active = true;
     const ex   = exercises[currentExIdx];
     const fmwW = getFMWStartWeight(ex);
     prefillWeight(currentExIdx, 0, fmwW);
-    showToast('⚡ Starting at ' + fmwW + ' lbs — log each set and we\'ll dial it in');
   } else {
     fmw.declined = true;
   }
