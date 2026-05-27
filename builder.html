@@ -689,19 +689,21 @@ button, input, select, a, textarea { touch-action: manipulation; }
 <script src="larofit-nav.js"></script>
 
 <!-- ══════════════════════════════════════
-     SCREEN 1 — PROGRAM SETUP
+     SCREEN 1 — SETUP + CALENDAR (combined)
 ══════════════════════════════════════ -->
-<main id="screen-setup">
+<main id="screen-main">
+
   <div class="lf-header">
     <div class="lf-header-inner">
       <button class="btn btn-ghost btn-sm" onclick="goBack()" style="padding:8px 4px;">
         <i class="ti ti-arrow-left" style="font-size:20px;"></i>
       </button>
-      <div class="lf-header-title">NEW PROGRAM</div>
-      <div style="width:60px;"></div>
+      <div class="lf-header-title" id="cal-header-title">NEW PROGRAM</div>
+      <button class="btn btn-volt btn-sm" onclick="saveProgram()">Save</button>
     </div>
   </div>
 
+  <!-- Program setup fields -->
   <div class="setup-card">
     <input
       class="setup-name-input"
@@ -709,6 +711,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
       id="prog-name"
       placeholder="Program name…"
       maxlength="60"
+      oninput="onNameInput()"
     >
     <div class="setup-row">
       <div class="setup-field">
@@ -724,7 +727,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
       </div>
       <div class="setup-field">
         <div class="setup-label">Weeks</div>
-        <select id="prog-weeks">
+        <select id="prog-weeks" onchange="onSetupChange()">
           <option value="4">4 weeks</option>
           <option value="6">6 weeks</option>
           <option value="8" selected>8 weeks</option>
@@ -736,34 +739,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
     </div>
     <div class="setup-field">
       <div class="setup-label">Start Date</div>
-      <input type="date" id="prog-start">
-    </div>
-  </div>
-
-  <div style="padding: 20px var(--page-pad) 0;">
-    <button class="btn btn-volt btn-full btn-lg" onclick="goToCalendar()">
-      Build schedule <i class="ti ti-calendar" aria-hidden="true"></i>
-    </button>
-  </div>
-  <div style="padding: 10px var(--page-pad) 0;">
-    <button class="btn btn-outline btn-full" onclick="saveProgram(true)">
-      Save without schedule
-    </button>
-  </div>
-</main>
-
-<!-- ══════════════════════════════════════
-     SCREEN 2 — CALENDAR
-══════════════════════════════════════ -->
-<main id="screen-calendar" style="display:none;">
-
-  <div class="lf-header">
-    <div class="lf-header-inner">
-      <button class="btn btn-ghost btn-sm" onclick="showScreen('setup')" style="padding:8px 4px;">
-        <i class="ti ti-arrow-left" style="font-size:20px;"></i>
-      </button>
-      <div class="lf-header-title" id="cal-header-title">SCHEDULE</div>
-      <button class="btn btn-volt btn-sm" onclick="saveProgram(false)">Save</button>
+      <input type="date" id="prog-start" onchange="onSetupChange()">
     </div>
   </div>
 
@@ -1026,8 +1002,7 @@ const todayStr = new Date().toISOString().slice(0,10);
 // ══════════════════════════════════════════════════════════════════════
 function init() {
   // Default start date = today
-  const todayInput = new Date().toISOString().slice(0,10);
-  document.getElementById('prog-start').value = todayInput;
+  document.getElementById('prog-start').value = new Date().toISOString().slice(0,10);
 
   // Load existing program if editing
   const params = new URLSearchParams(location.search);
@@ -1044,17 +1019,23 @@ function init() {
     program = programs.find(p => p.id === id);
     if (!program) { showToast('Program not found'); goBack(); return; }
     loadProgramIntoSetup();
-    // Go straight to calendar if program already has a startDate
-    if (program.startDate) {
-      initCalendarView();
-      showScreen('calendar');
-      return;
-    }
   } else {
     program = makeBlankProgram();
   }
 
   buildLibraryFilters();
+  initCalendarView();
+}
+
+// Live-update calendar when setup fields change
+function onSetupChange() {
+  flushSetupToProgram();
+  initCalendarView();
+}
+
+function onNameInput() {
+  const val = document.getElementById('prog-name').value.trim();
+  document.getElementById('cal-header-title').textContent = val ? val.toUpperCase() : 'NEW PROGRAM';
 }
 
 function makeBlankProgram() {
@@ -1066,7 +1047,7 @@ function makeBlankProgram() {
     startDate:   new Date().toISOString().slice(0,10),
     aiGenerated: false,
     savedAt:     null,
-    days:        {},  // keyed by 'YYYY-MM-DD'
+    days:        {},
   };
 }
 
@@ -1075,35 +1056,6 @@ function loadProgramIntoSetup() {
   document.getElementById('prog-goal').value  = program.goal  || 'hypertrophy';
   document.getElementById('prog-weeks').value = program.weeks || 8;
   document.getElementById('prog-start').value = program.startDate || new Date().toISOString().slice(0,10);
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// SCREEN MANAGEMENT
-// ══════════════════════════════════════════════════════════════════════
-function showScreen(name) {
-  document.getElementById('screen-setup').style.display    = name === 'setup'    ? '' : 'none';
-  document.getElementById('screen-calendar').style.display = name === 'calendar' ? '' : 'none';
-  document.getElementById('screen-day').style.display      = name === 'day'      ? '' : 'none';
-  window.scrollTo(0, 0);
-}
-
-function goBack() {
-  window.location.href = 'programs.html';
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// SCREEN 1 → SCREEN 2
-// ══════════════════════════════════════════════════════════════════════
-function goToCalendar() {
-  const name = document.getElementById('prog-name').value.trim();
-  if (!name) {
-    showToast('Give your program a name first');
-    document.getElementById('prog-name').focus();
-    return;
-  }
-  flushSetupToProgram();
-  initCalendarView();
-  showScreen('calendar');
 }
 
 function flushSetupToProgram() {
@@ -1313,7 +1265,6 @@ function openDayEditor(dateStr) {
 
   showScreen('day');
   renderExList();
-  buildLibraryFilters();
 }
 
 function saveDayAndBack() {
@@ -1329,7 +1280,7 @@ function saveDayAndBack() {
     }
   }
   editingDate = null;
-  showScreen('calendar');
+  showScreen('main');
   renderCalendar();
 }
 
@@ -1560,12 +1511,11 @@ function addExercise(exId) {
 // ══════════════════════════════════════════════════════════════════════
 // SAVE PROGRAM
 // ══════════════════════════════════════════════════════════════════════
-function saveProgram(skipSchedule) {
+function saveProgram() {
   flushSetupToProgram();
 
   if (!program.name) {
     showToast('Give your program a name first');
-    showScreen('setup');
     document.getElementById('prog-name').focus();
     return;
   }
