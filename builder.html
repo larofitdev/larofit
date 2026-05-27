@@ -1000,6 +1000,16 @@ const todayStr = new Date().toISOString().slice(0,10);
 // ══════════════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════════════
+function showScreen(name) {
+  document.getElementById('screen-main').style.display = name === 'main' ? '' : 'none';
+  document.getElementById('screen-day').style.display  = name === 'day'  ? '' : 'none';
+  window.scrollTo(0, 0);
+}
+
+function goBack() {
+  window.location.href = 'programs.html';
+}
+
 function init() {
   // Default start date = today
   document.getElementById('prog-start').value = new Date().toISOString().slice(0,10);
@@ -1156,9 +1166,7 @@ function renderCalendar() {
 }
 
 function calGridTap(e) {
-  console.log('[CAL] tap fired', e.type, e.target.className);
   const cell = e.target.closest('[data-date]');
-  console.log('[CAL] cell:', cell ? cell.dataset.date : 'null');
   if (!cell) return;
   const dateStr = cell.dataset.date;
   if (dateStr) handleDayTap(dateStr);
@@ -1180,14 +1188,12 @@ function nextMonth() {
 // DAY TAP LOGIC
 // ══════════════════════════════════════════════════════════════════════
 function handleDayTap(dateStr) {
-  console.log('[CAL] handleDayTap', dateStr, 'days keys:', Object.keys(program.days));
   if (pasteMode) {
     pasteWorkout(dateStr);
     return;
   }
 
   const workout = program.days[dateStr];
-  console.log('[CAL] workout:', workout);
   if (workout) {
     openDayAction(dateStr);
   } else {
@@ -1201,7 +1207,6 @@ function handleDayTap(dateStr) {
 let actionDate = null;
 
 function openDayAction(dateStr) {
-  console.log('[CAL] openDayAction', dateStr);
   actionDate = dateStr;
   const workout = program.days[dateStr];
   const d = new Date(dateStr + 'T00:00:00');
@@ -1210,8 +1215,6 @@ function openDayAction(dateStr) {
   document.getElementById('day-action-name').textContent = workout.name || 'Workout';
   document.getElementById('day-action-overlay').classList.add('open');
   document.getElementById('day-action-sheet').classList.add('open');
-  console.log('[CAL] overlay classes:', document.getElementById('day-action-overlay').className);
-  console.log('[CAL] sheet classes:', document.getElementById('day-action-sheet').className);
 }
 
 function closeDayAction() {
