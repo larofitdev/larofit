@@ -1085,8 +1085,21 @@ function initCalendarView() {
   calYear  = start.getFullYear();
   calMonth = start.getMonth();
   document.getElementById('cal-header-title').textContent =
-    (program.name || 'SCHEDULE').toUpperCase();
+    (program.name || 'NEW PROGRAM').toUpperCase();
   renderCalendar();
+
+  // Attach delegated tap listener once — handles both browser click and PWA touch
+  const grid = document.getElementById('cal-grid');
+  let lastTap = 0;
+  grid.addEventListener('touchend', e => {
+    lastTap = Date.now();
+    calGridTap(e);
+  }, { passive: true });
+  grid.addEventListener('click', e => {
+    // Suppress click if touchend already fired within 400ms (same tap)
+    if (Date.now() - lastTap < 400) return;
+    calGridTap(e);
+  });
 }
 
 function renderCalendar() {
@@ -1140,19 +1153,11 @@ function renderCalendar() {
   }
 
   document.getElementById('cal-grid').innerHTML = html;
-
-  // Delegated tap handler — works on both browser and PWA without 300ms delay
-  const grid = document.getElementById('cal-grid');
-  grid.addEventListener('touchend', calGridTap, { passive: true });
-  grid.addEventListener('click',    calGridTap);
 }
 
 function calGridTap(e) {
-  // Prevent double-firing on mobile (touchend then click)
-  if (e.type === 'click' && e._handled) return;
   const cell = e.target.closest('[data-date]');
   if (!cell) return;
-  if (e.type === 'touchend') e._handled = true;
   const dateStr = cell.dataset.date;
   if (dateStr) handleDayTap(dateStr);
 }
