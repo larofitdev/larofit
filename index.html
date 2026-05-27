@@ -11,6 +11,117 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="appletouchicon.png">
 <link rel="stylesheet" href="larofit.css?v=2">
+<style>
+/* ── BUILD POPUP ── */
+.build-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.build-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.build-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-radius: 20px 20px 0 0;
+  padding: 0 16px calc(env(safe-area-inset-bottom) + 24px);
+  z-index: 201;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+.build-sheet.open {
+  transform: translateY(0);
+}
+.build-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border-md);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+.build-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 4px;
+}
+.build-sheet-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.build-sheet-close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--bg-card2);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+  font-size: 16px;
+  touch-action: manipulation;
+}
+.build-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: border-color 0.15s, background 0.15s;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.build-option:active {
+  background: var(--bg-card2);
+  border-color: var(--border-md);
+}
+.build-option-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.build-option-text { flex: 1; min-width: 0; }
+.build-option-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.build-option-desc {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+.build-option-arrow {
+  color: var(--text-3);
+  font-size: 18px;
+  flex-shrink: 0;
+}
+</style>
 </head>
 <body>
 
@@ -112,7 +223,7 @@
         <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:14px;">
           Build your first program to get daily workouts here.
         </div>
-        <button class="btn btn-volt btn-full" onclick="location.href='programs.html'">
+        <button class="btn btn-volt btn-full" onclick="openBuildSheet()">
           Build a program <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
@@ -188,6 +299,49 @@
   <div style="height:24px;"></div>
 
 </main>
+
+<!-- ── BUILD PROGRAM POPUP ── -->
+<div class="build-overlay" id="build-overlay" onclick="closeBuildSheet()"></div>
+<div class="build-sheet" id="build-sheet" role="dialog" aria-modal="true" aria-label="How do you want to build your program?">
+  <div class="build-sheet-handle"></div>
+  <div class="build-sheet-header">
+    <div class="build-sheet-title">Build a program</div>
+    <button class="build-sheet-close" onclick="closeBuildSheet()" aria-label="Close">
+      <i class="ti ti-x"></i>
+    </button>
+  </div>
+
+  <!-- Option 1: Build it yourself -->
+  <a class="build-option" href="builder.html">
+    <div class="build-option-icon" style="background:var(--bg-dark);">🔨</div>
+    <div class="build-option-text">
+      <div class="build-option-title">Build it yourself</div>
+      <div class="build-option-desc">Choose your days, pick exercises, set your sets and reps.</div>
+    </div>
+    <div class="build-option-arrow"><i class="ti ti-chevron-right"></i></div>
+  </a>
+
+  <!-- Option 2: AI-assisted -->
+  <a class="build-option" href="onboarding.html">
+    <div class="build-option-icon" style="background:var(--bg-dark);">🤖</div>
+    <div class="build-option-text">
+      <div class="build-option-title">AI-assisted</div>
+      <div class="build-option-desc">Answer a few questions and get a personalized program built for you.</div>
+    </div>
+    <div class="build-option-arrow"><i class="ti ti-chevron-right"></i></div>
+  </a>
+
+  <!-- Option 3: Templates (not yet wired) -->
+  <div class="build-option" style="opacity:0.45;cursor:default;">
+    <div class="build-option-icon" style="background:var(--bg-card2);">📋</div>
+    <div class="build-option-text">
+      <div class="build-option-title">Templates</div>
+      <div class="build-option-desc">Start from a pre-built program and make it your own.</div>
+    </div>
+    <div class="build-option-arrow"><i class="ti ti-chevron-right"></i></div>
+  </div>
+
+</div>
 
 <script>
 /* ============================================================
@@ -400,7 +554,7 @@ async function loadPrograms() {
         <div class="lf-empty-icon" aria-hidden="true"><i class="ti ti-layout-grid" style="font-size:36px;color:var(--text-3);"></i></div>
         <div class="lf-empty-title">No programs yet</div>
         <div class="lf-empty-body">Build your first training program to get started.</div>
-        <button class="btn btn-dark lf-mt-sm" onclick="location.href='programs.html'">
+        <button class="btn btn-dark lf-mt-sm" onclick="openBuildSheet()">
           Build a program <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>`;
@@ -503,6 +657,19 @@ async function handleSignOut() {
     await LF.auth.signOut();
     window.location.href = 'login.html';
   }
+}
+
+// ── BUILD SHEET ──────────────────────────────────────────────
+function openBuildSheet() {
+  document.getElementById('build-overlay').classList.add('open');
+  document.getElementById('build-sheet').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBuildSheet() {
+  document.getElementById('build-overlay').classList.remove('open');
+  document.getElementById('build-sheet').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 // ── INIT ─────────────────────────────────────────────────────
