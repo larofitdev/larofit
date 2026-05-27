@@ -14,77 +14,69 @@
 <style>
 html, body {
   background: #1a1a1a;
-  color: #ffffff;
   min-height: 100vh;
   min-height: 100dvh;
-  padding-bottom: 0;
-  display: block;
 }
-
 button, a, input { touch-action: manipulation; }
+input { font-size: 16px !important; }
 
-.login-wrap {
+/* ── LAYOUT ── */
+.li-wrap {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  background: #1a1a1a;
 }
 
 /* ── HERO ── */
-.login-hero {
-  background: #1a1a1a;
-  padding: 56px 24px 36px;
+.li-hero {
+  padding: max(56px, env(safe-area-inset-top, 56px)) 24px 36px;
   text-align: center;
   flex-shrink: 0;
 }
-
-.login-logo {
+.li-logo {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 26px;
   letter-spacing: 3px;
-  color: #ffffff;
-  margin-bottom: 32px;
+  color: #fff;
+  margin-bottom: 28px;
 }
-.login-logo span { color: var(--volt); }
-
-.login-title {
+.li-logo span { color: var(--volt); }
+.li-headline {
   font-family: var(--font-display);
-  font-size: 40px;
+  font-size: 38px;
   letter-spacing: 1px;
-  color: #ffffff;
+  color: #fff;
   line-height: 1.05;
   margin-bottom: 10px;
 }
-.login-title span { color: var(--volt); }
-
-.login-sub {
+.li-headline span { color: var(--volt); }
+.li-sub {
   font-size: 14px;
   color: rgba(255,255,255,0.45);
-  line-height: 1.6;
 }
 
 /* ── FORM CARD ── */
-.login-form-wrap {
+.li-card {
   flex: 1;
   background: var(--bg);
   border-radius: 24px 24px 0 0;
-  padding: 28px 20px;
-  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+  padding: 28px 20px max(40px, env(safe-area-inset-bottom, 40px));
 }
 
-.su-label {
+/* ── FIELDS ── */
+.li-label {
+  display: block;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-2);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: 6px;
-  display: block;
 }
-
-.su-field { margin-bottom: 16px; }
-
-.su-input {
+.li-field { margin-bottom: 16px; }
+.li-input {
   width: 100%;
   padding: 13px 14px;
   background: var(--bg-card);
@@ -92,273 +84,283 @@ button, a, input { touch-action: manipulation; }
   border-radius: var(--radius-sm);
   font-size: 16px;
   color: var(--text);
+  font-family: var(--font-body);
   outline: none;
   transition: border-color 0.2s;
   -webkit-appearance: none;
+  appearance: none;
 }
-.su-input:focus { border-color: var(--volt-dark); }
-.su-input::placeholder { color: var(--text-3); }
+.li-input:focus { border-color: var(--volt-dark); }
+.li-input::placeholder { color: var(--text-3); }
 
-/* Password wrapper with show/hide toggle */
-.pass-wrap {
-  position: relative;
-}
-.pass-toggle {
-  position: absolute;
-  right: 12px; top: 50%;
-  transform: translateY(-50%);
-  background: none; border: none;
-  color: var(--text-3); font-size: 18px;
-  cursor: pointer; padding: 4px;
-  display: flex; align-items: center;
+/* ── FORGOT PASSWORD ── */
+.li-forgot {
+  display: block;
+  text-align: right;
+  font-size: 12px;
+  color: var(--volt-dark);
+  font-weight: 600;
+  text-decoration: none;
+  margin-top: -10px;
+  margin-bottom: 20px;
 }
 
-.su-error {
-  font-size: 13px;
-  color: var(--danger);
-  background: var(--danger-bg);
-  border: 1px solid rgba(239,68,68,0.2);
+/* ── ERROR / SUCCESS ── */
+.li-msg {
+  display: none;
   border-radius: var(--radius-sm);
   padding: 10px 14px;
-  margin-bottom: 14px;
-  display: none;
-}
-
-/* Forgot password */
-.forgot-row {
-  text-align: right;
-  margin-top: -8px;
+  font-size: 13px;
   margin-bottom: 16px;
 }
-.forgot-link {
-  font-size: 12px;
-  color: var(--text-3);
-  text-decoration: none;
+.li-msg.error {
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
+  color: var(--danger);
 }
-.forgot-link:active { color: var(--volt-dark); }
+.li-msg.success {
+  background: var(--success-bg);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
 
-/* Submit */
-.su-submit {
+/* ── BUTTONS ── */
+.li-btn {
   width: 100%;
   padding: 16px;
-  background: var(--volt);
   border: none;
   border-radius: var(--radius);
   font-size: 16px;
   font-weight: 700;
-  color: var(--bg-dark);
   cursor: pointer;
   font-family: var(--font-body);
-  letter-spacing: 0.02em;
-  transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transition: all 0.15s;
 }
-.su-submit:active { transform: scale(0.98); background: #b8e020; }
-.su-submit:disabled { opacity: 0.6; cursor: default; transform: none; }
+.li-btn-primary {
+  background: var(--volt);
+  color: var(--bg-dark);
+}
+.li-btn-primary:active { transform: scale(0.98); background: #b8e020; }
+.li-btn-primary:disabled {
+  background: var(--bg-card2);
+  color: var(--text-3);
+  cursor: not-allowed;
+  transform: none;
+}
+.li-btn .btn-spinner {
+  display: none;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.li-btn.loading .btn-spinner { display: block; }
+.li-btn.loading .btn-text    { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-.su-signup {
+.li-signup {
   font-size: 13px;
   color: var(--text-3);
   text-align: center;
   margin-top: 20px;
 }
-.su-signup a { color: var(--volt-dark); font-weight: 600; text-decoration: none; }
-
-/* Divider */
-.or-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 20px 0;
-  color: var(--text-3);
-  font-size: 12px;
-}
-.or-divider::before,
-.or-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+.li-signup a {
+  color: var(--volt-dark);
+  font-weight: 700;
+  text-decoration: none;
 }
 
-/* Demo shortcut */
-.demo-btn {
-  width: 100%;
-  padding: 13px;
-  background: transparent;
-  border: 1px solid var(--border-md);
-  border-radius: var(--radius);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-2);
-  cursor: pointer;
-  font-family: var(--font-body);
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-.demo-btn:active { background: var(--bg-card); border-color: var(--volt-dark); color: var(--volt-dark); }
+/* ── RESET PASSWORD VIEW ── */
+#view-reset { display: none; }
+#view-login { display: block; }
 </style>
 </head>
 <body>
+<script src="supabase-client.js"></script>
 
-<div class="login-wrap">
+<div class="li-wrap">
 
   <!-- HERO -->
-  <div class="login-hero">
-    <div class="login-logo">LARO<span>FIT</span></div>
-    <div class="login-title">WELCOME<br><span>BACK</span></div>
-    <div class="login-sub">Good to see you again.<br>Let's get to work.</div>
+  <div class="li-hero">
+    <div class="li-logo">LARO<span>FIT</span></div>
+    <div class="li-headline">WELCOME<br><span>BACK</span></div>
+    <div class="li-sub">Sign in to continue your journey.</div>
   </div>
 
-  <!-- FORM -->
-  <div class="login-form-wrap">
+  <!-- CARD -->
+  <div class="li-card">
 
-    <div id="su-error" class="su-error"></div>
+    <!-- ── LOGIN VIEW ── -->
+    <div id="view-login">
 
-    <!-- Email -->
-    <div class="su-field">
-      <label class="su-label" for="f-email">Email address</label>
-      <input class="su-input" type="email" id="f-email"
-             placeholder="you@email.com"
-             autocomplete="email"
-             onkeydown="if(event.key==='Enter') document.getElementById('f-pass').focus()">
-    </div>
+      <div class="li-field">
+        <label class="li-label" for="l-email">Email address</label>
+        <input class="li-input" type="email" id="l-email"
+               placeholder="you@email.com"
+               autocomplete="email" autocapitalize="none"
+               onkeydown="if(event.key==='Enter') document.getElementById('l-pass').focus()">
+      </div>
 
-    <!-- Password -->
-    <div class="su-field">
-      <label class="su-label" for="f-pass">Password</label>
-      <div class="pass-wrap">
-        <input class="su-input" type="password" id="f-pass"
+      <div class="li-field">
+        <label class="li-label" for="l-pass">Password</label>
+        <input class="li-input" type="password" id="l-pass"
                placeholder="Your password"
                autocomplete="current-password"
-               style="padding-right:44px;"
                onkeydown="if(event.key==='Enter') handleLogin()">
-        <button class="pass-toggle" onclick="togglePass()" aria-label="Show/hide password" tabindex="-1">
-          <i class="ti ti-eye" id="pass-eye"></i>
-        </button>
       </div>
+
+      <a class="li-forgot" href="#" onclick="showReset(); return false;">Forgot password?</a>
+
+      <div class="li-msg" id="li-error"></div>
+
+      <button class="li-btn li-btn-primary" id="li-btn" onclick="handleLogin()">
+        <div class="btn-spinner"></div>
+        <span class="btn-text"><i class="ti ti-login"></i> Sign in</span>
+      </button>
+
+      <div class="li-signup">Don't have an account? <a href="signup.html">Create one free</a></div>
+
     </div>
 
-    <!-- Forgot password -->
-    <div class="forgot-row">
-      <a href="#" class="forgot-link" onclick="showForgot(event)">Forgot password?</a>
-    </div>
+    <!-- ── RESET PASSWORD VIEW ── -->
+    <div id="view-reset">
 
-    <!-- Sign in button -->
-    <button class="su-submit" id="signin-btn" onclick="handleLogin()">
-      <i class="ti ti-login"></i> Sign in
-    </button>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">Reset your password</div>
+        <div style="font-size:13px;color:var(--text-3);line-height:1.6;">Enter your email and we'll send you a link to reset your password.</div>
+      </div>
 
-    <!-- Or divider -->
-    <div class="or-divider">or</div>
+      <div class="li-field">
+        <label class="li-label" for="r-email">Email address</label>
+        <input class="li-input" type="email" id="r-email"
+               placeholder="you@email.com"
+               autocomplete="email" autocapitalize="none"
+               onkeydown="if(event.key==='Enter') handleReset()">
+      </div>
 
-    <!-- Demo / continue as guest -->
-    <button class="demo-btn" onclick="continueAsGuest()">
-      <i class="ti ti-user"></i> Continue with demo account
-    </button>
+      <div class="li-msg" id="reset-msg"></div>
 
-    <div class="su-signup">
-      Don't have an account? <a href="signup.html">Sign up free</a>
+      <button class="li-btn li-btn-primary" id="reset-btn" onclick="handleReset()">
+        <div class="btn-spinner"></div>
+        <span class="btn-text"><i class="ti ti-mail"></i> Send reset link</span>
+      </button>
+
+      <div class="li-signup" style="margin-top:16px;">
+        <a href="#" onclick="showLogin(); return false;">← Back to sign in</a>
+      </div>
+
     </div>
 
   </div>
 </div>
 
 <script>
-function handleLogin() {
-  const email  = document.getElementById('f-email').value.trim().toLowerCase();
-  const pass   = document.getElementById('f-pass').value;
-  const errEl  = document.getElementById('su-error');
-  const btn    = document.getElementById('signin-btn');
+// ── LOGIN ─────────────────────────────────────────────────────
+async function handleLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const btn   = document.getElementById('li-btn');
 
-  errEl.style.display = 'none';
+  hideMsg('li-error');
 
-  if (!email || !email.includes('@')) return showError('Please enter a valid email address.');
-  if (!pass)                          return showError('Please enter your password.');
+  if (!email || !email.includes('@')) return showMsg('li-error', 'error', 'Please enter a valid email address.');
+  if (!pass)                          return showMsg('li-error', 'error', 'Please enter your password.');
 
-  // Loading state
   btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader-2" style="animation:spin 0.8s linear infinite;"></i> Signing in…';
+  btn.classList.add('loading');
 
-  // localStorage-only auth — check lf_user
-  setTimeout(() => {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="ti ti-login"></i> Sign in';
+  await LF.ready();
+  const { data, error } = await LF.auth.signIn(email, pass);
 
-    const stored = JSON.parse(localStorage.getItem('lf_user') || 'null');
+  btn.disabled = false;
+  btn.classList.remove('loading');
 
-    if (!stored) {
-      return showError('No account found. Please sign up first.');
-    }
-
-    if (stored.email && stored.email.toLowerCase() !== email) {
-      return showError('Email address not recognised.');
-    }
-
-    // Note: password isn't actually stored yet (no backend) —
-    // this will be replaced with Supabase auth before launch.
-    // For now, any password lets you in if the email matches.
-
-    // Mark as signed in
-    stored.signedIn = true;
-    localStorage.setItem('lf_user', JSON.stringify(stored));
-
-    // Redirect
-    const onboarded = stored.onboarded;
-    window.location.href = onboarded ? 'index.html' : 'onboarding.html';
-  }, 600);
-}
-
-function togglePass() {
-  const inp = document.getElementById('f-pass');
-  const ico = document.getElementById('pass-eye');
-  if (inp.type === 'password') {
-    inp.type = 'text';
-    ico.className = 'ti ti-eye-off';
-  } else {
-    inp.type = 'password';
-    ico.className = 'ti ti-eye';
+  if (error) {
+    const msg = error.message.includes('Invalid login')
+      ? 'Incorrect email or password. Please try again.'
+      : error.message;
+    return showMsg('li-error', 'error', msg);
   }
-}
 
-function showForgot(e) {
-  e.preventDefault();
-  showError('Password recovery will be available once account sync is set up. For now, your account data lives on this device.');
-}
-
-function continueAsGuest() {
-  // Use demo seed data
-  const demo = {
-    name: 'Demo',
-    fullName: 'Demo User',
-    email: 'demo@larofit.com',
-    initials: 'D',
+  // Cache user basics
+  const firstName = data.user?.user_metadata?.name || email.split('@')[0];
+  localStorage.setItem('lf_user', JSON.stringify({
+    id:       data.user.id,
+    email:    data.user.email,
+    name:     firstName,
+    fullName: data.user?.user_metadata?.full_name || firstName,
+    initials: firstName.charAt(0).toUpperCase(),
     onboarded: true,
-    signedIn: true,
-  };
-  localStorage.setItem('lf_user', JSON.stringify(demo));
-  localStorage.setItem('lf_seeded', JSON.stringify(true));
+  }));
+
   window.location.href = 'index.html';
 }
 
-function showError(msg) {
-  const el = document.getElementById('su-error');
-  el.textContent = msg;
-  el.style.display = 'block';
-  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+// ── RESET PASSWORD ────────────────────────────────────────────
+async function handleReset() {
+  const email = document.getElementById('r-email').value.trim();
+  const btn   = document.getElementById('reset-btn');
+
+  hideMsg('reset-msg');
+
+  if (!email || !email.includes('@')) return showMsg('reset-msg', 'error', 'Please enter a valid email address.');
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  await LF.ready();
+  const { error } = await LF.auth.resetPassword(email);
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+
+  if (error) return showMsg('reset-msg', 'error', error.message);
+
+  showMsg('reset-msg', 'success', 'Reset link sent! Check your inbox.');
+  btn.style.display = 'none';
 }
 
-// Spinner keyframe
-const style = document.createElement('style');
-style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-document.head.appendChild(style);
-</script>
+// ── VIEW SWITCHING ────────────────────────────────────────────
+function showReset() {
+  document.getElementById('view-login').style.display = 'none';
+  document.getElementById('view-reset').style.display = 'block';
+  // Pre-fill email if already entered
+  const email = document.getElementById('l-email').value.trim();
+  if (email) document.getElementById('r-email').value = email;
+}
 
+function showLogin() {
+  document.getElementById('view-reset').style.display = 'none';
+  document.getElementById('view-login').style.display = 'block';
+}
+
+// ── MSG HELPERS ───────────────────────────────────────────────
+function showMsg(id, type, msg) {
+  const el = document.getElementById(id);
+  el.textContent  = msg;
+  el.className    = 'li-msg ' + type;
+  el.style.display = 'block';
+}
+function hideMsg(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+// ── CHECK RESET PARAM ─────────────────────────────────────────
+if (new URLSearchParams(window.location.search).get('reset') === '1') {
+  showReset();
+}
+
+// ── REDIRECT IF ALREADY LOGGED IN ────────────────────────────
+LF.ready().then(async () => {
+  const session = await LF.auth.session();
+  if (session) window.location.href = 'index.html';
+});
+</script>
 </body>
 </html>

@@ -10,142 +10,137 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="appletouchicon.png">
 <link rel="stylesheet" href="larofit.css?v=2">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
-/* ── DARK FULL-SCREEN LAYOUT (signup is always dark) ── */
 html, body {
   background: #1a1a1a;
-  color: #ffffff;
   min-height: 100vh;
   min-height: 100dvh;
-  padding-bottom: 0;
-  display: block;
 }
+button, a, input, select { touch-action: manipulation; }
+input, select { font-size: 16px !important; }
 
-button, a, input { touch-action: manipulation; }
-
-.signup-wrap {
+/* ── LAYOUT ── */
+.su-wrap {
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  background: #1a1a1a;
 }
 
 /* ── HERO ── */
-.signup-hero {
-  background: #1a1a1a;
-  padding: 48px 24px 32px;
+.su-hero {
+  padding: max(48px, env(safe-area-inset-top, 48px)) 24px 32px;
   text-align: center;
   flex-shrink: 0;
 }
-
-.signup-logo {
+.su-logo {
   font-family: var(--font-display);
-  font-size: 28px;
+  font-size: 26px;
   letter-spacing: 3px;
-  color: #ffffff;
-  margin-bottom: 28px;
+  color: #fff;
+  margin-bottom: 24px;
 }
-
-.signup-logo span { color: var(--volt); }
-
-.signup-title {
+.su-logo span { color: var(--volt); }
+.su-headline {
   font-family: var(--font-display);
-  font-size: 36px;
+  font-size: 38px;
   letter-spacing: 1px;
-  color: #ffffff;
-  line-height: 1.1;
+  color: #fff;
+  line-height: 1.05;
   margin-bottom: 10px;
 }
-
-.signup-title span { color: var(--volt); }
-
-.signup-sub {
+.su-headline span { color: var(--volt); }
+.su-sub {
   font-size: 14px;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.45);
   line-height: 1.6;
 }
 
 /* ── FORM CARD ── */
-.signup-form-wrap {
+.su-card {
   flex: 1;
   background: var(--bg);
   border-radius: 24px 24px 0 0;
-  padding: 28px 20px 40px;
+  padding: 28px 20px max(40px, env(safe-area-inset-bottom, 40px));
+  overflow-y: auto;
 }
 
-/* field labels in dark mode on this page */
+/* ── FIELDS ── */
 .su-label {
+  display: block;
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-2);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-bottom: 6px;
-  display: block;
 }
-
 .su-field { margin-bottom: 16px; }
-
 .su-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
   margin-bottom: 16px;
 }
-
 .su-input {
   width: 100%;
   padding: 13px 14px;
   background: var(--bg-card);
   border: 1px solid var(--border-md);
   border-radius: var(--radius-sm);
-  font-size: 16px; /* prevent iOS zoom */
+  font-size: 16px;
   color: var(--text);
+  font-family: var(--font-body);
   outline: none;
   transition: border-color 0.2s;
   -webkit-appearance: none;
+  appearance: none;
 }
-
 .su-input:focus { border-color: var(--volt-dark); }
 .su-input::placeholder { color: var(--text-3); }
 
-select.su-input { cursor: pointer; }
-
-.su-error {
-  font-size: 12px;
-  color: var(--danger);
-  margin-top: 5px;
-  display: none;
-}
-
-/* ── PERKS ── */
-.perks-row {
+/* ── PASSWORD STRENGTH ── */
+.pw-strength {
+  margin-top: 6px;
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 24px;
-  padding: 14px;
-  background: var(--volt-bg);
-  border: 1px solid var(--volt-border);
-  border-radius: var(--radius);
-}
-
-.perk {
-  display: flex;
+  gap: 4px;
   align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  color: var(--text-2);
+}
+.pw-bar {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border-md);
+  transition: background 0.3s;
+}
+.pw-bar.weak   { background: var(--danger); }
+.pw-bar.fair   { background: var(--warning); }
+.pw-bar.strong { background: var(--success); }
+.pw-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  min-width: 40px;
+  text-align: right;
+  font-family: var(--font-mono);
 }
 
-.perk i {
-  color: var(--volt-dark);
-  font-size: 15px;
-  flex-shrink: 0;
+/* ── ERROR ── */
+.su-error {
+  display: none;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--danger);
+  margin-bottom: 16px;
 }
 
 /* ── SUBMIT ── */
-.su-submit {
+.su-btn {
   width: 100%;
   padding: 16px;
   background: var(--volt);
@@ -157,15 +152,31 @@ select.su-input { cursor: pointer; }
   cursor: pointer;
   font-family: var(--font-body);
   letter-spacing: 0.02em;
-  transition: all 0.15s;
-  margin-top: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  transition: all 0.15s;
+  margin-top: 4px;
 }
-
-.su-submit:active { transform: scale(0.98); background: #b8e020; }
+.su-btn:active { transform: scale(0.98); background: #b8e020; }
+.su-btn:disabled {
+  background: var(--bg-card2);
+  color: var(--text-3);
+  cursor: not-allowed;
+  transform: none;
+}
+.su-btn .btn-spinner {
+  display: none;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.su-btn.loading .btn-spinner { display: block; }
+.su-btn.loading .btn-text { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .su-note {
   font-size: 11px;
@@ -174,149 +185,172 @@ select.su-input { cursor: pointer; }
   margin-top: 12px;
   line-height: 1.5;
 }
-
 .su-signin {
   font-size: 13px;
   color: var(--text-3);
   text-align: center;
   margin-top: 16px;
 }
+.su-signin a {
+  color: var(--volt-dark);
+  font-weight: 700;
+  text-decoration: none;
+}
 
-.su-signin a { color: var(--volt-dark); font-weight: 600; }
+/* ── DIVIDER ── */
+.su-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.su-divider::before,
+.su-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-md);
+}
 </style>
 </head>
 <body>
+<script src="supabase-client.js"></script>
 
-<div class="signup-wrap">
+<div class="su-wrap">
 
   <!-- HERO -->
-  <div class="signup-hero">
-    <div class="signup-logo">LARO<span>FIT</span></div>
-    <div class="signup-title">YOUR <span>FIRST</span><br>WORKOUT IS<br><span>AI-BUILT</span></div>
-    <div class="signup-sub">Tell us about yourself.<br>We'll build your perfect program in 60 seconds.</div>
+  <div class="su-hero">
+    <div class="su-logo">LARO<span>FIT</span></div>
+    <div class="su-headline">TRAIN <span>SMARTER</span><br>LIVE BETTER</div>
+    <div class="su-sub">Create your free account.<br>No credit card required.</div>
   </div>
 
   <!-- FORM -->
-  <div class="signup-form-wrap">
+  <div class="su-card">
 
-    <!-- Perks -->
-    <div class="perks-row">
-      <div class="perk"><i class="ti ti-robot"></i> AI builds your first program automatically</div>
-      <div class="perk"><i class="ti ti-trophy"></i> PR tracking, rest timers, voice logging</div>
-      <div class="perk"><i class="ti ti-chart-line"></i> Progress tracking from day one</div>
-    </div>
-
-    <!-- Name -->
+    <!-- Full name -->
     <div class="su-field">
       <label class="su-label" for="f-name">Full name</label>
-      <input class="su-input" type="text" id="f-name" placeholder="e.g. Lyndon Johnson" autocomplete="name">
+      <input class="su-input" type="text" id="f-name"
+             placeholder="e.g. Lyndon Johnson"
+             autocomplete="name" autocorrect="off">
     </div>
 
     <!-- Email -->
     <div class="su-field">
       <label class="su-label" for="f-email">Email address</label>
-      <input class="su-input" type="email" id="f-email" placeholder="you@email.com" autocomplete="email">
+      <input class="su-input" type="email" id="f-email"
+             placeholder="you@email.com"
+             autocomplete="email" autocapitalize="none">
     </div>
 
-    <!-- Password row -->
-    <div class="su-row">
-      <div>
-        <label class="su-label" for="f-pass">Password</label>
-        <input class="su-input" type="password" id="f-pass" placeholder="Min. 8 chars">
-      </div>
-      <div>
-        <label class="su-label" for="f-pass2">Confirm</label>
-        <input class="su-input" type="password" id="f-pass2" placeholder="Repeat">
-      </div>
-    </div>
-
-    <!-- DOB + Sex row -->
-    <div class="su-row">
-      <div>
-        <label class="su-label" for="f-dob">Date of birth</label>
-        <input class="su-input" type="date" id="f-dob">
-      </div>
-      <div>
-        <label class="su-label" for="f-sex">Sex</label>
-        <select class="su-input" id="f-sex">
-          <option value="">Select…</option>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Prefer not to say</option>
-        </select>
+    <!-- Password -->
+    <div class="su-field">
+      <label class="su-label" for="f-pass">Password</label>
+      <input class="su-input" type="password" id="f-pass"
+             placeholder="Min. 8 characters"
+             autocomplete="new-password"
+             oninput="checkStrength(this.value)">
+      <div class="pw-strength">
+        <div class="pw-bar" id="pw-bar-1"></div>
+        <div class="pw-bar" id="pw-bar-2"></div>
+        <div class="pw-bar" id="pw-bar-3"></div>
+        <div class="pw-bar" id="pw-bar-4"></div>
+        <span class="pw-label" id="pw-label"></span>
       </div>
     </div>
 
-    <div id="su-error" class="su-error"></div>
+    <!-- Confirm password -->
+    <div class="su-field">
+      <label class="su-label" for="f-pass2">Confirm password</label>
+      <input class="su-input" type="password" id="f-pass2"
+             placeholder="Repeat password"
+             autocomplete="new-password">
+    </div>
 
-    <button class="su-submit" onclick="handleSignup()">
-      <i class="ti ti-rocket"></i> Create account &amp; build my program
+    <!-- Error -->
+    <div class="su-error" id="su-error"></div>
+
+    <!-- Submit -->
+    <button class="su-btn" id="su-btn" onclick="handleSignup()">
+      <div class="btn-spinner"></div>
+      <span class="btn-text"><i class="ti ti-rocket"></i> Create account</span>
     </button>
 
-    <div class="su-note">14-day free trial · No credit card required</div>
+    <div class="su-note">By creating an account you agree to our Terms of Service.</div>
     <div class="su-signin">Already have an account? <a href="login.html">Sign in</a></div>
 
   </div>
 </div>
 
-<!-- Tabler icons -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-
 <script>
-function dobTab(el, nextId, maxLen) {
-  // Strip non-digits
-  el.value = el.value.replace(/[^0-9]/g, '');
-  if (el.value.length >= maxLen) {
-    document.getElementById(nextId)?.focus();
-  }
+// ── PASSWORD STRENGTH ─────────────────────────────────────────
+function checkStrength(pw) {
+  let score = 0;
+  if (pw.length >= 8)                        score++;
+  if (pw.length >= 12)                       score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw) || /[^A-Za-z0-9]/.test(pw)) score++;
+
+  const bars   = ['pw-bar-1','pw-bar-2','pw-bar-3','pw-bar-4'];
+  const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+  const cls    = ['', 'weak', 'fair', 'strong', 'strong'];
+
+  bars.forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.className = 'pw-bar' + (i < score ? ' ' + cls[score] : '');
+  });
+  document.getElementById('pw-label').textContent = pw.length ? labels[score] : '';
 }
 
-function handleSignup() {
+// ── SIGNUP ────────────────────────────────────────────────────
+async function handleSignup() {
   const name  = document.getElementById('f-name').value.trim();
   const email = document.getElementById('f-email').value.trim();
   const pass  = document.getElementById('f-pass').value;
   const pass2 = document.getElementById('f-pass2').value;
-  const mm    = document.getElementById('f-dob-mm').value.trim();
-  const dd    = document.getElementById('f-dob-dd').value.trim();
-  const yyyy  = document.getElementById('f-dob-yyyy').value.trim();
-  const sex   = document.getElementById('f-sex').value;
   const errEl = document.getElementById('su-error');
+  const btn   = document.getElementById('su-btn');
 
   errEl.style.display = 'none';
 
-  if (!name)                          return showError('Please enter your name.');
-  if (!email || !email.includes('@')) return showError('Please enter a valid email.');
+  // Validate
+  if (!name)                          return showError('Please enter your full name.');
+  if (!email || !email.includes('@')) return showError('Please enter a valid email address.');
   if (pass.length < 8)                return showError('Password must be at least 8 characters.');
   if (pass !== pass2)                 return showError('Passwords do not match.');
 
-  // Validate DOB if provided
-  let dob = '';
-  if (mm || dd || yyyy) {
-    const m = parseInt(mm), d = parseInt(dd), y = parseInt(yyyy);
-    if (!mm || !dd || !yyyy)          return showError('Please complete your date of birth.');
-    if (m < 1 || m > 12)              return showError('Please enter a valid month (01–12).');
-    if (d < 1 || d > 31)              return showError('Please enter a valid day (01–31).');
-    if (y < 1920 || y > 2015)         return showError('Please enter a valid birth year.');
-    dob = `${yyyy}-${mm.padStart(2,'0')}-${dd.padStart(2,'0')}`;
-  }
+  // Loading state
+  btn.disabled = true;
+  btn.classList.add('loading');
 
-  // Save account basics
+  await LF.ready();
+  const { data, error } = await LF.auth.signUp(email, pass, name);
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+
+  if (error) return showError(error.message);
+
+  // Save name to localStorage immediately so onboarding can use it
   const firstName = name.split(' ')[0];
   localStorage.setItem('lf_user', JSON.stringify({
-    name: firstName,
-    fullName: name,
+    id:       data.user?.id || '',
     email,
-    dob,
-    sex,
-    initials: firstName.charAt(0).toUpperCase()
+    name:     firstName,
+    fullName: name,
+    initials: firstName.charAt(0).toUpperCase(),
+    onboarded: false,
   }));
 
-  // Clear any old seeded data so onboarding starts fresh
-  localStorage.removeItem('lf_seeded');
+  // Clear any old program data
   localStorage.removeItem('lf_programs');
   localStorage.removeItem('lf_active_program');
+  localStorage.removeItem('lf_seeded');
 
-  window.location.href = 'onboarding.html';
+  window.location.href = 'index.html';
 }
 
 function showError(msg) {
@@ -324,7 +358,12 @@ function showError(msg) {
   el.textContent = msg;
   el.style.display = 'block';
 }
-</script>
 
+// ── REDIRECT IF ALREADY LOGGED IN ────────────────────────────
+LF.ready().then(async () => {
+  const session = await LF.auth.session();
+  if (session) window.location.href = 'index.html';
+});
+</script>
 </body>
 </html>
