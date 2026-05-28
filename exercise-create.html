@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f0">
+<title>LaroFit — Create Exercise</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="larofit.css?v=2">
+<style>
+input, select, textarea, button, a { touch-action: manipulation; }
+input[type="text"], input[type="url"], textarea { font-size: 16px !important; }
+
+/* ── PAGE SHELL ── */
+.ce-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: var(--bg);
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+}
+
+/* ── TOP BAR ── */
+.ce-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 16px;
+  background: var(--bg);
+  border-bottom: 0.5px solid var(--border);
+}
+.ce-topbar-x {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--bg-card2);
+  color: var(--text-2);
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+.ce-topbar-x:active { opacity: 0.6; }
+.ce-topbar-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--text);
+}
+.ce-topbar-save {
+  height: 36px;
+  padding: 0 18px;
+  background: var(--volt);
+  color: var(--bg-dark);
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+.ce-topbar-save:active { opacity: 0.8; transform: scale(0.97); }
+
+/* ── MEDIA SLOT ── */
+.ce-media {
+  width: 100%;
+  height: 220px;
+  background: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.ce-media-preview {
+  position: absolute;
+  inset: 0;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+  display: none;
+}
+.ce-media-preview.show { display: block; }
+.ce-media-preview-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: none;
+}
+.ce-media-preview-video.show { display: block; }
+.ce-media-icon {
+  font-size: 44px;
+  opacity: 0.35;
+}
+.ce-media-label {
+  font-size: 13px;
+  color: var(--text-3);
+  font-weight: 500;
+}
+.ce-media-hint {
+  font-size: 11px;
+  color: var(--text-3);
+  opacity: 0.6;
+}
+.ce-media-edit-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: none;
+  cursor: pointer;
+}
+.ce-media-edit-btn.show { display: block; }
+#ce-media-input { display: none; }
+
+/* ── FORM BODY ── */
+.ce-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── SECTION DIVIDER ── */
+.ce-section {
+  padding: 20px var(--page-pad) 0;
+}
+.ce-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ── NAME FIELD ── */
+.ce-name-input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: var(--font-body);
+  color: var(--text);
+  outline: none;
+}
+.ce-name-input::placeholder { color: var(--text-3); }
+.ce-name-input:focus { border-color: var(--volt-dark); }
+
+/* ── ROW TAPPABLE (like Jefit) ── */
+.ce-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px var(--page-pad);
+  background: var(--bg-card);
+  border-bottom: 0.5px solid var(--border);
+  cursor: pointer;
+  min-height: 62px;
+  gap: 12px;
+}
+.ce-row:first-of-type { border-top: 0.5px solid var(--border); }
+.ce-row:active { background: var(--bg-card2); }
+.ce-row-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.ce-row-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.ce-row-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.ce-row-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.ce-row-value {
+  font-size: 14px;
+  color: var(--text-3);
+  font-weight: 500;
+  text-align: right;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ce-row-value.selected { color: var(--volt-dark); font-weight: 600; }
+.ce-row-chevron {
+  color: var(--text-3);
+  font-size: 14px;
+  opacity: 0.5;
+}
+
+/* rows that are inputs not tappable sheets */
+.ce-row-input-wrap {
+  display: flex;
+  flex-direction: column;
+  padding: 14px var(--page-pad) 0;
+}
+.ce-row-input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 0.5px solid var(--border-md);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  font-size: 16px;
+  font-family: var(--font-body);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 0;
+}
+.ce-row-input::placeholder { color: var(--text-3); }
+.ce-row-input:focus { border-color: var(--volt-dark); }
+.ce-row-textarea {
+  resize: none;
+  min-height: 100px;
+  line-height: 1.6;
+}
+
+/* ── BOTTOM SHEET OVERLAY ── */
+.ce-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 300;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.ce-overlay.open { opacity: 1; pointer-events: all; }
+
+/* ── BOTTOM SHEET ── */
+.ce-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-card);
+  border-radius: 20px 20px 0 0;
+  z-index: 301;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  max-height: 88dvh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.ce-sheet.open { transform: translateY(0); }
+
+.ce-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border-md);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+}
+.ce-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px 12px;
+  flex-shrink: 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.ce-sheet-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+.ce-sheet-close {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-card2);
+  border: none;
+  border-radius: 50%;
+  font-size: 14px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.ce-sheet-close:active { opacity: 0.6; }
+.ce-sheet-body {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  padding: 16px 20px 24px;
+}
+
+/* ── MUSCLE GRID ── */
+.muscle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.muscle-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.muscle-tile:active { background: var(--bg-card2); }
+.muscle-tile.selected .muscle-circle {
+  background: var(--volt-bg);
+  border-color: var(--volt);
+}
+.muscle-tile.selected .muscle-name { color: var(--volt-dark); font-weight: 700; }
+.muscle-circle {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--bg-card2);
+  border: 2px solid var(--border-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s;
+}
+.muscle-circle svg {
+  width: 70px;
+  height: 70px;
+}
+.muscle-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-2);
+  text-align: center;
+}
+
+/* ── EQUIPMENT / RECORD TYPE CHIPS ── */
+.ce-option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ce-option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 4px;
+  border-bottom: 0.5px solid var(--border);
+  cursor: pointer;
+  border-radius: 0;
+}
+.ce-option-row:last-child { border-bottom: none; }
+.ce-option-row:active { background: var(--bg-card2); }
+.ce-option-label {
+  font-size: 15px;
+  color: var(--text);
+  font-weight: 500;
+}
+.ce-option-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.ce-option-check {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--border-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.ce-option-check.checked {
+  background: var(--volt);
+  border-color: var(--volt);
+}
+.ce-option-check.checked::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: 2px solid var(--bg-dark);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translateY(-1px);
+  display: block;
+}
+
+/* ── BOTTOM SPACER ── */
+.ce-bottom-space { height: 32px; }
+
+</style>
+</head>
+<body>
+<div class="ce-page">
+
+  <!-- TOP BAR -->
+  <div class="ce-topbar">
+    <button class="ce-topbar-x" onclick="discardAndExit()" aria-label="Discard">✕</button>
+    <span class="ce-topbar-title">CREATE EXERCISE</span>
+    <button class="ce-topbar-save" onclick="saveExercise()">SAVE</button>
+  </div>
+
+  <!-- MEDIA SLOT -->
+  <div class="ce-media" id="ce-media-zone" onclick="triggerMediaPick()">
+    <img class="ce-media-preview" id="ce-media-img" src="" alt="">
+    <video class="ce-media-preview-video" id="ce-media-vid" muted playsinline loop></video>
+    <div id="ce-media-placeholder">
+      <div class="ce-media-icon">🎬</div>
+      <div class="ce-media-label">Add Photo, GIF or Video</div>
+      <div class="ce-media-hint">Tap to upload</div>
+    </div>
+    <button class="ce-media-edit-btn" id="ce-media-edit-btn" onclick="triggerMediaPick(event)">Change</button>
+  </div>
+  <input type="file" id="ce-media-input" accept="image/*,video/*,.gif">
+
+  <!-- FORM BODY -->
+  <div class="ce-body">
+
+    <!-- NAME -->
+    <div class="ce-section">
+      <div class="ce-section-label">Exercise Name *</div>
+      <input class="ce-name-input" id="ce-name" type="text" placeholder="e.g. Banded Hip Thrust" autocomplete="off" autocorrect="off">
+    </div>
+
+    <!-- TAPPABLE ROWS -->
+    <div class="ce-section" style="padding-bottom: 0; padding-top: 24px;">
+      <div class="ce-section-label">Details</div>
+    </div>
+
+    <!-- Main Muscle Group -->
+    <div class="ce-row" onclick="openSheet('primary')">
+      <div class="ce-row-left">
+        <div class="ce-row-title">Main Muscle Group <span style="color:var(--danger)">*</span></div>
+      </div>
+      <div class="ce-row-right">
+        <span class="ce-row-value" id="val-primary">Select</span>
+        <span class="ce-row-chevron">›</span>
+      </div>
+    </div>
+
+    <!-- Secondary Muscle Groups -->
+    <div class="ce-row" onclick="openSheet('secondary')">
+      <div class="ce-row-left">
+        <div class="ce-row-title">Secondary Muscle Groups</div>
+        <div class="ce-row-sub">Select up to 2</div>
+      </div>
+      <div class="ce-row-right">
+        <span class="ce-row-value" id="val-secondary">Select</span>
+        <span class="ce-row-chevron">›</span>
+      </div>
+    </div>
+
+    <!-- Equipment -->
+    <div class="ce-row" onclick="openSheet('equipment')">
+      <div class="ce-row-left">
+        <div class="ce-row-title">Equipment <span style="color:var(--danger)">*</span></div>
+      </div>
+      <div class="ce-row-right">
+        <span class="ce-row-value" id="val-equipment">Select</span>
+        <span class="ce-row-chevron">›</span>
+      </div>
+    </div>
+
+    <!-- Record Type -->
+    <div class="ce-row" onclick="openSheet('recordtype')">
+      <div class="ce-row-left">
+        <div class="ce-row-title">Record Type <span style="color:var(--danger)">*</span></div>
+        <div class="ce-row-sub">How this exercise is tracked</div>
+      </div>
+      <div class="ce-row-right">
+        <span class="ce-row-value" id="val-recordtype">Select</span>
+        <span class="ce-row-chevron">›</span>
+      </div>
+    </div>
+
+    <!-- Exercise URL -->
+    <div class="ce-section">
+      <div class="ce-section-label">Exercise URL</div>
+      <input class="ce-row-input" id="ce-url" type="url" placeholder="https://youtube.com/..." inputmode="url">
+    </div>
+
+    <!-- Instructions -->
+    <div class="ce-section">
+      <div class="ce-section-label">Instructions</div>
+      <textarea class="ce-row-input ce-row-textarea" id="ce-instructions" placeholder="Describe form cues, technique tips, common mistakes to avoid…"></textarea>
+    </div>
+
+    <div class="ce-bottom-space"></div>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div class="ce-overlay" id="ce-overlay" onclick="closeSheet()"></div>
+
+<!-- MUSCLE SHEET (shared for primary + secondary) -->
+<div class="ce-sheet" id="sheet-muscle">
+  <div class="ce-sheet-handle"></div>
+  <div class="ce-sheet-header">
+    <span class="ce-sheet-title" id="sheet-muscle-title">Main Muscle Group</span>
+    <button class="ce-sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="ce-sheet-body">
+    <div class="muscle-grid" id="muscle-grid"></div>
+  </div>
+</div>
+
+<!-- EQUIPMENT SHEET -->
+<div class="ce-sheet" id="sheet-equipment">
+  <div class="ce-sheet-handle"></div>
+  <div class="ce-sheet-header">
+    <span class="ce-sheet-title">Equipment</span>
+    <button class="ce-sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="ce-sheet-body">
+    <div class="ce-option-list" id="equipment-list"></div>
+  </div>
+</div>
+
+<!-- RECORD TYPE SHEET -->
+<div class="ce-sheet" id="sheet-recordtype">
+  <div class="ce-sheet-handle"></div>
+  <div class="ce-sheet-header">
+    <span class="ce-sheet-title">Record Type</span>
+    <button class="ce-sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="ce-sheet-body">
+    <div class="ce-option-list" id="recordtype-list"></div>
+  </div>
+</div>
+
+<script src="supabase-client.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA DEFINITIONS
+// ══════════════════════════════════════════════════════════
+
+const MUSCLE_GROUPS = [
+  { id: 'abs',        name: 'Abs',         svg: svgAbs() },
+  { id: 'back',       name: 'Back',        svg: svgBack() },
+  { id: 'biceps',     name: 'Biceps',      svg: svgBiceps() },
+  { id: 'chest',      name: 'Chest',       svg: svgChest() },
+  { id: 'forearms',   name: 'Forearms',    svg: svgForearms() },
+  { id: 'glutes',     name: 'Glutes',      svg: svgGlutes() },
+  { id: 'shoulders',  name: 'Shoulders',   svg: svgShoulders() },
+  { id: 'triceps',    name: 'Triceps',     svg: svgTriceps() },
+  { id: 'upper_legs', name: 'Upper Legs',  svg: svgUpperLegs() },
+  { id: 'lower_legs', name: 'Lower Legs',  svg: svgLowerLegs() },
+  { id: 'cardio',     name: 'Cardio',      svg: svgCardio() },
+];
+
+const EQUIPMENT_OPTIONS = [
+  { id: 'bodyweight',    name: 'Bodyweight' },
+  { id: 'bands',         name: 'Bands' },
+  { id: 'barbell',       name: 'Barbell' },
+  { id: 'bench',         name: 'Bench' },
+  { id: 'cardio_machine',name: 'Cardio Machine' },
+  { id: 'dumbbells',     name: 'Dumbbells' },
+  { id: 'exercise_ball', name: 'Exercise Ball' },
+  { id: 'ez_bar',        name: 'EZ Bar' },
+  { id: 'kettlebells',   name: 'Kettlebells' },
+  { id: 'machine_cable', name: 'Machine / Cable' },
+];
+
+const RECORD_TYPES = [
+  { id: 'weight_reps',    name: 'Weight × Reps',    sub: 'Log weight and rep count per set' },
+  { id: 'reps',           name: 'Reps Only',         sub: 'Bodyweight — log reps only' },
+  { id: 'reps_duration',  name: 'Reps + Duration',   sub: 'Log both reps and time' },
+  { id: 'duration',       name: 'Duration',          sub: 'Timed sets — log time only' },
+  { id: 'cardio',         name: 'Cardio',            sub: 'Distance, speed, duration, kcal' },
+];
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+
+let state = {
+  primaryMuscle: null,       // muscle id string
+  secondaryMuscles: [],      // array of muscle id strings (max 2)
+  equipment: null,
+  recordType: null,
+  mediaFile: null,
+  mediaDataUrl: null,
+};
+
+let activeSheet = null;      // 'primary' | 'secondary' | 'equipment' | 'recordtype'
+
+// ══════════════════════════════════════════════════════════
+// SVG MUSCLE ILLUSTRATIONS
+// Each SVG is a circular body silhouette with the relevant
+// muscle group highlighted in volt (#c6f135).
+// Inactive muscle paths use a muted grey tone.
+// ══════════════════════════════════════════════════════════
+
+function svgBase(highlightedPaths, viewBox = '0 0 100 100') {
+  // Full-body silhouette base paths (grey), overlaid with highlighted group
+  return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">
+    ${highlightedPaths}
+  </svg>`;
+}
+
+const M = '#b0b0b0';   // muted body color
+const H = '#c6f135';   // volt highlight
+
+function svgAbs() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <!-- body silhouette -->
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.3"/>
+    <!-- torso outline -->
+    <path d="M36 42 Q50 37 64 42 L67 75 Q50 82 33 75 Z" fill="${M}" opacity="0.25"/>
+    <!-- shoulders -->
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <!-- arms -->
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <!-- legs -->
+    <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- ABS HIGHLIGHT — 6-pack grid -->
+    <rect x="42" y="48" width="7" height="7" rx="1.5" fill="${H}"/>
+    <rect x="51" y="48" width="7" height="7" rx="1.5" fill="${H}"/>
+    <rect x="42" y="57" width="7" height="7" rx="1.5" fill="${H}"/>
+    <rect x="51" y="57" width="7" height="7" rx="1.5" fill="${H}"/>
+    <rect x="42" y="66" width="7" height="7" rx="1.5" fill="${H}"/>
+    <rect x="51" y="66" width="7" height="7" rx="1.5" fill="${H}"/>
+    <!-- midline -->
+    <line x1="50" y1="47" x2="50" y2="74" stroke="${M}" stroke-width="0.8" opacity="0.4"/>
+  </svg>`;
+}
+
+function svgBack() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- BACK HIGHLIGHT — lats + traps -->
+    <path d="M36 40 Q50 35 64 40 L66 56 Q58 62 50 63 Q42 62 34 56 Z" fill="${H}" opacity="0.9"/>
+    <path d="M36 58 Q42 64 50 65 Q58 64 64 58 L66 72 Q58 78 50 79 Q42 78 34 72 Z" fill="${H}" opacity="0.7"/>
+    <!-- spine -->
+    <line x1="50" y1="38" x2="50" y2="78" stroke="${M}" stroke-width="1.5" opacity="0.5"/>
+  </svg>`;
+}
+
+function svgBiceps() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.4"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.4"/>
+    <!-- arms grey -->
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- BICEP HIGHLIGHT — front upper arms -->
+    <path d="M22 44 Q18 52 19 60 Q21 56 25 50 Q27 47 26 44 Z" fill="${H}"/>
+    <path d="M78 44 Q82 52 81 60 Q79 56 75 50 Q73 47 74 44 Z" fill="${H}"/>
+  </svg>`;
+}
+
+function svgChest() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- CHEST HIGHLIGHT — pec major -->
+    <path d="M36 40 Q43 38 50 39 Q50 48 44 52 Q38 50 34 46 Z" fill="${H}" opacity="0.9"/>
+    <path d="M64 40 Q57 38 50 39 Q50 48 56 52 Q62 50 66 46 Z" fill="${H}" opacity="0.9"/>
+  </svg>`;
+}
+
+function svgForearms() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <!-- upper arms grey -->
+    <path d="M20 44 Q18 54 19 60" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M80 44 Q82 54 81 60" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- FOREARM HIGHLIGHT — lower arms -->
+    <path d="M19 60 Q17 68 19 75" stroke="${H}" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="M81 60 Q83 68 81 75" stroke="${H}" stroke-width="7" stroke-linecap="round" fill="none"/>
+  </svg>`;
+}
+
+function svgGlutes() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- GLUTE HIGHLIGHT — two rounded lobes -->
+    <ellipse cx="42" cy="78" rx="10" ry="8" fill="${H}" opacity="0.9"/>
+    <ellipse cx="58" cy="78" rx="10" ry="8" fill="${H}" opacity="0.9"/>
+  </svg>`;
+}
+
+function svgShoulders() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- SHOULDER HIGHLIGHT — deltoids -->
+    <ellipse cx="27" cy="43" rx="10" ry="7" fill="${H}" opacity="0.9"/>
+    <ellipse cx="73" cy="43" rx="10" ry="7" fill="${H}" opacity="0.9"/>
+  </svg>`;
+}
+
+function svgTriceps() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <!-- arms grey front -->
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- TRICEP HIGHLIGHT — back upper arms (slightly offset to show rear) -->
+    <path d="M24 44 Q21 50 22 60 Q20 56 18 50 Q18 47 20 44 Z" fill="${H}"/>
+    <path d="M76 44 Q79 50 78 60 Q80 56 82 50 Q82 47 80 44 Z" fill="${H}"/>
+  </svg>`;
+}
+
+function svgUpperLegs() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <!-- lower legs grey -->
+    <path d="M37 92 Q35 102 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 92 Q65 102 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- UPPER LEG HIGHLIGHT — quads + hamstrings -->
+    <path d="M37 80 Q35 88 37 96" stroke="${H}" stroke-width="10" stroke-linecap="round" fill="none"/>
+    <path d="M63 80 Q65 88 63 96" stroke="${H}" stroke-width="10" stroke-linecap="round" fill="none"/>
+  </svg>`;
+}
+
+function svgLowerLegs() {
+  return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
+    <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
+    <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
+    <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
+    <!-- upper legs grey -->
+    <path d="M37 80 Q35 92 37 96" stroke="${M}" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <path d="M63 80 Q65 92 63 96" stroke="${M}" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.3"/>
+    <!-- LOWER LEG HIGHLIGHT — calves + shins -->
+    <path d="M37 96 Q35 102 34 108" stroke="${H}" stroke-width="9" stroke-linecap="round" fill="none"/>
+    <path d="M63 96 Q65 102 66 108" stroke="${H}" stroke-width="9" stroke-linecap="round" fill="none"/>
+  </svg>`;
+}
+
+function svgCardio() {
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- chest/ribcage silhouette -->
+    <ellipse cx="50" cy="50" rx="32" ry="36" fill="${M}" opacity="0.2"/>
+    <ellipse cx="50" cy="50" rx="28" ry="32" fill="${M}" opacity="0.15"/>
+    <!-- LUNGS HIGHLIGHT -->
+    <path d="M26 38 Q22 46 23 58 Q26 66 32 68 Q38 66 38 58 L38 40 Q34 36 26 38 Z" fill="${H}" opacity="0.85"/>
+    <path d="M74 38 Q78 46 77 58 Q74 66 68 68 Q62 66 62 58 L62 40 Q66 36 74 38 Z" fill="${H}" opacity="0.85"/>
+    <!-- bronchi -->
+    <path d="M50 28 L50 40" stroke="${H}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M50 40 Q44 42 38 42" stroke="${H}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M50 40 Q56 42 62 42" stroke="${H}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- trachea -->
+    <path d="M50 20 L50 28" stroke="${M}" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+    <!-- heartbeat line -->
+    <polyline points="18,72 30,72 36,62 42,82 48,68 54,68 60,72 82,72" stroke="${H}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  </svg>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// SHEET MANAGEMENT
+// ══════════════════════════════════════════════════════════
+
+function openSheet(type) {
+  activeSheet = type;
+  const overlay = document.getElementById('ce-overlay');
+  overlay.classList.add('open');
+
+  if (type === 'primary' || type === 'secondary') {
+    buildMuscleGrid(type);
+    document.getElementById('sheet-muscle-title').textContent =
+      type === 'primary' ? 'Main Muscle Group' : 'Secondary Muscle Groups';
+    document.getElementById('sheet-muscle').classList.add('open');
+  } else if (type === 'equipment') {
+    buildEquipmentList();
+    document.getElementById('sheet-equipment').classList.add('open');
+  } else if (type === 'recordtype') {
+    buildRecordTypeList();
+    document.getElementById('sheet-recordtype').classList.add('open');
+  }
+}
+
+function closeSheet() {
+  document.getElementById('ce-overlay').classList.remove('open');
+  document.getElementById('sheet-muscle').classList.remove('open');
+  document.getElementById('sheet-equipment').classList.remove('open');
+  document.getElementById('sheet-recordtype').classList.remove('open');
+  activeSheet = null;
+}
+
+// ══════════════════════════════════════════════════════════
+// MUSCLE GRID
+// ══════════════════════════════════════════════════════════
+
+function buildMuscleGrid(type) {
+  const grid = document.getElementById('muscle-grid');
+  grid.innerHTML = '';
+  MUSCLE_GROUPS.forEach(m => {
+    const isSelected = type === 'primary'
+      ? state.primaryMuscle === m.id
+      : state.secondaryMuscles.includes(m.id);
+
+    const tile = document.createElement('div');
+    tile.className = 'muscle-tile' + (isSelected ? ' selected' : '');
+    tile.innerHTML = `
+      <div class="muscle-circle">${m.svg}</div>
+      <div class="muscle-name">${m.name}</div>
+    `;
+    tile.addEventListener('click', () => selectMuscle(type, m.id));
+    grid.appendChild(tile);
+  });
+}
+
+function selectMuscle(type, id) {
+  if (type === 'primary') {
+    state.primaryMuscle = state.primaryMuscle === id ? null : id;
+    updateRowValue('val-primary',
+      state.primaryMuscle
+        ? MUSCLE_GROUPS.find(m => m.id === state.primaryMuscle)?.name
+        : null
+    );
+    buildMuscleGrid('primary');
+    // auto-close after selection
+    setTimeout(closeSheet, 180);
+  } else {
+    const idx = state.secondaryMuscles.indexOf(id);
+    if (idx > -1) {
+      state.secondaryMuscles.splice(idx, 1);
+    } else {
+      if (state.secondaryMuscles.length >= 2) {
+        showToast('Maximum 2 secondary muscles');
+        return;
+      }
+      state.secondaryMuscles.push(id);
+    }
+    const names = state.secondaryMuscles
+      .map(sid => MUSCLE_GROUPS.find(m => m.id === sid)?.name)
+      .filter(Boolean)
+      .join(', ');
+    updateRowValue('val-secondary', names || null);
+    buildMuscleGrid('secondary');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// EQUIPMENT LIST
+// ══════════════════════════════════════════════════════════
+
+function buildEquipmentList() {
+  const list = document.getElementById('equipment-list');
+  list.innerHTML = '';
+  EQUIPMENT_OPTIONS.forEach(eq => {
+    const isSelected = state.equipment === eq.id;
+    const row = document.createElement('div');
+    row.className = 'ce-option-row';
+    row.innerHTML = `
+      <div class="ce-option-label">${eq.name}</div>
+      <div class="ce-option-check ${isSelected ? 'checked' : ''}"></div>
+    `;
+    row.addEventListener('click', () => {
+      state.equipment = isSelected ? null : eq.id;
+      updateRowValue('val-equipment', state.equipment ? eq.name : null);
+      buildEquipmentList();
+      if (state.equipment) setTimeout(closeSheet, 180);
+    });
+    list.appendChild(row);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// RECORD TYPE LIST
+// ══════════════════════════════════════════════════════════
+
+function buildRecordTypeList() {
+  const list = document.getElementById('recordtype-list');
+  list.innerHTML = '';
+  RECORD_TYPES.forEach(rt => {
+    const isSelected = state.recordType === rt.id;
+    const row = document.createElement('div');
+    row.className = 'ce-option-row';
+    row.innerHTML = `
+      <div>
+        <div class="ce-option-label">${rt.name}</div>
+        <div class="ce-option-sub">${rt.sub}</div>
+      </div>
+      <div class="ce-option-check ${isSelected ? 'checked' : ''}"></div>
+    `;
+    row.addEventListener('click', () => {
+      state.recordType = isSelected ? null : rt.id;
+      updateRowValue('val-recordtype', state.recordType ? rt.name : null);
+      buildRecordTypeList();
+      if (state.recordType) setTimeout(closeSheet, 180);
+    });
+    list.appendChild(row);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// ROW VALUE DISPLAY HELPER
+// ══════════════════════════════════════════════════════════
+
+function updateRowValue(id, value) {
+  const el = document.getElementById(id);
+  if (value) {
+    el.textContent = value;
+    el.classList.add('selected');
+  } else {
+    el.textContent = 'Select';
+    el.classList.remove('selected');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// MEDIA UPLOAD
+// ══════════════════════════════════════════════════════════
+
+function triggerMediaPick(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('ce-media-input').click();
+}
+
+document.getElementById('ce-media-input').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  state.mediaFile = file;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    state.mediaDataUrl = ev.target.result;
+    const isVideo = file.type.startsWith('video/');
+    const imgEl = document.getElementById('ce-media-img');
+    const vidEl = document.getElementById('ce-media-vid');
+    const placeholder = document.getElementById('ce-media-placeholder');
+    const editBtn = document.getElementById('ce-media-edit-btn');
+
+    if (isVideo) {
+      vidEl.src = state.mediaDataUrl;
+      vidEl.classList.add('show');
+      imgEl.classList.remove('show');
+      vidEl.play();
+    } else {
+      imgEl.src = state.mediaDataUrl;
+      imgEl.classList.add('show');
+      vidEl.classList.remove('show');
+    }
+    placeholder.style.display = 'none';
+    editBtn.classList.add('show');
+  };
+  reader.readAsDataURL(file);
+});
+
+// ══════════════════════════════════════════════════════════
+// SAVE
+// ══════════════════════════════════════════════════════════
+
+function saveExercise() {
+  const name = document.getElementById('ce-name').value.trim();
+  if (!name) { showToast('Exercise name is required'); return; }
+  if (!state.primaryMuscle) { showToast('Select a main muscle group'); return; }
+  if (!state.equipment) { showToast('Select equipment'); return; }
+  if (!state.recordType) { showToast('Select a record type'); return; }
+
+  const existing = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+  const id = 'cx-' + Date.now();
+
+  const exercise = {
+    id,
+    name,
+    primaryMuscle: state.primaryMuscle,
+    secondaryMuscles: [...state.secondaryMuscles],
+    equipment: state.equipment,
+    recordType: state.recordType,
+    mediaDataUrl: state.mediaDataUrl || null,
+    exerciseUrl: document.getElementById('ce-url').value.trim() || null,
+    instructions: document.getElementById('ce-instructions').value.trim() || null,
+    custom: true,
+    createdAt: new Date().toISOString(),
+  };
+
+  existing.push(exercise);
+  localStorage.setItem('lf_custom_exercises', JSON.stringify(existing));
+  showToast('Exercise saved!');
+  setTimeout(() => { window.location.href = 'programs.html'; }, 700);
+}
+
+function discardAndExit() {
+  window.location.href = 'programs.html';
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+
+function showToast(msg) {
+  let t = document.getElementById('lf-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'lf-toast';
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--bg-dark);color:var(--volt);border:1px solid var(--volt-border);border-radius:999px;padding:10px 22px;font-size:13px;font-weight:600;font-family:var(--font-mono);z-index:9999;opacity:0;transition:opacity 0.25s;pointer-events:none;white-space:nowrap;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2200);
+}
+
+// ══════════════════════════════════════════════════════════
+// EDIT MODE — load existing exercise if ?id= param present
+// ══════════════════════════════════════════════════════════
+
+function loadExistingExercise() {
+  const params = new URLSearchParams(location.search);
+  const id = params.get('id');
+  if (!id) return;
+
+  const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+  const ex = all.find(e => e.id === id);
+  if (!ex) return;
+
+  document.querySelector('.ce-topbar-title').textContent = 'EDIT EXERCISE';
+  document.getElementById('ce-name').value = ex.name || '';
+
+  state.primaryMuscle = ex.primaryMuscle || null;
+  state.secondaryMuscles = ex.secondaryMuscles || [];
+  state.equipment = ex.equipment || null;
+  state.recordType = ex.recordType || null;
+  state.mediaDataUrl = ex.mediaDataUrl || null;
+
+  if (state.primaryMuscle) {
+    const m = MUSCLE_GROUPS.find(m => m.id === state.primaryMuscle);
+    if (m) updateRowValue('val-primary', m.name);
+  }
+  if (state.secondaryMuscles.length) {
+    const names = state.secondaryMuscles
+      .map(sid => MUSCLE_GROUPS.find(m => m.id === sid)?.name)
+      .filter(Boolean).join(', ');
+    updateRowValue('val-secondary', names);
+  }
+  if (state.equipment) {
+    const eq = EQUIPMENT_OPTIONS.find(e => e.id === state.equipment);
+    if (eq) updateRowValue('val-equipment', eq.name);
+  }
+  if (state.recordType) {
+    const rt = RECORD_TYPES.find(r => r.id === state.recordType);
+    if (rt) updateRowValue('val-recordtype', rt.name);
+  }
+  if (state.mediaDataUrl) {
+    const isVideo = state.mediaDataUrl.startsWith('data:video');
+    const imgEl = document.getElementById('ce-media-img');
+    const vidEl = document.getElementById('ce-media-vid');
+    if (isVideo) { vidEl.src = state.mediaDataUrl; vidEl.classList.add('show'); vidEl.play(); }
+    else { imgEl.src = state.mediaDataUrl; imgEl.classList.add('show'); }
+    document.getElementById('ce-media-placeholder').style.display = 'none';
+    document.getElementById('ce-media-edit-btn').classList.add('show');
+  }
+  if (ex.exerciseUrl) document.getElementById('ce-url').value = ex.exerciseUrl;
+  if (ex.instructions) document.getElementById('ce-instructions').value = ex.instructions;
+
+  // Override save to update instead of insert
+  window._editingId = id;
+}
+
+// Override save for edit mode
+const _origSave = saveExercise;
+window.saveExercise = function() {
+  if (!window._editingId) { _origSave(); return; }
+
+  const name = document.getElementById('ce-name').value.trim();
+  if (!name) { showToast('Exercise name is required'); return; }
+  if (!state.primaryMuscle) { showToast('Select a main muscle group'); return; }
+  if (!state.equipment) { showToast('Select equipment'); return; }
+  if (!state.recordType) { showToast('Select a record type'); return; }
+
+  const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+  const idx = all.findIndex(e => e.id === window._editingId);
+  if (idx === -1) { showToast('Exercise not found'); return; }
+
+  all[idx] = {
+    ...all[idx],
+    name,
+    primaryMuscle: state.primaryMuscle,
+    secondaryMuscles: [...state.secondaryMuscles],
+    equipment: state.equipment,
+    recordType: state.recordType,
+    mediaDataUrl: state.mediaDataUrl || null,
+    exerciseUrl: document.getElementById('ce-url').value.trim() || null,
+    instructions: document.getElementById('ce-instructions').value.trim() || null,
+    updatedAt: new Date().toISOString(),
+  };
+  localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
+  showToast('Exercise updated!');
+  setTimeout(() => { window.location.href = 'programs.html'; }, 700);
+};
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+loadExistingExercise();
+
+</script>
+
+<!-- NAV -->
+<script>window.LF_PAGE = 'build';</script>
+<script src="larofit-nav.js"></script>
+</body>
+</html>
