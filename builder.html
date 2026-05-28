@@ -1694,26 +1694,31 @@ function initDrag() {
 // LIBRARY SHEET
 // ══════════════════════════════════════════════════════════════════════
 const MUSCLE_FILTERS = [
-  { id:'all',       label:'All' },
-  { id:'chest',     label:'Chest' },
-  { id:'back',      label:'Back' },
-  { id:'shoulders', label:'Shoulders' },
-  { id:'biceps',    label:'Biceps' },
-  { id:'triceps',   label:'Triceps' },
-  { id:'legs',      label:'Legs' },
-  { id:'core',      label:'Core' },
-  { id:'fullbody',  label:'Full body' },
-  { id:'cardio',    label:'Cardio' },
+  { id:'all',        label:'All' },
+  { id:'abs',        label:'Abs' },
+  { id:'back',       label:'Back' },
+  { id:'biceps',     label:'Biceps' },
+  { id:'chest',      label:'Chest' },
+  { id:'forearms',   label:'Forearms' },
+  { id:'glutes',     label:'Glutes' },
+  { id:'shoulders',  label:'Shoulders' },
+  { id:'triceps',    label:'Triceps' },
+  { id:'upper_legs', label:'Upper Legs' },
+  { id:'lower_legs', label:'Lower Legs' },
+  { id:'cardio',     label:'Cardio' },
 ];
 const EQ_FILTERS = [
-  { id:'all',  label:'All equipment' },
-  { id:'db',   label:'Dumbbells' },
-  { id:'bb',   label:'Barbell' },
-  { id:'mc',   label:'Machine' },
-  { id:'bw',   label:'Bodyweight' },
-  { id:'kb',   label:'Kettlebell' },
-  { id:'band', label:'Bands' },
-  { id:'cd',   label:'Cable' },
+  { id:'all',           label:'All equipment' },
+  { id:'bodyweight',    label:'Bodyweight' },
+  { id:'bands',         label:'Bands' },
+  { id:'barbell',       label:'Barbell' },
+  { id:'bench',         label:'Bench' },
+  { id:'cardio_machine',label:'Cardio Machine' },
+  { id:'dumbbells',     label:'Dumbbells' },
+  { id:'exercise_ball', label:'Exercise Ball' },
+  { id:'ez_bar',        label:'EZ Bar' },
+  { id:'kettlebells',   label:'Kettlebells' },
+  { id:'machine_cable', label:'Machine / Cable' },
 ];
 
 function buildLibraryFilters() {
@@ -1753,16 +1758,21 @@ function renderLibrary() {
   const customs  = getCustomExercises();
   let exercises  = [...customs, ...(LAROFIT_EXERCISES || [])];
 
-  if (libMuscle !== 'all') exercises = exercises.filter(e => e.category === libMuscle);
-  if (libEq     !== 'all') exercises = exercises.filter(e => e.eq === libEq);
+  if (libMuscle !== 'all') exercises = exercises.filter(e => e.primaryMuscle === libMuscle);
+  if (libEq     !== 'all') exercises = exercises.filter(e => e.equipment === libEq);
   if (q) {
     exercises = exercises.filter(e =>
       e.name.toLowerCase().includes(q) ||
-      (e.muscles || []).some(m => m.toLowerCase().includes(q))
+      e.primaryMuscle.toLowerCase().includes(q) ||
+      (e.secondaryMuscles || []).some(m => m.toLowerCase().includes(q))
     );
   }
 
-  const EQ_ICONS = { db:'🏋️', bb:'🏗️', mc:'⚙️', bw:'🤸', kb:'🔔', band:'🎽', cd:'🔗' };
+  const EQ_ICONS = {
+    bodyweight:'🤸', bands:'🎽', barbell:'🏗️', bench:'🪑',
+    cardio_machine:'🏃', dumbbells:'🏋️', exercise_ball:'⚽',
+    ez_bar:'〰️', kettlebells:'🔔', machine_cable:'⚙️'
+  };
   const isCustom = id => id && id.startsWith('cx-');
 
   document.getElementById('lib-results').innerHTML = exercises.length === 0
@@ -1771,10 +1781,10 @@ function renderLibrary() {
         const added = addedIds.has(ex.id);
         return `
           <div class="lib-ex-row${added?' already-added':''}" onclick="addExercise('${ex.id}')">
-            <div class="lib-ex-icon">${EQ_ICONS[ex.eq] || '🏋️'}</div>
+            <div class="lib-ex-icon">${EQ_ICONS[ex.equipment] || '🏋️'}</div>
             <div class="lib-ex-body">
               <div class="lib-ex-name">${escHtml(ex.name)}${isCustom(ex.id)?'<span class="custom-badge">CUSTOM</span>':''}</div>
-              <div class="lib-ex-meta">${(ex.muscles||[]).slice(0,2).join(' · ')}</div>
+              <div class="lib-ex-meta">${[ex.primaryMuscle, ...(ex.secondaryMuscles||[])].slice(0,2).map(m => m.replace('_',' ')).join(' · ')}</div>
             </div>
             <div class="lib-ex-add">${added ? '✓' : '+'}</div>
           </div>`;
@@ -1795,7 +1805,7 @@ function addExercise(exId) {
     renderLibrary(); renderExList(); return;
   }
 
-  session.exercises.push({ id: ex.id, name: ex.name, muscles: ex.muscles || [], sets: 3, reps: 10, restSec: 60 });
+  session.exercises.push({ id: ex.id, name: ex.name, primaryMuscle: ex.primaryMuscle, secondaryMuscles: ex.secondaryMuscles || [], sets: 3, reps: 10, restSec: 60 });
   renderLibrary();
   renderExList();
   showToast(ex.name + ' added');

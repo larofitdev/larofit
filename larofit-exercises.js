@@ -1,609 +1,240 @@
 /**
  * larofit-exercises.js
  * Single source of truth for all LaroFit exercise data.
- * Loaded by: larofit-library.html, larofit-builder.html,
- *            larofit-trainer-builder.html
+ * Loaded by: builder.html, workout.html, programs.html
  *
- * Exports (globals):
- *   LAROFIT_EXERCISES  — flat array, full rich format
- *   EXERCISE_LIBRARY   — keyed object grouped by display category (builders)
- *   CATEGORIES         — category metadata array (library page)
- *   MUSCLES_ALL        — all muscle names (library page)
+ * Globals:
+ *   MUSCLES_ALL        — 11 muscle group ids (used for validation)
+ *   CATEGORIES         — 11 muscle group metadata (id, name, icon)
+ *   LAROFIT_EXERCISES  — flat array of all built-in exercises
+ *   EXERCISE_LIBRARY   — same exercises keyed by primaryMuscle group id
+ *
+ * Exercise object shape:
+ * {
+ *   id,                  // string — 'b1', 'b2', etc.
+ *   name,                // string
+ *   primaryMuscle,       // string — one of MUSCLE_IDS
+ *   secondaryMuscles,    // string[] — up to 2, from MUSCLE_IDS
+ *   equipment,           // string — one of EQUIPMENT_IDS
+ *   recordType,          // string — one of RECORD_TYPE_IDS
+ *   exerciseUrl,         // string | null
+ *   instructions,        // string | null
+ *   custom,              // boolean — always false for built-in
+ * }
+ *
+ * Valid muscle ids:
+ *   abs, back, biceps, chest, forearms, glutes,
+ *   shoulders, triceps, upper_legs, lower_legs, cardio
+ *
+ * Valid equipment ids:
+ *   bodyweight, bands, barbell, bench, cardio_machine,
+ *   dumbbells, exercise_ball, ez_bar, kettlebells, machine_cable
+ *
+ * Valid recordType ids:
+ *   weight_reps, reps, reps_duration, duration, cardio
  */
 
-const MUSCLES_ALL = ['Chest','Back','Shoulders','Biceps','Triceps','Legs','Glutes',
-  'Hamstrings','Quads','Calves','Core','Abs','Lower back','Hip flexors','Full body'];
+// ── MUSCLE GROUPS ────────────────────────────────────────────────────────────
+
+const MUSCLES_ALL = [
+  'abs','back','biceps','chest','forearms',
+  'glutes','shoulders','triceps','upper_legs','lower_legs','cardio'
+];
 
 const CATEGORIES = [
-  {id:'all',       name:'All exercises', icon:'📚'},
-  {id:'chest',     name:'Chest',         icon:'🏋️'},
-  {id:'back',      name:'Back',          icon:'🔙'},
-  {id:'shoulders', name:'Shoulders',     icon:'💪'},
-  {id:'biceps',    name:'Biceps',        icon:'💪'},
-  {id:'triceps',   name:'Triceps',       icon:'💪'},
-  {id:'legs',      name:'Legs',          icon:'🦵'},
-  {id:'core',      name:'Core',          icon:'⭕'},
-  {id:'fullbody',  name:'Full body',     icon:'⚡'},
-  {id:'cardio',    name:'Cardio',        icon:'🏃'},
-  {id:'yoga',      name:'Yoga',          icon:'🧘'},
-  {id:'stretching',name:'Stretching',   icon:'🤸'},
-  {id:'recovery',  name:'Recovery',      icon:'💆'},
-  {id:'custom',    name:'My exercises',  icon:'⭐'},
+  { id:'all',        name:'All',         icon:'📚' },
+  { id:'abs',        name:'Abs',         icon:'⭕' },
+  { id:'back',       name:'Back',        icon:'🔙' },
+  { id:'biceps',     name:'Biceps',      icon:'💪' },
+  { id:'chest',      name:'Chest',       icon:'🏋️' },
+  { id:'forearms',   name:'Forearms',    icon:'🤜' },
+  { id:'glutes',     name:'Glutes',      icon:'🍑' },
+  { id:'shoulders',  name:'Shoulders',   icon:'🔝' },
+  { id:'triceps',    name:'Triceps',     icon:'💪' },
+  { id:'upper_legs', name:'Upper Legs',  icon:'🦵' },
+  { id:'lower_legs', name:'Lower Legs',  icon:'🦶' },
+  { id:'cardio',     name:'Cardio',      icon:'🏃' },
+];
+
+// ── EQUIPMENT IDS ────────────────────────────────────────────────────────────
+
+const EQUIPMENT_IDS = [
+  'bodyweight','bands','barbell','bench','cardio_machine',
+  'dumbbells','exercise_ball','ez_bar','kettlebells','machine_cable'
+];
+
+// ── RECORD TYPE IDS ──────────────────────────────────────────────────────────
+
+const RECORD_TYPE_IDS = [
+  'weight_reps','reps','reps_duration','duration','cardio'
 ];
 
 // ── MASTER EXERCISE LIST ─────────────────────────────────────────────────────
-// 473 built-in exercises. Rich format: id, name, category, eq, type,
-// difficulty, muscles[], video, notes (optional).
-//
-// category values match CATEGORIES ids above.
-// eq values: db, bb, mc, bw, kb, band, cd, yoga, rc
-// type values: strength, cardio, hiit, yoga, stretch, recovery,
-//              timed_bodyweight, plyo
-// difficulty: beginner, intermediate, advanced
+// Built-in exercises. New field structure as of May 2026.
+// primaryMuscle  — single muscle group id
+// secondaryMuscles — array of up to 2 muscle group ids
+// equipment      — single equipment id
+// recordType     — how this exercise is tracked
 
 const LAROFIT_EXERCISES = [
-  // CHEST
-  {id:'b1',  name:'Dumbbell bench press',    category:'chest',    eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps'],           video:'https://www.youtube.com/watch?v=VmB1G1K7v94', notes:'Keep shoulder blades retracted throughout the movement.'},
-  {id:'b2',  name:'Dumbbell incline press',  category:'chest',    eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Chest','Shoulders'],         video:'https://www.youtube.com/watch?v=8iPEnn-ltC8'},
-  {id:'b3',  name:'Dumbbell decline press',  category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],           video:''},
-  {id:'b4',  name:'Dumbbell flyes',          category:'chest',    eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Chest'],                     video:'https://www.youtube.com/watch?v=eozdVDA78K0'},
-  {id:'b5',  name:'Incline dumbbell flyes',  category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest','Shoulders'],         video:''},
-  {id:'b6',  name:'Dumbbell pullover',       category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest','Back'],              video:''},
-  {id:'b7',  name:'Barbell bench press',     category:'chest',    eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps','Shoulders'],video:'https://www.youtube.com/watch?v=rT7DgCr-3pg', notes:'Use a spotter for heavy sets.'},
-  {id:'b8',  name:'Barbell incline press',   category:'chest',    eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Chest','Shoulders'],         video:''},
-  {id:'b9',  name:'Machine chest press',     category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps'],           video:''},
-  {id:'b10', name:'Machine pec deck fly',    category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest'],                     video:''},
-  {id:'b11', name:'Cable chest fly',         category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                     video:''},
-  {id:'b12', name:'Cable crossover',         category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                     video:''},
-  {id:'b13', name:'Push-up',                 category:'chest',    eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps','Shoulders'],video:''},
-  {id:'b14', name:'Wide push-up',            category:'chest',    eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Chest'],                     video:''},
-  {id:'b15', name:'Decline push-up',         category:'chest',    eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],           video:''},
-  {id:'b16', name:'Diamond push-up',         category:'chest',    eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Triceps','Chest'],           video:''},
-  // BACK
-  {id:'b17', name:'Dumbbell bent-over row',  category:'back',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:'https://www.youtube.com/watch?v=roCP6wCXPqo'},
-  {id:'b18', name:'Single-arm dumbbell row', category:'back',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:'https://www.youtube.com/watch?v=pYcpY20QaE8'},
-  {id:'b19', name:'Dumbbell Romanian deadlift',category:'back',   eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Back','Hamstrings','Glutes'],video:'https://www.youtube.com/watch?v=hCDzSR6bW10'},
-  {id:'b20', name:'Dumbbell shrugs',         category:'back',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],          video:''},
-  {id:'b21', name:'Renegade row',            category:'back',     eq:'db',  type:'strength', difficulty:'advanced',    muscles:['Back','Core','Biceps'],      video:''},
-  {id:'b22', name:'Barbell deadlift',        category:'back',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Back','Legs','Glutes'],      video:'https://www.youtube.com/watch?v=op9kVnSso6Q', notes:'Hinge at the hips. Keep back flat throughout.'},
-  {id:'b23', name:'Barbell bent-over row',   category:'back',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],             video:''},
-  {id:'b24', name:'Barbell shrug',           category:'back',     eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],          video:''},
-  {id:'b25', name:'Machine lat pulldown',    category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:''},
-  {id:'b26', name:'Machine seated row',      category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:''},
-  {id:'b27', name:'Cable straight-arm pulldown',category:'back',  eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Back'],                     video:''},
-  {id:'b28', name:'Cable row',               category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],             video:''},
-  {id:'b29', name:'Pull-up',                 category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],             video:'https://www.youtube.com/watch?v=eGo4IYlbE5g'},
-  {id:'b30', name:'Chin-up',                 category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],             video:''},
-  {id:'b31', name:'Inverted row',            category:'back',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],             video:''},
-  // SHOULDERS
-  {id:'b32', name:'Dumbbell overhead press', category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Triceps'],       video:'https://www.youtube.com/watch?v=qEwKCR5JCog'},
-  {id:'b33', name:'Dumbbell lateral raise',  category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                 video:'https://www.youtube.com/watch?v=3VcKaXpzqRo'},
-  {id:'b34', name:'Dumbbell front raise',    category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                 video:''},
-  {id:'b35', name:'Dumbbell rear delt fly',  category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],          video:''},
-  {id:'b36', name:'Arnold press',            category:'shoulders',eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Triceps'],       video:'https://www.youtube.com/watch?v=6Z15_WdXmVw'},
-  {id:'b37', name:'Dumbbell upright row',    category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],          video:''},
-  {id:'b38', name:'Barbell overhead press',  category:'shoulders',eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Triceps','Core'],video:''},
-  {id:'b39', name:'Machine shoulder press',  category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Triceps'],       video:''},
-  {id:'b40', name:'Machine lateral raise',   category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                 video:''},
-  {id:'b41', name:'Cable lateral raise',     category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                 video:''},
-  {id:'b42', name:'Cable face pull',         category:'shoulders',eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Back'],          video:''},
-  {id:'b43', name:'Pike push-up',            category:'shoulders',eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Triceps'],       video:''},
-  {id:'b44', name:'Handstand hold',          category:'shoulders',eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Shoulders','Core'],          video:''},
-  // BICEPS
-  {id:'b45', name:'Dumbbell curl',           category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:'https://www.youtube.com/watch?v=ykJmrZ5v0Oo'},
-  {id:'b46', name:'Hammer curl',             category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:'https://www.youtube.com/watch?v=TwD-YGVP4Bk'},
-  {id:'b47', name:'Incline dumbbell curl',   category:'biceps',   eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                    video:''},
-  {id:'b48', name:'Concentration curl',      category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
-  {id:'b49', name:'Zottman curl',            category:'biceps',   eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                    video:''},
-  {id:'b50', name:'Cross-body hammer curl',  category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
-  {id:'b51', name:'Barbell curl',            category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
-  {id:'b52', name:'EZ-bar curl',             category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
-  {id:'b53', name:'Machine preacher curl',   category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
-  {id:'b54', name:'Cable curl',              category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
-  {id:'b55', name:'Resistance band curl',    category:'biceps',   eq:'band',type:'strength', difficulty:'beginner',    muscles:['Biceps'],                    video:''},
-  // TRICEPS
-  {id:'b56', name:'Dumbbell overhead tricep extension',category:'triceps',eq:'db',type:'strength',difficulty:'beginner',muscles:['Triceps'],video:'https://www.youtube.com/watch?v=YbX7Wd8jQ-Q'},
-  {id:'b57', name:'Dumbbell skull crusher',  category:'triceps',  eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Triceps'],                   video:'https://www.youtube.com/watch?v=d_KZxkY_0cM'},
-  {id:'b58', name:'Dumbbell kickback',       category:'triceps',  eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                   video:''},
-  {id:'b59', name:'Close-grip dumbbell press',category:'triceps', eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Triceps','Chest'],           video:''},
-  {id:'b60', name:'Barbell skull crusher',   category:'triceps',  eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Triceps'],                   video:''},
-  {id:'b61', name:'Close-grip barbell press',category:'triceps',  eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Triceps','Chest'],           video:''},
-  {id:'b62', name:'Cable rope pushdown',     category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                   video:''},
-  {id:'b63', name:'Machine tricep pushdown', category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                   video:''},
-  {id:'b64', name:'Tricep dip',              category:'triceps',  eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Triceps','Chest'],           video:''},
-  // LEGS
-  {id:'b65', name:'Dumbbell squat',          category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:'https://www.youtube.com/watch?v=Uj5yCwVLCzg'},
-  {id:'b66', name:'Dumbbell lunge',          category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'],video:'https://www.youtube.com/watch?v=D7KaRcUTQeE'},
-  {id:'b67', name:'Dumbbell reverse lunge',  category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
-  {id:'b68', name:'Dumbbell Bulgarian split squat',category:'legs',eq:'db', type:'strength', difficulty:'advanced',    muscles:['Quads','Glutes'],            video:'https://www.youtube.com/watch?v=2C-uNgKwPLE'},
-  {id:'b69', name:'Dumbbell goblet squat',   category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Core'],     video:'https://www.youtube.com/watch?v=MeIiIdhvXT4'},
-  {id:'b70', name:'Dumbbell step-up',        category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
-  {id:'b71', name:'Dumbbell sumo squat',     category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'],video:''},
-  {id:'b72', name:'Dumbbell calf raise',     category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Calves'],                    video:''},
-  {id:'b73', name:'Dumbbell leg curl',       category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Hamstrings'],                video:''},
-  {id:'b74', name:'Barbell squat',           category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Quads','Glutes','Core'],     video:'https://www.youtube.com/watch?v=ultWZbUMPL8', notes:'Keep chest up, knees tracking over toes.'},
-  {id:'b75', name:'Barbell Romanian deadlift',category:'legs',    eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Hamstrings','Glutes','Back'],video:''},
-  {id:'b76', name:'Barbell hip thrust',      category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Glutes','Hamstrings'],       video:''},
-  {id:'b77', name:'Barbell lunge',           category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Quads','Glutes'],            video:''},
-  {id:'b78', name:'Machine leg press',       category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
-  {id:'b79', name:'Machine leg extension',   category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads'],                     video:''},
-  {id:'b80', name:'Machine leg curl',        category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Hamstrings'],                video:''},
-  {id:'b81', name:'Machine calf raise',      category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Calves'],                    video:''},
-  {id:'b82', name:'Machine hip abductor',    category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Legs'],             video:''},
-  {id:'b83', name:'Bodyweight squat',        category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
-  {id:'b84', name:'Bodyweight lunge',        category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],            video:''},
-  {id:'b85', name:'Glute bridge',            category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],       video:''},
-  {id:'b86', name:'Wall sit',               category:'legs',     eq:'bw',  type:'timed_bodyweight', difficulty:'beginner',    muscles:['Quads'],                     video:''},
-  {id:'b87', name:'Jump squat',              category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes'],            video:''},
-  {id:'b88', name:'Box jump',               category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Calves'],   video:''},
-  // CORE
-  {id:'b89', name:'Plank',                   category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'beginner',    muscles:['Core','Abs'],                video:''},
-  {id:'b90', name:'Side plank',              category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Abs'],                video:''},
-  {id:'b91', name:'Crunch',                  category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                       video:''},
-  {id:'b92', name:'Bicycle crunch',          category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Core'],                video:''},
-  {id:'b93', name:'Leg raise',               category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Abs','Hip flexors'],         video:''},
-  {id:'b94', name:'Mountain climber',        category:'core',     eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Core','Abs'],                video:''},
-  {id:'b95', name:'Dead bug',               category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'beginner',    muscles:['Core','Lower back'],         video:''},
-  {id:'b96', name:'Russian twist',          category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Core'],                video:''},
-  {id:'b97', name:'Dumbbell Russian twist',  category:'core',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Abs','Core'],                video:'https://www.youtube.com/watch?v=wkD8rjkodUI'},
-  {id:'b98', name:'Dumbbell side bend',      category:'core',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Core','Abs'],                video:''},
-  {id:'b99', name:'Dumbbell woodchop',       category:'core',     eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs'],                video:''},
-  {id:'b100',name:'Cable crunch',            category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                       video:''},
-  {id:'b101',name:'Ab wheel rollout',        category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Core','Abs','Lower back'],   video:''},
-  {id:'b102',name:'Hanging leg raise',       category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Abs','Hip flexors'],         video:''},
-  // FULL BODY
-  {id:'b103',name:"Farmer's carry",          category:'fullbody', eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Full body'],                 video:'https://www.youtube.com/watch?v=Fkzk_RqlYig'},
-  {id:'b104',name:'Dumbbell thruster',       category:'fullbody', eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Full body'],                 video:'https://www.youtube.com/watch?v=L219ltL15zk'},
-  {id:'b105',name:'Dumbbell clean and press',category:'fullbody', eq:'db',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                 video:''},
-  {id:'b106',name:'Dumbbell swing',          category:'fullbody', eq:'db',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
-  {id:'b107',name:'Dumbbell snatch',         category:'fullbody', eq:'db',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                 video:''},
-  {id:'b108',name:'Kettlebell swing',        category:'fullbody', eq:'kb',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Glutes'],        video:''},
-  {id:'b109',name:'Kettlebell clean',        category:'fullbody', eq:'kb',  type:'strength', difficulty:'intermediate',muscles:['Full body'],                 video:''},
-  {id:'b110',name:'Turkish get-up',          category:'fullbody', eq:'kb',  type:'strength', difficulty:'advanced',    muscles:['Full body','Core'],          video:''},
-  {id:'b111',name:'Burpee',                  category:'fullbody', eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
-  {id:'b112',name:'Barbell clean',           category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                 video:''},
-  {id:'b113',name:'Barbell thruster',        category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                 video:''},
-  // CARDIO
-  {id:'b114',name:'Treadmill walk',          category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs'],                      video:''},
-  {id:'b115',name:'Treadmill run',           category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
-  {id:'b116',name:'Treadmill incline walk',  category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes'],             video:''},
-  {id:'b117',name:'Treadmill HIIT sprints',  category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
-  {id:'b118',name:'Stationary bike',         category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs'],                      video:''},
-  {id:'b119',name:'Spin bike',               category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
-  {id:'b120',name:'Rowing machine',          category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Full body'],                 video:''},
-  {id:'b121',name:'Elliptical',              category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
-  {id:'b122',name:'Stair climber',           category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'intermediate',muscles:['Legs','Glutes'],             video:''},
-  {id:'b123',name:'Jump rope',               category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
-  {id:'b124',name:'Outdoor run',             category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
-  {id:'b125',name:'Cycling',                 category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs'],                      video:''},
-  {id:'b126',name:'Swimming',                category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Full body'],                 video:''},
-  {id:'b127',name:'HIIT circuit',            category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
-  // YOGA
-  {id:'b128',name:'Downward dog',            category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Shoulders','Hamstrings'],video:''},
-  {id:'b129',name:'Upward dog',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Chest','Back'],              video:''},
-  {id:'b130',name:'Child\'s pose',           category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Hip flexors'],        video:''},
-  {id:'b131',name:'Warrior I',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Hip flexors'],        video:''},
-  {id:'b132',name:'Warrior II',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Shoulders'],          video:''},
-  {id:'b133',name:'Warrior III',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
-  {id:'b134',name:'Triangle pose',           category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
-  {id:'b135',name:'Tree pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Core'],               video:''},
-  {id:'b136',name:'Chair pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Quads','Core'],              video:''},
-  {id:'b137',name:'Cat-cow flow',            category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Core'],               video:''},
-  {id:'b138',name:'Pigeon pose',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Hip flexors','Glutes'],      video:''},
-  {id:'b139',name:'Cobra pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Chest'],              video:''},
-  {id:'b140',name:'Bridge pose',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Glutes','Back'],             video:''},
-  {id:'b141',name:'Seated forward fold',     category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hamstrings','Back'],         video:''},
-  {id:'b142',name:'Supine spinal twist',     category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Core'],               video:''},
-  {id:'b143',name:'Crow pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Core','Shoulders','Arms'],   video:''},
-  {id:'b144',name:'Headstand',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Shoulders','Core'],          video:''},
-  {id:'b145',name:'Shoulder stand',          category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Back','Core'],               video:''},
-  {id:'b146',name:'Legs up the wall',        category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Back'],               video:''},
-  {id:'b147',name:'Savasana',                category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Full body'],                 video:'', notes:'Final relaxation pose. Hold for 5-10 minutes.'},
-  {id:'b148',name:'Sun salutation A',        category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Full body'],                 video:''},
-  {id:'b149',name:'Sun salutation B',        category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
-  {id:'b150',name:'Moon salutation',         category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Full body'],                 video:''},
-  {id:'b151',name:'Half moon pose',          category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
-  {id:'b152',name:'Eagle pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Legs','Core'],               video:''},
-  {id:'b153',name:'Dancer pose',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Legs','Core','Chest'],       video:''},
-  {id:'b154',name:'Camel pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Chest','Back','Hip flexors'], video:''},
-  {id:'b155',name:'Bow pose',                category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Back','Chest'],              video:''},
-  {id:'b156',name:'Fish pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Chest','Back'],              video:''},
-  {id:'b157',name:'Lizard pose',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Hip flexors','Legs'],        video:''},
-  {id:'b158',name:'Frog pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Hip flexors','Glutes'],      video:''},
-  // STRETCHING
-  {id:'b159',name:'Standing quad stretch',   category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Quads'],                     video:''},
-  {id:'b160',name:'Standing hamstring stretch',category:'stretching',eq:'bw',type:'stretch', difficulty:'beginner',    muscles:['Hamstrings'],                video:''},
-  {id:'b161',name:'Hip flexor stretch',      category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Hip flexors'],               video:''},
-  {id:'b162',name:'Butterfly stretch',       category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Hip flexors','Legs'],        video:''},
-  {id:'b163',name:'90/90 hip stretch',       category:'stretching',eq:'bw', type:'stretch',  difficulty:'intermediate',muscles:['Hip flexors','Glutes'],      video:''},
-  {id:'b164',name:'Doorway chest stretch',   category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Chest','Shoulders'],         video:''},
-  {id:'b165',name:'Cross-body shoulder stretch',category:'stretching',eq:'bw',type:'stretch',difficulty:'beginner',   muscles:['Shoulders'],                 video:''},
-  {id:'b166',name:'Overhead tricep stretch', category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Triceps'],                   video:''},
-  {id:'b167',name:'Neck side stretch',       category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Back','Shoulders'],          video:''},
-  {id:'b168',name:'Calf stretch (wall)',     category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Calves'],                    video:''},
-  {id:'b169',name:'Figure-4 stretch',        category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Glutes','Hip flexors'],      video:''},
-  {id:'b170',name:'World greatest stretch',  category:'stretching',eq:'bw', type:'stretch',  difficulty:'intermediate',muscles:['Full body'],                 video:''},
-  {id:'b171',name:'Thoracic spine rotation', category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Back','Core'],               video:''},
-  {id:'b172',name:'Wrist and forearm stretch',category:'stretching',eq:'bw',type:'stretch',  difficulty:'beginner',    muscles:['Arms'],                      video:''},
-  // RECOVERY
-  {id:'b173',name:'Foam roller — upper back',category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Back'],                      video:''},
-  {id:'b174',name:'Foam roller — lower back',category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Lower back'],                video:''},
-  {id:'b175',name:'Foam roller — IT band',   category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Legs'],                      video:''},
-  {id:'b176',name:'Foam roller — quads',     category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Quads'],                     video:''},
-  {id:'b177',name:'Foam roller — hamstrings',category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Hamstrings'],                video:''},
-  {id:'b178',name:'Foam roller — calves',    category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Calves'],                    video:''},
-  {id:'b179',name:'Massage bed',             category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:'', notes:'10-15 minutes recommended post-workout.'},
-  {id:'b180',name:'Ice bath',                category:'recovery', eq:'rc',  type:'recovery', difficulty:'intermediate',muscles:['Full body'],                 video:'', notes:'10-15°C water. Start with 5 minutes and work up.'},
-  {id:'b181',name:'Contrast shower',         category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:''},
-  {id:'b182',name:'Sauna session',           category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:''},
-  {id:'b183',name:'Percussion gun therapy',  category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:''},
-  {id:'b184',name:'Meditation',              category:'recovery', eq:'bw',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:''},
-  {id:'b185',name:'Breathing exercise',      category:'recovery', eq:'bw',  type:'recovery', difficulty:'beginner',    muscles:['Full body'],                 video:'', notes:'Box breathing: 4s in, 4s hold, 4s out, 4s hold.'},
-  {id:'b186',name:'Cold water immersion',    category:'recovery', eq:'rc',  type:'recovery', difficulty:'intermediate',muscles:['Full body'],                 video:''},
 
-  // ── CHEST — additional ───────────────────────────────────────────────────
-  {id:'b187',name:'Smith machine bench press',      category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps','Shoulders'], video:''},
-  {id:'b188',name:'Smith machine incline press',    category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest','Shoulders'],           video:''},
-  {id:'b189',name:'Cable chest press',              category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],             video:''},
-  {id:'b190',name:'Low cable chest fly',            category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                       video:''},
-  {id:'b191',name:'High cable chest fly',           category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                       video:''},
-  {id:'b192',name:'Dumbbell squeeze press',         category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],             video:''},
-  {id:'b193',name:'Incline cable fly',              category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest','Shoulders'],           video:''},
-  {id:'b194',name:'Dumbbell around the world',      category:'chest',    eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                       video:''},
-  {id:'b195',name:'Chest dip',                      category:'chest',    eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],             video:''},
-  {id:'b196',name:'Svend press',                    category:'chest',    eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest'],                       video:''},
+  // ── CHEST ─────────────────────────────────────────────────────────────────
+  { id:'b1',  name:'Barbell Bench Press',         primaryMuscle:'chest',      secondaryMuscles:['triceps','shoulders'],  equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Lie flat on bench. Grip bar slightly wider than shoulder width. Lower to chest, press up explosively.', custom:false },
+  { id:'b2',  name:'Dumbbell Bench Press',        primaryMuscle:'chest',      secondaryMuscles:['triceps','shoulders'],  equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Lie flat on bench. Press dumbbells up from chest level, slight arc inward at top.', custom:false },
+  { id:'b3',  name:'Incline Barbell Press',       primaryMuscle:'chest',      secondaryMuscles:['shoulders','triceps'],  equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Set bench to 30-45 degrees. Press bar from upper chest upward.', custom:false },
+  { id:'b4',  name:'Incline Dumbbell Press',      primaryMuscle:'chest',      secondaryMuscles:['shoulders','triceps'],  equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Set bench to 30-45 degrees. Press dumbbells from upper chest level.', custom:false },
+  { id:'b5',  name:'Decline Barbell Press',       primaryMuscle:'chest',      secondaryMuscles:['triceps'],              equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Set bench to slight decline. Targets lower chest.', custom:false },
+  { id:'b6',  name:'Dumbbell Flyes',              primaryMuscle:'chest',      secondaryMuscles:['shoulders'],            equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Lie flat. Lower dumbbells in wide arc, feel chest stretch, bring back together.', custom:false },
+  { id:'b7',  name:'Incline Dumbbell Flyes',      primaryMuscle:'chest',      secondaryMuscles:['shoulders'],            equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Set bench to 30 degrees. Perform fly motion targeting upper chest.', custom:false },
+  { id:'b8',  name:'Cable Chest Fly',             primaryMuscle:'chest',      secondaryMuscles:['shoulders'],            equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Set cables at shoulder height. Bring handles together in front of chest with slight bend in elbows.', custom:false },
+  { id:'b9',  name:'High Cable Fly',              primaryMuscle:'chest',      secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Set cables high. Pull handles down and together, targeting lower chest.', custom:false },
+  { id:'b10', name:'Machine Chest Press',         primaryMuscle:'chest',      secondaryMuscles:['triceps'],              equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Adjust seat so handles align with mid-chest. Press forward until arms extended.', custom:false },
+  { id:'b11', name:'Machine Pec Deck Fly',        primaryMuscle:'chest',      secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Sit upright. Bring arms together in front squeezing chest at peak.', custom:false },
+  { id:'b12', name:'Push-Up',                     primaryMuscle:'chest',      secondaryMuscles:['triceps','shoulders'],  equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Hands slightly wider than shoulders. Lower chest to floor, press back up. Keep core tight.', custom:false },
+  { id:'b13', name:'Wide Push-Up',                primaryMuscle:'chest',      secondaryMuscles:['shoulders'],            equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Hands wider than shoulder width to emphasise chest.', custom:false },
+  { id:'b14', name:'Decline Push-Up',             primaryMuscle:'chest',      secondaryMuscles:['triceps'],              equipment:'bench',         recordType:'reps',        exerciseUrl:null, instructions:'Feet elevated on bench. Targets upper chest.', custom:false },
+  { id:'b15', name:'Dips (Chest Focus)',          primaryMuscle:'chest',      secondaryMuscles:['triceps'],              equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Lean forward at bars to target chest over triceps. Lower until shoulders below elbows.', custom:false },
 
-  // ── BACK — additional ────────────────────────────────────────────────────
-  {id:'b197',name:'Smith machine bent-over row',    category:'back',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],               video:''},
-  {id:'b198',name:'Cable single-arm row',           category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b199',name:'Cable face pull',                category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],            video:''},
-  {id:'b200',name:'Meadows row',                    category:'back',     eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],               video:''},
-  {id:'b201',name:'Chest-supported dumbbell row',   category:'back',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b202',name:'Seal row',                       category:'back',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],               video:''},
-  {id:'b203',name:'Machine reverse fly',            category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],            video:''},
-  {id:'b204',name:'Cable pull-over',                category:'back',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Back','Chest'],                video:''},
-  {id:'b205',name:'Wide-grip lat pulldown',         category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b206',name:'Reverse-grip lat pulldown',      category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b207',name:'Single-arm lat pulldown',        category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b208',name:'Dumbbell pullover (back focus)',  category:'back',     eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Back','Chest'],                video:''},
-  {id:'b209',name:'TRX row',                        category:'back',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b210',name:'Machine high row',               category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  // ── BACK ──────────────────────────────────────────────────────────────────
+  { id:'b16', name:'Barbell Deadlift',            primaryMuscle:'back',       secondaryMuscles:['glutes','upper_legs'],  equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Hip-width stance. Hinge at hips, grip bar, drive through floor keeping back flat.', custom:false },
+  { id:'b17', name:'Romanian Deadlift',           primaryMuscle:'back',       secondaryMuscles:['glutes','upper_legs'],  equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Soft knee bend. Hinge at hips lowering bar along legs, feel hamstring stretch, drive hips forward.', custom:false },
+  { id:'b18', name:'Barbell Bent-Over Row',       primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Hinge forward 45 degrees. Pull bar to lower chest, squeeze shoulder blades.', custom:false },
+  { id:'b19', name:'Pendlay Row',                 primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Bar starts on floor each rep. Torso parallel to floor. Explosive pull to chest.', custom:false },
+  { id:'b20', name:'Single-Arm Dumbbell Row',     primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Brace on bench. Pull dumbbell to hip, lead with elbow, keep torso still.', custom:false },
+  { id:'b21', name:'Dumbbell Bent-Over Row',      primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Hinge forward. Pull both dumbbells to sides simultaneously.', custom:false },
+  { id:'b22', name:'Pull-Up',                     primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Overhand grip. Pull chest to bar driving elbows down. Full hang between reps.', custom:false },
+  { id:'b23', name:'Chin-Up',                     primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Underhand grip. Pull chest to bar. More bicep involvement than pull-up.', custom:false },
+  { id:'b24', name:'Lat Pulldown',                primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Grip wide. Pull bar to upper chest driving elbows down, slight lean back.', custom:false },
+  { id:'b25', name:'Close-Grip Lat Pulldown',     primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Neutral grip attachment. Pull to chest emphasising lower lats.', custom:false },
+  { id:'b26', name:'Seated Cable Row',            primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Sit upright. Pull handle to abdomen squeezing shoulder blades together.', custom:false },
+  { id:'b27', name:'Cable Straight-Arm Pulldown', primaryMuscle:'back',       secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Stand facing cable. With straight arms pull bar down to thighs feeling lat contraction.', custom:false },
+  { id:'b28', name:'Machine Seated Row',          primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Chest against pad. Pull handles to sides squeezing back.', custom:false },
+  { id:'b29', name:'T-Bar Row',                   primaryMuscle:'back',       secondaryMuscles:['biceps'],               equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Straddle bar. Pull to chest keeping back flat and chest up.', custom:false },
+  { id:'b30', name:'Dumbbell Pullover',           primaryMuscle:'back',       secondaryMuscles:['chest'],                equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Lie across bench. Lower dumbbell behind head in arc, return over chest.', custom:false },
 
-  // ── SHOULDERS — additional ───────────────────────────────────────────────
-  {id:'b211',name:'Smith machine shoulder press',   category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Triceps'],         video:''},
-  {id:'b212',name:'Cable lateral raise',            category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                   video:''},
-  {id:'b213',name:'Cable front raise',              category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                   video:''},
-  {id:'b214',name:'Cable rear delt fly',            category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
-  {id:'b215',name:'Dumbbell W raise',               category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
-  {id:'b216',name:'Dumbbell Y raise',               category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
-  {id:'b217',name:'Prone dumbbell rear delt raise', category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
-  {id:'b218',name:'Barbell upright row',            category:'shoulders',eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Traps'],           video:''},
-  {id:'b219',name:'Dumbbell shrug (neutral grip)',  category:'shoulders',eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Traps','Shoulders'],           video:''},
-  {id:'b220',name:'Machine shrug',                  category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Traps','Shoulders'],           video:''},
-  {id:'b221',name:'Behind-the-back cable raise',    category:'shoulders',eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Shoulders'],                   video:''},
-  {id:'b222',name:'Plate front raise',              category:'shoulders',eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Shoulders'],                   video:''},
+  // ── SHOULDERS ─────────────────────────────────────────────────────────────
+  { id:'b31', name:'Barbell Overhead Press',      primaryMuscle:'shoulders',  secondaryMuscles:['triceps'],              equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Stand or sit. Press bar from shoulder height overhead. Avoid excessive back arch.', custom:false },
+  { id:'b32', name:'Dumbbell Shoulder Press',     primaryMuscle:'shoulders',  secondaryMuscles:['triceps'],              equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Press dumbbells from ear level overhead, slight arc inward at top.', custom:false },
+  { id:'b33', name:'Arnold Press',                primaryMuscle:'shoulders',  secondaryMuscles:['triceps'],              equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Start with palms facing you. Press up while rotating palms outward.', custom:false },
+  { id:'b34', name:'Dumbbell Lateral Raise',      primaryMuscle:'shoulders',  secondaryMuscles:[],                       equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Slight bend in elbows. Raise arms to shoulder height leading with pinkies.', custom:false },
+  { id:'b35', name:'Cable Lateral Raise',         primaryMuscle:'shoulders',  secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Single cable at hip height. Raise arm across body to shoulder height.', custom:false },
+  { id:'b36', name:'Dumbbell Front Raise',        primaryMuscle:'shoulders',  secondaryMuscles:[],                       equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Raise dumbbells alternating or together to shoulder height in front.', custom:false },
+  { id:'b37', name:'Barbell Front Raise',         primaryMuscle:'shoulders',  secondaryMuscles:[],                       equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Raise bar to shoulder height keeping arms straight.', custom:false },
+  { id:'b38', name:'Dumbbell Rear Delt Fly',      primaryMuscle:'shoulders',  secondaryMuscles:['back'],                 equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Hinge forward. Raise dumbbells to sides leading with elbows.', custom:false },
+  { id:'b39', name:'Cable Face Pull',             primaryMuscle:'shoulders',  secondaryMuscles:['back'],                 equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Cable at face height. Pull rope to forehead, flare elbows high.', custom:false },
+  { id:'b40', name:'Machine Shoulder Press',      primaryMuscle:'shoulders',  secondaryMuscles:['triceps'],              equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Adjust seat. Press handles overhead.', custom:false },
+  { id:'b41', name:'Barbell Upright Row',         primaryMuscle:'shoulders',  secondaryMuscles:['biceps'],               equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Pull bar up along body to chin, elbows flare out.', custom:false },
+  { id:'b42', name:'Shrugs',                      primaryMuscle:'shoulders',  secondaryMuscles:[],                       equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Hold dumbbells at sides. Shrug shoulders straight up, hold briefly, release.', custom:false },
+  { id:'b43', name:'Barbell Shrugs',              primaryMuscle:'shoulders',  secondaryMuscles:[],                       equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Hold bar in front. Shrug straight up avoiding rolling motion.', custom:false },
 
-  // ── BICEPS — additional ──────────────────────────────────────────────────
-  {id:'b223',name:'Spider curl',                    category:'biceps',   eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:''},
-  {id:'b224',name:'Reverse curl',                   category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Biceps','Forearms'],           video:''},
-  {id:'b225',name:'Drag curl',                      category:'biceps',   eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:''},
-  {id:'b226',name:'Cable hammer curl',              category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Biceps','Forearms'],           video:''},
-  {id:'b227',name:'Cable reverse curl',             category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Biceps','Forearms'],           video:''},
-  {id:'b228',name:'Barbell preacher curl',          category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                      video:''},
-  {id:'b229',name:'Dumbbell preacher curl',         category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                      video:''},
-  {id:'b230',name:'21s curl',                       category:'biceps',   eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:'', notes:'7 bottom half, 7 top half, 7 full range reps.'},
-  {id:'b231',name:'Supinating dumbbell curl',       category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Biceps'],                      video:''},
-  {id:'b232',name:'Bayesian cable curl',            category:'biceps',   eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:''},
-  {id:'b233',name:'TRX bicep curl',                 category:'biceps',   eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Biceps'],                      video:''},
+  // ── BICEPS ────────────────────────────────────────────────────────────────
+  { id:'b44', name:'Barbell Curl',                primaryMuscle:'biceps',     secondaryMuscles:['forearms'],             equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Elbows at sides. Curl bar to shoulder height squeezing at top.', custom:false },
+  { id:'b45', name:'EZ Bar Curl',                 primaryMuscle:'biceps',     secondaryMuscles:['forearms'],             equipment:'ez_bar',        recordType:'weight_reps', exerciseUrl:null, instructions:'Neutral grip reduces wrist strain. Curl to shoulder height.', custom:false },
+  { id:'b46', name:'Dumbbell Curl',               primaryMuscle:'biceps',     secondaryMuscles:['forearms'],             equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Alternate or simultaneous. Supinate wrist as you curl.', custom:false },
+  { id:'b47', name:'Hammer Curl',                 primaryMuscle:'biceps',     secondaryMuscles:['forearms'],             equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Neutral (hammer) grip throughout. Targets brachialis.', custom:false },
+  { id:'b48', name:'Incline Dumbbell Curl',       primaryMuscle:'biceps',     secondaryMuscles:[],                       equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Lie on incline bench. Arms hang behind body. Full stretch at bottom.', custom:false },
+  { id:'b49', name:'Concentration Curl',          primaryMuscle:'biceps',     secondaryMuscles:[],                       equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Seated. Brace upper arm on inner thigh. Curl with full range.', custom:false },
+  { id:'b50', name:'Cable Curl',                  primaryMuscle:'biceps',     secondaryMuscles:['forearms'],             equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Low pulley. Curl bar or handle to shoulder height.', custom:false },
+  { id:'b51', name:'Preacher Curl',               primaryMuscle:'biceps',     secondaryMuscles:[],                       equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Upper arms braced on preacher bench. Full range of motion.', custom:false },
+  { id:'b52', name:'EZ Bar Preacher Curl',        primaryMuscle:'biceps',     secondaryMuscles:[],                       equipment:'ez_bar',        recordType:'weight_reps', exerciseUrl:null, instructions:'EZ bar on preacher bench. Lower fully, curl to peak contraction.', custom:false },
+  { id:'b53', name:'Cable Rope Hammer Curl',      primaryMuscle:'biceps',     secondaryMuscles:['forearms'],             equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Rope attachment low pulley. Neutral grip curl.', custom:false },
+  { id:'b54', name:'Chin-Up (Bicep Focus)',       primaryMuscle:'biceps',     secondaryMuscles:['back'],                 equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Supinated grip. Pull chest to bar emphasising bicep contraction.', custom:false },
 
-  // ── TRICEPS — additional ─────────────────────────────────────────────────
-  {id:'b234',name:'Cable overhead tricep extension',category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
-  {id:'b235',name:'Cable kickback',                 category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
-  {id:'b236',name:'Smith machine close-grip press', category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps','Chest'],             video:''},
-  {id:'b237',name:'JM press',                       category:'triceps',  eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Triceps'],                     video:''},
-  {id:'b238',name:'Tricep dip (bench)',              category:'triceps',  eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Triceps','Chest'],             video:''},
-  {id:'b239',name:'Band tricep pushdown',           category:'triceps',  eq:'band',type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
-  {id:'b240',name:'Dumbbell tate press',            category:'triceps',  eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Triceps'],                     video:''},
-  {id:'b241',name:'Cable rope overhead extension',  category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
+  // ── TRICEPS ───────────────────────────────────────────────────────────────
+  { id:'b55', name:'Close-Grip Bench Press',      primaryMuscle:'triceps',    secondaryMuscles:['chest','shoulders'],    equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Hands shoulder-width on bar. Lower to chest, press up keeping elbows tucked.', custom:false },
+  { id:'b56', name:'Skull Crusher',               primaryMuscle:'triceps',    secondaryMuscles:[],                       equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Lie flat. Lower bar to forehead bending only at elbows, extend back up.', custom:false },
+  { id:'b57', name:'EZ Bar Skull Crusher',        primaryMuscle:'triceps',    secondaryMuscles:[],                       equipment:'ez_bar',        recordType:'weight_reps', exerciseUrl:null, instructions:'EZ bar reduces wrist strain. Lower to forehead, extend fully.', custom:false },
+  { id:'b58', name:'Dumbbell Overhead Tricep Extension', primaryMuscle:'triceps', secondaryMuscles:[],                   equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Hold dumbbell overhead with both hands. Lower behind head, extend up.', custom:false },
+  { id:'b59', name:'Cable Rope Pushdown',         primaryMuscle:'triceps',    secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Rope attachment overhead pulley. Push down and slightly out at bottom.', custom:false },
+  { id:'b60', name:'Cable Bar Pushdown',          primaryMuscle:'triceps',    secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Straight bar overhead pulley. Push down keeping elbows at sides.', custom:false },
+  { id:'b61', name:'Overhead Cable Tricep Extension', primaryMuscle:'triceps', secondaryMuscles:[],                      equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Rope from low pulley. Extend arms overhead.', custom:false },
+  { id:'b62', name:'Tricep Dips',                 primaryMuscle:'triceps',    secondaryMuscles:['chest','shoulders'],    equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Upright torso at bars to target triceps. Lower until 90 degree elbow bend.', custom:false },
+  { id:'b63', name:'Bench Dip',                   primaryMuscle:'triceps',    secondaryMuscles:[],                       equipment:'bench',         recordType:'reps',        exerciseUrl:null, instructions:'Hands on bench behind you. Lower hips toward floor, press back up.', custom:false },
+  { id:'b64', name:'Diamond Push-Up',             primaryMuscle:'triceps',    secondaryMuscles:['chest'],                equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Hands form diamond shape under chest. Lower and press.', custom:false },
+  { id:'b65', name:'Kickback',                    primaryMuscle:'triceps',    secondaryMuscles:[],                       equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Hinge forward. Upper arm parallel to floor. Extend forearm back.', custom:false },
 
-  // ── LEGS — additional ────────────────────────────────────────────────────
-  {id:'b242',name:'Smith machine squat',            category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Core'],       video:''},
-  {id:'b243',name:'Smith machine lunge',            category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
-  {id:'b244',name:'Smith machine hip thrust',       category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
-  {id:'b245',name:'Smith machine calf raise',       category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Calves'],                      video:''},
-  {id:'b246',name:'Cable pull-through',             category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
-  {id:'b247',name:'Cable kickback (glute)',         category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes'],                      video:''},
-  {id:'b248',name:'Machine glute kickback',         category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes'],                      video:''},
-  {id:'b249',name:'Machine hip thrust',             category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
-  {id:'b250',name:'Machine seated calf raise',      category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Calves'],                      video:''},
-  {id:'b251',name:'Single-leg press',               category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
-  {id:'b252',name:'Hack squat machine',             category:'legs',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Quads','Glutes'],              video:''},
-  {id:'b253',name:'Pendulum squat',                 category:'legs',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Quads','Glutes'],              video:''},
-  {id:'b254',name:'Single-leg Romanian deadlift',   category:'legs',     eq:'db',  type:'strength', difficulty:'intermediate',muscles:['Hamstrings','Glutes'],         video:''},
-  {id:'b255',name:'Dumbbell hip thrust',            category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
-  {id:'b256',name:'Barbell hip thrust',             category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Glutes','Hamstrings'],         video:''},
-  {id:'b257',name:'Barbell front squat',            category:'legs',     eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Quads','Core','Glutes'],       video:''},
-  {id:'b258',name:'Barbell sumo deadlift',          category:'legs',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Glutes','Hamstrings','Back'],  video:''},
-  {id:'b259',name:'Nordic hamstring curl',          category:'legs',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Hamstrings'],                  video:''},
-  {id:'b260',name:'Bodyweight hip thrust',          category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
-  {id:'b261',name:'Step-up (bodyweight)',           category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
-  {id:'b262',name:'Sumo squat pulse',               category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'], video:''},
-  {id:'b263',name:'Lateral lunge',                  category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'], video:''},
-  {id:'b264',name:'Dumbbell lateral lunge',         category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
-  {id:'b265',name:'Leg press (wide stance)',        category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings','Quads'], video:''},
-  {id:'b266',name:'Leg press (narrow stance)',      category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads'],                       video:''},
-  {id:'b267',name:'Seated hip abductor',            category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
-  {id:'b268',name:'Seated hip adductor',            category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Inner thigh','Hip adductors'], video:''},
-  {id:'b269',name:'Band hip abduction (standing)',  category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
-  {id:'b270',name:'Band glute bridge',              category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hamstrings'],         video:''},
-  {id:'b271',name:'Kettlebell goblet squat',        category:'legs',     eq:'kb',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Core'],       video:''},
-  {id:'b272',name:'Kettlebell Romanian deadlift',   category:'legs',     eq:'kb',  type:'strength', difficulty:'intermediate',muscles:['Hamstrings','Glutes'],         video:''},
-  {id:'b273',name:'Pistol squat',                   category:'legs',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Quads','Glutes'],              video:''},
-  {id:'b274',name:'Walking lunge',                  category:'legs',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes','Hamstrings'], video:''},
-  {id:'b275',name:'Dumbbell walking lunge',         category:'legs',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
+  // ── ABS ───────────────────────────────────────────────────────────────────
+  { id:'b66', name:'Crunch',                      primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Lie on back. Curl shoulders off floor contracting abs. Do not pull neck.', custom:false },
+  { id:'b67', name:'Cable Crunch',                primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Kneel at cable. Crunch elbows to knees against resistance.', custom:false },
+  { id:'b68', name:'Decline Crunch',              primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bench',         recordType:'reps',        exerciseUrl:null, instructions:'Feet secured on decline bench. Crunch up with increased range of motion.', custom:false },
+  { id:'b69', name:'Plank',                       primaryMuscle:'abs',        secondaryMuscles:['shoulders'],            equipment:'bodyweight',    recordType:'duration',    exerciseUrl:null, instructions:'Forearms on floor. Body straight from head to heels. Hold.', custom:false },
+  { id:'b70', name:'Side Plank',                  primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'duration',    exerciseUrl:null, instructions:'One forearm on floor. Body straight sideways. Hold each side.', custom:false },
+  { id:'b71', name:'Hanging Leg Raise',           primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Hang from bar. Raise legs to parallel or higher, lower controlled.', custom:false },
+  { id:'b72', name:'Captain\'s Chair Leg Raise',  primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'machine_cable', recordType:'reps',        exerciseUrl:null, instructions:'Arms on pads. Raise knees to chest or legs to parallel.', custom:false },
+  { id:'b73', name:'Ab Wheel Rollout',            primaryMuscle:'abs',        secondaryMuscles:['shoulders','back'],     equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Kneel. Roll wheel forward until body is low, roll back engaging core.', custom:false },
+  { id:'b74', name:'Russian Twist',               primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Sit with knees bent, lean back slightly. Rotate torso side to side.', custom:false },
+  { id:'b75', name:'Bicycle Crunch',              primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Alternate elbow to opposite knee while extending other leg.', custom:false },
+  { id:'b76', name:'Leg Raise',                   primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Lie flat. Raise straight legs to 90 degrees, lower slowly.', custom:false },
+  { id:'b77', name:'Dead Bug',                    primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Lie on back arms up. Lower opposite arm and leg simultaneously keeping back flat.', custom:false },
+  { id:'b78', name:'Mountain Climber',            primaryMuscle:'abs',        secondaryMuscles:['shoulders'],            equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Push-up position. Drive knees to chest alternating rapidly.', custom:false },
+  { id:'b79', name:'Sit-Up',                      primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Full range crunch bringing torso upright. Control on the way down.', custom:false },
+  { id:'b80', name:'Decline Sit-Up',              primaryMuscle:'abs',        secondaryMuscles:[],                       equipment:'bench',         recordType:'reps',        exerciseUrl:null, instructions:'Feet secured on decline bench. Full sit-up with extended range.', custom:false },
 
-  // ── CORE — additional ────────────────────────────────────────────────────
-  {id:'b276',name:'Cable crunch',                   category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                         video:''},
-  {id:'b277',name:'Pallof press',                   category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs'],                  video:''},
-  {id:'b278',name:'Cable woodchop (high to low)',   category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs','Obliques'],       video:''},
-  {id:'b279',name:'Cable woodchop (low to high)',   category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs','Obliques'],       video:''},
-  {id:'b280',name:'Decline crunch',                 category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Abs'],                         video:''},
-  {id:'b281',name:'Weighted crunch',                category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                         video:''},
-  {id:'b282',name:'V-up',                           category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Abs','Hip flexors'],           video:''},
-  {id:'b283',name:'Toe touch crunch',               category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                         video:''},
-  {id:'b284',name:'Flutter kick',                   category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:''},
-  {id:'b285',name:'Scissor kick',                   category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:''},
-  {id:'b286',name:'Plank with shoulder tap',        category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Shoulders'],            video:''},
-  {id:'b287',name:'Plank reach',                    category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Abs'],                  video:''},
-  {id:'b288',name:'Copenhagen plank',               category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'advanced',    muscles:['Core','Hip adductors'],        video:''},
-  {id:'b289',name:'Hollow body hold',               category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs'],                  video:''},
-  {id:'b290',name:'L-sit',                          category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'advanced',    muscles:['Core','Abs','Hip flexors'],    video:''},
-  {id:'b291',name:'Band pull-apart',                category:'core',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Back','Shoulders'],            video:''},
-  {id:'b292',name:'Dumbbell suitcase carry',        category:'core',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Core','Obliques'],             video:''},
-  {id:'b293',name:'Barbell rollout',                category:'core',     eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Core','Abs'],                  video:''},
+  // ── GLUTES ────────────────────────────────────────────────────────────────
+  { id:'b81', name:'Barbell Hip Thrust',          primaryMuscle:'glutes',     secondaryMuscles:['upper_legs'],           equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Upper back on bench. Bar across hips. Drive hips up squeezing glutes at top.', custom:false },
+  { id:'b82', name:'Dumbbell Hip Thrust',         primaryMuscle:'glutes',     secondaryMuscles:['upper_legs'],           equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Upper back on bench. Dumbbell across hips. Drive up squeezing at top.', custom:false },
+  { id:'b83', name:'Glute Bridge',                primaryMuscle:'glutes',     secondaryMuscles:['upper_legs'],           equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Lie on back, feet flat. Drive hips up squeezing glutes. Lower controlled.', custom:false },
+  { id:'b84', name:'Cable Kickback',              primaryMuscle:'glutes',     secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Ankle strap on low pulley. Kick leg back extending at hip.', custom:false },
+  { id:'b85', name:'Machine Hip Abductor',        primaryMuscle:'glutes',     secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Seated. Push legs outward against pads.', custom:false },
+  { id:'b86', name:'Donkey Kick',                 primaryMuscle:'glutes',     secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'On all fours. Drive one knee up and back extending at hip.', custom:false },
+  { id:'b87', name:'Banded Glute Kickback',       primaryMuscle:'glutes',     secondaryMuscles:[],                       equipment:'bands',         recordType:'reps',        exerciseUrl:null, instructions:'Band around ankles. Kick one leg back extending hip.', custom:false },
+  { id:'b88', name:'Sumo Deadlift',               primaryMuscle:'glutes',     secondaryMuscles:['upper_legs','back'],    equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Wide stance toes out. Pull bar from floor targeting glutes and inner thighs.', custom:false },
 
-  // ── FULL BODY / FUNCTIONAL ───────────────────────────────────────────────
-  {id:'b294',name:'Battle ropes',                   category:'fullbody', eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Arms'],            video:''},
-  {id:'b295',name:'Sled push',                      category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Legs'],            video:''},
-  {id:'b296',name:'Sled pull',                      category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Back'],            video:''},
-  {id:'b297',name:'Medicine ball slam',             category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Core'],            video:''},
-  {id:'b298',name:'Medicine ball throw',            category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Core'],            video:''},
-  {id:'b299',name:'Sandbag carry',                  category:'fullbody', eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Full body'],                   video:''},
-  {id:'b300',name:'TRX squat',                      category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
-  {id:'b301',name:'TRX chest press',                category:'fullbody', eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Chest','Triceps'],             video:''},
-  {id:'b302',name:'TRX pike',                       category:'fullbody', eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Core','Shoulders'],            video:''},
-  {id:'b303',name:'Assault bike',                   category:'fullbody', eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:''},
-  {id:'b304',name:'Ski erg',                        category:'fullbody', eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Back'],            video:''},
-  {id:'b305',name:'Bear crawl',                     category:'fullbody', eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Core'],            video:''},
-  {id:'b306',name:'Crab walk',                      category:'fullbody', eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Core'],            video:''},
-  {id:'b307',name:'Inchworm',                       category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Full body','Core'],            video:''},
-  {id:'b308',name:'Man maker',                      category:'fullbody', eq:'db',  type:'hiit',     difficulty:'advanced',    muscles:['Full body'],                   video:'', notes:'Row, row, push-up, stand, press — one rep.'},
-  {id:'b309',name:'Dumbbell complex',               category:'fullbody', eq:'db',  type:'hiit',     difficulty:'advanced',    muscles:['Full body'],                   video:''},
-  {id:'b310',name:'Barbell complex',                category:'fullbody', eq:'bb',  type:'hiit',     difficulty:'advanced',    muscles:['Full body'],                   video:''},
-  {id:'b311',name:'Kettlebell windmill',            category:'fullbody', eq:'kb',  type:'strength', difficulty:'advanced',    muscles:['Core','Shoulders','Hamstrings'],video:''},
-  {id:'b312',name:'Kettlebell halo',                category:'fullbody', eq:'kb',  type:'strength', difficulty:'beginner',    muscles:['Shoulders','Core'],            video:''},
-  {id:'b313',name:'Kettlebell goblet carry',        category:'fullbody', eq:'kb',  type:'strength', difficulty:'beginner',    muscles:['Core','Quads'],                video:''},
+  // ── UPPER LEGS ────────────────────────────────────────────────────────────
+  { id:'b89', name:'Barbell Back Squat',          primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Bar on upper traps. Squat to parallel or below keeping chest up.', custom:false },
+  { id:'b90', name:'Barbell Front Squat',         primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Bar on front delts. Upright torso squat emphasising quads.', custom:false },
+  { id:'b91', name:'Goblet Squat',                primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Hold dumbbell at chest. Squat deep with elbows tracking inside knees.', custom:false },
+  { id:'b92', name:'Dumbbell Lunge',              primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Step forward lowering back knee toward floor. Return and alternate.', custom:false },
+  { id:'b93', name:'Barbell Lunge',               primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Bar on back. Step forward into lunge position.', custom:false },
+  { id:'b94', name:'Bulgarian Split Squat',       primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Rear foot elevated on bench. Lower front knee toward floor.', custom:false },
+  { id:'b95', name:'Leg Press',                   primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Feet shoulder width on platform. Press until legs nearly straight.', custom:false },
+  { id:'b96', name:'Hack Squat',                  primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Shoulders under pads. Squat deep, drive through heels to top.', custom:false },
+  { id:'b97', name:'Machine Leg Extension',       primaryMuscle:'upper_legs', secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Sit with pad on lower shins. Extend legs fully, hold briefly, lower.', custom:false },
+  { id:'b98', name:'Machine Leg Curl',            primaryMuscle:'upper_legs', secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Lie face down. Curl heels to glutes against resistance.', custom:false },
+  { id:'b99', name:'Seated Leg Curl',             primaryMuscle:'upper_legs', secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Seated machine. Drive heels down and back.', custom:false },
+  { id:'b100',name:'Kettlebell Swing',            primaryMuscle:'upper_legs', secondaryMuscles:['glutes','back'],        equipment:'kettlebells',   recordType:'weight_reps', exerciseUrl:null, instructions:'Hinge at hips. Drive hips forward swinging kettlebell to shoulder height.', custom:false },
+  { id:'b101',name:'Step-Up',                     primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Hold dumbbells. Step onto box driving through heel. Alternate legs.', custom:false },
+  { id:'b102',name:'Bodyweight Squat',            primaryMuscle:'upper_legs', secondaryMuscles:['glutes'],               equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Feet shoulder-width. Squat to parallel keeping chest up.', custom:false },
+  { id:'b103',name:'Wall Sit',                    primaryMuscle:'upper_legs', secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'duration',    exerciseUrl:null, instructions:'Back against wall. Hold 90 degree knee bend position.', custom:false },
 
-  // ── CARDIO — additional ──────────────────────────────────────────────────
-  {id:'b314',name:'Treadmill walk (incline 10%+)',  category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes'],               video:'', notes:'Walking lunges at 10–15% incline builds glutes effectively.'},
-  {id:'b315',name:'Treadmill LISS run',             category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],                 video:'', notes:'Low intensity steady state — 60-70% max heart rate.'},
-  {id:'b316',name:'Treadmill hill sprints',         category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'advanced',    muscles:['Legs','Glutes','Core'],        video:''},
-  {id:'b317',name:'Stationary bike HIIT',           category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
-  {id:'b318',name:'Rowing machine HIIT',            category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:''},
-  {id:'b319',name:'Stair climber intervals',        category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Glutes'],               video:''},
-  {id:'b320',name:'Elliptical intervals',           category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'beginner',    muscles:['Legs','Core'],                 video:''},
-  {id:'b321',name:'Jacob\'s ladder',               category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:''},
-  {id:'b322',name:'VersaClimber',                  category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:''},
+  // ── LOWER LEGS ────────────────────────────────────────────────────────────
+  { id:'b104',name:'Standing Calf Raise',         primaryMuscle:'lower_legs', secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Rise onto toes fully. Lower slowly for full stretch at bottom.', custom:false },
+  { id:'b105',name:'Seated Calf Raise',           primaryMuscle:'lower_legs', secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Knees at 90 degrees. Rise up, lower for full stretch. Targets soleus.', custom:false },
+  { id:'b106',name:'Dumbbell Calf Raise',         primaryMuscle:'lower_legs', secondaryMuscles:[],                       equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Hold dumbbells, one foot on edge of step. Full range each rep.', custom:false },
+  { id:'b107',name:'Leg Press Calf Raise',        primaryMuscle:'lower_legs', secondaryMuscles:[],                       equipment:'machine_cable', recordType:'weight_reps', exerciseUrl:null, instructions:'Feet at bottom of leg press platform. Press through toes.', custom:false },
+  { id:'b108',name:'Bodyweight Calf Raise',       primaryMuscle:'lower_legs', secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Stand on step edge. Full range rise and lower.', custom:false },
+  { id:'b109',name:'Single-Leg Calf Raise',       primaryMuscle:'lower_legs', secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'One foot on step. Full range. Use wall for balance.', custom:false },
+  { id:'b110',name:'Tibialis Raise',              primaryMuscle:'lower_legs', secondaryMuscles:[],                       equipment:'bodyweight',    recordType:'reps',        exerciseUrl:null, instructions:'Heels on floor, back against wall. Raise toes up as high as possible.', custom:false },
 
-  // ── BODYWEIGHT — additional ──────────────────────────────────────────────
-  {id:'b323',name:'Pull-up (wide grip)',            category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],               video:''},
-  {id:'b324',name:'Pull-up (neutral grip)',         category:'back',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Back','Biceps'],               video:''},
-  {id:'b325',name:'Assisted pull-up (machine)',     category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b326',name:'Assisted dip (machine)',         category:'triceps',  eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Triceps','Chest'],             video:''},
-  {id:'b327',name:'Parallel bar dip',              category:'triceps',  eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Triceps','Chest','Shoulders'], video:''},
-  {id:'b328',name:'Ring dip',                      category:'triceps',  eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Triceps','Chest','Core'],      video:''},
-  {id:'b329',name:'Muscle-up',                     category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Chest','Triceps'],      video:''},
-  {id:'b330',name:'Archer push-up',                category:'chest',    eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Chest','Triceps','Shoulders'], video:''},
-  {id:'b331',name:'Pseudo planche push-up',        category:'chest',    eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Chest','Shoulders','Triceps'], video:''},
-  {id:'b332',name:'Hindu push-up',                 category:'chest',    eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Chest','Shoulders','Back'],    video:''},
-  {id:'b333',name:'Typewriter pull-up',            category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Biceps'],               video:''},
-  {id:'b334',name:'L-sit pull-up',                 category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Core','Biceps'],        video:''},
-  {id:'b335',name:'Tuck front lever',              category:'back',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Back','Core'],                 video:''},
-  {id:'b336',name:'Australian pull-up',            category:'back',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
+  // ── FOREARMS ──────────────────────────────────────────────────────────────
+  { id:'b111',name:'Wrist Curl',                  primaryMuscle:'forearms',   secondaryMuscles:[],                       equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Forearms on bench, palms up. Curl wrists upward.', custom:false },
+  { id:'b112',name:'Reverse Wrist Curl',          primaryMuscle:'forearms',   secondaryMuscles:[],                       equipment:'barbell',       recordType:'weight_reps', exerciseUrl:null, instructions:'Forearms on bench, palms down. Curl wrists upward.', custom:false },
+  { id:'b113',name:'Dumbbell Wrist Curl',         primaryMuscle:'forearms',   secondaryMuscles:[],                       equipment:'dumbbells',     recordType:'weight_reps', exerciseUrl:null, instructions:'Forearm on thigh, palm up. Curl wrist through full range.', custom:false },
+  { id:'b114',name:'Farmer\'s Carry',             primaryMuscle:'forearms',   secondaryMuscles:['shoulders','back'],     equipment:'dumbbells',     recordType:'duration',    exerciseUrl:null, instructions:'Hold heavy dumbbells at sides. Walk maintaining upright posture.', custom:false },
+  { id:'b115',name:'Dead Hang',                   primaryMuscle:'forearms',   secondaryMuscles:['back','shoulders'],     equipment:'bodyweight',    recordType:'duration',    exerciseUrl:null, instructions:'Hang from bar with full grip. Hold as long as possible.', custom:false },
+  { id:'b116',name:'Plate Pinch',                 primaryMuscle:'forearms',   secondaryMuscles:[],                       equipment:'barbell',       recordType:'duration',    exerciseUrl:null, instructions:'Pinch two weight plates together between fingers and thumb. Hold.', custom:false },
 
-  // ── FOREARMS / GRIP ──────────────────────────────────────────────────────
-  {id:'b337',name:'Wrist curl',                    category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Forearms'],                    video:''},
-  {id:'b338',name:'Reverse wrist curl',            category:'biceps',   eq:'bb',  type:'strength', difficulty:'beginner',    muscles:['Forearms'],                    video:''},
-  {id:'b339',name:'Dumbbell wrist curl',           category:'biceps',   eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Forearms'],                    video:''},
-  {id:'b340',name:'Plate pinch',                   category:'biceps',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Forearms','Grip'],             video:''},
-  {id:'b341',name:'Dead hang',                     category:'back',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Forearms','Back','Grip'],      video:'', notes:'Great for grip strength and shoulder decompression.'},
-  {id:'b342',name:'Fat bar hold',                  category:'biceps',   eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Forearms','Grip'],             video:''},
+  // ── CARDIO ────────────────────────────────────────────────────────────────
+  { id:'b117',name:'Treadmill Run',               primaryMuscle:'cardio',     secondaryMuscles:['upper_legs','lower_legs'], equipment:'cardio_machine', recordType:'cardio',   exerciseUrl:null, instructions:'Set speed and incline. Maintain consistent pace.', custom:false },
+  { id:'b118',name:'Treadmill Walk (Incline)',     primaryMuscle:'cardio',     secondaryMuscles:['upper_legs','glutes'],  equipment:'cardio_machine', recordType:'cardio',    exerciseUrl:null, instructions:'Set incline 8-15%. Walk at brisk pace.', custom:false },
+  { id:'b119',name:'Stationary Bike',             primaryMuscle:'cardio',     secondaryMuscles:['upper_legs'],           equipment:'cardio_machine', recordType:'cardio',    exerciseUrl:null, instructions:'Adjust seat height. Pedal at target heart rate zone.', custom:false },
+  { id:'b120',name:'Rowing Machine',              primaryMuscle:'cardio',     secondaryMuscles:['back','upper_legs'],    equipment:'cardio_machine', recordType:'cardio',    exerciseUrl:null, instructions:'Drive legs first, lean back, then pull handle to abdomen.', custom:false },
+  { id:'b121',name:'Elliptical',                  primaryMuscle:'cardio',     secondaryMuscles:['upper_legs'],           equipment:'cardio_machine', recordType:'cardio',    exerciseUrl:null, instructions:'Low impact. Maintain upright posture, push and pull handles.', custom:false },
+  { id:'b122',name:'Stairmaster',                 primaryMuscle:'cardio',     secondaryMuscles:['upper_legs','glutes'],  equipment:'cardio_machine', recordType:'cardio',    exerciseUrl:null, instructions:'Set step rate. Avoid leaning on rails.', custom:false },
+  { id:'b123',name:'Jump Rope',                   primaryMuscle:'cardio',     secondaryMuscles:['lower_legs','shoulders'], equipment:'bodyweight',  recordType:'reps_duration', exerciseUrl:null, instructions:'Keep elbows close to sides. Wrists rotate rope.', custom:false },
+  { id:'b124',name:'Burpee',                      primaryMuscle:'cardio',     secondaryMuscles:['chest','upper_legs'],   equipment:'bodyweight',    recordType:'reps',       exerciseUrl:null, instructions:'Squat to floor, jump feet back, push-up, jump feet forward, jump up.', custom:false },
+  { id:'b125',name:'Box Jump',                    primaryMuscle:'cardio',     secondaryMuscles:['upper_legs','glutes'],  equipment:'bodyweight',    recordType:'reps',       exerciseUrl:null, instructions:'Explosive jump onto box. Land softly with bent knees. Step down.', custom:false },
+  { id:'b126',name:'Battle Ropes',                primaryMuscle:'cardio',     secondaryMuscles:['shoulders','back'],     equipment:'bands',         recordType:'duration',   exerciseUrl:null, instructions:'Alternate or simultaneous wave motions. Maintain athletic stance.', custom:false },
+  { id:'b127',name:'Sled Push',                   primaryMuscle:'cardio',     secondaryMuscles:['upper_legs','glutes'],  equipment:'bodyweight',    recordType:'duration',   exerciseUrl:null, instructions:'Drive forward from hips pushing sled. Stay low and powerful.', custom:false },
 
-  // ── NECK ─────────────────────────────────────────────────────────────────
-  {id:'b343',name:'Neck flexion',                  category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Neck'],                        video:''},
-  {id:'b344',name:'Neck extension',                category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Neck'],                        video:''},
-  {id:'b345',name:'Neck lateral flexion',          category:'fullbody', eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Neck'],                        video:''},
-
-  // ── PLYO / ATHLETIC ──────────────────────────────────────────────────────
-  {id:'b346',name:'Broad jump',                    category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Calves'],     video:''},
-  {id:'b347',name:'Lateral bound',                 category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Calves'],     video:''},
-  {id:'b348',name:'Depth jump',                    category:'legs',     eq:'bw',  type:'plyo',     difficulty:'advanced',    muscles:['Quads','Glutes','Calves'],     video:''},
-  {id:'b349',name:'Tuck jump',                     category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Core'],       video:''},
-  {id:'b350',name:'Split jump',                    category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Hamstrings'], video:''},
-  {id:'b351',name:'Power clean',                   category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                   video:''},
-  {id:'b352',name:'Hang clean',                    category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                   video:''},
-  {id:'b353',name:'Push press',                    category:'shoulders',eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Shoulders','Triceps','Legs'],  video:''},
-  {id:'b354',name:'Push jerk',                     category:'shoulders',eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Shoulders','Triceps','Legs'],  video:''},
-  {id:'b355',name:'Barbell snatch',                category:'fullbody', eq:'bb',  type:'strength', difficulty:'advanced',    muscles:['Full body'],                   video:''},
-
-  // ── STRETCHING — additional ──────────────────────────────────────────────
-  {id:'b356',name:'Pigeon pose stretch',           category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Glutes','Hip flexors'],        video:''},
-  {id:'b357',name:'Couch stretch',                 category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Hip flexors','Quads'],         video:''},
-  {id:'b358',name:'Doorway pec stretch',           category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Chest','Shoulders'],           video:''},
-  {id:'b359',name:'Lat stretch (overhead)',        category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Back','Shoulders'],            video:''},
-  {id:'b360',name:'Spinal decompression hang',     category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Back','Spine'],                video:''},
-  {id:'b361',name:'Hip flexor lunge stretch',      category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Hip flexors','Quads'],         video:''},
-  {id:'b362',name:'Seated piriformis stretch',     category:'stretching',eq:'bw', type:'stretch',  difficulty:'beginner',    muscles:['Glutes','Hip flexors'],        video:''},
-  {id:'b363',name:'Foam roller — glutes',          category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Glutes'],                      video:''},
-  {id:'b364',name:'Foam roller — chest',           category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Chest'],                       video:''},
-  {id:'b365',name:'Foam roller — lats',            category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Back'],                        video:''},
-  {id:'b366',name:'Foam roller — peroneals',       category:'recovery', eq:'rc',  type:'recovery', difficulty:'beginner',    muscles:['Calves','Legs'],               video:''},
-
-  // ── BAND EXERCISES ───────────────────────────────────────────────────────
-  {id:'b367',name:'Band pull-apart',               category:'shoulders',eq:'band',type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
-  {id:'b368',name:'Band face pull',                category:'shoulders',eq:'band',type:'strength', difficulty:'beginner',    muscles:['Shoulders','Back'],            video:''},
-  {id:'b369',name:'Band squat',                    category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
-  {id:'b370',name:'Band deadlift',                 category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Hamstrings','Glutes','Back'],  video:''},
-  {id:'b371',name:'Band row',                      category:'back',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b372',name:'Band chest press',              category:'chest',    eq:'band',type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps'],             video:''},
-  {id:'b373',name:'Band lateral walk',             category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
-  {id:'b374',name:'Band monster walk',             category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
-  {id:'b375',name:'Band clamshell',                category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Glutes','Hip abductors'],      video:''},
-  {id:'b376',name:'Band overhead press',           category:'shoulders',eq:'band',type:'strength', difficulty:'beginner',    muscles:['Shoulders','Triceps'],         video:''},
-  {id:'b377',name:'Band bicep curl',               category:'biceps',   eq:'band',type:'strength', difficulty:'beginner',    muscles:['Biceps'],                      video:''},
-  {id:'b378',name:'Band tricep pushdown',          category:'triceps',  eq:'band',type:'strength', difficulty:'beginner',    muscles:['Triceps'],                     video:''},
-  {id:'b379',name:'Band good morning',             category:'legs',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Hamstrings','Glutes','Back'],  video:''},
-  {id:'b380',name:'Band seated row',               category:'back',     eq:'band',type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-
-  // ── MACHINE — PLANET FITNESS SPECIFIC ───────────────────────────────────
-  {id:'b381',name:'Planet Fitness 30-min circuit', category:'fullbody', eq:'mc',  type:'hiit',     difficulty:'beginner',    muscles:['Full body'],                   video:'', notes:'Complete all 20 stations in sequence. 1 min per station.'},
-  {id:'b382',name:'Chest press machine (bilateral)',category:'chest',   eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Chest','Triceps'],             video:''},
-  {id:'b383',name:'Shoulder press machine (bilateral)',category:'shoulders',eq:'mc',type:'strength',difficulty:'beginner',   muscles:['Shoulders','Triceps'],         video:''},
-  {id:'b384',name:'Dual cable machine row',        category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b385',name:'Functional trainer cable fly',  category:'chest',    eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Chest'],                       video:''},
-  {id:'b386',name:'Functional trainer row',        category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Back','Biceps'],               video:''},
-  {id:'b387',name:'Functional trainer squat',      category:'legs',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Quads','Glutes'],              video:''},
-  {id:'b388',name:'Ab crunch machine',             category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs'],                         video:''},
-  {id:'b389',name:'Back extension machine',        category:'back',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Lower back','Glutes'],         video:''},
-  {id:'b390',name:'Rotary torso machine',          category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Obliques','Core'],             video:''},
-
-  // ── HIIT / CONDITIONING ──────────────────────────────────────────────────
-  {id:'b391',name:'Box step-up (fast)',             category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Quads','Glutes','Calves'],     video:''},
-  {id:'b392',name:'High knees',                    category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Legs','Core'],                 video:''},
-  {id:'b393',name:'Butt kicks',                    category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Hamstrings','Calves'],         video:''},
-  {id:'b394',name:'Jumping jacks',                 category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Full body'],                   video:''},
-  {id:'b395',name:'Skaters',                       category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Glutes','Legs','Core'],        video:''},
-  {id:'b396',name:'Squat jumps',                   category:'legs',     eq:'bw',  type:'plyo',     difficulty:'intermediate',muscles:['Quads','Glutes','Calves'],     video:''},
-  {id:'b397',name:'Explosive push-up',             category:'chest',    eq:'bw',  type:'plyo',     difficulty:'advanced',    muscles:['Chest','Triceps','Shoulders'], video:''},
-  {id:'b398',name:'Sprint (in place)',             category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
-  {id:'b399',name:'Lateral shuffle',              category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Legs','Glutes'],               video:''},
-  {id:'b400',name:'Agility ladder drill',          category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
-  {id:'b401',name:'Cone drill',                    category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
-  {id:'b402',name:'Box drill',                     category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
-  {id:'b403',name:'Tabata squat',                  category:'legs',     eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Quads','Glutes'],              video:'', notes:'20 sec on, 10 sec off x8 rounds.'},
-  {id:'b404',name:'Tabata push-up',                category:'chest',    eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Chest','Triceps'],             video:'', notes:'20 sec on, 10 sec off x8 rounds.'},
-
-  // ── YOGA — additional ────────────────────────────────────────────────────
-  {id:'b405',name:'Boat pose',                     category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Core','Hip flexors','Abs'],    video:'', notes:'Navasana. Hold for 5 breaths. Keep spine long.'},
-  {id:'b406',name:'Wheel pose',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Chest','Shoulders','Back','Hip flexors'],video:'', notes:'Chakrasana. Full backbend. Warm up spine thoroughly first.'},
-  {id:'b407',name:'Reverse warrior',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Core','Shoulders'],     video:''},
-  {id:'b408',name:'Extended side angle',           category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Legs','Core','Shoulders'],     video:''},
-  {id:'b409',name:'Garland pose',                  category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Glutes','Hip flexors','Ankles'],video:'', notes:'Malasana. Deep squat position. Great for hip mobility.'},
-  {id:'b410',name:'Low lunge',                     category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hip flexors','Quads','Glutes'],video:'', notes:'Anjaneyasana. Keep back knee down for more hip flexor stretch.'},
-  {id:'b411',name:'High lunge',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hip flexors','Quads','Glutes','Core'],video:''},
-  {id:'b412',name:'Standing forward fold',         category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hamstrings','Back','Calves'],  video:'', notes:'Uttanasana. Bend knees slightly if hamstrings are tight.'},
-  {id:'b413',name:'Ragdoll pose',                  category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hamstrings','Back','Neck'],    video:'', notes:'Forward fold with arms hanging. Great for spine decompression.'},
-  {id:'b414',name:'Puppy pose',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Chest','Shoulders','Back'],    video:'', notes:'Between child\'s pose and downward dog. Opens chest and shoulders.'},
-  {id:'b415',name:'Sphinx pose',                   category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Chest','Spine'],        video:'', notes:'Gentle backbend. Good starting point before cobra or wheel.'},
-  {id:'b416',name:'Locust pose',                   category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Glutes','Hamstrings'], video:'', notes:'Salabhasana. Strengthens the entire posterior chain.'},
-  {id:'b417',name:'Happy baby',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hip flexors','Glutes','Lower back'],video:'', notes:'Ananda Balasana. Great post-workout hip opener.'},
-  {id:'b418',name:'Reclined pigeon',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Glutes','Hip flexors'],        video:'', notes:'Supta Kapotasana. Figure-4 on your back. Easier than floor pigeon.'},
-  {id:'b419',name:'Seated spinal twist',           category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Back','Core','Spine'],         video:'', notes:'Ardha Matsyendrasana. Hold each side for 5-8 breaths.'},
-  {id:'b420',name:'Wide-legged forward fold',      category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'beginner',    muscles:['Hamstrings','Inner thigh','Back'],video:'', notes:'Prasarita Padottanasana. Walk hands back between legs for deeper stretch.'},
-  {id:'b421',name:'Revolved triangle',             category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Legs','Core','Back','Spine'],  video:'', notes:'Parivrtta Trikonasana. Requires good hamstring and hip flexibility.'},
-  {id:'b422',name:'King pigeon pose',              category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Hip flexors','Chest','Back','Quads'],video:'', notes:'Eka Pada Rajakapotasana. Deep backbend + hip opener. Advanced prep required.'},
-  {id:'b423',name:'Lotus pose',                    category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'advanced',    muscles:['Hip flexors','Knees','Ankles'],video:'', notes:'Padmasana. Never force this pose. Requires significant hip external rotation.'},
-  {id:'b424',name:'Half lotus pose',               category:'yoga',     eq:'yoga',type:'yoga',     difficulty:'intermediate',muscles:['Hip flexors','Knees'],         video:'', notes:'Ardha Padmasana. One leg in lotus, one extended. Good prep for full lotus.'},
-
-  // ── CORE — additional ────────────────────────────────────────────────────
-  {id:'b425',name:'Windshield wipers',             category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Obliques','Core','Abs'],       video:'', notes:'Hanging or lying. Control the rotation — do not swing.'},
-  {id:'b426',name:'Dragon flag',                   category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Core','Abs','Lower back'],     video:'', notes:'Made famous by Bruce Lee. Full body tension required throughout.'},
-  {id:'b427',name:'Stir the pot',                  category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs','Shoulders'],      video:'', notes:'Forearms on stability ball, make small circles. Keep hips still.'},
-  {id:'b428',name:'Reverse crunch',                category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:'', notes:'Curl hips off the floor toward chest. Avoid swinging.'},
-  {id:'b429',name:'Hanging knee raise',            category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:'', notes:'Good progression before hanging leg raise.'},
-  {id:'b430',name:'Toes to bar',                   category:'core',     eq:'bw',  type:'strength', difficulty:'advanced',    muscles:['Abs','Hip flexors','Lats'],    video:'', notes:'Full range hanging core movement. Requires grip strength and lat engagement.'},
-  {id:'b431',name:'Seated leg tuck',               category:'core',     eq:'bw',  type:'strength', difficulty:'beginner',    muscles:['Abs','Hip flexors'],           video:''},
-  {id:'b432',name:'Kneeling ab wheel rollout',     category:'core',     eq:'bw',  type:'strength', difficulty:'intermediate',muscles:['Core','Abs','Shoulders'],      video:'', notes:'Easier progression from standing ab wheel. Keep lower back flat.'},
-  {id:'b433',name:'Landmine rotation',             category:'core',     eq:'bb',  type:'strength', difficulty:'intermediate',muscles:['Obliques','Core','Shoulders'], video:'', notes:'Rotate barbell end side to side. Great for rotational power.'},
-  {id:'b434',name:'Cable oblique crunch',          category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Obliques','Core'],             video:''},
-  {id:'b435',name:'Side bend (cable)',              category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Obliques','Core'],             video:''},
-  {id:'b436',name:'Stability ball crunch',         category:'core',     eq:'mc',  type:'strength', difficulty:'beginner',    muscles:['Abs','Core'],                  video:'', notes:'Greater range of motion than floor crunch due to ball curvature.'},
-  {id:'b437',name:'Stability ball plank',          category:'core',     eq:'mc',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Abs','Shoulders'],      video:'', notes:'Forearms on ball increases instability and core demand.'},
-  {id:'b438',name:'Stability ball pike',           category:'core',     eq:'mc',  type:'strength', difficulty:'advanced',    muscles:['Core','Abs','Shoulders'],      video:''},
-  {id:'b439',name:'Stability ball pass',           category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Abs','Core','Hip flexors'],    video:'', notes:'Pass ball from hands to feet lying on back.'},
-  {id:'b440',name:'GHD sit-up',                    category:'core',     eq:'mc',  type:'strength', difficulty:'advanced',    muscles:['Abs','Hip flexors','Back'],    video:'', notes:'Glute ham developer. Full range sit-up. Use with caution — high injury risk if rushed.'},
-  {id:'b441',name:'Roman chair sit-up',            category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Abs','Hip flexors'],           video:''},
-  {id:'b442',name:'Weighted Russian twist',        category:'core',     eq:'mc',  type:'strength', difficulty:'intermediate',muscles:['Obliques','Core','Abs'],       video:''},
-  {id:'b443',name:'Plank hip dip',                 category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'beginner',    muscles:['Obliques','Core'],             video:''},
-  {id:'b444',name:'Spiderman plank',               category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Obliques','Hip flexors'],video:''},
-  {id:'b445',name:'Single-leg plank',              category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Glutes','Abs'],         video:''},
-  {id:'b446',name:'RKC plank',                     category:'core',     eq:'bw',  type:'timed_bodyweight', difficulty:'intermediate',muscles:['Core','Abs'],                  video:'', notes:'Squeeze every muscle simultaneously. Much harder than standard plank.'},
-  {id:'b447',name:'Suitcase deadlift',             category:'core',     eq:'db',  type:'strength', difficulty:'beginner',    muscles:['Core','Obliques','Legs'],      video:'', notes:'One dumbbell at side. Anti-lateral flexion core exercise.'},
-
-  // ── CARDIO — additional ──────────────────────────────────────────────────
-  {id:'b448',name:'12-3-30 treadmill',             category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes','Calves'],      video:'', notes:'12% incline, 3 mph, 30 minutes. Popularized on social media. Effective low-impact glute and cardio workout.'},
-  {id:'b449',name:'Recumbent bike',                category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Quads'],                video:'', notes:'Lower back supported. Good for beginners or those with back issues.'},
-  {id:'b450',name:'Upper body ergometer',          category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Arms','Shoulders','Back'],     video:'', notes:'Hand bike. Great for upper body cardio or lower body injury rehab.'},
-  {id:'b451',name:'Nordic ski machine',            category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'intermediate',muscles:['Full body','Core'],            video:'', notes:'Combines upper and lower body in skiing motion. Low impact.'},
-  {id:'b452',name:'Stepper machine',               category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes','Calves'],      video:''},
-  {id:'b453',name:'Power walking',                 category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core'],                 video:'', notes:'3.5-4.5 mph pace. Arms pumping actively. Underrated calorie burner.'},
-  {id:'b454',name:'Speed walking (track)',         category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Core','Calves'],        video:''},
-  {id:'b455',name:'Hiking',                        category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes','Core'],        video:'', notes:'Log distance and elevation gain. Great active recovery option.'},
-  {id:'b456',name:'Kayaking',                      category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Back','Shoulders','Core','Arms'],video:''},
-  {id:'b457',name:'Dance cardio',                  category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Full body','Legs','Core'],     video:'', notes:'Zumba-style. Log by duration. High calorie burn with low perceived effort.'},
-  {id:'b458',name:'Kickboxing cardio',             category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Core','Arms'],     video:'', notes:'Punches, kicks, and combinations. Log by rounds or duration.'},
-  {id:'b459',name:'Track sprint intervals',        category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core','Glutes'],        video:'', notes:'e.g. 8x100m with 60 sec rest. Log sets as sprint repeats.'},
-  {id:'b460',name:'Fartlek run',                   category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'intermediate',muscles:['Legs','Core'],                 video:'', notes:'Swedish for speed play. Alternate fast and easy efforts freely during a run.'},
-  {id:'b461',name:'Water rowing',                  category:'cardio',   eq:'cd',  type:'cardio',   difficulty:'intermediate',muscles:['Full body','Back','Legs'],     video:'', notes:'Water rower. More natural feel than air rower. Log distance or time.'},
-  {id:'b462',name:'Sled drag (cardio)',            category:'cardio',   eq:'mc',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Glutes','Core'],        video:''},
-  {id:'b463',name:'Versa climber intervals',       category:'cardio',   eq:'cd',  type:'hiit',     difficulty:'advanced',    muscles:['Full body'],                   video:'', notes:'Vertical climbing machine. Extremely high calorie burn. Short intervals recommended.'},
-  {id:'b464',name:'Pool swimming (laps)',          category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Full body'],                   video:'', notes:'Log by laps or distance. Note stroke type (freestyle, backstroke, etc).'},
-  {id:'b465',name:'Open water swimming',           category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'intermediate',muscles:['Full body'],                   video:''},
-  {id:'b466',name:'Cycling (outdoor)',             category:'cardio',   eq:'bw',  type:'cardio',   difficulty:'beginner',    muscles:['Legs','Glutes','Core'],        video:'', notes:'Log by distance or time. Note terrain — flat vs hills changes intensity significantly.'},
-  {id:'b467',name:'Mountain biking',              category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Glutes','Core','Arms'], video:''},
-  {id:'b468',name:'Sport (basketball)',            category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body'],                   video:'', notes:'Log by duration. High intensity interval nature makes it great cardio.'},
-  {id:'b469',name:'Sport (tennis)',                category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Full body','Core'],            video:''},
-  {id:'b470',name:'Sport (soccer)',                category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'intermediate',muscles:['Legs','Core'],                 video:''},
-  {id:'b471',name:'Sport (pickleball)',            category:'cardio',   eq:'bw',  type:'hiit',     difficulty:'beginner',    muscles:['Legs','Core','Arms'],          video:'', notes:'Fast growing sport. Great cardio for all ages.'},
 ];
 
-// ── KEYED OBJECT FOR BUILDERS ────────────────────────────────────────────────
-// Groups exercises by capitalised category name for use in program builder
-// filter pills and library panels. Custom exercises are added at runtime.
+// ── EXERCISE LIBRARY (keyed by primaryMuscle) ────────────────────────────────
+// Groups exercises for quick access by muscle group.
 
-const EXERCISE_LIBRARY = (() => {
-  const categoryDisplayNames = {
-    chest:      'Chest',
-    back:       'Back',
-    shoulders:  'Shoulders',
-    biceps:     'Biceps',
-    triceps:    'Triceps',
-    legs:       'Legs',
-    core:       'Core',
-    fullbody:   'Full Body',
-    cardio:     'Cardio',
-    yoga:       'Yoga',
-    stretching: 'Stretching',
-    recovery:   'Recovery',
-  };
-  const lib = {};
-  // Preserve display order
-  Object.values(categoryDisplayNames).forEach(name => { lib[name] = []; });
-  LAROFIT_EXERCISES.forEach(ex => {
-    const display = categoryDisplayNames[ex.category];
-    if (!display) return;
-    lib[display].push({
-      name:        ex.name,
-      eq:          ex.eq,
-      defaultType: ex.type,
-      difficulty:  ex.difficulty,
-      muscles:     ex.muscles,
-      video:       ex.video  || '',
-      notes:       ex.notes  || '',
-      id:          ex.id,
-    });
-  });
-  // Remove empty groups
-  Object.keys(lib).forEach(k => { if (!lib[k].length) delete lib[k]; });
+const EXERCISE_LIBRARY = LAROFIT_EXERCISES.reduce((lib, ex) => {
+  const key = ex.primaryMuscle;
+  if (!lib[key]) lib[key] = [];
+  lib[key].push(ex);
   return lib;
-})();
+}, {});
