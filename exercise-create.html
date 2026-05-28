@@ -954,6 +954,7 @@ document.getElementById('ce-media-input').addEventListener('change', function() 
 function saveExercise() {
   const name = document.getElementById('ce-name').value.trim();
   if (!name)                { showToast('Exercise name is required'); return; }
+  if (isDuplicateName(name)){ showToast('An exercise with that name already exists'); return; }
   if (!state.primaryMuscle) { showToast('Select a main muscle group'); return; }
   if (!state.equipment)     { showToast('Select equipment'); return; }
   if (!state.recordType)    { showToast('Select a record type'); return; }
@@ -996,8 +997,19 @@ function saveExercise() {
 
 function getReturnUrl() {
   const p = new URLSearchParams(location.search).get('returnTo');
-  if (p === 'builder') return 'builder.html';
+  if (p === 'builder') return 'builder.html?openLibrary=1';
   return 'programs.html';
+}
+
+function isDuplicateName(name) {
+  const lower = name.toLowerCase();
+  const customs = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+  const editingId = window._editingId || null;
+  if (customs.some(e => e.name.toLowerCase() === lower && e.id !== editingId)) return true;
+  if (typeof LAROFIT_EXERCISES !== 'undefined') {
+    if (LAROFIT_EXERCISES.some(e => e.name.toLowerCase() === lower)) return true;
+  }
+  return false;
 }
 
 function discardAndExit() {

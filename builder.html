@@ -552,6 +552,14 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .lib-ex-row.already-added .lib-ex-add {
   background: var(--success-bg); color: var(--success); font-size: 14px;
 }
+.lib-ex-delete {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--danger-bg);
+  border: none; border-radius: 8px;
+  font-size: 14px; cursor: pointer; flex-shrink: 0;
+}
+.lib-ex-delete:active { opacity: 0.7; }
 .lib-empty { padding: 48px 24px; text-align: center; color: var(--text-3); font-size: 14px; }
 .lib-create-row {
   padding: 14px 16px; border-top: 0.5px solid var(--border);
@@ -1111,6 +1119,11 @@ function init() {
 
   buildLibraryFilters();
   initCalendarView();
+
+  // Auto-open library picker if returning from exercise-create
+  if (new URLSearchParams(location.search).get('openLibrary') === '1') {
+    setTimeout(openLibrary, 350);
+  }
 }
 
 function onSetupChange() {
@@ -1694,26 +1707,31 @@ function initDrag() {
 // LIBRARY SHEET
 // ══════════════════════════════════════════════════════════════════════
 const MUSCLE_FILTERS = [
-  { id:'all',       label:'All' },
-  { id:'chest',     label:'Chest' },
-  { id:'back',      label:'Back' },
-  { id:'shoulders', label:'Shoulders' },
-  { id:'biceps',    label:'Biceps' },
-  { id:'triceps',   label:'Triceps' },
-  { id:'legs',      label:'Legs' },
-  { id:'core',      label:'Core' },
-  { id:'fullbody',  label:'Full body' },
-  { id:'cardio',    label:'Cardio' },
+  { id:'all',        label:'All' },
+  { id:'abs',        label:'Abs' },
+  { id:'back',       label:'Back' },
+  { id:'biceps',     label:'Biceps' },
+  { id:'chest',      label:'Chest' },
+  { id:'forearms',   label:'Forearms' },
+  { id:'glutes',     label:'Glutes' },
+  { id:'shoulders',  label:'Shoulders' },
+  { id:'triceps',    label:'Triceps' },
+  { id:'upper_legs', label:'Upper Legs' },
+  { id:'lower_legs', label:'Lower Legs' },
+  { id:'cardio',     label:'Cardio' },
 ];
 const EQ_FILTERS = [
-  { id:'all',  label:'All equipment' },
-  { id:'db',   label:'Dumbbells' },
-  { id:'bb',   label:'Barbell' },
-  { id:'mc',   label:'Machine' },
-  { id:'bw',   label:'Bodyweight' },
-  { id:'kb',   label:'Kettlebell' },
-  { id:'band', label:'Bands' },
-  { id:'cd',   label:'Cable' },
+  { id:'all',            label:'All equipment' },
+  { id:'bodyweight',     label:'Bodyweight' },
+  { id:'bands',          label:'Bands' },
+  { id:'barbell',        label:'Barbell' },
+  { id:'bench',          label:'Bench' },
+  { id:'cardio_machine', label:'Cardio Machine' },
+  { id:'dumbbells',      label:'Dumbbells' },
+  { id:'exercise_ball',  label:'Exercise Ball' },
+  { id:'ez_bar',         label:'EZ Bar' },
+  { id:'kettlebells',    label:'Kettlebells' },
+  { id:'machine_cable',  label:'Machine / Cable' },
 ];
 
 function buildLibraryFilters() {
@@ -1753,32 +1771,50 @@ function renderLibrary() {
   const customs  = getCustomExercises();
   let exercises  = [...customs, ...(LAROFIT_EXERCISES || [])];
 
-  if (libMuscle !== 'all') exercises = exercises.filter(e => e.category === libMuscle);
-  if (libEq     !== 'all') exercises = exercises.filter(e => e.eq === libEq);
+  if (libMuscle !== 'all') exercises = exercises.filter(e => e.primaryMuscle === libMuscle);
+  if (libEq     !== 'all') exercises = exercises.filter(e => e.equipment === libEq);
   if (q) {
     exercises = exercises.filter(e =>
       e.name.toLowerCase().includes(q) ||
-      (e.muscles || []).some(m => m.toLowerCase().includes(q))
+      (e.primaryMuscle || '').includes(q) ||
+      (e.secondaryMuscles || []).some(m => m.includes(q))
     );
   }
 
-  const EQ_ICONS = { db:'🏋️', bb:'🏗️', mc:'⚙️', bw:'🤸', kb:'🔔', band:'🎽', cd:'🔗' };
+  const EQ_ICONS = {
+    bodyweight:'🤸', bands:'🎽', barbell:'🏗️', bench:'🪑',
+    cardio_machine:'🏃', dumbbells:'🏋️', exercise_ball:'⚽',
+    ez_bar:'〰️', kettlebells:'🔔', machine_cable:'⚙️'
+  };
   const isCustom = id => id && id.startsWith('cx-');
 
   document.getElementById('lib-results').innerHTML = exercises.length === 0
     ? `<div class="lib-empty">No exercises found.<br>Try a different search or filter.</div>`
     : exercises.map(ex => {
         const added = addedIds.has(ex.id);
+        const meta  = [ex.primaryMuscle, ...(ex.secondaryMuscles||[])]
+          .slice(0,2).map(m => m.replace('_',' ')).join(' · ');
         return `
           <div class="lib-ex-row${added?' already-added':''}" onclick="addExercise('${ex.id}')">
-            <div class="lib-ex-icon">${EQ_ICONS[ex.eq] || '🏋️'}</div>
+            <div class="lib-ex-icon">${EQ_ICONS[ex.equipment] || '🏋️'}</div>
             <div class="lib-ex-body">
               <div class="lib-ex-name">${escHtml(ex.name)}${isCustom(ex.id)?'<span class="custom-badge">CUSTOM</span>':''}</div>
-              <div class="lib-ex-meta">${(ex.muscles||[]).slice(0,2).join(' · ')}</div>
+              <div class="lib-ex-meta">${meta}</div>
             </div>
-            <div class="lib-ex-add">${added ? '✓' : '+'}</div>
+            ${isCustom(ex.id)
+              ? `<button class="lib-ex-delete" onclick="deleteCustomExercise(event,'${ex.id}')">🗑</button>`
+              : `<div class="lib-ex-add">${added ? '✓' : '+'}</div>`
+            }
           </div>`;
       }).join('');
+}
+
+function deleteCustomExercise(e, id) {
+  e.stopPropagation();
+  const arr = getCustomExercises().filter(ex => ex.id !== id);
+  localStorage.setItem('lf_custom_exercises', JSON.stringify(arr));
+  renderLibrary();
+  showToast('Exercise deleted');
 }
 
 function addExercise(exId) {
@@ -1795,7 +1831,7 @@ function addExercise(exId) {
     renderLibrary(); renderExList(); return;
   }
 
-  session.exercises.push({ id: ex.id, name: ex.name, muscles: ex.muscles || [], sets: 3, reps: 10, restSec: 60 });
+  session.exercises.push({ id: ex.id, name: ex.name, primaryMuscle: ex.primaryMuscle, secondaryMuscles: ex.secondaryMuscles || [], sets: 3, reps: 10, restSec: 60 });
   renderLibrary();
   renderExList();
   showToast(ex.name + ' added');
