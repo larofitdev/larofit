@@ -991,11 +991,17 @@ function saveExercise() {
     localStorage.setItem('lf_custom_exercises', JSON.stringify(existing));
     showToast('Exercise saved!');
   }
-  setTimeout(() => { window.location.href = 'programs.html'; }, 700);
+  setTimeout(() => { window.location.href = getReturnUrl(); }, 700);
+}
+
+function getReturnUrl() {
+  const p = new URLSearchParams(location.search).get('returnTo');
+  if (p === 'builder') return 'builder.html';
+  return 'programs.html';
 }
 
 function discardAndExit() {
-  window.location.href = 'programs.html';
+  window.location.href = getReturnUrl();
 }
 
 // ══════════════════════════════════════════════════════════
