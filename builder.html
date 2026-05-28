@@ -122,19 +122,19 @@ button, input, select, a, textarea { touch-action: manipulation; }
 }
 
 .cal-cell {
-  aspect-ratio: 1 / 1.15;
+  aspect-ratio: 1 / 1.25;
   border-radius: var(--radius-sm);
   border: 0.5px solid var(--border);
   background: var(--bg-card);
   display: flex;
   flex-direction: column;
-  padding: 4px 5px 3px;
+  padding: 4px 4px 3px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   transition: border-color 0.15s, background 0.15s;
-  min-height: 52px;
+  min-height: 56px;
 }
 .cal-cell:active { background: var(--bg-card2); }
 .cal-cell.empty {
@@ -173,28 +173,37 @@ button, input, select, a, textarea { touch-action: manipulation; }
   line-height: 1;
   flex-shrink: 0;
 }
-.cal-cell.has-workout .cal-date-num { color: rgba(255,255,255,0.5); }
+.cal-cell.has-workout .cal-date-num { color: rgba(255,255,255,0.4); }
 .cal-cell.is-today .cal-date-num    { color: var(--volt-dark); }
+.cal-cell.has-workout.is-today .cal-date-num { color: var(--volt); }
 
-.cal-workout-name {
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--volt);
-  line-height: 1.2;
+/* AM/PM session labels in calendar cell */
+.cal-session-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   margin-top: 3px;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  word-break: break-word;
 }
-
-.cal-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--volt);
-  margin-top: auto;
-  flex-shrink: 0;
+.cal-session-label {
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+.cal-session-label.am {
+  color: #fbbf24;
+  background: rgba(251,191,36,0.18);
+}
+.cal-session-label.pm {
+  color: var(--volt);
+  background: rgba(198,241,53,0.15);
 }
 
 /* Paste mode banner */
@@ -238,7 +247,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 }
 
 /* ══════════════════════════════════════════
-   SCREEN 3 — DAY EDITOR (kept from v1)
+   SCREEN 3 — DAY EDITOR
 ══════════════════════════════════════════ */
 .bldr-day-header {
   display: flex;
@@ -271,6 +280,29 @@ button, input, select, a, textarea { touch-action: manipulation; }
   min-width: 0;
 }
 .bldr-day-title-input::placeholder { color: var(--text-3); }
+
+/* Session badge in day editor header */
+.bldr-session-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  padding: 4px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.bldr-session-badge.am {
+  background: rgba(251,191,36,0.18);
+  color: #b45309;
+  border: 1px solid rgba(251,191,36,0.4);
+}
+.bldr-session-badge.pm {
+  background: var(--volt-bg);
+  color: var(--volt-dark);
+  border: 1px solid var(--volt-border);
+}
+
 .bldr-ex-list {
   padding: 12px var(--page-pad);
   display: flex;
@@ -535,7 +567,43 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .lib-create-label { font-size: 14px; font-weight: 600; color: var(--volt-dark); }
 .lib-create-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
 
-/* ── DAY ACTION SHEET ── */
+/* ══════════════════════════════════════════
+   SESSION PICKER ACTION SHEET
+   (shown when tapping an empty day)
+══════════════════════════════════════════ */
+.session-picker-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 300; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s;
+}
+.session-picker-overlay.open { opacity: 1; pointer-events: all; }
+.session-picker-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  z-index: 301;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
+  padding: 0 var(--page-pad) calc(env(safe-area-inset-bottom, 0px) + 20px);
+}
+.session-picker-sheet.open { transform: translateY(0); }
+.session-picker-handle {
+  width: 36px; height: 4px; background: var(--border-md);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.session-picker-date {
+  font-size: 12px; font-weight: 700; color: var(--text-3);
+  text-align: center; padding: 12px 0 4px;
+  font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase;
+}
+.session-picker-title {
+  font-size: 18px; font-weight: 700; color: var(--text);
+  text-align: center; padding-bottom: 14px;
+  border-bottom: 0.5px solid var(--border); margin-bottom: 10px;
+}
+
+/* ── DAY ACTION SHEET (existing day) ── */
 .day-action-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.45);
@@ -562,8 +630,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
   text-align: center; padding: 12px 0 4px;
   font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase;
 }
-.day-action-name {
-  font-size: 18px; font-weight: 700; color: var(--text);
+.day-action-title {
+  font-size: 16px; font-weight: 700; color: var(--text);
   text-align: center; padding-bottom: 14px;
   border-bottom: 0.5px solid var(--border); margin-bottom: 10px;
 }
@@ -581,8 +649,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
   display: flex; align-items: center; justify-content: center;
   font-size: 18px; flex-shrink: 0;
 }
-.day-action-label { font-size: 15px; font-weight: 600; color: var(--text); }
-.day-action-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.day-action-label { font-size: 15px; font-weight: 600; color: var(--text); text-align: left; }
+.day-action-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; text-align: left; }
 
 /* ── SAVE FOOTER ── */
 .bldr-save-footer {
@@ -762,7 +830,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
     </button>
   </div>
 
-  <!-- Day-of-week headers (Sun–Sat) -->
+  <!-- Day-of-week headers -->
   <div class="cal-dow-row">
     <div class="cal-dow">Sun</div>
     <div class="cal-dow">Mon</div>
@@ -780,15 +848,19 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div style="display:flex;gap:16px;padding:10px var(--page-pad) 0;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:5px;">
       <div style="width:12px;height:12px;border-radius:3px;background:var(--bg-dark);"></div>
-      <span style="font-size:11px;color:var(--text-3);">Workout</span>
+      <span style="font-size:11px;color:var(--text-3);">Has sessions</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div style="width:12px;height:8px;border-radius:2px;background:rgba(251,191,36,0.3);border:1px solid rgba(251,191,36,0.5);"></div>
+      <span style="font-size:11px;color:var(--text-3);">AM</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;">
+      <div style="width:12px;height:8px;border-radius:2px;background:rgba(198,241,53,0.2);border:1px solid rgba(198,241,53,0.4);"></div>
+      <span style="font-size:11px;color:var(--text-3);">PM</span>
     </div>
     <div style="display:flex;align-items:center;gap:5px;">
       <div style="width:12px;height:12px;border-radius:3px;border:1.5px solid var(--volt-dark);"></div>
       <span style="font-size:11px;color:var(--text-3);">Today</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px;">
-      <div style="width:12px;height:12px;border-radius:3px;background:var(--bg-card);border:0.5px solid var(--border);opacity:0.4;"></div>
-      <span style="font-size:11px;color:var(--text-3);">Out of range</span>
     </div>
   </div>
 
@@ -806,9 +878,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
       class="bldr-day-title-input"
       type="text"
       id="day-title-input"
-      placeholder="Day name e.g. Chest & Triceps"
+      placeholder="Session name e.g. AM Cardio"
       maxlength="40"
     >
+    <div class="bldr-session-badge" id="session-badge">AM</div>
     <button class="btn btn-volt btn-sm" onclick="saveDayAndBack()">Done</button>
   </div>
 
@@ -826,43 +899,46 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </main>
 
 <!-- ══════════════════════════════════════
-     DAY ACTION SHEET
+     SESSION PICKER (empty day tap)
+══════════════════════════════════════ -->
+<div class="session-picker-overlay" id="session-picker-overlay" onclick="closeSessionPicker()"></div>
+<div class="session-picker-sheet" id="session-picker-sheet">
+  <div class="session-picker-handle"></div>
+  <div class="session-picker-date" id="session-picker-date"></div>
+  <div class="session-picker-title">Add a session</div>
+
+  <button class="day-action-btn" onclick="sessionPickerChoose('am')">
+    <div class="day-action-icon" style="background:rgba(251,191,36,0.15);">
+      <i class="ti ti-sun" style="color:#b45309;font-size:20px;"></i>
+    </div>
+    <div>
+      <div class="day-action-label">Morning (AM)</div>
+      <div class="day-action-sub">Add a morning session to this day</div>
+    </div>
+  </button>
+
+  <button class="day-action-btn" onclick="sessionPickerChoose('pm')">
+    <div class="day-action-icon" style="background:var(--volt-bg);">
+      <i class="ti ti-moon" style="color:var(--volt-dark);font-size:20px;"></i>
+    </div>
+    <div>
+      <div class="day-action-label">Evening (PM)</div>
+      <div class="day-action-sub">Add an evening session to this day</div>
+    </div>
+  </button>
+
+</div>
+
+<!-- ══════════════════════════════════════
+     DAY ACTION SHEET (existing day)
 ══════════════════════════════════════ -->
 <div class="day-action-overlay" id="day-action-overlay" onclick="closeDayAction()"></div>
 <div class="day-action-sheet" id="day-action-sheet">
   <div class="day-action-handle"></div>
   <div class="day-action-date" id="day-action-date"></div>
-  <div class="day-action-name" id="day-action-name"></div>
-
-  <button class="day-action-btn" onclick="dayActionEdit()">
-    <div class="day-action-icon" style="background:var(--volt-bg);">
-      <i class="ti ti-pencil" style="color:var(--volt-dark);font-size:18px;"></i>
-    </div>
-    <div>
-      <div class="day-action-label">Edit workout</div>
-      <div class="day-action-sub">Add, remove or reorder exercises</div>
-    </div>
-  </button>
-
-  <button class="day-action-btn" onclick="dayActionCopy()">
-    <div class="day-action-icon" style="background:var(--blue-bg);">
-      <i class="ti ti-copy" style="color:var(--blue);font-size:18px;"></i>
-    </div>
-    <div>
-      <div class="day-action-label">Copy to another date</div>
-      <div class="day-action-sub">Tap any date on the calendar to paste</div>
-    </div>
-  </button>
-
-  <button class="day-action-btn" id="clear-btn" onclick="dayActionClear()">
-    <div class="day-action-icon" style="background:var(--danger-bg);">
-      <i class="ti ti-trash" style="color:var(--danger);font-size:18px;"></i>
-    </div>
-    <div>
-      <div class="day-action-label">Clear this day</div>
-      <div class="day-action-sub">Remove all exercises from this date</div>
-    </div>
-  </button>
+  <div class="day-action-title" id="day-action-title">Edit day</div>
+  <!-- Buttons injected dynamically based on what sessions exist -->
+  <div id="day-action-btns"></div>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -981,17 +1057,17 @@ LF.ready().then(() => LF.guard());
 // ══════════════════════════════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════════════════════════════
-let program      = null;   // program object being built
-let editingDate  = null;   // 'YYYY-MM-DD' string of day being edited
-let pasteMode    = false;  // true when user has copied a day
-let copiedDate   = null;   // source date for copy
-let libMuscle    = 'all';
-let libEq        = 'all';
+let program          = null;   // program object being built
+let editingDate      = null;   // 'YYYY-MM-DD' of day being edited
+let editingSession   = null;   // 'am' | 'pm'
+let pasteMode        = false;
+let copiedDate       = null;
+let libMuscle        = 'all';
+let libEq            = 'all';
 let cxSelectedMuscles = [];
 
-// Viewing month on calendar
 let calYear  = 0;
-let calMonth = 0; // 0=Jan
+let calMonth = 0;
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December'];
@@ -1011,10 +1087,8 @@ function goBack() {
 }
 
 function init() {
-  // Default start date = today
   document.getElementById('prog-start').value = new Date().toISOString().slice(0,10);
 
-  // Load existing program if editing
   const params = new URLSearchParams(location.search);
   const id = params.get('id') || (() => {
     try {
@@ -1028,6 +1102,8 @@ function init() {
     const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
     program = programs.find(p => p.id === id);
     if (!program) { showToast('Program not found'); goBack(); return; }
+    // Migrate old flat day structure to AM/PM if needed
+    migrateLegacyDays();
     loadProgramIntoSetup();
   } else {
     program = makeBlankProgram();
@@ -1037,7 +1113,6 @@ function init() {
   initCalendarView();
 }
 
-// Live-update calendar when setup fields change
 function onSetupChange() {
   flushSetupToProgram();
   initCalendarView();
@@ -1059,6 +1134,21 @@ function makeBlankProgram() {
     savedAt:     null,
     days:        {},
   };
+}
+
+// Migrate old { name, exercises[] } days to { am: {...} | null, pm: null }
+function migrateLegacyDays() {
+  if (!program.days) { program.days = {}; return; }
+  Object.keys(program.days).forEach(dateStr => {
+    const d = program.days[dateStr];
+    // If it has an exercises array at the top level it's the old format
+    if (Array.isArray(d.exercises)) {
+      program.days[dateStr] = {
+        am: { name: d.name || 'Workout', exercises: d.exercises },
+        pm: null,
+      };
+    }
+  });
 }
 
 function loadProgramIntoSetup() {
@@ -1098,7 +1188,6 @@ function initCalendarView() {
     (program.name || 'NEW PROGRAM').toUpperCase();
   renderCalendar();
 
-  // Attach delegated tap listener once — handles both browser click and PWA touch
   const grid = document.getElementById('cal-grid');
   let lastTap = 0;
   grid.addEventListener('touchend', e => {
@@ -1106,7 +1195,6 @@ function initCalendarView() {
     calGridTap(e);
   }, { passive: true });
   grid.addEventListener('click', e => {
-    // Suppress click if touchend already fired within 400ms (same tap)
     if (Date.now() - lastTap < 400) return;
     calGridTap(e);
   });
@@ -1114,27 +1202,22 @@ function initCalendarView() {
 
 function renderCalendar() {
   const range = programDateRange();
-  const label = MONTH_NAMES[calMonth] + ' ' + calYear;
-  document.getElementById('cal-month-label').textContent = label;
+  document.getElementById('cal-month-label').textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
 
-  // Disable prev if this month is before start month
-  const startM = new Date(range.startStr + 'T00:00:00');
-  const endM   = new Date(range.endStr   + 'T00:00:00');
+  const startM    = new Date(range.startStr + 'T00:00:00');
+  const endM      = new Date(range.endStr   + 'T00:00:00');
   const thisFirst = new Date(calYear, calMonth, 1);
-  const thisLast  = new Date(calYear, calMonth + 1, 0);
 
   document.getElementById('cal-prev').disabled =
     thisFirst <= new Date(startM.getFullYear(), startM.getMonth(), 1);
   document.getElementById('cal-next').disabled =
     thisFirst >= new Date(endM.getFullYear(), endM.getMonth(), 1);
 
-  // Build grid
-  const firstDow = new Date(calYear, calMonth, 1).getDay(); // 0=Sun
+  const firstDow    = new Date(calYear, calMonth, 1).getDay();
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
 
   let html = '';
 
-  // Leading empty cells
   for (let i = 0; i < firstDow; i++) {
     html += `<div class="cal-cell empty"></div>`;
   }
@@ -1143,22 +1226,35 @@ function renderCalendar() {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const inRange = dateStr >= range.startStr && dateStr <= range.endStr;
     const isToday = dateStr === todayStr;
-    const workout = program.days[dateStr];
-    const isPaste = pasteMode && inRange;
+    const day     = program.days[dateStr]; // { am, pm } | undefined
+    const hasAM   = day && day.am;
+    const hasPM   = day && day.pm;
+    const hasAny  = hasAM || hasPM;
 
     let cls = 'cal-cell';
     if (!inRange) cls += ' out-of-range';
     if (isToday)  cls += ' is-today';
-    if (workout)  cls += ' has-workout';
-    if (isPaste && inRange)  cls += ' paste-target';
+    if (hasAny)   cls += ' has-workout';
+    if (pasteMode && inRange) cls += ' paste-target';
 
-    const clickFn = inRange ? `data-date="${dateStr}"` : '';
+    let sessionsHtml = '';
+    if (hasAny) {
+      sessionsHtml = `<div class="cal-session-labels">`;
+      if (hasAM) {
+        const amName = day.am.name || 'AM';
+        sessionsHtml += `<div class="cal-session-label am">${escHtml(amName)}</div>`;
+      }
+      if (hasPM) {
+        const pmName = day.pm.name || 'PM';
+        sessionsHtml += `<div class="cal-session-label pm">${escHtml(pmName)}</div>`;
+      }
+      sessionsHtml += `</div>`;
+    }
 
     html += `
       <div class="${cls}" ${inRange ? `data-date="${dateStr}"` : ''}>
         <div class="cal-date-num">${d}</div>
-        ${workout ? `<div class="cal-workout-name">${escHtml(workout.name || 'Workout')}</div>` : ''}
-        ${workout ? `<div class="cal-dot"></div>` : ''}
+        ${sessionsHtml}
       </div>`;
   }
 
@@ -1193,26 +1289,140 @@ function handleDayTap(dateStr) {
     return;
   }
 
-  const workout = program.days[dateStr];
-  if (workout) {
-    openDayAction(dateStr);
+  const day  = program.days[dateStr];
+  const hasAM = day && day.am;
+  const hasPM = day && day.pm;
+
+  if (!hasAM && !hasPM) {
+    // Empty day — show session picker
+    openSessionPicker(dateStr);
   } else {
-    openDayEditor(dateStr);
+    // Has at least one session — show action sheet
+    openDayAction(dateStr);
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// DAY ACTION SHEET (for days that already have a workout)
+// SESSION PICKER (empty day — choose AM or PM)
+// ══════════════════════════════════════════════════════════════════════
+let pickerDate = null;
+
+function openSessionPicker(dateStr) {
+  pickerDate = dateStr;
+  const d = new Date(dateStr + 'T00:00:00');
+  const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('session-picker-date').textContent = label;
+  document.getElementById('session-picker-overlay').classList.add('open');
+  document.getElementById('session-picker-sheet').classList.add('open');
+}
+
+function closeSessionPicker() {
+  document.getElementById('session-picker-overlay').classList.remove('open');
+  document.getElementById('session-picker-sheet').classList.remove('open');
+  pickerDate = null;
+}
+
+function sessionPickerChoose(session) {
+  const date = pickerDate;
+  closeSessionPicker();
+  openDayEditor(date, session);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// DAY ACTION SHEET (days with existing sessions)
 // ══════════════════════════════════════════════════════════════════════
 let actionDate = null;
 
 function openDayAction(dateStr) {
   actionDate = dateStr;
-  const workout = program.days[dateStr];
+  const day   = program.days[dateStr];
+  const hasAM = day && day.am;
+  const hasPM = day && day.pm;
+
   const d = new Date(dateStr + 'T00:00:00');
   const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   document.getElementById('day-action-date').textContent = label;
-  document.getElementById('day-action-name').textContent = workout.name || 'Workout';
+
+  // Title summarises what's on this day
+  const parts = [];
+  if (hasAM) parts.push(day.am.name || 'AM Session');
+  if (hasPM) parts.push(day.pm.name || 'PM Session');
+  document.getElementById('day-action-title').textContent = parts.join(' · ') || 'Edit day';
+
+  // Build dynamic buttons
+  let btns = '';
+
+  if (hasAM) {
+    const exCount = (day.am.exercises || []).length;
+    btns += `
+      <button class="day-action-btn" onclick="dayActionEditSession('am')">
+        <div class="day-action-icon" style="background:rgba(251,191,36,0.15);">
+          <i class="ti ti-sun" style="color:#b45309;font-size:18px;"></i>
+        </div>
+        <div>
+          <div class="day-action-label">${escHtml(day.am.name || 'AM Session')}</div>
+          <div class="day-action-sub">${exCount} exercise${exCount !== 1 ? 's' : ''} · tap to edit</div>
+        </div>
+      </button>`;
+  } else {
+    btns += `
+      <button class="day-action-btn" onclick="dayActionAddSession('am')">
+        <div class="day-action-icon" style="background:rgba(251,191,36,0.15);">
+          <i class="ti ti-sun" style="color:#b45309;font-size:18px;"></i>
+        </div>
+        <div>
+          <div class="day-action-label">Add Morning (AM) session</div>
+          <div class="day-action-sub">No AM session yet</div>
+        </div>
+      </button>`;
+  }
+
+  if (hasPM) {
+    const exCount = (day.pm.exercises || []).length;
+    btns += `
+      <button class="day-action-btn" onclick="dayActionEditSession('pm')">
+        <div class="day-action-icon" style="background:var(--volt-bg);">
+          <i class="ti ti-moon" style="color:var(--volt-dark);font-size:18px;"></i>
+        </div>
+        <div>
+          <div class="day-action-label">${escHtml(day.pm.name || 'PM Session')}</div>
+          <div class="day-action-sub">${exCount} exercise${exCount !== 1 ? 's' : ''} · tap to edit</div>
+        </div>
+      </button>`;
+  } else {
+    btns += `
+      <button class="day-action-btn" onclick="dayActionAddSession('pm')">
+        <div class="day-action-icon" style="background:var(--volt-bg);">
+          <i class="ti ti-moon" style="color:var(--volt-dark);font-size:18px;"></i>
+        </div>
+        <div>
+          <div class="day-action-label">Add Evening (PM) session</div>
+          <div class="day-action-sub">No PM session yet</div>
+        </div>
+      </button>`;
+  }
+
+  btns += `
+    <button class="day-action-btn" onclick="dayActionCopy()">
+      <div class="day-action-icon" style="background:var(--blue-bg);">
+        <i class="ti ti-copy" style="color:var(--blue);font-size:18px;"></i>
+      </div>
+      <div>
+        <div class="day-action-label">Copy day to another date</div>
+        <div class="day-action-sub">Copies all sessions to another date</div>
+      </div>
+    </button>
+    <button class="day-action-btn" id="clear-btn" onclick="dayActionClear()">
+      <div class="day-action-icon" style="background:var(--danger-bg);">
+        <i class="ti ti-trash" style="color:var(--danger);font-size:18px;"></i>
+      </div>
+      <div>
+        <div class="day-action-label">Clear this day</div>
+        <div class="day-action-sub">Remove all sessions from this date</div>
+      </div>
+    </button>`;
+
+  document.getElementById('day-action-btns').innerHTML = btns;
   document.getElementById('day-action-overlay').classList.add('open');
   document.getElementById('day-action-sheet').classList.add('open');
 }
@@ -1220,26 +1430,28 @@ function openDayAction(dateStr) {
 function closeDayAction() {
   document.getElementById('day-action-overlay').classList.remove('open');
   document.getElementById('day-action-sheet').classList.remove('open');
-  // Reset clear button state
-  const btn = document.getElementById('clear-btn');
-  if (btn) {
-    btn.dataset.confirming = '';
-    btn.querySelector('.day-action-label').textContent = 'Clear this day';
-    btn.querySelector('.day-action-sub').textContent   = 'Remove all exercises from this date';
-  }
   actionDate = null;
 }
 
-function dayActionEdit() {
+function dayActionEditSession(session) {
   const date = actionDate;
   closeDayAction();
-  openDayEditor(date);
+  openDayEditor(date, session);
+}
+
+function dayActionAddSession(session) {
+  const date = actionDate;
+  closeDayAction();
+  openDayEditor(date, session);
 }
 
 function dayActionCopy() {
   copiedDate = actionDate;
-  const workout = program.days[copiedDate];
-  document.getElementById('paste-banner-name').textContent = workout.name || 'Workout';
+  const day  = program.days[copiedDate];
+  const parts = [];
+  if (day.am) parts.push(day.am.name || 'AM');
+  if (day.pm) parts.push(day.pm.name || 'PM');
+  document.getElementById('paste-banner-name').textContent = parts.join(' + ');
   document.getElementById('paste-banner').style.display = 'flex';
   pasteMode = true;
   closeDayAction();
@@ -1247,24 +1459,25 @@ function dayActionCopy() {
 }
 
 function dayActionClear() {
-  // Show confirm state directly in the sheet — avoid confirm() which is unreliable in PWAs
   const btn = document.getElementById('clear-btn');
-  if (btn.dataset.confirming === 'true') {
+  if (btn && btn.dataset.confirming === 'true') {
     delete program.days[actionDate];
     closeDayAction();
     renderCalendar();
     showToast('Day cleared');
   } else {
-    btn.dataset.confirming = 'true';
-    btn.querySelector('.day-action-label').textContent = 'Tap again to confirm';
-    btn.querySelector('.day-action-sub').textContent   = 'This will remove all exercises';
-    setTimeout(() => {
-      if (btn.dataset.confirming) {
-        btn.dataset.confirming = '';
-        btn.querySelector('.day-action-label').textContent = 'Clear this day';
-        btn.querySelector('.day-action-sub').textContent   = 'Remove all exercises from this date';
-      }
-    }, 3000);
+    if (btn) {
+      btn.dataset.confirming = 'true';
+      btn.querySelector('.day-action-label').textContent = 'Tap again to confirm';
+      btn.querySelector('.day-action-sub').textContent   = 'This will remove all sessions';
+      setTimeout(() => {
+        if (btn && btn.dataset.confirming) {
+          btn.dataset.confirming = '';
+          btn.querySelector('.day-action-label').textContent = 'Clear this day';
+          btn.querySelector('.day-action-sub').textContent   = 'Remove all sessions from this date';
+        }
+      }, 3000);
+    }
   }
 }
 
@@ -1274,12 +1487,10 @@ function dayActionClear() {
 function pasteWorkout(targetDate) {
   const source = program.days[copiedDate];
   if (!source) { cancelPaste(); return; }
-
-  // If target already has a workout, just overwrite — user chose to paste here
   program.days[targetDate] = JSON.parse(JSON.stringify(source));
   cancelPaste();
   renderCalendar();
-  showToast('Workout pasted to ' + formatDateShort(targetDate));
+  showToast('Day pasted to ' + formatDateShort(targetDate));
 }
 
 function cancelPaste() {
@@ -1292,11 +1503,34 @@ function cancelPaste() {
 // ══════════════════════════════════════════════════════════════════════
 // SCREEN 3 — DAY EDITOR
 // ══════════════════════════════════════════════════════════════════════
-function openDayEditor(dateStr) {
-  editingDate = dateStr;
+function openDayEditor(dateStr, session) {
+  editingDate    = dateStr;
+  editingSession = session; // 'am' | 'pm'
 
-  const day = program.days[dateStr];
-  document.getElementById('day-title-input').value = day ? (day.name || '') : '';
+  // Ensure the day and session objects exist
+  if (!program.days[dateStr]) {
+    program.days[dateStr] = { am: null, pm: null };
+  }
+  if (!program.days[dateStr][session]) {
+    program.days[dateStr][session] = { name: '', exercises: [] };
+  }
+
+  const sessionData = program.days[dateStr][session];
+  document.getElementById('day-title-input').value = sessionData.name || '';
+
+  // Session badge
+  const badge = document.getElementById('session-badge');
+  if (session === 'am') {
+    badge.textContent = '☀ AM';
+    badge.className   = 'bldr-session-badge am';
+  } else {
+    badge.textContent = '🌙 PM';
+    badge.className   = 'bldr-session-badge pm';
+  }
+
+  // Placeholder hint
+  document.getElementById('day-title-input').placeholder =
+    session === 'am' ? 'e.g. AM Cardio, AM Abs' : 'e.g. PM Chest, PM Legs';
 
   const d = new Date(dateStr + 'T00:00:00');
   document.getElementById('day-date-label').textContent =
@@ -1308,18 +1542,28 @@ function openDayEditor(dateStr) {
 }
 
 function saveDayAndBack() {
-  if (editingDate) {
+  if (editingDate && editingSession) {
     const nameVal = document.getElementById('day-title-input').value.trim();
-    if (!program.days[editingDate]) program.days[editingDate] = { name: '', exercises: [] };
+    const session = program.days[editingDate][editingSession];
 
-    // If no name and no exercises, remove the day entirely (treat as rest)
-    if (!nameVal && program.days[editingDate].exercises.length === 0) {
+    if (session) {
+      // If no name and no exercises, remove this session
+      if (!nameVal && session.exercises.length === 0) {
+        program.days[editingDate][editingSession] = null;
+      } else {
+        session.name = nameVal || (editingSession === 'am' ? 'AM Workout' : 'PM Workout');
+      }
+    }
+
+    // If both sessions are now null, remove the day entirely
+    const day = program.days[editingDate];
+    if (!day.am && !day.pm) {
       delete program.days[editingDate];
-    } else {
-      program.days[editingDate].name = nameVal || 'Workout';
     }
   }
-  editingDate = null;
+
+  editingDate    = null;
+  editingSession = null;
   showScreen('main');
   renderCalendar();
 }
@@ -1331,11 +1575,16 @@ function backToCalendar() {
 // ══════════════════════════════════════════════════════════════════════
 // EXERCISE LIST
 // ══════════════════════════════════════════════════════════════════════
-function renderExList() {
-  const day  = editingDate ? program.days[editingDate] : null;
-  const list = document.getElementById('ex-list');
+function currentSession() {
+  if (!editingDate || !editingSession) return null;
+  return program.days[editingDate] && program.days[editingDate][editingSession];
+}
 
-  if (!day || day.exercises.length === 0) {
+function renderExList() {
+  const session = currentSession();
+  const list    = document.getElementById('ex-list');
+
+  if (!session || session.exercises.length === 0) {
     list.innerHTML = `
       <div style="padding:32px 0 8px;text-align:center;">
         <div style="font-size:32px;opacity:0.25;margin-bottom:8px;">🏋️</div>
@@ -1345,7 +1594,7 @@ function renderExList() {
     return;
   }
 
-  list.innerHTML = day.exercises.map((ex, ei) => `
+  list.innerHTML = session.exercises.map((ex, ei) => `
     <div class="bldr-ex-card" id="ex-card-${ei}">
       <div class="bldr-ex-card-header">
         <span class="bldr-ex-drag" title="Drag to reorder">⠿</span>
@@ -1384,13 +1633,15 @@ function renderExList() {
 }
 
 function updateExParam(ei, key, val) {
-  const day = program.days[editingDate];
-  if (!day || !day.exercises[ei]) return;
-  day.exercises[ei][key] = parseInt(val) || 0;
+  const session = currentSession();
+  if (!session || !session.exercises[ei]) return;
+  session.exercises[ei][key] = parseInt(val) || 0;
 }
 
 function removeExercise(ei) {
-  program.days[editingDate].exercises.splice(ei, 1);
+  const session = currentSession();
+  if (!session) return;
+  session.exercises.splice(ei, 1);
   renderExList();
 }
 
@@ -1419,9 +1670,10 @@ function initDrag() {
     const cardH  = dragEl.offsetHeight + 10;
     const newIdx = Math.max(0, Math.min(cards.length - 1, startIdx + Math.round(dy / cardH)));
     if (newIdx !== curIdx) {
-      const exes  = program.days[editingDate].exercises;
-      const moved = exes.splice(curIdx, 1)[0];
-      exes.splice(newIdx, 0, moved);
+      const session = currentSession();
+      if (!session) return;
+      const moved = session.exercises.splice(curIdx, 1)[0];
+      session.exercises.splice(newIdx, 0, moved);
       curIdx = newIdx;
       renderExList();
       initDrag();
@@ -1495,9 +1747,9 @@ function closeLibrary() {
 }
 
 function renderLibrary() {
-  const q       = (document.getElementById('lib-search').value || '').toLowerCase().trim();
-  const day     = program.days[editingDate];
-  const addedIds = new Set((day?.exercises || []).map(e => e.id));
+  const q        = (document.getElementById('lib-search').value || '').toLowerCase().trim();
+  const session  = currentSession();
+  const addedIds = new Set((session?.exercises || []).map(e => e.id));
   const customs  = getCustomExercises();
   let exercises  = [...customs, ...(LAROFIT_EXERCISES || [])];
 
@@ -1530,24 +1782,20 @@ function renderLibrary() {
 }
 
 function addExercise(exId) {
-  const customs  = getCustomExercises();
-  const ex       = customs.find(e => e.id === exId) || (LAROFIT_EXERCISES || []).find(e => e.id === exId);
+  const customs = getCustomExercises();
+  const ex      = customs.find(e => e.id === exId) || (LAROFIT_EXERCISES || []).find(e => e.id === exId);
   if (!ex) return;
 
-  // Lazily create the day object only when first exercise is added
-  if (!program.days[editingDate]) {
-    program.days[editingDate] = { name: '', exercises: [] };
-  }
-  const day = program.days[editingDate];
-  if (!day) return;
+  const session = currentSession();
+  if (!session) return;
 
-  const existing = day.exercises.findIndex(e => e.id === exId);
+  const existing = session.exercises.findIndex(e => e.id === exId);
   if (existing >= 0) {
-    day.exercises.splice(existing, 1);
+    session.exercises.splice(existing, 1);
     renderLibrary(); renderExList(); return;
   }
 
-  day.exercises.push({ id: ex.id, name: ex.name, muscles: ex.muscles || [], sets: 3, reps: 10, restSec: 60 });
+  session.exercises.push({ id: ex.id, name: ex.name, muscles: ex.muscles || [], sets: 3, reps: 10, restSec: 60 });
   renderLibrary();
   renderExList();
   showToast(ex.name + ' added');
