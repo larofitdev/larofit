@@ -560,100 +560,28 @@ input[type="text"], input[type="url"], textarea { font-size: 16px !important; }
 
 <script>
 // ══════════════════════════════════════════════════════════
-// DATA DEFINITIONS
+// SVG CONSTANTS — must come first, MUSCLE_GROUPS depends on them
 // ══════════════════════════════════════════════════════════
-
-const MUSCLE_GROUPS = [
-  { id: 'abs',        name: 'Abs',         svg: svgAbs() },
-  { id: 'back',       name: 'Back',        svg: svgBack() },
-  { id: 'biceps',     name: 'Biceps',      svg: svgBiceps() },
-  { id: 'chest',      name: 'Chest',       svg: svgChest() },
-  { id: 'forearms',   name: 'Forearms',    svg: svgForearms() },
-  { id: 'glutes',     name: 'Glutes',      svg: svgGlutes() },
-  { id: 'shoulders',  name: 'Shoulders',   svg: svgShoulders() },
-  { id: 'triceps',    name: 'Triceps',     svg: svgTriceps() },
-  { id: 'upper_legs', name: 'Upper Legs',  svg: svgUpperLegs() },
-  { id: 'lower_legs', name: 'Lower Legs',  svg: svgLowerLegs() },
-  { id: 'cardio',     name: 'Cardio',      svg: svgCardio() },
-];
-
-const EQUIPMENT_OPTIONS = [
-  { id: 'bodyweight',    name: 'Bodyweight' },
-  { id: 'bands',         name: 'Bands' },
-  { id: 'barbell',       name: 'Barbell' },
-  { id: 'bench',         name: 'Bench' },
-  { id: 'cardio_machine',name: 'Cardio Machine' },
-  { id: 'dumbbells',     name: 'Dumbbells' },
-  { id: 'exercise_ball', name: 'Exercise Ball' },
-  { id: 'ez_bar',        name: 'EZ Bar' },
-  { id: 'kettlebells',   name: 'Kettlebells' },
-  { id: 'machine_cable', name: 'Machine / Cable' },
-];
-
-const RECORD_TYPES = [
-  { id: 'weight_reps',    name: 'Weight × Reps',    sub: 'Log weight and rep count per set' },
-  { id: 'reps',           name: 'Reps Only',         sub: 'Bodyweight — log reps only' },
-  { id: 'reps_duration',  name: 'Reps + Duration',   sub: 'Log both reps and time' },
-  { id: 'duration',       name: 'Duration',          sub: 'Timed sets — log time only' },
-  { id: 'cardio',         name: 'Cardio',            sub: 'Distance, speed, duration, kcal' },
-];
-
-// ══════════════════════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════════════════════
-
-let state = {
-  primaryMuscle: null,       // muscle id string
-  secondaryMuscles: [],      // array of muscle id strings (max 2)
-  equipment: null,
-  recordType: null,
-  mediaFile: null,
-  mediaDataUrl: null,
-};
-
-let activeSheet = null;      // 'primary' | 'secondary' | 'equipment' | 'recordtype'
-
-// ══════════════════════════════════════════════════════════
-// SVG MUSCLE ILLUSTRATIONS
-// Each SVG is a circular body silhouette with the relevant
-// muscle group highlighted in volt (#c6f135).
-// Inactive muscle paths use a muted grey tone.
-// ══════════════════════════════════════════════════════════
-
-function svgBase(highlightedPaths, viewBox = '0 0 100 100') {
-  // Full-body silhouette base paths (grey), overlaid with highlighted group
-  return `<svg viewBox="${viewBox}" xmlns="http://www.w3.org/2000/svg">
-    ${highlightedPaths}
-  </svg>`;
-}
-
-const M = '#b0b0b0';   // muted body color
-const H = '#c6f135';   // volt highlight
+const M = '#b0b0b0';
+const H = '#c6f135';
 
 function svgAbs() {
   return `<svg viewBox="0 0 100 110" xmlns="http://www.w3.org/2000/svg">
-    <!-- body silhouette -->
     <ellipse cx="50" cy="22" rx="13" ry="15" fill="${M}" opacity="0.4"/>
     <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.3"/>
-    <!-- torso outline -->
     <path d="M36 42 Q50 37 64 42 L67 75 Q50 82 33 75 Z" fill="${M}" opacity="0.25"/>
-    <!-- shoulders -->
     <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
     <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
-    <!-- arms -->
     <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
-    <!-- legs -->
     <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- ABS HIGHLIGHT — 6-pack grid -->
     <rect x="42" y="48" width="7" height="7" rx="1.5" fill="${H}"/>
     <rect x="51" y="48" width="7" height="7" rx="1.5" fill="${H}"/>
     <rect x="42" y="57" width="7" height="7" rx="1.5" fill="${H}"/>
     <rect x="51" y="57" width="7" height="7" rx="1.5" fill="${H}"/>
     <rect x="42" y="66" width="7" height="7" rx="1.5" fill="${H}"/>
     <rect x="51" y="66" width="7" height="7" rx="1.5" fill="${H}"/>
-    <!-- midline -->
     <line x1="50" y1="47" x2="50" y2="74" stroke="${M}" stroke-width="0.8" opacity="0.4"/>
   </svg>`;
 }
@@ -668,10 +596,8 @@ function svgBack() {
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- BACK HIGHLIGHT — lats + traps -->
     <path d="M36 40 Q50 35 64 40 L66 56 Q58 62 50 63 Q42 62 34 56 Z" fill="${H}" opacity="0.9"/>
     <path d="M36 58 Q42 64 50 65 Q58 64 64 58 L66 72 Q58 78 50 79 Q42 78 34 72 Z" fill="${H}" opacity="0.7"/>
-    <!-- spine -->
     <line x1="50" y1="38" x2="50" y2="78" stroke="${M}" stroke-width="1.5" opacity="0.5"/>
   </svg>`;
 }
@@ -682,12 +608,10 @@ function svgBiceps() {
     <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
     <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.4"/>
     <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.4"/>
-    <!-- arms grey -->
     <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- BICEP HIGHLIGHT — front upper arms -->
     <path d="M22 44 Q18 52 19 60 Q21 56 25 50 Q27 47 26 44 Z" fill="${H}"/>
     <path d="M78 44 Q82 52 81 60 Q79 56 75 50 Q73 47 74 44 Z" fill="${H}"/>
   </svg>`;
@@ -703,7 +627,6 @@ function svgChest() {
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- CHEST HIGHLIGHT — pec major -->
     <path d="M36 40 Q43 38 50 39 Q50 48 44 52 Q38 50 34 46 Z" fill="${H}" opacity="0.9"/>
     <path d="M64 40 Q57 38 50 39 Q50 48 56 52 Q62 50 66 46 Z" fill="${H}" opacity="0.9"/>
   </svg>`;
@@ -715,12 +638,10 @@ function svgForearms() {
     <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
     <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
     <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
-    <!-- upper arms grey -->
     <path d="M20 44 Q18 54 19 60" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M80 44 Q82 54 81 60" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- FOREARM HIGHLIGHT — lower arms -->
     <path d="M19 60 Q17 68 19 75" stroke="${H}" stroke-width="7" stroke-linecap="round" fill="none"/>
     <path d="M81 60 Q83 68 81 75" stroke="${H}" stroke-width="7" stroke-linecap="round" fill="none"/>
   </svg>`;
@@ -736,7 +657,6 @@ function svgGlutes() {
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- GLUTE HIGHLIGHT — two rounded lobes -->
     <ellipse cx="42" cy="78" rx="10" ry="8" fill="${H}" opacity="0.9"/>
     <ellipse cx="58" cy="78" rx="10" ry="8" fill="${H}" opacity="0.9"/>
   </svg>`;
@@ -750,7 +670,6 @@ function svgShoulders() {
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- SHOULDER HIGHLIGHT — deltoids -->
     <ellipse cx="27" cy="43" rx="10" ry="7" fill="${H}" opacity="0.9"/>
     <ellipse cx="73" cy="43" rx="10" ry="7" fill="${H}" opacity="0.9"/>
   </svg>`;
@@ -762,12 +681,10 @@ function svgTriceps() {
     <path d="M32 38 Q50 32 68 38 L72 80 Q50 88 28 80 Z" fill="${M}" opacity="0.25"/>
     <ellipse cx="28" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
     <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
-    <!-- arms grey front -->
     <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M37 80 Q35 96 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 96 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- TRICEP HIGHLIGHT — back upper arms (slightly offset to show rear) -->
     <path d="M24 44 Q21 50 22 60 Q20 56 18 50 Q18 47 20 44 Z" fill="${H}"/>
     <path d="M76 44 Q79 50 78 60 Q80 56 82 50 Q82 47 80 44 Z" fill="${H}"/>
   </svg>`;
@@ -781,10 +698,8 @@ function svgUpperLegs() {
     <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
     <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
-    <!-- lower legs grey -->
     <path d="M37 92 Q35 102 34 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 92 Q65 102 66 108" stroke="${M}" stroke-width="9" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- UPPER LEG HIGHLIGHT — quads + hamstrings -->
     <path d="M37 80 Q35 88 37 96" stroke="${H}" stroke-width="10" stroke-linecap="round" fill="none"/>
     <path d="M63 80 Q65 88 63 96" stroke="${H}" stroke-width="10" stroke-linecap="round" fill="none"/>
   </svg>`;
@@ -798,10 +713,8 @@ function svgLowerLegs() {
     <ellipse cx="72" cy="44" rx="8" ry="5" fill="${M}" opacity="0.35"/>
     <path d="M20 44 Q17 58 19 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
     <path d="M80 44 Q83 58 81 68" stroke="${M}" stroke-width="7" stroke-linecap="round" fill="none" opacity="0.35"/>
-    <!-- upper legs grey -->
     <path d="M37 80 Q35 92 37 96" stroke="${M}" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.3"/>
     <path d="M63 80 Q65 92 63 96" stroke="${M}" stroke-width="10" stroke-linecap="round" fill="none" opacity="0.3"/>
-    <!-- LOWER LEG HIGHLIGHT — calves + shins -->
     <path d="M37 96 Q35 102 34 108" stroke="${H}" stroke-width="9" stroke-linecap="round" fill="none"/>
     <path d="M63 96 Q65 102 66 108" stroke="${H}" stroke-width="9" stroke-linecap="round" fill="none"/>
   </svg>`;
@@ -809,22 +722,71 @@ function svgLowerLegs() {
 
 function svgCardio() {
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <!-- chest/ribcage silhouette -->
     <ellipse cx="50" cy="50" rx="32" ry="36" fill="${M}" opacity="0.2"/>
     <ellipse cx="50" cy="50" rx="28" ry="32" fill="${M}" opacity="0.15"/>
-    <!-- LUNGS HIGHLIGHT -->
     <path d="M26 38 Q22 46 23 58 Q26 66 32 68 Q38 66 38 58 L38 40 Q34 36 26 38 Z" fill="${H}" opacity="0.85"/>
     <path d="M74 38 Q78 46 77 58 Q74 66 68 68 Q62 66 62 58 L62 40 Q66 36 74 38 Z" fill="${H}" opacity="0.85"/>
-    <!-- bronchi -->
     <path d="M50 28 L50 40" stroke="${H}" stroke-width="3" stroke-linecap="round"/>
     <path d="M50 40 Q44 42 38 42" stroke="${H}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
     <path d="M50 40 Q56 42 62 42" stroke="${H}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-    <!-- trachea -->
     <path d="M50 20 L50 28" stroke="${M}" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
-    <!-- heartbeat line -->
     <polyline points="18,72 30,72 36,62 42,82 48,68 54,68 60,72 82,72" stroke="${H}" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
   </svg>`;
 }
+
+// ══════════════════════════════════════════════════════════
+// DATA DEFINITIONS — after SVG functions so they can be called
+// ══════════════════════════════════════════════════════════
+
+const MUSCLE_GROUPS = [
+  { id: 'abs',        name: 'Abs',        svg: svgAbs() },
+  { id: 'back',       name: 'Back',       svg: svgBack() },
+  { id: 'biceps',     name: 'Biceps',     svg: svgBiceps() },
+  { id: 'chest',      name: 'Chest',      svg: svgChest() },
+  { id: 'forearms',   name: 'Forearms',   svg: svgForearms() },
+  { id: 'glutes',     name: 'Glutes',     svg: svgGlutes() },
+  { id: 'shoulders',  name: 'Shoulders',  svg: svgShoulders() },
+  { id: 'triceps',    name: 'Triceps',    svg: svgTriceps() },
+  { id: 'upper_legs', name: 'Upper Legs', svg: svgUpperLegs() },
+  { id: 'lower_legs', name: 'Lower Legs', svg: svgLowerLegs() },
+  { id: 'cardio',     name: 'Cardio',     svg: svgCardio() },
+];
+
+const EQUIPMENT_OPTIONS = [
+  { id: 'bodyweight',     name: 'Bodyweight' },
+  { id: 'bands',          name: 'Bands' },
+  { id: 'barbell',        name: 'Barbell' },
+  { id: 'bench',          name: 'Bench' },
+  { id: 'cardio_machine', name: 'Cardio Machine' },
+  { id: 'dumbbells',      name: 'Dumbbells' },
+  { id: 'exercise_ball',  name: 'Exercise Ball' },
+  { id: 'ez_bar',         name: 'EZ Bar' },
+  { id: 'kettlebells',    name: 'Kettlebells' },
+  { id: 'machine_cable',  name: 'Machine / Cable' },
+];
+
+const RECORD_TYPES = [
+  { id: 'weight_reps',   name: 'Weight × Reps',  sub: 'Log weight and rep count per set' },
+  { id: 'reps',          name: 'Reps Only',       sub: 'Bodyweight — log reps only' },
+  { id: 'reps_duration', name: 'Reps + Duration', sub: 'Log both reps and time' },
+  { id: 'duration',      name: 'Duration',        sub: 'Timed sets — log time only' },
+  { id: 'cardio',        name: 'Cardio',          sub: 'Distance, speed, duration, kcal' },
+];
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+
+let state = {
+  primaryMuscle:    null,
+  secondaryMuscles: [],
+  equipment:        null,
+  recordType:       null,
+  mediaFile:        null,
+  mediaDataUrl:     null,
+};
+
+let activeSheet = null;
 
 // ══════════════════════════════════════════════════════════
 // SHEET MANAGEMENT
@@ -832,9 +794,7 @@ function svgCardio() {
 
 function openSheet(type) {
   activeSheet = type;
-  const overlay = document.getElementById('ce-overlay');
-  overlay.classList.add('open');
-
+  document.getElementById('ce-overlay').classList.add('open');
   if (type === 'primary' || type === 'secondary') {
     buildMuscleGrid(type);
     document.getElementById('sheet-muscle-title').textContent =
@@ -868,13 +828,9 @@ function buildMuscleGrid(type) {
     const isSelected = type === 'primary'
       ? state.primaryMuscle === m.id
       : state.secondaryMuscles.includes(m.id);
-
     const tile = document.createElement('div');
     tile.className = 'muscle-tile' + (isSelected ? ' selected' : '');
-    tile.innerHTML = `
-      <div class="muscle-circle">${m.svg}</div>
-      <div class="muscle-name">${m.name}</div>
-    `;
+    tile.innerHTML = `<div class="muscle-circle">${m.svg}</div><div class="muscle-name">${m.name}</div>`;
     tile.addEventListener('click', () => selectMuscle(type, m.id));
     grid.appendChild(tile);
   });
@@ -883,29 +839,20 @@ function buildMuscleGrid(type) {
 function selectMuscle(type, id) {
   if (type === 'primary') {
     state.primaryMuscle = state.primaryMuscle === id ? null : id;
-    updateRowValue('val-primary',
-      state.primaryMuscle
-        ? MUSCLE_GROUPS.find(m => m.id === state.primaryMuscle)?.name
-        : null
-    );
+    const m = MUSCLE_GROUPS.find(m => m.id === state.primaryMuscle);
+    updateRowValue('val-primary', m ? m.name : null);
     buildMuscleGrid('primary');
-    // auto-close after selection
-    setTimeout(closeSheet, 180);
+    if (state.primaryMuscle) setTimeout(closeSheet, 180);
   } else {
     const idx = state.secondaryMuscles.indexOf(id);
     if (idx > -1) {
       state.secondaryMuscles.splice(idx, 1);
     } else {
-      if (state.secondaryMuscles.length >= 2) {
-        showToast('Maximum 2 secondary muscles');
-        return;
-      }
+      if (state.secondaryMuscles.length >= 2) { showToast('Maximum 2 secondary muscles'); return; }
       state.secondaryMuscles.push(id);
     }
     const names = state.secondaryMuscles
-      .map(sid => MUSCLE_GROUPS.find(m => m.id === sid)?.name)
-      .filter(Boolean)
-      .join(', ');
+      .map(sid => MUSCLE_GROUPS.find(m => m.id === sid)?.name).filter(Boolean).join(', ');
     updateRowValue('val-secondary', names || null);
     buildMuscleGrid('secondary');
   }
@@ -922,10 +869,7 @@ function buildEquipmentList() {
     const isSelected = state.equipment === eq.id;
     const row = document.createElement('div');
     row.className = 'ce-option-row';
-    row.innerHTML = `
-      <div class="ce-option-label">${eq.name}</div>
-      <div class="ce-option-check ${isSelected ? 'checked' : ''}"></div>
-    `;
+    row.innerHTML = `<div class="ce-option-label">${eq.name}</div><div class="ce-option-check ${isSelected ? 'checked' : ''}"></div>`;
     row.addEventListener('click', () => {
       state.equipment = isSelected ? null : eq.id;
       updateRowValue('val-equipment', state.equipment ? eq.name : null);
@@ -947,13 +891,7 @@ function buildRecordTypeList() {
     const isSelected = state.recordType === rt.id;
     const row = document.createElement('div');
     row.className = 'ce-option-row';
-    row.innerHTML = `
-      <div>
-        <div class="ce-option-label">${rt.name}</div>
-        <div class="ce-option-sub">${rt.sub}</div>
-      </div>
-      <div class="ce-option-check ${isSelected ? 'checked' : ''}"></div>
-    `;
+    row.innerHTML = `<div><div class="ce-option-label">${rt.name}</div><div class="ce-option-sub">${rt.sub}</div></div><div class="ce-option-check ${isSelected ? 'checked' : ''}"></div>`;
     row.addEventListener('click', () => {
       state.recordType = isSelected ? null : rt.id;
       updateRowValue('val-recordtype', state.recordType ? rt.name : null);
@@ -965,18 +903,13 @@ function buildRecordTypeList() {
 }
 
 // ══════════════════════════════════════════════════════════
-// ROW VALUE DISPLAY HELPER
+// ROW VALUE HELPER
 // ══════════════════════════════════════════════════════════
 
 function updateRowValue(id, value) {
   const el = document.getElementById(id);
-  if (value) {
-    el.textContent = value;
-    el.classList.add('selected');
-  } else {
-    el.textContent = 'Select';
-    el.classList.remove('selected');
-  }
+  if (value) { el.textContent = value; el.classList.add('selected'); }
+  else { el.textContent = 'Select'; el.classList.remove('selected'); }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -998,9 +931,6 @@ document.getElementById('ce-media-input').addEventListener('change', function() 
     const isVideo = file.type.startsWith('video/');
     const imgEl = document.getElementById('ce-media-img');
     const vidEl = document.getElementById('ce-media-vid');
-    const placeholder = document.getElementById('ce-media-placeholder');
-    const editBtn = document.getElementById('ce-media-edit-btn');
-
     if (isVideo) {
       vidEl.src = state.mediaDataUrl;
       vidEl.classList.add('show');
@@ -1011,8 +941,8 @@ document.getElementById('ce-media-input').addEventListener('change', function() 
       imgEl.classList.add('show');
       vidEl.classList.remove('show');
     }
-    placeholder.style.display = 'none';
-    editBtn.classList.add('show');
+    document.getElementById('ce-media-placeholder').style.display = 'none';
+    document.getElementById('ce-media-edit-btn').classList.add('show');
   };
   reader.readAsDataURL(file);
 });
@@ -1023,31 +953,44 @@ document.getElementById('ce-media-input').addEventListener('change', function() 
 
 function saveExercise() {
   const name = document.getElementById('ce-name').value.trim();
-  if (!name) { showToast('Exercise name is required'); return; }
+  if (!name)                { showToast('Exercise name is required'); return; }
   if (!state.primaryMuscle) { showToast('Select a main muscle group'); return; }
-  if (!state.equipment) { showToast('Select equipment'); return; }
-  if (!state.recordType) { showToast('Select a record type'); return; }
+  if (!state.equipment)     { showToast('Select equipment'); return; }
+  if (!state.recordType)    { showToast('Select a record type'); return; }
 
-  const existing = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
-  const id = 'cx-' + Date.now();
-
-  const exercise = {
-    id,
-    name,
-    primaryMuscle: state.primaryMuscle,
-    secondaryMuscles: [...state.secondaryMuscles],
-    equipment: state.equipment,
-    recordType: state.recordType,
-    mediaDataUrl: state.mediaDataUrl || null,
-    exerciseUrl: document.getElementById('ce-url').value.trim() || null,
-    instructions: document.getElementById('ce-instructions').value.trim() || null,
-    custom: true,
-    createdAt: new Date().toISOString(),
-  };
-
-  existing.push(exercise);
-  localStorage.setItem('lf_custom_exercises', JSON.stringify(existing));
-  showToast('Exercise saved!');
+  if (window._editingId) {
+    const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+    const idx = all.findIndex(e => e.id === window._editingId);
+    if (idx === -1) { showToast('Exercise not found'); return; }
+    all[idx] = { ...all[idx], name,
+      primaryMuscle: state.primaryMuscle,
+      secondaryMuscles: [...state.secondaryMuscles],
+      equipment: state.equipment,
+      recordType: state.recordType,
+      mediaDataUrl: state.mediaDataUrl || null,
+      exerciseUrl: document.getElementById('ce-url').value.trim() || null,
+      instructions: document.getElementById('ce-instructions').value.trim() || null,
+      updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
+    showToast('Exercise updated!');
+  } else {
+    const existing = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+    existing.push({
+      id: 'cx-' + Date.now(), name,
+      primaryMuscle: state.primaryMuscle,
+      secondaryMuscles: [...state.secondaryMuscles],
+      equipment: state.equipment,
+      recordType: state.recordType,
+      mediaDataUrl: state.mediaDataUrl || null,
+      exerciseUrl: document.getElementById('ce-url').value.trim() || null,
+      instructions: document.getElementById('ce-instructions').value.trim() || null,
+      custom: true,
+      createdAt: new Date().toISOString(),
+    });
+    localStorage.setItem('lf_custom_exercises', JSON.stringify(existing));
+    showToast('Exercise saved!');
+  }
   setTimeout(() => { window.location.href = 'programs.html'; }, 700);
 }
 
@@ -1074,36 +1017,31 @@ function showToast(msg) {
 }
 
 // ══════════════════════════════════════════════════════════
-// EDIT MODE — load existing exercise if ?id= param present
+// EDIT MODE
 // ══════════════════════════════════════════════════════════
 
 function loadExistingExercise() {
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
   if (!id) return;
-
   const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
   const ex = all.find(e => e.id === id);
   if (!ex) return;
-
+  window._editingId = id;
   document.querySelector('.ce-topbar-title').textContent = 'EDIT EXERCISE';
   document.getElementById('ce-name').value = ex.name || '';
-
-  state.primaryMuscle = ex.primaryMuscle || null;
+  state.primaryMuscle    = ex.primaryMuscle || null;
   state.secondaryMuscles = ex.secondaryMuscles || [];
-  state.equipment = ex.equipment || null;
-  state.recordType = ex.recordType || null;
-  state.mediaDataUrl = ex.mediaDataUrl || null;
-
+  state.equipment        = ex.equipment || null;
+  state.recordType       = ex.recordType || null;
+  state.mediaDataUrl     = ex.mediaDataUrl || null;
   if (state.primaryMuscle) {
     const m = MUSCLE_GROUPS.find(m => m.id === state.primaryMuscle);
     if (m) updateRowValue('val-primary', m.name);
   }
   if (state.secondaryMuscles.length) {
-    const names = state.secondaryMuscles
-      .map(sid => MUSCLE_GROUPS.find(m => m.id === sid)?.name)
-      .filter(Boolean).join(', ');
-    updateRowValue('val-secondary', names);
+    updateRowValue('val-secondary',
+      state.secondaryMuscles.map(sid => MUSCLE_GROUPS.find(m => m.id === sid)?.name).filter(Boolean).join(', '));
   }
   if (state.equipment) {
     const eq = EQUIPMENT_OPTIONS.find(e => e.id === state.equipment);
@@ -1122,44 +1060,9 @@ function loadExistingExercise() {
     document.getElementById('ce-media-placeholder').style.display = 'none';
     document.getElementById('ce-media-edit-btn').classList.add('show');
   }
-  if (ex.exerciseUrl) document.getElementById('ce-url').value = ex.exerciseUrl;
-  if (ex.instructions) document.getElementById('ce-instructions').value = ex.instructions;
-
-  // Override save to update instead of insert
-  window._editingId = id;
+  if (ex.exerciseUrl)   document.getElementById('ce-url').value = ex.exerciseUrl;
+  if (ex.instructions)  document.getElementById('ce-instructions').value = ex.instructions;
 }
-
-// Override save for edit mode
-const _origSave = saveExercise;
-window.saveExercise = function() {
-  if (!window._editingId) { _origSave(); return; }
-
-  const name = document.getElementById('ce-name').value.trim();
-  if (!name) { showToast('Exercise name is required'); return; }
-  if (!state.primaryMuscle) { showToast('Select a main muscle group'); return; }
-  if (!state.equipment) { showToast('Select equipment'); return; }
-  if (!state.recordType) { showToast('Select a record type'); return; }
-
-  const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
-  const idx = all.findIndex(e => e.id === window._editingId);
-  if (idx === -1) { showToast('Exercise not found'); return; }
-
-  all[idx] = {
-    ...all[idx],
-    name,
-    primaryMuscle: state.primaryMuscle,
-    secondaryMuscles: [...state.secondaryMuscles],
-    equipment: state.equipment,
-    recordType: state.recordType,
-    mediaDataUrl: state.mediaDataUrl || null,
-    exerciseUrl: document.getElementById('ce-url').value.trim() || null,
-    instructions: document.getElementById('ce-instructions').value.trim() || null,
-    updatedAt: new Date().toISOString(),
-  };
-  localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
-  showToast('Exercise updated!');
-  setTimeout(() => { window.location.href = 'programs.html'; }, 700);
-};
 
 // ══════════════════════════════════════════════════════════
 // INIT
