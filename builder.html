@@ -1118,6 +1118,9 @@ async function init() {
     program = makeBlankProgram();
   }
 
+  // One-time migration of any localStorage exercises to Supabase
+  await LF.db.migrateLocalCustomExercises();
+
   // Load custom exercises from Supabase into cache
   _customsCache = await LF.db.getCustomExercises();
 

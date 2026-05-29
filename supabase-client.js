@@ -280,6 +280,42 @@ window.LF = {
 
     // ── CUSTOM EXERCISES ─────────────────────────────────────
 
+    // One-time migration: push any old localStorage exercises to Supabase
+    async migrateLocalCustomExercises() {
+      const LEGACY_KEY = 'lf_custom_exercises';
+      const MIGRATED_KEY = 'lf_custom_exercises_migrated';
+      if (localStorage.getItem(MIGRATED_KEY)) return; // already done
+      try {
+        const raw = localStorage.getItem(LEGACY_KEY);
+        if (!raw) { localStorage.setItem(MIGRATED_KEY, '1'); return; }
+        const old = JSON.parse(raw);
+        if (!old || !old.length) { localStorage.setItem(MIGRATED_KEY, '1'); return; }
+
+        // Normalise old field names to new shape
+        const normalised = old.map(ex => ({
+          id:               ex.id               || ('cx-' + Date.now() + Math.random()),
+          name:             ex.name             || 'Unnamed',
+          primaryMuscle:    ex.primaryMuscle    || ex.category || 'abs',
+          secondaryMuscles: ex.secondaryMuscles || ex.muscles  || [],
+          equipment:        ex.equipment        || ex.eq       || 'bodyweight',
+          recordType:       ex.recordType       || 'weight_reps',
+          instructions:     ex.instructions     || ex.notes    || null,
+          exerciseUrl:      ex.exerciseUrl       || ex.video   || null,
+          custom:           true,
+        }));
+
+        // Upload each one — fire sequentially to avoid rate limits
+        for (const ex of normalised) {
+          await LF.db.saveCustomExercise(ex);
+        }
+
+        localStorage.setItem(MIGRATED_KEY, '1');
+        console.log(`Migrated ${normalised.length} custom exercise(s) to Supabase.`);
+      } catch (e) {
+        console.warn('Custom exercise migration failed:', e);
+      }
+    },
+
     // Synchronous read of the local cache (populated by getCustomExercises)
     _customsLocalCache() {
       return LS.get('custom_exercises', []);
