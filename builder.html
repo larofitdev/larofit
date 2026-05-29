@@ -1073,7 +1073,7 @@ let copiedDate       = null;
 let libMuscle         = 'all';
 let libEq             = 'all';
 let cxSelectedMuscles = [];
-let _customsCache     = LF.db._customsLocalCache();  // seeded from localStorage, updated by Supabase
+let _customsCache     = [];  // seeded from localStorage in init(), updated by Supabase in background
 
 let calYear  = 0;
 let calMonth = 0;
@@ -1117,6 +1117,9 @@ async function init() {
   } else {
     program = makeBlankProgram();
   }
+
+  // Seed cache immediately from localStorage so library works before Supabase responds
+  _customsCache = LF.db._customsLocalCache();
 
   buildLibraryFilters();
   initCalendarView();
