@@ -987,10 +987,14 @@ function saveExercise() {
   if (idx >= 0) all[idx] = exData; else all.unshift(exData);
   localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
 
-  // Attempt Supabase sync in background — never blocks navigation
-  try { LF.db.saveCustomExercise(exData).catch(e => console.error('[LaroFit] save failed:', e)); } catch(e) { console.error('[LaroFit] save exception:', e); }
-
-  window.location.href = getReturnUrl();
+  // Save to Supabase then navigate — race with 4s timeout so it never hangs
+  const supabaseSave = (typeof LF !== 'undefined' && LF.db)
+    ? LF.db.saveCustomExercise(exData).catch(e => console.error('[LaroFit] save failed:', e))
+    : Promise.resolve();
+  const timeout = new Promise(r => setTimeout(r, 4000));
+  Promise.race([supabaseSave, timeout]).finally(() => {
+    window.location.href = getReturnUrl();
+  });
 }
 
 function getReturnUrl() {
