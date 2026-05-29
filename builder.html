@@ -1119,7 +1119,13 @@ function init() {
   }
 
   // Seed cache immediately from localStorage so library works before Supabase responds
-  try { _customsCache = LF.db._customsLocalCache(); } catch(e) { _customsCache = []; }
+  try {
+    _customsCache = LF.db._customsLocalCache();
+    console.log('[LaroFit] customs from localStorage:', _customsCache.length, _customsCache.map(e=>e.name));
+  } catch(e) {
+    console.error('[LaroFit] _customsLocalCache error:', e);
+    _customsCache = [];
+  }
 
   buildLibraryFilters();
   initCalendarView();
@@ -1132,8 +1138,11 @@ function init() {
   // Sync custom exercises in the background — don't block the UI
   LF.db.migrateLocalCustomExercises()
     .then(() => LF.db.getCustomExercises())
-    .then(customs => { _customsCache = customs; })
-    .catch(() => {});
+    .then(customs => {
+      console.log('[LaroFit] customs after Supabase sync:', customs.length, customs.map(e=>e.name));
+      _customsCache = customs;
+    })
+    .catch(e => console.error('[LaroFit] sync error:', e));
 }
 
 function onSetupChange() {

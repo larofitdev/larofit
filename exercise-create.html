@@ -986,6 +986,7 @@ function saveExercise() {
   const idx = all.findIndex(e => e.id === exData.id);
   if (idx >= 0) all[idx] = exData; else all.unshift(exData);
   localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
+  console.log('[LaroFit] saved to localStorage:', all.length, 'exercises. Key=lf_custom_exercises');
 
   // Attempt Supabase sync in background — never blocks navigation
   try { LF.db.saveCustomExercise(exData).catch(() => {}); } catch(e) {}
