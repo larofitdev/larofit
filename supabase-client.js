@@ -377,9 +377,7 @@ window.LF = {
         const sb   = await lfReady();
         const user = await LF.auth.user();
         if (!user) return { error: 'Not authenticated' };
-        const { data, error } = await sb
-          .from('custom_exercises')
-          .upsert({
+        const row = {
             id:                ex.id,
             user_id:           user.id,
             name:              ex.name,
@@ -390,8 +388,13 @@ window.LF = {
             instructions:      ex.instructions  || null,
             exercise_url:      ex.exerciseUrl   || null,
             updated_at:        new Date().toISOString(),
-          }, { onConflict: 'id,user_id' })
+          };
+        const { data, error } = await sb
+          .from('custom_exercises')
+          .upsert(row)
           .select().single();
+        if (error) console.error('[LaroFit] saveCustomExercise error:', error.message, error);
+        else console.log('[LaroFit] saveCustomExercise OK:', ex.name);
         return { data, error };
       } catch (e) { return { error: e.message }; }
     },
