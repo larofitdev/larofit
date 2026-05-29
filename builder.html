@@ -1798,6 +1798,11 @@ function openLibrary() {
   document.getElementById('lib-search').value = '';
   renderLibrary();
   setTimeout(() => document.getElementById('lib-search').focus(), 350);
+  // Always fetch fresh customs from Supabase when library opens
+  LF.db.getCustomExercises().then(customs => {
+    _customsCache = customs;
+    renderLibrary();
+  }).catch(() => {});
 }
 
 function closeLibrary() {
