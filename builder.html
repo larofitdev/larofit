@@ -1118,12 +1118,6 @@ async function init() {
     program = makeBlankProgram();
   }
 
-  // One-time migration of any localStorage exercises to Supabase
-  await LF.db.migrateLocalCustomExercises();
-
-  // Load custom exercises from Supabase into cache
-  _customsCache = await LF.db.getCustomExercises();
-
   buildLibraryFilters();
   initCalendarView();
 
@@ -1131,6 +1125,12 @@ async function init() {
   if (new URLSearchParams(location.search).get('openLibrary') === '1') {
     setTimeout(openLibrary, 400);
   }
+
+  // Sync custom exercises in the background — don't block the UI
+  LF.db.migrateLocalCustomExercises()
+    .then(() => LF.db.getCustomExercises())
+    .then(customs => { _customsCache = customs; })
+    .catch(() => {});
 }
 
 function onSetupChange() {

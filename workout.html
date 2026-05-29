@@ -2298,12 +2298,13 @@ function speakText(text) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-minus').onclick = () => adjustRest(-15);
   document.getElementById('btn-plus').onclick  = () => adjustRest(15);
   document.getElementById('btn-skip').onclick  = () => skipRest();
-  await LF.db.getCustomExercises(); // prime the cache
   init();
+  // Prime custom exercises cache in background
+  LF.db.getCustomExercises().catch(() => {});
 });
 </script>
 
