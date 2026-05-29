@@ -310,7 +310,7 @@ window.LF = {
         }
 
         localStorage.setItem(MIGRATED_KEY, '1');
-        console.log(`Migrated ${normalised.length} custom exercise(s) to Supabase.`);
+        console.log(`[LaroFit] Migrated ${normalised.length} custom exercise(s) to Supabase.`);
       } catch (e) {
         console.warn('Custom exercise migration failed:', e);
       }
@@ -352,8 +352,13 @@ window.LF = {
           exerciseUrl:      row.exercise_url  || null,
           custom:           true,
         }));
-        LS.set('custom_exercises', exercises);
-        return exercises;
+        // Only overwrite local cache if Supabase actually returned exercises.
+        // Never let an empty Supabase result erase exercises stored locally.
+        if (exercises.length > 0) {
+          LS.set('custom_exercises', exercises);
+          return exercises;
+        }
+        return LS.get('custom_exercises', []);
       } catch { return LS.get('custom_exercises', []); }
     },
 
