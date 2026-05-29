@@ -1793,7 +1793,7 @@ function renderLibrary() {
     : exercises.map(ex => {
         const added = addedIds.has(ex.id);
         const meta  = [ex.primaryMuscle, ...(ex.secondaryMuscles||[])]
-          .slice(0,2).map(m => m.replace('_',' ')).join(' · ');
+          .filter(Boolean).slice(0,2).map(m => m.replace('_',' ')).join(' · ');
         return `
           <div class="lib-ex-row${added?' already-added':''}" onclick="addExercise('${ex.id}')">
             <div class="lib-ex-icon">${EQ_ICONS[ex.equipment] || '🏋️'}</div>
