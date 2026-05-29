@@ -1095,7 +1095,7 @@ function goBack() {
   window.location.href = 'programs.html';
 }
 
-async function init() {
+function init() {
   document.getElementById('prog-start').value = new Date().toISOString().slice(0,10);
 
   const params = new URLSearchParams(location.search);
@@ -1119,7 +1119,7 @@ async function init() {
   }
 
   // Seed cache immediately from localStorage so library works before Supabase responds
-  _customsCache = LF.db._customsLocalCache();
+  try { _customsCache = LF.db._customsLocalCache(); } catch(e) { _customsCache = []; }
 
   buildLibraryFilters();
   initCalendarView();
