@@ -1593,6 +1593,50 @@ function currentSession() {
   return program.days[editingDate] && program.days[editingDate][editingSession];
 }
 
+function buildExParams(ex, ei) {
+  const rt = ex.recordType || 'weight_reps';
+  const p = (label, key, unit, min, max, step='1', inputType='number') => `
+    <div class="bldr-param">
+      <div class="bldr-param-label">${label}</div>
+      <input class="bldr-param-input" type="${inputType}"
+        value="${ex[key] ?? ''}" min="${min}" max="${max}" step="${step}"
+        onchange="updateExParam(${ei},'${key}',this.value)">
+      <div class="bldr-param-unit">${unit}</div>
+    </div>`;
+
+  if (rt === 'weight_reps') return `
+    ${p('Sets',   'sets',        'sets', 1, 20)}
+    ${p('Weight', 'weight',      'kg',   0, 999, '0.5')}
+    ${p('Reps',   'reps',        'reps', 1, 100)}
+    ${p('Rest',   'restSec',     'sec',  0, 600, '15')}`;
+
+  if (rt === 'reps') return `
+    ${p('Sets',   'sets',        'sets', 1, 20)}
+    ${p('Reps',   'reps',        'reps', 1, 100)}
+    ${p('Rest',   'restSec',     'sec',  0, 600, '15')}`;
+
+  if (rt === 'duration') return `
+    ${p('Sets',   'sets',        'sets', 1, 20)}
+    ${p('Duration','durationSec','sec',  5, 3600, '5')}
+    ${p('Rest',   'restSec',     'sec',  0, 600,  '15')}`;
+
+  if (rt === 'cardio') return `
+    ${p('Duration','durationMin','min',  1, 300)}
+    ${p('Distance','distance',   'km',   0, 100,  '0.1')}`;
+
+  if (rt === 'reps_duration') return `
+    ${p('Sets',     'sets',        'sets', 1, 20)}
+    ${p('Reps',     'reps',        'reps', 1, 100)}
+    ${p('Duration', 'durationSec', 'sec',  5, 3600, '5')}
+    ${p('Rest',     'restSec',     'sec',  0, 600,  '15')}`;
+
+  // fallback
+  return `
+    ${p('Sets', 'sets',    'sets', 1, 20)}
+    ${p('Reps', 'reps',    'reps', 1, 100)}
+    ${p('Rest', 'restSec', 'sec',  0, 600, '15')}`;
+}
+
 function renderExList() {
   const session = currentSession();
   const list    = document.getElementById('ex-list');
@@ -1618,27 +1662,7 @@ function renderExList() {
         <button class="bldr-ex-del" onclick="removeExercise(${ei})" aria-label="Remove">✕</button>
       </div>
       <div class="bldr-ex-params">
-        <div class="bldr-param">
-          <div class="bldr-param-label">Sets</div>
-          <input class="bldr-param-input" type="number"
-            value="${ex.sets}" min="1" max="20"
-            onchange="updateExParam(${ei},'sets',this.value)">
-          <div class="bldr-param-unit">sets</div>
-        </div>
-        <div class="bldr-param">
-          <div class="bldr-param-label">Reps</div>
-          <input class="bldr-param-input" type="number"
-            value="${ex.reps}" min="1" max="100"
-            onchange="updateExParam(${ei},'reps',this.value)">
-          <div class="bldr-param-unit">reps</div>
-        </div>
-        <div class="bldr-param">
-          <div class="bldr-param-label">Rest</div>
-          <input class="bldr-param-input" type="number"
-            value="${ex.restSec}" min="0" max="600" step="15"
-            onchange="updateExParam(${ei},'restSec',this.value)">
-          <div class="bldr-param-unit">sec</div>
-        </div>
+        ${buildExParams(ex, ei)}
       </div>
     </div>`).join('');
 
@@ -1648,7 +1672,8 @@ function renderExList() {
 function updateExParam(ei, key, val) {
   const session = currentSession();
   if (!session || !session.exercises[ei]) return;
-  session.exercises[ei][key] = parseInt(val) || 0;
+  const floatKeys = ['weight', 'distance'];
+  session.exercises[ei][key] = floatKeys.includes(key) ? (parseFloat(val) || 0) : (parseInt(val) || 0);
 }
 
 function removeExercise(ei) {
@@ -1832,7 +1857,15 @@ function addExercise(exId) {
     renderLibrary(); renderExList(); return;
   }
 
-  session.exercises.push({ id: ex.id, name: ex.name, primaryMuscle: ex.primaryMuscle, secondaryMuscles: ex.secondaryMuscles || [], sets: 3, reps: 10, restSec: 60 });
+  const rt = ex.recordType || 'weight_reps';
+  const defaults =
+    rt === 'weight_reps'   ? { sets: 3, weight: 0, reps: 10, restSec: 60 } :
+    rt === 'reps'          ? { sets: 3, reps: 10, restSec: 60 } :
+    rt === 'duration'      ? { sets: 3, durationSec: 30, restSec: 60 } :
+    rt === 'cardio'        ? { durationMin: 20, distance: '' } :
+    rt === 'reps_duration' ? { sets: 3, reps: 10, durationSec: 30, restSec: 60 } :
+                             { sets: 3, reps: 10, restSec: 60 };
+  session.exercises.push({ id: ex.id, name: ex.name, primaryMuscle: ex.primaryMuscle, secondaryMuscles: ex.secondaryMuscles || [], recordType: rt, ...defaults });
   renderLibrary();
   renderExList();
   showToast(ex.name + ' added');
