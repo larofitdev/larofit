@@ -1132,7 +1132,13 @@ function init() {
   // Sync custom exercises in the background — don't block the UI
   LF.db.migrateLocalCustomExercises()
     .then(() => LF.db.getCustomExercises())
-    .then(customs => { _customsCache = customs; })
+    .then(customs => {
+      _customsCache = customs;
+      // Re-render library if it's open so Supabase exercises appear on first load
+      if (document.getElementById('lib-sheet').classList.contains('open')) {
+        renderLibrary();
+      }
+    })
     .catch(() => {});
 }
 
