@@ -278,6 +278,86 @@ window.LF = {
       } catch (e) { return { error: e.message }; }
     },
 
+    // ── CUSTOM EXERCISES ─────────────────────────────────────
+
+    // Synchronous read of the local cache (populated by getCustomExercises)
+    _customsLocalCache() {
+      return LS.get('custom_exercises', []);
+    },
+
+    async getCustomExercises() {
+      if (!isOnline()) return LS.get('custom_exercises', []);
+      try {
+        const sb   = await lfReady();
+        const user = await LF.auth.user();
+        if (!user) return LS.get('custom_exercises', []);
+        const { data, error } = await sb
+          .from('custom_exercises')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        if (error) return LS.get('custom_exercises', []);
+        const exercises = (data || []).map(row => ({
+          id:               row.id,
+          name:             row.name,
+          primaryMuscle:    row.primary_muscle,
+          secondaryMuscles: row.secondary_muscles || [],
+          equipment:        row.equipment,
+          recordType:       row.record_type,
+          instructions:     row.instructions  || null,
+          exerciseUrl:      row.exercise_url  || null,
+          custom:           true,
+        }));
+        LS.set('custom_exercises', exercises);
+        return exercises;
+      } catch { return LS.get('custom_exercises', []); }
+    },
+
+    async saveCustomExercise(ex) {
+      // Update local cache immediately
+      const local = LS.get('custom_exercises', []);
+      const idx   = local.findIndex(e => e.id === ex.id);
+      if (idx >= 0) local[idx] = ex; else local.unshift(ex);
+      LS.set('custom_exercises', local);
+
+      if (!isOnline()) return { error: null, offline: true };
+      try {
+        const sb   = await lfReady();
+        const user = await LF.auth.user();
+        if (!user) return { error: 'Not authenticated' };
+        const { data, error } = await sb
+          .from('custom_exercises')
+          .upsert({
+            id:                ex.id,
+            user_id:           user.id,
+            name:              ex.name,
+            primary_muscle:    ex.primaryMuscle,
+            secondary_muscles: ex.secondaryMuscles || [],
+            equipment:         ex.equipment,
+            record_type:       ex.recordType,
+            instructions:      ex.instructions  || null,
+            exercise_url:      ex.exerciseUrl   || null,
+            updated_at:        new Date().toISOString(),
+          }, { onConflict: 'id,user_id' })
+          .select().single();
+        return { data, error };
+      } catch (e) { return { error: e.message }; }
+    },
+
+    async deleteCustomExercise(id) {
+      // Remove from local cache immediately
+      const local = LS.get('custom_exercises', []).filter(e => e.id !== id);
+      LS.set('custom_exercises', local);
+
+      if (!isOnline()) return { error: null, offline: true };
+      try {
+        const sb   = await lfReady();
+        const user = await LF.auth.user();
+        if (!user) return { error: 'Not authenticated' };
+        return sb.from('custom_exercises').delete().eq('id', id).eq('user_id', user.id);
+      } catch (e) { return { error: e.message }; }
+    },
+
     async deleteProgram(programId) {
       const local = LS.get('programs', []).filter(p => p.id !== programId);
       LS.set('programs', local);

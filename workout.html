@@ -1815,11 +1815,11 @@ function escHtml(str) {
 // MUSCLES_ALL already declared in larofit-exercises.js
 
 function getCustomExercises() {
-  try { return JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]'); } catch { return []; }
+  return LF.db._customsLocalCache();
 }
 
 function saveCustomExercises(arr) {
-  localStorage.setItem('lf_custom_exercises', JSON.stringify(arr));
+  // no-op: cache managed by LF.db
 }
 
 let cxSelectedMuscles = [];
@@ -1877,9 +1877,7 @@ function saveCustomExercise() {
     custom:     true,
   };
 
-  const arr = getCustomExercises();
-  arr.push(ex);
-  saveCustomExercises(arr);
+  LF.db.saveCustomExercise(ex);
   closeCustomExSheet();
   showToast(name + ' saved');
 
@@ -2300,10 +2298,11 @@ function speakText(text) {
 }
 
 // ── INIT ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-minus').onclick = () => adjustRest(-15);
   document.getElementById('btn-plus').onclick  = () => adjustRest(15);
   document.getElementById('btn-skip').onclick  = () => skipRest();
+  await LF.db.getCustomExercises(); // prime the cache
   init();
 });
 </script>

@@ -959,39 +959,29 @@ function saveExercise() {
   if (!state.equipment)     { showToast('Select equipment'); return; }
   if (!state.recordType)    { showToast('Select a record type'); return; }
 
+  const exData = {
+    name,
+    primaryMuscle:    state.primaryMuscle,
+    secondaryMuscles: [...state.secondaryMuscles],
+    equipment:        state.equipment,
+    recordType:       state.recordType,
+    mediaDataUrl:     state.mediaDataUrl || null,
+    exerciseUrl:      document.getElementById('ce-url').value.trim() || null,
+    instructions:     document.getElementById('ce-instructions').value.trim() || null,
+    custom:           true,
+  };
+
   if (window._editingId) {
-    const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
-    const idx = all.findIndex(e => e.id === window._editingId);
-    if (idx === -1) { showToast('Exercise not found'); return; }
-    all[idx] = { ...all[idx], name,
-      primaryMuscle: state.primaryMuscle,
-      secondaryMuscles: [...state.secondaryMuscles],
-      equipment: state.equipment,
-      recordType: state.recordType,
-      mediaDataUrl: state.mediaDataUrl || null,
-      exerciseUrl: document.getElementById('ce-url').value.trim() || null,
-      instructions: document.getElementById('ce-instructions').value.trim() || null,
-      updatedAt: new Date().toISOString(),
-    };
-    localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
+    exData.id        = window._editingId;
+    exData.updatedAt = new Date().toISOString();
     showToast('Exercise updated!');
   } else {
-    const existing = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
-    existing.push({
-      id: 'cx-' + Date.now(), name,
-      primaryMuscle: state.primaryMuscle,
-      secondaryMuscles: [...state.secondaryMuscles],
-      equipment: state.equipment,
-      recordType: state.recordType,
-      mediaDataUrl: state.mediaDataUrl || null,
-      exerciseUrl: document.getElementById('ce-url').value.trim() || null,
-      instructions: document.getElementById('ce-instructions').value.trim() || null,
-      custom: true,
-      createdAt: new Date().toISOString(),
-    });
-    localStorage.setItem('lf_custom_exercises', JSON.stringify(existing));
+    exData.id        = 'cx-' + Date.now();
+    exData.createdAt = new Date().toISOString();
     showToast('Exercise saved!');
   }
+
+  LF.db.saveCustomExercise(exData);
   setTimeout(() => { window.location.href = getReturnUrl(); }, 700);
 }
 
@@ -1002,9 +992,9 @@ function getReturnUrl() {
 }
 
 function isDuplicateName(name) {
-  const lower = name.toLowerCase();
-  const customs = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+  const lower     = name.toLowerCase();
   const editingId = window._editingId || null;
+  const customs   = LF.db._customsLocalCache();
   if (customs.some(e => e.name.toLowerCase() === lower && e.id !== editingId)) return true;
   if (typeof LAROFIT_EXERCISES !== 'undefined') {
     if (LAROFIT_EXERCISES.some(e => e.name.toLowerCase() === lower)) return true;
@@ -1042,8 +1032,8 @@ function loadExistingExercise() {
   const params = new URLSearchParams(location.search);
   const id = params.get('id');
   if (!id) return;
-  const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
-  const ex = all.find(e => e.id === id);
+  const all = LF.db._customsLocalCache();
+  const ex  = all.find(e => e.id === id);
   if (!ex) return;
   window._editingId = id;
   document.querySelector('.ce-topbar-title').textContent = 'EDIT EXERCISE';

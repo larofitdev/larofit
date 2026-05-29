@@ -1070,9 +1070,10 @@ let editingDate      = null;   // 'YYYY-MM-DD' of day being edited
 let editingSession   = null;   // 'am' | 'pm'
 let pasteMode        = false;
 let copiedDate       = null;
-let libMuscle        = 'all';
-let libEq            = 'all';
+let libMuscle         = 'all';
+let libEq             = 'all';
 let cxSelectedMuscles = [];
+let _customsCache     = [];  // populated from Supabase on init
 
 let calYear  = 0;
 let calMonth = 0;
@@ -1094,7 +1095,7 @@ function goBack() {
   window.location.href = 'programs.html';
 }
 
-function init() {
+async function init() {
   document.getElementById('prog-start').value = new Date().toISOString().slice(0,10);
 
   const params = new URLSearchParams(location.search);
@@ -1116,6 +1117,9 @@ function init() {
   } else {
     program = makeBlankProgram();
   }
+
+  // Load custom exercises from Supabase into cache
+  _customsCache = await LF.db.getCustomExercises();
 
   buildLibraryFilters();
   initCalendarView();
@@ -1837,8 +1841,8 @@ function renderLibrary() {
 
 function deleteCustomExercise(e, id) {
   e.stopPropagation();
-  const arr = getCustomExercises().filter(ex => ex.id !== id);
-  localStorage.setItem('lf_custom_exercises', JSON.stringify(arr));
+  _customsCache = _customsCache.filter(ex => ex.id !== id);
+  LF.db.deleteCustomExercise(id);
   renderLibrary();
   showToast('Exercise deleted');
 }
@@ -1899,7 +1903,7 @@ function saveProgram() {
 // CUSTOM EXERCISES
 // ══════════════════════════════════════════════════════════════════════
 function getCustomExercises() {
-  try { return JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]'); } catch { return []; }
+  return _customsCache;
 }
 
 function openCustomExSheet() {
@@ -1955,9 +1959,8 @@ function saveCustomExercise() {
     custom:     true,
   };
 
-  const arr = getCustomExercises();
-  arr.push(ex);
-  localStorage.setItem('lf_custom_exercises', JSON.stringify(arr));
+  _customsCache.unshift(ex);
+  LF.db.saveCustomExercise(ex);
   closeCustomExSheet();
   addExercise(ex.id);
   renderLibrary();
