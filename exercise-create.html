@@ -986,7 +986,6 @@ function saveExercise() {
   const idx = all.findIndex(e => e.id === exData.id);
   if (idx >= 0) all[idx] = exData; else all.unshift(exData);
   localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
-  console.log('[LaroFit] saved to localStorage:', all.length, 'exercises. Key=lf_custom_exercises');
 
   // Attempt Supabase sync in background — never blocks navigation
   try { LF.db.saveCustomExercise(exData).catch(() => {}); } catch(e) {}
@@ -1004,9 +1003,8 @@ function isDuplicateName(name) {
   const lower     = name.toLowerCase();
   const editingId = window._editingId || null;
   try {
-    const customs = (typeof LF !== 'undefined' && LF.db._customsLocalCache)
-      ? LF.db._customsLocalCache() : [];
-    if (customs.some(e => e.name.toLowerCase() === lower && e.id !== editingId)) return true;
+    const customs = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+    if (customs.some(e => (e.name||'').toLowerCase() === lower && e.id !== editingId)) return true;
   } catch(e) {}
   try {
     if (typeof LAROFIT_EXERCISES !== 'undefined') {
