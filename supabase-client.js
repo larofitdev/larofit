@@ -78,11 +78,11 @@ window.LF = {
       return data?.session || null;
     },
 
-    // Get current user (null if not logged in)
+    // Get current user from local session (no network call — reliable on mobile)
     async user() {
       const sb = await lfReady();
-      const { data } = await sb.auth.getUser();
-      return data?.user || null;
+      const { data } = await sb.auth.getSession();
+      return data?.session?.user || null;
     },
 
     // Sign up with email + password
