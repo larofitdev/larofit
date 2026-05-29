@@ -981,7 +981,13 @@ function saveExercise() {
     showToast('Exercise saved!');
   }
 
-  LF.db.saveCustomExercise(exData);
+  try { LF.db.saveCustomExercise(exData); } catch(e) {
+    // Fallback: save to localStorage directly if LF unavailable
+    const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+    const idx = all.findIndex(e => e.id === exData.id);
+    if (idx >= 0) all[idx] = exData; else all.push(exData);
+    localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
+  }
   setTimeout(() => { window.location.href = getReturnUrl(); }, 700);
 }
 
@@ -994,11 +1000,16 @@ function getReturnUrl() {
 function isDuplicateName(name) {
   const lower     = name.toLowerCase();
   const editingId = window._editingId || null;
-  const customs   = LF.db._customsLocalCache();
-  if (customs.some(e => e.name.toLowerCase() === lower && e.id !== editingId)) return true;
-  if (typeof LAROFIT_EXERCISES !== 'undefined') {
-    if (LAROFIT_EXERCISES.some(e => e.name.toLowerCase() === lower)) return true;
-  }
+  try {
+    const customs = (typeof LF !== 'undefined' && LF.db._customsLocalCache)
+      ? LF.db._customsLocalCache() : [];
+    if (customs.some(e => e.name.toLowerCase() === lower && e.id !== editingId)) return true;
+  } catch(e) {}
+  try {
+    if (typeof LAROFIT_EXERCISES !== 'undefined') {
+      if (LAROFIT_EXERCISES.some(e => e.name.toLowerCase() === lower)) return true;
+    }
+  } catch(e) {}
   return false;
 }
 
