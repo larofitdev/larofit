@@ -981,14 +981,20 @@ function saveExercise() {
     showToast('Exercise saved!');
   }
 
-  try { LF.db.saveCustomExercise(exData); } catch(e) {
+  const returnUrl = getReturnUrl();
+  try {
+    // Await the save so Supabase upload completes before navigating away
+    LF.db.saveCustomExercise(exData).finally(() => {
+      window.location.href = returnUrl;
+    });
+  } catch(e) {
     // Fallback: save to localStorage directly if LF unavailable
     const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
     const idx = all.findIndex(e => e.id === exData.id);
     if (idx >= 0) all[idx] = exData; else all.push(exData);
     localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
+    window.location.href = returnUrl;
   }
-  setTimeout(() => { window.location.href = getReturnUrl(); }, 700);
 }
 
 function getReturnUrl() {

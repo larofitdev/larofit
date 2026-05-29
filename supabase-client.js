@@ -352,13 +352,14 @@ window.LF = {
           exerciseUrl:      row.exercise_url  || null,
           custom:           true,
         }));
-        // Only overwrite local cache if Supabase actually returned exercises.
-        // Never let an empty Supabase result erase exercises stored locally.
-        if (exercises.length > 0) {
-          LS.set('custom_exercises', exercises);
-          return exercises;
-        }
-        return LS.get('custom_exercises', []);
+        // Merge Supabase exercises with any local-only ones not yet uploaded.
+        // Supabase is the source of truth for existing IDs; local-only entries are preserved.
+        const local = LS.get('custom_exercises', []);
+        const supabaseIds = new Set(exercises.map(e => e.id));
+        const localOnly   = local.filter(e => !supabaseIds.has(e.id));
+        const merged      = [...exercises, ...localOnly];
+        LS.set('custom_exercises', merged);
+        return merged;
       } catch { return LS.get('custom_exercises', []); }
     },
 
