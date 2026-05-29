@@ -1802,7 +1802,8 @@ function openLibrary() {
   LF.db.getCustomExercises().then(customs => {
     _customsCache = customs;
     renderLibrary();
-  }).catch(() => {});
+    showToast('Supabase: ' + customs.length + ' custom exercise(s)');
+  }).catch(e => showToast('Supabase error: ' + e));
 }
 
 function closeLibrary() {
