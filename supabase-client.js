@@ -393,8 +393,6 @@ window.LF = {
           .from('custom_exercises')
           .upsert(row)
           .select().single();
-        if (error) console.error('[LaroFit] saveCustomExercise error:', error.message, error);
-        else console.log('[LaroFit] saveCustomExercise OK:', ex.name);
         return { data, error };
       } catch (e) { return { error: e.message }; }
     },
