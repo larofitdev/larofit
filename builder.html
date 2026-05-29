@@ -1808,7 +1808,12 @@ function renderLibrary() {
 
   if (libMuscle !== 'all') exercises = exercises.filter(e => e.primaryMuscle === libMuscle);
   if (libEq     !== 'all') exercises = exercises.filter(e => e.equipment === libEq);
-  exercises.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  // Custom exercises pinned to top, built-ins sorted alphabetically below
+  exercises.sort((a, b) => {
+    if (a.custom && !b.custom) return -1;
+    if (!a.custom && b.custom) return 1;
+    return (a.name || '').localeCompare(b.name || '');
+  });
   if (q) {
     exercises = exercises.filter(e =>
       e.name.toLowerCase().includes(q) ||
