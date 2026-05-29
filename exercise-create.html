@@ -981,20 +981,16 @@ function saveExercise() {
     showToast('Exercise saved!');
   }
 
-  const returnUrl = getReturnUrl();
-  try {
-    // Await the save so Supabase upload completes before navigating away
-    LF.db.saveCustomExercise(exData).finally(() => {
-      window.location.href = returnUrl;
-    });
-  } catch(e) {
-    // Fallback: save to localStorage directly if LF unavailable
-    const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
-    const idx = all.findIndex(e => e.id === exData.id);
-    if (idx >= 0) all[idx] = exData; else all.push(exData);
-    localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
-    window.location.href = returnUrl;
-  }
+  // Always write to localStorage immediately — this is what the builder reads
+  const all = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+  const idx = all.findIndex(e => e.id === exData.id);
+  if (idx >= 0) all[idx] = exData; else all.unshift(exData);
+  localStorage.setItem('lf_custom_exercises', JSON.stringify(all));
+
+  // Attempt Supabase sync in background — never blocks navigation
+  try { LF.db.saveCustomExercise(exData).catch(() => {}); } catch(e) {}
+
+  window.location.href = getReturnUrl();
 }
 
 function getReturnUrl() {

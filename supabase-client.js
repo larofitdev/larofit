@@ -316,17 +316,19 @@ window.LF = {
       }
     },
 
-    // Synchronous read of the local cache, normalising any old-format fields
+    // Synchronous read of localStorage, normalising any old-format fields
     _customsLocalCache() {
-      const raw = LS.get('custom_exercises', []);
-      return raw.map(ex => ({
-        ...ex,
-        primaryMuscle:    ex.primaryMuscle    || ex.category || '',
-        secondaryMuscles: ex.secondaryMuscles || ex.muscles  || [],
-        equipment:        ex.equipment        || ex.eq       || 'bodyweight',
-        recordType:       ex.recordType       || 'weight_reps',
-        custom:           true,
-      }));
+      try {
+        const raw = JSON.parse(localStorage.getItem('lf_custom_exercises') || '[]');
+        return Array.isArray(raw) ? raw.map(ex => ({
+          ...ex,
+          primaryMuscle:    ex.primaryMuscle    || ex.category || '',
+          secondaryMuscles: ex.secondaryMuscles || ex.muscles  || [],
+          equipment:        ex.equipment        || ex.eq       || 'bodyweight',
+          recordType:       ex.recordType       || 'weight_reps',
+          custom:           true,
+        })) : [];
+      } catch(e) { return []; }
     },
 
     async getCustomExercises() {
