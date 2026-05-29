@@ -1073,7 +1073,7 @@ let copiedDate       = null;
 let libMuscle         = 'all';
 let libEq             = 'all';
 let cxSelectedMuscles = [];
-let _customsCache     = [];  // populated from Supabase on init
+let _customsCache     = LF.db._customsLocalCache();  // seeded from localStorage, updated by Supabase
 
 let calYear  = 0;
 let calMonth = 0;

@@ -316,9 +316,17 @@ window.LF = {
       }
     },
 
-    // Synchronous read of the local cache (populated by getCustomExercises)
+    // Synchronous read of the local cache, normalising any old-format fields
     _customsLocalCache() {
-      return LS.get('custom_exercises', []);
+      const raw = LS.get('custom_exercises', []);
+      return raw.map(ex => ({
+        ...ex,
+        primaryMuscle:    ex.primaryMuscle    || ex.category || '',
+        secondaryMuscles: ex.secondaryMuscles || ex.muscles  || [],
+        equipment:        ex.equipment        || ex.eq       || 'bodyweight',
+        recordType:       ex.recordType       || 'weight_reps',
+        custom:           true,
+      }));
     },
 
     async getCustomExercises() {
