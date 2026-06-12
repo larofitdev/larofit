@@ -1144,7 +1144,14 @@ let calMonth = 0;
 
 const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December'];
-const todayStr = new Date().toISOString().slice(0,10);
+// ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+const todayStr = localDateStr();
 
 // ══════════════════════════════════════════════════════════════════════
 // INIT
@@ -1160,7 +1167,7 @@ function goBack() {
 }
 
 function init() {
-  document.getElementById('prog-start').value = new Date().toISOString().slice(0,10);
+  document.getElementById('prog-start').value = localDateStr();
 
   const params = new URLSearchParams(location.search);
   const id = params.get('id') || (() => {
@@ -1234,7 +1241,7 @@ function makeBlankProgram() {
     name:        '',
     goal:        'hypertrophy',
     weeks:       8,
-    startDate:   new Date().toISOString().slice(0,10),
+    startDate:   localDateStr(),
     aiGenerated: false,
     savedAt:     null,
     days:        {},
@@ -1260,7 +1267,7 @@ function loadProgramIntoSetup() {
   document.getElementById('prog-name').value  = program.name  || '';
   document.getElementById('prog-goal').value  = program.goal  || 'hypertrophy';
   document.getElementById('prog-weeks').value = program.weeks || 8;
-  document.getElementById('prog-start').value = program.startDate || new Date().toISOString().slice(0,10);
+  document.getElementById('prog-start').value = program.startDate || localDateStr();
 }
 
 function flushSetupToProgram() {

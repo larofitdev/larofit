@@ -540,6 +540,13 @@ const FIELDS = [
 // ══════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════
+// ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
 let log     = [];
 let units   = 'imperial'; // 'imperial' | 'metric'
 let wtUnit  = 'lbs';
@@ -764,7 +771,7 @@ function clearLogFields() {
 }
 
 function saveLog() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateStr();
 
   const entry = { date: today };
   const w = document.getElementById('log-weight').value;

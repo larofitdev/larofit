@@ -1034,7 +1034,14 @@ let restInterval   = null;
 let restRemaining  = 0;
 let totalPRs       = 0;
 let exNotes        = {};   // { exIdx: noteText }
-const todayKey     = new Date().toISOString().slice(0, 10);
+// ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+const todayKey     = localDateStr();
 
 // ── EPLEY 1RM ────────────────────────────────────────────────
 function calc1RM(weight, reps) {

@@ -540,6 +540,13 @@ const store = {
 };
 
 // ── STATE ─────────────────────────────────────────────────────
+// ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
 let periodDays = 28;
 let history    = {};   // lf_workout_history: { 'YYYY-MM-DD': { name, durationMin, totalVolume, prs, exercises[] } }
 let measLogs   = [];   // lf_measurements_log: [{ date, weight }]
@@ -682,7 +689,7 @@ function renderStreak() {
   for (let i = 0; i < 365; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const k = d.toISOString().slice(0, 10);
+    const k = localDateStr(d);
     if (workedDays.has(k)) streak++;
     else if (i > 0) break;
   }
@@ -700,7 +707,7 @@ function renderStreak() {
   for (let i = 27; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const k = d.toISOString().slice(0, 10);
+    const k = localDateStr(d);
     const div = document.createElement('div');
     let cls = 'streak-day';
     if (workedDays.has(k)) cls += ' worked';
@@ -736,7 +743,7 @@ function renderVolumeChart() {
     const diff = (day === 0 ? -6 : 1) - day;
     const mon = new Date(d);
     mon.setDate(d.getDate() + diff);
-    const key = mon.toISOString().slice(0, 10);
+    const key = localDateStr(mon);
     weeks[key] = (weeks[key] || 0) + (data.totalVolume || 0);
   });
 
