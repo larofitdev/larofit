@@ -680,6 +680,19 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <button class="btn btn-outline lf-mt-sm" onclick="startFreeForm()">Log a workout anyway</button>
   </div>
 
+  <!-- SESSION PICKER STATE — shown when both AM and PM exist for today -->
+  <div class="no-program" id="session-picker-state" style="display:none;">
+    <div style="font-size:48px;" aria-hidden="true">🌅</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px;">Which session?</div>
+    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;margin-bottom:20px;">You have two sessions scheduled today.</div>
+    <button class="btn btn-dark btn-lg btn-full" style="max-width:260px;margin-bottom:10px;" onclick="loadSession('am')">
+      <span style="color:#fbbf24;">☀️</span> Morning session
+    </button>
+    <button class="btn btn-volt btn-lg btn-full" style="max-width:260px;" onclick="loadSession('pm')">
+      <span>🌙</span> Evening session
+    </button>
+  </div>
+
   <!-- WORKOUT IN PROGRESS — full screen flex column -->
   <div id="workout-state">
 
@@ -1034,14 +1047,7 @@ let restInterval   = null;
 let restRemaining  = 0;
 let totalPRs       = 0;
 let exNotes        = {};   // { exIdx: noteText }
-// ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
-function localDateStr(d) {
-  d = d || new Date();
-  return d.getFullYear() + '-' +
-    String(d.getMonth() + 1).padStart(2, '0') + '-' +
-    String(d.getDate()).padStart(2, '0');
-}
-const todayKey     = localDateStr();
+const todayKey     = new Date().toISOString().slice(0, 10);
 
 // ── EPLEY 1RM ────────────────────────────────────────────────
 function calc1RM(weight, reps) {
@@ -1086,13 +1092,38 @@ function init() {
   }
 }
 
+// Holds today's day object while session picker is shown
+let _todayDayPlan = null;
+
 function _loadFromProgram(program) {
-  const dayIndex = (new Date().getDay() + 6) % 7;
-  const dayPlan  = program.days && program.days[dayIndex];
+  const todayKey = localDateStr();
+  const dayPlan  = program.days && program.days[todayKey];
 
-  if (!dayPlan || dayPlan.rest) { show('rest-day-state'); setHeader('Rest day'); return; }
+  if (!dayPlan) { show('rest-day-state'); setHeader('Rest day'); return; }
 
-  buildExerciseList(dayPlan.exercises || [], dayPlan.name || program.name);
+  const hasAM = dayPlan.am && (dayPlan.am.exercises || []).length > 0;
+  const hasPM = dayPlan.pm && (dayPlan.pm.exercises || []).length > 0;
+
+  if (!hasAM && !hasPM) { show('rest-day-state'); setHeader('Rest day'); return; }
+
+  if (hasAM && hasPM) {
+    // Both sessions exist — let user pick
+    _todayDayPlan = dayPlan;
+    show('session-picker-state');
+    setHeader('Workout');
+    return;
+  }
+
+  // Only one session — load it directly
+  const session = hasAM ? dayPlan.am : dayPlan.pm;
+  buildExerciseList(session.exercises || [], session.name || program.name);
+}
+
+function loadSession(slot) {
+  if (!_todayDayPlan) return;
+  const session = _todayDayPlan[slot];
+  if (!session) return;
+  buildExerciseList(session.exercises || [], session.name || (slot === 'am' ? 'Morning' : 'Evening'));
 }
 
 function buildExerciseList(exArr, workoutName) {
@@ -1180,7 +1211,7 @@ function startFreeForm() {
 
 // ── SHOW/HIDE ─────────────────────────────────────────────────
 function show(id) {
-  ['no-program-state','rest-day-state','workout-state','completion-state'].forEach(s => {
+  ['no-program-state','rest-day-state','session-picker-state','workout-state','completion-state'].forEach(s => {
     const el = document.getElementById(s);
     if (!el) return;
     if (s === 'workout-state') {
