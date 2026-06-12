@@ -1709,7 +1709,7 @@ function buildExParams(ex, ei) {
     ${p('Reps',   'reps',        'reps', 1, 100)}
     ${p('Rest',   'restSec',     'sec',  0, 600, '15')}`;
 
-  if (rt === 'reps') return `
+  if (rt === 'reps' || rt === 'reps_only') return `
     ${p('Sets',   'sets',        'sets', 1, 20)}
     ${p('Reps',   'reps',        'reps', 1, 100)}
     ${p('Rest',   'restSec',     'sec',  0, 600, '15')}`;
@@ -1977,6 +1977,7 @@ function addExercise(exId) {
   const defaults =
     rt === 'weight_reps'   ? { sets: 3, weight: 0, reps: 10, restSec: 60 } :
     rt === 'reps'          ? { sets: 3, reps: 10, restSec: 60 } :
+    rt === 'reps_only'     ? { sets: 3, reps: 10, restSec: 60 } :
     rt === 'duration'      ? { sets: 3, durationSec: 30, restSec: 60 } :
     rt === 'cardio'        ? { durationMin: 20, distance: '' } :
     rt === 'reps_duration' ? { sets: 3, reps: 10, durationSec: 30, restSec: 60 } :
