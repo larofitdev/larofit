@@ -363,7 +363,15 @@ if ('serviceWorker' in navigator) {
 // ── DATE HELPERS ─────────────────────────────────────────────
 const today = new Date();
 const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-const todayKey = today.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
+const todayKey = localDateStr(); // 'YYYY-MM-DD' in local time
 
 function weekDates() {
   // Return Mon–Sun of the current week
@@ -374,7 +382,7 @@ function weekDates() {
   return Array.from({ length: 7 }, (_, i) => {
     const dd = new Date(monday);
     dd.setDate(monday.getDate() + i);
-    return dd.toISOString().slice(0, 10);
+    return localDateStr(dd);
   });
 }
 
@@ -424,20 +432,46 @@ async function loadTodayCard() {
     return;
   }
 
-  const lf_day  = (today.getDay() + 6) % 7; // Mon=0 … Sun=6
-  const dayPlan = program.days && program.days[lf_day];
+  // Look up today by date key (new format) or day index (legacy)
+  let dayPlan = program.days && program.days[todayKey];
 
-  if (!dayPlan || dayPlan.rest) {
-    restCard.style.display = 'block';
-    return;
+  // Legacy fallback: array indexed by day-of-week
+  if (!dayPlan && Array.isArray(program.days)) {
+    const lf_day = (today.getDay() + 6) % 7;
+    dayPlan = program.days[lf_day];
   }
 
-  hasCard.style.display = 'block';
-  document.getElementById('today-name').textContent =
-    dayPlan.name || program.name + ' — Day ' + (lf_day + 1);
+  if (!dayPlan) { restCard.style.display = 'block'; return; }
 
-  const exCount = (dayPlan.exercises || []).length;
-  const estMins = Math.round(exCount * 7 + (dayPlan.exercises || []).reduce((acc, ex) => {
+  // Flatten AM/PM sessions into a single exercise list for display
+  let sessions = [];
+  let displayName = program.name;
+
+  if (dayPlan.am || dayPlan.pm) {
+    // New AM/PM format
+    if (dayPlan.am && (dayPlan.am.exercises||[]).length) sessions.push(dayPlan.am);
+    if (dayPlan.pm && (dayPlan.pm.exercises||[]).length) sessions.push(dayPlan.pm);
+    if (!sessions.length) { restCard.style.display = 'block'; return; }
+    displayName = sessions.length > 1
+      ? sessions.map(s => s.name || '').filter(Boolean).join(' + ') || program.name
+      : sessions[0].name || program.name;
+  } else if (dayPlan.rest) {
+    restCard.style.display = 'block';
+    return;
+  } else {
+    // Legacy flat format
+    sessions = [dayPlan];
+    displayName = dayPlan.name || program.name;
+  }
+
+  const allExercises = sessions.flatMap(s => s.exercises || []);
+  if (!allExercises.length) { restCard.style.display = 'block'; return; }
+
+  hasCard.style.display = 'block';
+  document.getElementById('today-name').textContent = displayName;
+
+  const exCount = allExercises.length;
+  const estMins = Math.round(exCount * 7 + allExercises.reduce((acc, ex) => {
     return acc + (ex.sets || 3) * ((ex.restSec || 60) / 60);
   }, 0));
 
