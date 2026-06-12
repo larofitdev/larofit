@@ -1052,7 +1052,18 @@ function calc1RM(weight, reps) {
 
 // ── EXERCISE TYPE HELPERS ─────────────────────────────────────
 function exTypeOf(ex) {
-  return ex.type || lookupExType(ex.id) || 'strength';
+  if (ex.type) return ex.type;
+  if (ex.recordType) {
+    const RT_MAP = {
+      weight_reps:   'strength',
+      reps_only:     'bodyweight',
+      duration:      'timed_bodyweight',
+      reps_duration: 'timed_bodyweight',
+      cardio:        'cardio'
+    };
+    return RT_MAP[ex.recordType] || 'strength';
+  }
+  return lookupExType(ex.id) || 'strength';
 }
 
 function isCardio(ex)   { const t = exTypeOf(ex); return t === 'cardio'; }
