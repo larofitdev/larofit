@@ -546,9 +546,33 @@ let measLogs   = [];   // lf_measurements_log: [{ date, weight }]
 
 // ── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  history   = store.get('workout_history', {});
-  measLogs  = store.get('measurements_log', []);
+  // Render immediately from localStorage — instant, works offline at gym
+  history  = store.get('workout_history', {});
+  measLogs = store.get('measurements_log', []);
   renderAll();
+  renderMeasSummary();
+
+  // Background sync from Supabase — re-render if remote has newer data
+  LF.ready().then(() => {
+    Promise.all([
+      LF.db.getWorkoutHistory().catch(() => null),
+      LF.db.getMeasurements().catch(() => null),
+    ]).then(([remoteHistory, remoteMeas]) => {
+      let changed = false;
+      if (remoteHistory && Object.keys(remoteHistory).length) {
+        history = remoteHistory;
+        changed = true;
+      }
+      if (remoteMeas && remoteMeas.length) {
+        measLogs = remoteMeas;
+        changed = true;
+      }
+      if (changed) {
+        renderAll();
+        renderMeasSummary();
+      }
+    });
+  });
 });
 
 function setPeriod(days, btn) {
@@ -1006,17 +1030,17 @@ function esc(str) {
 }
 
 // ── MEASUREMENTS SUMMARY ─────────────────────────────────
-(function() {
-  const log = JSON.parse(localStorage.getItem('lf_measurements_log') || '[]');
+function renderMeasSummary() {
+  const log = measLogs.length ? measLogs : JSON.parse(localStorage.getItem('lf_measurements_log') || '[]');
   const el  = document.getElementById('meas-summary');
   if (!el) return;
   if (!log.length) return;
-  const latest = log.sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+  const latest = log.slice().sort((a,b) => new Date(b.date) - new Date(a.date))[0];
   const d = new Date(latest.date + 'T12:00:00');
   const label = d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
   const wt = latest.weight ? ` · ${latest.weight} lbs` : '';
   el.textContent = `Last logged ${label}${wt}`;
-})();
+}
 
 // ── EXERCISE HISTORY DRILL-IN ─────────────────────────────────
 function openExHist(exName) {
