@@ -607,7 +607,13 @@ async function loadPrograms() {
 
   el.innerHTML = programs.slice(0, 3).map(p => {
     const isActive = p.id === activeId || p.isActive;
-    const days = p.days ? p.days.filter(d => !d.rest).length : 0;
+    const days = (() => {
+      if (!p.days) return 0;
+      if (Array.isArray(p.days)) return p.days.filter(d => !d.rest).length;
+      return Object.values(p.days).filter(day =>
+        day && ((day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length))
+      ).length;
+    })();
     return `
       <div class="lf-list-row" style="cursor:pointer;"
            onclick="location.href='programs.html?id=${p.id}'"
