@@ -521,10 +521,26 @@ let deleteId  = null;  // program pending delete confirmation
 
 // ── INIT ─────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // Render immediately from localStorage — page is never blank
   programs = store.get('programs', []);
   activeId = store.get('active_program', null);
   render();
   checkImportParam();
+
+  // Background sync from Supabase — re-render if remote has data
+  LF.ready().then(() => {
+    LF.db.getPrograms().then(remote => {
+      if (!remote || !remote.length) return;
+      programs = remote;
+      // Derive activeId from the remote isActive flag if present
+      const remoteActive = remote.find(p => p.isActive);
+      if (remoteActive) {
+        activeId = remoteActive.id;
+        store.set('active_program', activeId);
+      }
+      render();
+    }).catch(() => {}); // silently fall back to localStorage on network error
+  });
 });
 
 // ── RENDER ───────────────────────────────────────────────────
@@ -654,6 +670,8 @@ function setActive(e, id) {
   store.set('active_program', activeId);
   render();
   showToast('Program activated');
+  // Sync to Supabase in the background
+  LF.ready().then(() => LF.db.setActiveProgram(id).catch(() => {}));
 }
 
 function startWorkout(e) {
@@ -747,6 +765,8 @@ function activateFromDetail() {
   render();
   closeDetail();
   showToast('Program activated');
+  // Sync to Supabase in the background
+  LF.ready().then(() => LF.db.setActiveProgram(activeId).catch(() => {}));
 }
 
 // ── DELETE SHEET ──────────────────────────────────────────────
@@ -767,8 +787,9 @@ function closeDelete() {
 
 function confirmDelete() {
   if (!deleteId) return;
-  programs = programs.filter(p => p.id !== deleteId);
-  if (activeId === deleteId) {
+  const idToDelete = deleteId;
+  programs = programs.filter(p => p.id !== idToDelete);
+  if (activeId === idToDelete) {
     activeId = programs.length ? programs[0].id : null;
   }
   store.set('programs', programs);
@@ -776,6 +797,8 @@ function confirmDelete() {
   render();
   closeDelete();
   showToast('Program deleted');
+  // Sync deletion to Supabase in the background
+  LF.ready().then(() => LF.db.deleteProgram(idToDelete).catch(() => {}));
 }
 
 // ── HELPERS ──────────────────────────────────────────────────
@@ -880,6 +903,8 @@ function confirmImport() {
   closeImport();
   render();
   showToast('✓ ' + p.name + ' added');
+  // Sync to Supabase in the background
+  LF.ready().then(() => LF.db.saveProgram(p).catch(() => {}));
 }
 
 function closeImport() {
