@@ -221,8 +221,8 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 
 
 .gif-slot {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 220px;
+  height: 220px;
   background: #000;
   border-bottom: 0.5px solid var(--border);
   display: flex;
@@ -1187,7 +1187,7 @@ function buildLoggedSets(ex) {
   } else if (t === 'timed_bodyweight') {
     return Array.from({ length: count }, () => ({ holdTime: '', logged: false }));
   } else if (t === 'bodyweight') {
-    return Array.from({ length: count }, () => ({ weight: '', reps: '', logged: false }));
+    return Array.from({ length: count }, () => ({ reps: '', logged: false }));
   } else {
     // strength — pre-fill from last session
     const last = getLastSession(ex.id || ex.name);
