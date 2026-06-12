@@ -1172,12 +1172,24 @@ function init() {
   })();
 
   if (id) {
-    const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
-    program = programs.find(p => p.id === id);
-    if (!program) { showToast('Program not found'); goBack(); return; }
-    // Migrate old flat day structure to AM/PM if needed
-    migrateLegacyDays();
-    loadProgramIntoSetup();
+    const local = JSON.parse(localStorage.getItem('lf_programs') || '[]');
+    program = local.find(p => p.id === id) || null;
+
+    if (program) {
+      migrateLegacyDays();
+      loadProgramIntoSetup();
+    } else {
+      // Not in localStorage — try Supabase (e.g. fresh install / cleared cache)
+      LF.ready().then(() =>
+        LF.db.getPrograms().then(remote => {
+          program = (remote || []).find(p => p.id === id) || null;
+          if (!program) { showToast('Program not found'); goBack(); return; }
+          migrateLegacyDays();
+          loadProgramIntoSetup();
+        })
+      ).catch(() => { showToast('Program not found'); goBack(); });
+      return; // init continues asynchronously above
+    }
   } else {
     program = makeBlankProgram();
   }
@@ -1982,11 +1994,15 @@ function saveProgram() {
 
   program.savedAt = new Date().toISOString();
 
+  // Optimistic localStorage write — always works offline
   const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
   const idx      = programs.findIndex(p => p.id === program.id);
   if (idx >= 0) programs[idx] = program;
   else          programs.push(program);
   localStorage.setItem('lf_programs', JSON.stringify(programs));
+
+  // Sync to Supabase in the background
+  LF.ready().then(() => LF.db.saveProgram(program).catch(() => {}));
 
   showToast('Program saved ✓');
   setTimeout(() => { window.location.href = 'programs.html'; }, 900);
