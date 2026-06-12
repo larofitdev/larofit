@@ -61,7 +61,7 @@ const LAROFIT_EXERCISES = [
       'Holding the breath through the position rather than breathing deeply into the belly to deepen the release.',
       'Forcing maximum extension on the first rep — the body needs a few warm-up rounds before deeper range is safe.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/abdominals-stretch-variation-four.mp4',
     exerciseUrl: 'https://movekit.com/exercises/abdominals-stretch-variation-four',
     custom: false
   },
@@ -94,7 +94,7 @@ const LAROFIT_EXERCISES = [
       'Rushing in and out of the position rather than easing in slowly — the stretch needs time under tension to release.',
       'Dropping the head too far back, putting needless pressure on the neck instead of the abdominal wall.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/abdominals-stretch-variation-one.mp4',
     exerciseUrl: 'https://movekit.com/exercises/abdominals-stretch-variation-one',
     custom: false
   },
@@ -127,7 +127,7 @@ const LAROFIT_EXERCISES = [
       'Letting the head crank back at the end of the rotation, putting unneeded strain on the cervical spine.',
       'Skipping the side-to-side variation and only bending straight back, missing the oblique component entirely.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/abdominals-stretch-variation-three.mp4',
     exerciseUrl: 'https://movekit.com/exercises/abdominals-stretch-variation-three',
     custom: false
   },
@@ -160,7 +160,7 @@ const LAROFIT_EXERCISES = [
       'Forcing depth in the first few seconds rather than letting the breath ease you deeper over time.',
       'Tensing the shoulder of the raised arm — the arm should reach long but stay relaxed at the trap.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/abdominals-stretch-variation-two.mp4',
     exerciseUrl: 'https://movekit.com/exercises/abdominals-stretch-variation-two',
     custom: false
   },
@@ -193,7 +193,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the eccentric and letting the band snap your hands back down — you lose half the time-under-tension.',
       'Leaning back to swing the weight up, which shifts work from the biceps to momentum and the lower back.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-curl',
     custom: false
   },
@@ -226,7 +226,7 @@ const LAROFIT_EXERCISES = [
       'Using too heavy a band so form breaks down — light tension with clean reps beats heavy ugly reps here.',
       'Shrugging the shoulders up to the ears at the end of the pull, loading the traps instead of the rear delts.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-high-face-pull.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-high-face-pull',
     custom: false
   },
@@ -259,7 +259,7 @@ const LAROFIT_EXERCISES = [
       'Using a band so heavy that form breaks — start light to feel the glute working, then progress.',
       'Rushing the eccentric and letting the band snap the leg back in, losing half the time-under-tension.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-hip-abduction.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-hip-abduction',
     custom: false
   },
@@ -292,7 +292,7 @@ const LAROFIT_EXERCISES = [
       'Letting the shoulders shrug up to the ears at the top, losing the lat-pull pattern entirely.',
       'Snapping the band back up on the eccentric and missing the most muscle-building part of the rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-kneeling-pulldown.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-kneeling-pulldown',
     custom: false
   },
@@ -325,7 +325,7 @@ const LAROFIT_EXERCISES = [
       'Raising the arms above shoulder height, where the traps take over from the side delts.',
       'Using a band too heavy for the lift, breaking form and losing the strict isolation pattern.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-lateral-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-lateral-raise',
     custom: false
   },
@@ -358,7 +358,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short at the top — the stretched overhead position is where the growth happens.',
       'Letting the lower back arch as you reach overhead, which leaks tension and risks lumbar strain.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-pullover.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-pullover',
     custom: false
   },
@@ -391,7 +391,7 @@ const LAROFIT_EXERCISES = [
       'Going too low and losing the hamstring stretch — stop where the stretch is strongest, not where the floor is.',
       'Standing on too narrow a band section, making the resistance uneven and twisting the bar path.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-romanian-deadlift.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-romanian-deadlift',
     custom: false
   },
@@ -424,7 +424,7 @@ const LAROFIT_EXERCISES = [
       'Shrugging the shoulders up at the end of the pull, swapping mid-back work for trap engagement.',
       'Snapping the band back forward and skipping the eccentric, where most of the muscle-building tension lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-row',
     custom: false
   },
@@ -457,7 +457,7 @@ const LAROFIT_EXERCISES = [
       'Letting the shoulders shrug up at the top, losing the vertical-pull pattern.',
       'Releasing the band too quickly on the eccentric, missing half the time-under-tension benefit.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-seated-pulldown.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-seated-pulldown',
     custom: false
   },
@@ -490,7 +490,7 @@ const LAROFIT_EXERCISES = [
       'Standing on too narrow a section of band, making the tension uneven across the two arms.',
       'Rushing the eccentric and letting the band snap your shoulders down, losing the hardest part of the rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-shrug.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-shrug',
     custom: false
   },
@@ -523,7 +523,7 @@ const LAROFIT_EXERCISES = [
       'Raising the arm above shoulder height, where the traps take over from the side delts.',
       'Using a band tension that\'s too heavy and breaking form rather than dropping to clean reps.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-single-arm-lateral-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-single-arm-lateral-raise',
     custom: false
   },
@@ -556,7 +556,7 @@ const LAROFIT_EXERCISES = [
       'Going too heavy and breaking form — the chop should look athletic and controlled, not rushed.',
       'Forgetting to work both sides equally, leaving the trunk imbalanced for rotational sport.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/band-wood-chopper.mp4',
     exerciseUrl: 'https://movekit.com/exercises/band-wood-chopper',
     custom: false
   },
@@ -589,7 +589,7 @@ const LAROFIT_EXERCISES = [
       'Setting up bands unevenly so the bar tilts during the lift, creating dangerous side-to-side load.',
       'Using bands too heavy for the user\'s experience level, breaking form and risking the spine.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-banded-back-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-banded-back-squat',
     custom: false
   },
@@ -622,7 +622,7 @@ const LAROFIT_EXERCISES = [
       'Going too heavy and rolling the shoulders forward, exposing the front of the shoulder to strain.',
       'Skipping the squeeze at the top — the contraction is the entire point of the exercise.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-behind-the-back-30-degree-shrug.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-behind-the-back-30-degree-shrug',
     custom: false
   },
@@ -655,7 +655,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing the bar off the chest to use momentum instead of a controlled touch or pause.',
       'Lifting the glutes off the bench for leverage, which destabilizes the lift and risks back strain.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-bench-press',
     custom: false
   },
@@ -688,7 +688,7 @@ const LAROFIT_EXERCISES = [
       'Pulling with the biceps and bending the wrists, leaving the lats and mid-back understimulated.',
       'Using too much momentum and swinging the bar up — the back stops working when the body cheats.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-bent-over-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-bent-over-row',
     custom: false
   },
@@ -721,7 +721,7 @@ const LAROFIT_EXERCISES = [
       'Pressing the bar in front of the head instead of straight up, which strains the lower back and shoulders.',
       'Rounding the back on the pull from the floor, putting the spine in a weak and risky position.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-clean-and-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-clean-and-press',
     custom: false
   },
@@ -754,7 +754,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing the bar off the chest to use momentum instead of a controlled pause and press.',
       'Allowing the wrists to bend back under the bar, which leaks force and stresses the joints.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-close-grip-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-close-grip-bench-press',
     custom: false
   },
@@ -787,7 +787,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short and not extending the arms fully at the bottom of each rep.',
       'Gripping the bar too wide, which shifts tension off the biceps and stresses the wrists.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-curl',
     custom: false
   },
@@ -820,7 +820,7 @@ const LAROFIT_EXERCISES = [
       'Letting the bar drift away from the shins, which lengthens the lever arm and crushes the lower back.',
       'Hyperextending at the top instead of finishing with a tight glute squeeze and stacked rib cage.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-deadlift.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-deadlift',
     custom: false
   },
@@ -853,7 +853,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the bottom range short and not fully straightening the arms between reps.',
       'Rounding the shoulders forward to chase the bar up, which loads the front delts instead.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-drag-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-drag-curl',
     custom: false
   },
@@ -886,7 +886,7 @@ const LAROFIT_EXERCISES = [
       'Choosing a box that\'s too tall, forcing a hip-shift and removing tension from the quads.',
       'Stepping down hard instead of with control, beating up the joints and breaking position.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-front-rack-step-up-knee-drive.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-front-rack-step-up-knee-drive',
     custom: false
   },
@@ -919,7 +919,7 @@ const LAROFIT_EXERCISES = [
       'Flaring the elbows wide, which loads the front of the shoulders instead of the upper chest.',
       'Lifting the hips off the bench to cheat the press, which ruins the angle and risks back strain.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-high-incline-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-high-incline-bench-press',
     custom: false
   },
@@ -952,7 +952,7 @@ const LAROFIT_EXERCISES = [
       'Lifting the hips off the bench for leverage, which destabilizes the press and stresses the back.',
       'Bouncing the bar off the chest to use momentum instead of a controlled touch and press.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-incline-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-incline-bench-press',
     custom: false
   },
@@ -985,7 +985,7 @@ const LAROFIT_EXERCISES = [
       'Pressing the bar out at the top instead of pulling it overhead, which strains the shoulders.',
       'Using too much weight, which breaks the strict pattern and removes the teaching benefit.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-muscle-snatch.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-muscle-snatch',
     custom: false
   },
@@ -1018,7 +1018,7 @@ const LAROFIT_EXERCISES = [
       'Failing to brace the core, which lets the rib cage flare and weakens the press.',
       'Bending the knees and using leg drive, which makes the lift a push press and not a strict press.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-overhead-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-overhead-press',
     custom: false
   },
@@ -1051,7 +1051,7 @@ const LAROFIT_EXERCISES = [
       'Letting the bar swing away from the body, which forces the lower back to recover the lift.',
       'Catching too low into a full squat, which turns the power snatch into a regular snatch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-power-snatch.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-power-snatch',
     custom: false
   },
@@ -1084,7 +1084,7 @@ const LAROFIT_EXERCISES = [
       'Lifting the lower back off the bench, which removes tension from the lats and stresses the spine.',
       'Using too much weight, which forces the elbows to collapse and breaks the overhead arc.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-pullover.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-pullover',
     custom: false
   },
@@ -1117,7 +1117,7 @@ const LAROFIT_EXERCISES = [
       'Hyperextending at the top instead of finishing with a tight glute squeeze and stacked rib cage.',
       'Bouncing the bar off the pins and using momentum instead of resetting between reps.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-rack-pull.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-rack-pull',
     custom: false
   },
@@ -1150,7 +1150,7 @@ const LAROFIT_EXERCISES = [
       'Using too much weight and cutting the range short with tiny shrugs that miss the contraction.',
       'Letting the chin jut forward, which loads the neck instead of the upper traps.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-shrug.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-shrug',
     custom: false
   },
@@ -1183,7 +1183,7 @@ const LAROFIT_EXERCISES = [
       'Letting the bar drift forward, which forces a missed lift or a heavy lower-back save.',
       'Skipping the squat depth and catching too high, which turns the snatch into a power snatch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-snatch.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-snatch',
     custom: false
   },
@@ -1216,7 +1216,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the rep, which removes the controlled tissue loading that makes the drill useful.',
       'Bending the knees to chase depth, which removes the hamstring stretch that pairs with the spinal work.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-spinal-jefferson-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-spinal-jefferson-curl',
     custom: false
   },
@@ -1249,7 +1249,7 @@ const LAROFIT_EXERCISES = [
       'Leaning the torso too far forward, which turns the lift into a hinge and loses the quad focus.',
       'Setting the stance too short, which forces the front knee far past the toes and stresses the joint.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-split-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-split-squat',
     custom: false
   },
@@ -1282,7 +1282,7 @@ const LAROFIT_EXERCISES = [
       'Rounding the lower back at the bottom, which puts the spine at risk under heavy load.',
       'Shifting the bar weight onto the toes, which throws off the balance and strains the lower back.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-squat',
     custom: false
   },
@@ -1315,7 +1315,7 @@ const LAROFIT_EXERCISES = [
       'Letting the torso fold forward under the bar, which turns the lift into a heavy good morning.',
       'Stepping down hard from the box, which beats up the joints and breaks position between reps.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-step-up-knee-drive.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-step-up-knee-drive',
     custom: false
   },
@@ -1348,7 +1348,7 @@ const LAROFIT_EXERCISES = [
       'Letting the bar drift away from the legs, which crushes the lower back at the bottom range.',
       'Bending the knees too much, which turns the lift back into a regular deadlift.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-stiff-leg-deadlifts.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-stiff-leg-deadlifts',
     custom: false
   },
@@ -1381,7 +1381,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the squat depth short to save energy, turning the lift into a half-rep push press.',
       'Catching the bar on the shoulders too hard on the way down, which beats up the front delts over volume.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-thruster.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-thruster',
     custom: false
   },
@@ -1414,7 +1414,7 @@ const LAROFIT_EXERCISES = [
       'Heaving the bar up with body english instead of leading with the elbows in a controlled pull.',
       'Letting the bar drift away from the body, which kills side-delt tension and loads the lower back.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-upright-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-upright-row',
     custom: false
   },
@@ -1447,7 +1447,7 @@ const LAROFIT_EXERCISES = [
       'Skipping the fingertip roll at the bottom, which cuts out half the forearm and grip work.',
       'Rushing the tempo and bouncing the reps, which removes the time-under-tension that builds the forearms.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/barbell-wrist-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/barbell-wrist-curl',
     custom: false
   },
@@ -1480,7 +1480,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the depth short to make the reps easier, which removes most of the triceps work.',
       'Using only the legs to push off the floor, which turns the dip into an assisted leg-press motion.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bench-dips.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bench-dips',
     custom: false
   },
@@ -1513,7 +1513,7 @@ const LAROFIT_EXERCISES = [
       'Rounding the back when sitting into the lunge instead of hinging cleanly at the hips.',
       'Cutting the depth short and turning a real lateral lunge into a shallow side step.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-alternating-lateral-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-alternating-lateral-lunge',
     custom: false
   },
@@ -1546,7 +1546,7 @@ const LAROFIT_EXERCISES = [
       'Letting the chest collapse forward, which shifts the work to the lower back.',
       'Pushing off the back foot instead of driving through the front heel — robs the front leg of work.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-alternating-reverse-lunges.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-alternating-reverse-lunges',
     custom: false
   },
@@ -1579,7 +1579,7 @@ const LAROFIT_EXERCISES = [
       'Letting the knees cave inward as you stand back up, which weakens the lift and stresses the knees.',
       'Rounding the lower back at the bottom — turns a teaching tool into a back-strain risk.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-box-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-box-squat',
     custom: false
   },
@@ -1612,7 +1612,7 @@ const LAROFIT_EXERCISES = [
       'Bending the knees too much, which turns the lift into a half-squat instead of a clean hinge.',
       'Hyperextending the back at the top instead of finishing in a tall, neutral standing position.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-deadlift.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-deadlift',
     custom: false
   },
@@ -1645,7 +1645,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing the reps instead of lowering under control — kills the time-under-tension on the calves.',
       'Rounding the back in the bent-over position, which puts strain on the lower back over volume.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-donkey-calf-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-donkey-calf-raise',
     custom: false
   },
@@ -1678,7 +1678,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the depth short instead of bringing the chest close to the bench, which removes most of the chest work.',
       'Using a surface that is too high — turns the push-up into a near-standing motion with little load.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-elevated-push-up.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-elevated-push-up',
     custom: false
   },
@@ -1711,7 +1711,7 @@ const LAROFIT_EXERCISES = [
       'Pointing the toes up instead of flexing the foot, which shifts the work off the side hip.',
       'Letting the top hip drift forward — kills the side-glute contraction and turns the lift into a leg swing.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-hip-abduction.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-hip-abduction',
     custom: false
   },
@@ -1744,7 +1744,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the depth short and bouncing off a partial range, which kills the strength carryover.',
       'Sitting the hips back toward the heels — turns a push-up into a half-rep stretch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-knee-push-ups.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-knee-push-ups',
     custom: false
   },
@@ -1777,7 +1777,7 @@ const LAROFIT_EXERCISES = [
       'Pushing off the back foot instead of driving through the front heel — robs the working leg of work.',
       'Slamming the back knee into the floor instead of lowering it under control.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-reverse-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-reverse-lunge',
     custom: false
   },
@@ -1810,7 +1810,7 @@ const LAROFIT_EXERCISES = [
       'Letting the feet drop to the floor every rep, which breaks the constant core tension.',
       'Rushing the tempo instead of pausing on each side — turns a controlled twist into momentum-only work.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-russian-twist.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-russian-twist',
     custom: false
   },
@@ -1843,7 +1843,7 @@ const LAROFIT_EXERCISES = [
       'Going too heavy too soon — this is a mobility tool, not a strength lift.',
       'Snapping back up to standing instead of rolling up segment by segment under control.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-spinal-jefferson-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-spinal-jefferson-curl',
     custom: false
   },
@@ -1876,7 +1876,7 @@ const LAROFIT_EXERCISES = [
       'Lifting the heels off the floor at the bottom, which kills balance and reduces glute drive.',
       'Cutting the depth short and squatting only halfway — robs the lift of glute and quad work.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bodyweight-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bodyweight-squat',
     custom: false
   },
@@ -1909,7 +1909,7 @@ const LAROFIT_EXERCISES = [
       'Choosing a box too tall and barely clearing it, which leads to scraped shins and missed reps.',
       'Using too much arm swing without leg drive — turns a power lift into an arm-thrown jump.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/box-jump.mp4',
     exerciseUrl: 'https://movekit.com/exercises/box-jump',
     custom: false
   },
@@ -1942,7 +1942,7 @@ const LAROFIT_EXERCISES = [
       'Pushing off the back foot instead of driving through the front heel — robs the front leg of work.',
       'Twisting the hips to compensate for balance instead of staying square — kills the unilateral training.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/bulgarian-split-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/bulgarian-split-squat',
     custom: false
   },
@@ -1975,7 +1975,7 @@ const LAROFIT_EXERCISES = [
       'Landing the jump with stiff legs instead of absorbing softly into a quarter squat.',
       'Going so fast that form collapses — turns a conditioning lift into a sloppy injury risk.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/burpee.mp4',
     exerciseUrl: 'https://movekit.com/exercises/burpee',
     custom: false
   },
@@ -2008,7 +2008,7 @@ const LAROFIT_EXERCISES = [
       'Rounding the lower back in the leaned-over position, which strains the spine over volume.',
       'Using too much weight and rolling the shoulders forward instead of shrugging up and back.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-30-degree-shrug.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-30-degree-shrug',
     custom: false
   },
@@ -2041,7 +2041,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the lockout short at the bottom, missing the long-head stretch where most growth lives.',
       'Rushing the lowering phase, which throws away the highest-tension half of the rep where the biceps grow most.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-bar-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-bar-curl',
     custom: false
   },
@@ -2074,7 +2074,7 @@ const LAROFIT_EXERCISES = [
       'Leaning back hard to use bodyweight as a counterweight instead of pulling cleanly with the back.',
       'Loading too heavy and shrugging the traps up, hiding the rear delts under upper-trap dominance.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-bar-face-pull.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-bar-face-pull',
     custom: false
   },
@@ -2107,7 +2107,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the lockout short, missing the strongest contraction at the bottom of the movement.',
       'Bouncing the weight up at the top instead of controlling the return, throwing away half the working set.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-bar-pushdown.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-bar-pushdown',
     custom: false
   },
@@ -2140,7 +2140,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the lowering phase, where most of the chest-building tension lives.',
       'Letting the shoulders roll forward off the bench, losing the stable platform that keeps the chest loaded.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-bench-chest-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-bench-chest-fly',
     custom: false
   },
@@ -2173,7 +2173,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the lockout short, missing the chest-squeeze position at the top of the press.',
       'Lifting the head or hips off the bench for leverage, which destabilizes the press.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-bench-press',
     custom: false
   },
@@ -2206,7 +2206,7 @@ const LAROFIT_EXERCISES = [
       'Bending the knee mid-rep, swapping glute work for hamstring engagement.',
       'Rushing the return phase and letting the cable yank the leg forward instead of controlling the descent.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-bench-straight-leg-kickback.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-bench-straight-leg-kickback',
     custom: false
   },
@@ -2239,7 +2239,7 @@ const LAROFIT_EXERCISES = [
       'Allowing one arm to lead the press, creating uneven loading and shoulder asymmetry over time.',
       'Cutting the range short on the way back, missing the chest stretch that drives growth.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-chest-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-chest-press',
     custom: false
   },
@@ -2272,7 +2272,7 @@ const LAROFIT_EXERCISES = [
       'Pressing the handles unevenly, creating side-to-side imbalances over time.',
       'Lifting the hips off the bench for leverage, which destabilizes the press and risks back strain.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-decline-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-decline-bench-press',
     custom: false
   },
@@ -2305,7 +2305,7 @@ const LAROFIT_EXERCISES = [
       'Pressing too fast and skipping the stretch, missing the highest-tension portion of the rep.',
       'Lifting the hips off the bench for leverage, which destabilizes the press.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-incline-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-incline-bench-press',
     custom: false
   },
@@ -2338,7 +2338,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the lockout short and missing the strongest contraction at the top.',
       'Pressing too fast on the descent and losing tension before the next rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-overhead-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-overhead-press',
     custom: false
   },
@@ -2371,7 +2371,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the opening phase, throwing away the slow return where most of the chest tension lives.',
       'Using the torso to swing the handles together instead of squeezing with the chest.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-pec-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-pec-fly',
     custom: false
   },
@@ -2404,7 +2404,7 @@ const LAROFIT_EXERCISES = [
       'Rocking back on the knees to use bodyweight as a counterweight.',
       'Loading too heavy and shrugging the traps up, hiding the rear delts under upper-trap dominance.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-rope-kneeling-face-pull.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-rope-kneeling-face-pull',
     custom: false
   },
@@ -2437,7 +2437,7 @@ const LAROFIT_EXERCISES = [
       'Skipping the hand separation at the bottom, missing the deeper long-head contraction.',
       'Bouncing the weight up at the top instead of controlling the return.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-rope-pushdown.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-rope-pushdown',
     custom: false
   },
@@ -2470,7 +2470,7 @@ const LAROFIT_EXERCISES = [
       'Shrugging the shoulders up at the end of the pull, swapping mid-back work for trap engagement.',
       'Snapping the bar back forward and skipping the slow return, where most of the muscle-building tension lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-row-bar-standing-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-row-bar-standing-row',
     custom: false
   },
@@ -2503,7 +2503,7 @@ const LAROFIT_EXERCISES = [
       'Rounding the upper back as you pull, hiding the mid-back contraction.',
       'Loading too heavy and shrugging the traps up, hiding the rear delts under upper-trap dominance.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-seated-rope-face-pull.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-seated-rope-face-pull',
     custom: false
   },
@@ -2536,7 +2536,7 @@ const LAROFIT_EXERCISES = [
       'Letting the hips shift sideways, which steals load from the obliques.',
       'Rushing the rep and bouncing at the bottom instead of controlling the return phase.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-side-bend.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-side-bend',
     custom: false
   },
@@ -2569,7 +2569,7 @@ const LAROFIT_EXERCISES = [
       'Shrugging the shoulder up at the end of the pull, swapping lat work for trap engagement.',
       'Snapping the handle back forward and skipping the slow return, where most of the growth lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-single-arm-neutral-grip-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-single-arm-neutral-grip-row',
     custom: false
   },
@@ -2602,7 +2602,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the lockout short, missing the strongest contraction at the bottom.',
       'Bouncing the weight up at the top instead of controlling the return.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-single-arm-rope-pushdown.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-single-arm-rope-pushdown',
     custom: false
   },
@@ -2635,7 +2635,7 @@ const LAROFIT_EXERCISES = [
       'Curling the handle toward the shoulder instead of rowing toward the ribs, turning the lift into a biceps curl.',
       'Snapping the handle back forward and skipping the slow return, where most of the growth lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-single-arm-underhand-grip-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-single-arm-underhand-grip-row',
     custom: false
   },
@@ -2668,7 +2668,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the descent and letting the cable yank the handle back instead of controlling the return.',
       'Loading too heavy and rounding the lower back at the top, which risks spinal strain.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-standing-low-to-high-wood-chopper.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-standing-low-to-high-wood-chopper',
     custom: false
   },
@@ -2701,7 +2701,7 @@ const LAROFIT_EXERCISES = [
       'Standing too close to the stack so the cable goes slack at the start of the rep, killing tension.',
       'Shrugging the shoulder up at full extension instead of keeping the shoulder blade pinned down.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-standing-single-arm-chest-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-standing-single-arm-chest-press',
     custom: false
   },
@@ -2734,7 +2734,7 @@ const LAROFIT_EXERCISES = [
       'Letting the elbows drift wide so the rear delts take over and the lats stop working.',
       'Snapping back to the start position and skipping the slow return where most growth tension lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-supinating-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-supinating-row',
     custom: false
   },
@@ -2767,7 +2767,7 @@ const LAROFIT_EXERCISES = [
       'Using too much weight and yanking the cable, which trades clean rotation for momentum.',
       'Standing too close to the stack so the cable loses tension at the top of every rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-wood-chopper.mp4',
     exerciseUrl: 'https://movekit.com/exercises/cable-wood-chopper',
     custom: false
   },
@@ -2800,7 +2800,7 @@ const LAROFIT_EXERCISES = [
       'Shrugging the shoulders up at the start so the traps take over and the lats never engage.',
       'Dropping fast at the bottom and skipping the slow lowering phase, where most of the strength gains happen.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/chin-ups.mp4',
     exerciseUrl: 'https://movekit.com/exercises/chin-ups',
     custom: false
   },
@@ -2833,7 +2833,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing at the bottom instead of pausing briefly to control the lift through the full range.',
       'Cutting the range short by stopping a long way above the floor and skipping the deep stretch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/decline-push-up.mp4',
     exerciseUrl: 'https://movekit.com/exercises/decline-push-up',
     custom: false
   },
@@ -2866,7 +2866,7 @@ const LAROFIT_EXERCISES = [
       'Not bringing the hands close enough so the diamond shape disappears and the lift loses its triceps bias.',
       'Cutting the range short by stopping high above the hands instead of touching down for full triceps stretch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/diamond-push-ups.mp4',
     exerciseUrl: 'https://movekit.com/exercises/diamond-push-ups',
     custom: false
   },
@@ -2899,7 +2899,7 @@ const LAROFIT_EXERCISES = [
       'Leaning the torso forward over the front leg instead of staying tall and stacked through the trunk.',
       'Pushing off the back foot to stand instead of driving through the front-leg heel and glute.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-alternating-forward-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-alternating-forward-lunge',
     custom: false
   },
@@ -2932,7 +2932,7 @@ const LAROFIT_EXERCISES = [
       'Losing the upper-back squeeze mid-set, causing the shoulders to roll forward under load.',
       'Cutting the range short and pressing only the top half, missing the deepest stretch on the chest.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-bench-press',
     custom: false
   },
@@ -2965,7 +2965,7 @@ const LAROFIT_EXERCISES = [
       'Pushing off the back foot to stand instead of driving through the front-leg heel.',
       'Leaning too far forward so the lift becomes a hip hinge and pulls work out of the front quad.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-bulgarian-split-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-bulgarian-split-squat',
     custom: false
   },
@@ -2998,7 +2998,7 @@ const LAROFIT_EXERCISES = [
       'Clanking the dumbbells together at the top instead of stopping just short and squeezing the chest.',
       'Cutting the range short by stopping high so the chest never gets the stretch the fly is meant for.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-chest-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-chest-fly',
     custom: false
   },
@@ -3031,7 +3031,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short by stopping before the arm fully extends at the bottom of each rep.',
       'Dropping the weight quickly on the way down, skipping the slow descent where most growth happens.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-concentration-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-concentration-curl',
     custom: false
   },
@@ -3064,7 +3064,7 @@ const LAROFIT_EXERCISES = [
       'Bending the standing knee too much, which turns the lift into a single-leg squat instead of a hinge.',
       'Standing the dumbbell up with the lower back instead of driving the floor away through the working glute.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-cross-body-romanian-deadlift.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-cross-body-romanian-deadlift',
     custom: false
   },
@@ -3097,7 +3097,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short at the bottom by never fully straightening the arms between reps.',
       'Dropping the dumbbells fast on the way down and skipping the slow lowering phase where most growth lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-curl',
     custom: false
   },
@@ -3130,7 +3130,7 @@ const LAROFIT_EXERCISES = [
       'Setting up too steep a decline so the lift turns into a strange overhead press instead of a chest move.',
       'Cutting the range short and pressing only the top half, missing the deepest stretch on the chest.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-decline-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-decline-bench-press',
     custom: false
   },
@@ -3163,7 +3163,7 @@ const LAROFIT_EXERCISES = [
       'Clanking the dumbbells together at the top instead of squeezing the chest just short of contact.',
       'Skipping the bottom of the range so the chest never gets the stretch the fly is meant for.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-decline-chest-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-decline-chest-fly',
     custom: false
   },
@@ -3196,7 +3196,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short at the bottom and skipping the deep stretch where the long head loads up.',
       'Going too heavy and crashing the dumbbells toward the head instead of lowering under control.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-decline-skullcrusher.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-decline-skullcrusher',
     custom: false
   },
@@ -3229,7 +3229,7 @@ const LAROFIT_EXERCISES = [
       'Going too heavy and bouncing off the floor, which kills tension and risks back strain.',
       'Cutting the range short by stopping before the hips fully lock out at the top.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-feet-elevated-glute-bridge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-feet-elevated-glute-bridge',
     custom: false
   },
@@ -3262,7 +3262,7 @@ const LAROFIT_EXERCISES = [
       'Overextending the lower back at the top instead of holding a clean hip lockout.',
       'Cutting the range short by stopping before the hips fully extend, missing the strongest part of the rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-figure-four-heels-elevated-hip-thrust.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-figure-four-heels-elevated-hip-thrust',
     custom: false
   },
@@ -3295,7 +3295,7 @@ const LAROFIT_EXERCISES = [
       'Bending the elbows heavily mid-rep, which turns the lift into a curl-and-press hybrid.',
       'Going too heavy and shrugging the shoulders up at the top instead of keeping them pinned down.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-front-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-front-raise',
     custom: false
   },
@@ -3328,7 +3328,7 @@ const LAROFIT_EXERCISES = [
       'Leaning the torso forward over the front leg instead of staying upright through the trunk.',
       'Pushing off the back foot to stand instead of driving through the front-leg heel and glute.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-goblet-alternating-curtsy-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-goblet-alternating-curtsy-lunge',
     custom: false
   },
@@ -3361,7 +3361,7 @@ const LAROFIT_EXERCISES = [
       'Pushing off the back foot for help instead of loading the front leg cleanly through the rep.',
       'Rushing the lower portion and bouncing out of the bottom, missing the hardest part of the lift.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-goblet-bulgarian-split-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-goblet-bulgarian-split-squat',
     custom: false
   },
@@ -3394,7 +3394,7 @@ const LAROFIT_EXERCISES = [
       'Slamming the back knee into the floor instead of stopping just short of contact under control.',
       'Pushing off the back foot to stand instead of loading the front leg through the full press up.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-goblet-forward-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-goblet-forward-lunge',
     custom: false
   },
@@ -3427,7 +3427,7 @@ const LAROFIT_EXERCISES = [
       'Crashing the back knee into the floor rather than stopping just short under control.',
       'Leaning the torso forward over the front thigh, shifting tension off the glutes and onto the low back.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-goblet-reverse-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-goblet-reverse-lunge',
     custom: false
   },
@@ -3460,7 +3460,7 @@ const LAROFIT_EXERCISES = [
       'Pushing off the back foot for help instead of loading the front leg cleanly through the rep.',
       'Pitching the torso forward, which shifts work off the front-leg glute and onto the low back.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-goblet-split-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-goblet-split-squat',
     custom: false
   },
@@ -3493,7 +3493,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the depth short above parallel, missing most of the glute and quad development.',
       'Rounding the lower back at the bottom, which loads the spine instead of the working muscles.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-goblet-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-goblet-squat',
     custom: false
   },
@@ -3526,7 +3526,7 @@ const LAROFIT_EXERCISES = [
       'Rotating the wrists at the top and rushing the lower, missing the brachialis-building tension.',
       'Using too heavy a weight, which forces partial reps and short-changes the muscle stretch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-hammer-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-hammer-curl',
     custom: false
   },
@@ -3559,7 +3559,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short and never letting the hips fully extend at the top of the rep.',
       'Letting the knees cave inward at lockout, which reduces glute drive and stresses the joints.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-heels-elevated-hip-thrust.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-heels-elevated-hip-thrust',
     custom: false
   },
@@ -3592,7 +3592,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing the dumbbells at the bottom or stopping short, missing the productive stretch on the chest.',
       'Pressing the dumbbells out wide rather than straight up, which destabilizes the lift and shortens the press.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-incline-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-incline-bench-press',
     custom: false
   },
@@ -3625,7 +3625,7 @@ const LAROFIT_EXERCISES = [
       'Crashing the dumbbells together at the top instead of pausing for a controlled chest squeeze.',
       'Pulling the shoulder blades off the bench, rolling the shoulders forward and risking shoulder strain.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-incline-chest-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-incline-chest-fly',
     custom: false
   },
@@ -3658,7 +3658,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the lower portion and skipping the stretched bottom where most of the growth comes from.',
       'Going too heavy, which forces a swinging cheat curl and loses the strict isolation.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-incline-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-incline-curl',
     custom: false
   },
@@ -3691,7 +3691,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the lower portion and dropping the dumbbells back to the start, missing most of the muscle tension.',
       'Going too heavy, which forces swinging and removes the isolation the bench is designed to enforce.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-incline-front-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-incline-front-raise',
     custom: false
   },
@@ -3724,7 +3724,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the lower portion and dropping out of the stretched bottom where the growth happens.',
       'Loading too heavy, which forces a swinging cheat rep and ruins the isolation.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-incline-hammer-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-incline-hammer-curl',
     custom: false
   },
@@ -3757,7 +3757,7 @@ const LAROFIT_EXERCISES = [
       'Letting the elbows straighten and bend mid-rep, sneaking the biceps and front delts into the work.',
       'Going too heavy, which collapses form and removes the isolation the lift is designed for.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-lateral-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-lateral-raise',
     custom: false
   },
@@ -3790,7 +3790,7 @@ const LAROFIT_EXERCISES = [
       'Shrugging the shoulders up at the top, which trades rear-delt work for trap engagement.',
       'Loading too heavy, which forces swinging form and removes the strict isolation the bench enforces.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-laying-reverse-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-laying-reverse-fly',
     custom: false
   },
@@ -3823,7 +3823,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the lower portion and dropping the weight back to the start, missing most of the muscle tension.',
       'Loading too heavy, which forces broken form and risks dropping the dumbbell on the floor.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-leg-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-leg-curl',
     custom: false
   },
@@ -3856,7 +3856,7 @@ const LAROFIT_EXERCISES = [
       'Dropping the dumbbell back down quickly, missing the lower-biceps stretch where most of the growth lives.',
       'Loading too heavy, which forces the pad-arm to lift and turns the curl into a swinging cheat rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-preacher-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-preacher-curl',
     custom: false
   },
@@ -3889,7 +3889,7 @@ const LAROFIT_EXERCISES = [
       'Shrugging the shoulders at the top, which trades rear-delt work for trap engagement.',
       'Rounding the lower back at the hinge, which loads the spine instead of the working muscles.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-rear-delt-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-rear-delt-fly',
     custom: false
   },
@@ -3922,7 +3922,7 @@ const LAROFIT_EXERCISES = [
       'Yanking the dumbbells up with momentum instead of pulling cleanly with the back.',
       'Letting the elbows flare wide, which shifts work off the lats onto the rear delts only.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-row-bilateral.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-row-bilateral',
     custom: false
   },
@@ -3955,7 +3955,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the bottom of the rep short, missing the lat stretch that drives back-thickness growth.',
       'Letting the working shoulder roll forward at the bottom, risking front-shoulder strain under load.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-row-unilateral.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-row-unilateral',
     custom: false
   },
@@ -3988,7 +3988,7 @@ const LAROFIT_EXERCISES = [
       'Putting the feet down between reps, which removes most of the core stability demand.',
       'Loading too heavy, which forces a swinging cheat rep and loses the controlled rotation.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-russian-twist.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-russian-twist',
     custom: false
   },
@@ -4021,7 +4021,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short by stopping well below lockout, missing the top portion of the lift.',
       'Banging the dumbbells together at the top, which jolts the wrists and wastes pressing tension.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-seated-overhead-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-seated-overhead-press',
     custom: false
   },
@@ -4054,7 +4054,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the bottom range short and missing the deep stretch where most growth happens.',
       'Going too heavy and dropping the dumbbell down hard, which puts the elbows and back of the head at risk.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-seated-overhead-tricep-extension.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-seated-overhead-tricep-extension',
     custom: false
   },
@@ -4087,7 +4087,7 @@ const LAROFIT_EXERCISES = [
       'Shrugging the shoulders up at the top, which transfers the work to the upper traps.',
       'Sitting upright instead of hinging forward, which lets gravity bypass the rear shoulders entirely.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-seated-rear-delt-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-seated-rear-delt-fly',
     custom: false
   },
@@ -4120,7 +4120,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the top short and skipping the squeeze, where most of the trap contraction happens.',
       'Using too much weight and barely moving the dumbbells, which reduces the lift to a hold.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-seated-shrug.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-seated-shrug',
     custom: false
   },
@@ -4153,7 +4153,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing into the bottom of each rep, losing tension and bypassing the trap stretch.',
       'Going too heavy and barely moving the dumbbells, which leaves the traps under-stimulated.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-shrug.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-shrug',
     custom: false
   },
@@ -4186,7 +4186,7 @@ const LAROFIT_EXERCISES = [
       'Holding a dumbbell in both hands at once, which cancels out the side load and removes the training effect.',
       'Rushing through reps and skipping the squeeze at the top, where the obliques shorten the most.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-side-bend.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-side-bend',
     custom: false
   },
@@ -4219,7 +4219,7 @@ const LAROFIT_EXERCISES = [
       'Using too much weight and bouncing the dumbbell off the chest instead of pausing or controlling the touch.',
       'Lifting the off-side hip or shoulder off the bench for leverage, which destabilizes the lift.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-single-arm-chest-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-single-arm-chest-press',
     custom: false
   },
@@ -4252,7 +4252,7 @@ const LAROFIT_EXERCISES = [
       'Pressing overhead before standing fully tall, turning the lift into an unstable push press.',
       'Dropping the dumbbell back down without control, which can injure the shoulder or wrist.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-single-arm-clean-and-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-single-arm-clean-and-press',
     custom: false
   },
@@ -4285,7 +4285,7 @@ const LAROFIT_EXERCISES = [
       'Rounding the lower back instead of bracing flat, which puts the spine at risk under load.',
       'Cutting the bottom range short and skipping the lat stretch, where most of the growth stimulus happens.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-single-arm-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-single-arm-row',
     custom: false
   },
@@ -4318,7 +4318,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the top range short and not rising fully onto the ball of the foot.',
       'Rushing through reps too quickly, which trades full contractions for momentum.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-single-leg-calf-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-single-leg-calf-raise',
     custom: false
   },
@@ -4351,7 +4351,7 @@ const LAROFIT_EXERCISES = [
       'Holding the dumbbell out in front of the chest, which loads the shoulders instead of the abs.',
       'Hooking the feet too aggressively under a pad, which lets the hip flexors do most of the work.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-situp.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-situp',
     custom: false
   },
@@ -4384,7 +4384,7 @@ const LAROFIT_EXERCISES = [
       'Dropping the dumbbells down too fast and bouncing out of the bottom, which risks the elbows and forehead.',
       'Stopping the lockout short and skipping the squeeze at the top, where the triceps fully shorten.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-skullcrusher.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-skullcrusher',
     custom: false
   },
@@ -4417,7 +4417,7 @@ const LAROFIT_EXERCISES = [
       'Dropping straight down at the hips instead of rolling segment by segment through the spine.',
       'Standing back up by hinging at the hips first, which skips the segmental restack of the spine.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-spinal-jefferson-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-spinal-jefferson-curl',
     custom: false
   },
@@ -4450,7 +4450,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the bottom range short and not fully extending the arm, which kills the stretch position.',
       'Rushing the lowering phase, where most of the muscle-building tension actually lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-standing-single-arm-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-standing-single-arm-curl',
     custom: false
   },
@@ -4483,7 +4483,7 @@ const LAROFIT_EXERCISES = [
       'Letting the elbow drift forward, which shortens the range and reduces brachialis loading.',
       'Cutting the lowering phase short, which skips most of the muscle-building tension.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-standing-single-arm-hammer-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-standing-single-arm-hammer-curl',
     custom: false
   },
@@ -4516,7 +4516,7 @@ const LAROFIT_EXERCISES = [
       'Squatting with feet too narrow, which turns the lift into a regular goblet squat and loses the inner-thigh focus.',
       'Cutting the depth short and stopping above parallel, which leaves most of the glute and adductor work on the table.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-sumo-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-sumo-squat',
     custom: false
   },
@@ -4549,7 +4549,7 @@ const LAROFIT_EXERCISES = [
       'Bending the arms or knees during the lift, which shortens the levers and reduces the training effect.',
       'Bouncing the arms and legs up and down quickly instead of holding a clean controlled top position.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-superman.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-superman',
     custom: false
   },
@@ -4582,7 +4582,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the squat depth short, which removes the leg drive that powers the press.',
       'Crashing the dumbbells back onto the shoulders, which jolts the joints and breaks rhythm.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-thruster.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-thruster',
     custom: false
   },
@@ -4615,7 +4615,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the lockout short and not fully extending the elbow, where the triceps fully shorten.',
       'Rounding the lower back instead of hinging with a flat back, which puts the spine at risk.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-tricep-kickback.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-tricep-kickback',
     custom: false
   },
@@ -4648,7 +4648,7 @@ const LAROFIT_EXERCISES = [
       'Letting the elbows drop below the wrists, which turns the pull into a curl instead of a row.',
       'Rounding the upper back during the lift, which removes the upper-trap engagement.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-upright-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-upright-row',
     custom: false
   },
@@ -4681,7 +4681,7 @@ const LAROFIT_EXERCISES = [
       'Skipping the let-the-bar-roll-into-the-fingers phase, which leaves out the deepest grip and forearm work.',
       'Speeding through the lowering phase instead of controlling it, where most of the forearm growth comes from.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-wrist-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-wrist-curl',
     custom: false
   },
@@ -4714,7 +4714,7 @@ const LAROFIT_EXERCISES = [
       'Letting the forearm drift up off the bench, which removes the isolation entirely.',
       'Rushing the lowering phase, where most of the forearm extensor strength is built.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/dumbbell-wrist-extension.mp4',
     exerciseUrl: 'https://movekit.com/exercises/dumbbell-wrist-extension',
     custom: false
   },
@@ -4747,7 +4747,7 @@ const LAROFIT_EXERCISES = [
       'Placing the supporting elbow ahead of or behind the shoulder, which strains the shoulder joint.',
       'Holding your breath through the set instead of breathing steadily, which cuts hold time short.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/elbow-side-plank.mp4',
     exerciseUrl: 'https://movekit.com/exercises/elbow-side-plank',
     custom: false
   },
@@ -4780,7 +4780,7 @@ const LAROFIT_EXERCISES = [
       'Lifting the chest off the pad to swing the weight up, turning a strict curl into a partial cheat rep.',
       'Cutting the range short at the top or bottom, missing the stretch and contraction that drive bicep growth.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/ez-bar-preacher-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/ez-bar-preacher-curl',
     custom: false
   },
@@ -4813,7 +4813,7 @@ const LAROFIT_EXERCISES = [
       'Pulling the elbows back off the pad mid-rep, swapping isolation for shoulder cheating.',
       'Skipping the stretch at the bottom by stopping the rep early, which leaves growth on the table.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/ez-bar-reverse-preacher-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/ez-bar-reverse-preacher-curl',
     custom: false
   },
@@ -4846,7 +4846,7 @@ const LAROFIT_EXERCISES = [
       'Leaning the torso forward over the front leg, which loads the lower back instead of the legs.',
       'Slamming the back knee into the floor instead of stopping just above it under control.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/forward-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/forward-lunge',
     custom: false
   },
@@ -4879,7 +4879,7 @@ const LAROFIT_EXERCISES = [
       'Going past parallel before the hips can absorb the stretch, which strains the lower back.',
       'Standing up by pulling with the lower back instead of driving with the hips and glutes.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/good-mornings.mp4',
     exerciseUrl: 'https://movekit.com/exercises/good-mornings',
     custom: false
   },
@@ -4912,7 +4912,7 @@ const LAROFIT_EXERCISES = [
       'Letting the head drop or crane forward, which strains the neck and breaks the body\'s straight line.',
       'Locking the elbows and sinking into the shoulders instead of pressing the floor away.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/hand-plank.mp4',
     exerciseUrl: 'https://movekit.com/exercises/hand-plank',
     custom: false
   },
@@ -4945,7 +4945,7 @@ const LAROFIT_EXERCISES = [
       'Dropping the legs fast at the bottom, which trains the descent poorly and adds shoulder strain.',
       'Hanging completely loose at the shoulders, which stresses the joints and reduces core stability.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/hanging-knee-raises.mp4',
     exerciseUrl: 'https://movekit.com/exercises/hanging-knee-raises',
     custom: false
   },
@@ -4978,7 +4978,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short by lowering only halfway, which skips the deepest chest work.',
       'Looking up and craning the neck instead of keeping the head in line with the spine.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/incline-push-up.mp4',
     exerciseUrl: 'https://movekit.com/exercises/incline-push-up',
     custom: false
   },
@@ -5011,7 +5011,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short by stopping before the chest touches the bar.',
       'Dropping fast on the way down instead of controlling the descent, where most of the back work lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/inverted-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/inverted-row',
     custom: false
   },
@@ -5044,7 +5044,7 @@ const LAROFIT_EXERCISES = [
       'Letting the knees cave inward on landing, which strains the knees and shifts work off the glutes.',
       'Slumping the chest forward at the bottom, which makes the launch weak and stresses the lower back.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/jump-squats.mp4',
     exerciseUrl: 'https://movekit.com/exercises/jump-squats',
     custom: false
   },
@@ -5077,7 +5077,7 @@ const LAROFIT_EXERCISES = [
       'Leaning the torso forward over the front leg, loading the lower back instead of the glutes.',
       'Letting the kettlebell drop away from the chest, which destabilizes the upper body and shortens the rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-alternating-curtsy-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-alternating-curtsy-lunge',
     custom: false
   },
@@ -5110,7 +5110,7 @@ const LAROFIT_EXERCISES = [
       'Leaning forward over the front leg, loading the lower back instead of the working leg.',
       'Pushing off the back foot for help, which removes the single-leg challenge from the rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-assisted-bulgarian-split-squat.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-assisted-bulgarian-split-squat',
     custom: false
   },
@@ -5143,7 +5143,7 @@ const LAROFIT_EXERCISES = [
       'Losing the shoulder-blade squeeze mid-rep, causing the shoulders to roll forward under load.',
       'Flaring the elbows wide to 90 degrees, which strains the front shoulders and removes the chest from the lift.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-bench-press',
     custom: false
   },
@@ -5176,7 +5176,7 @@ const LAROFIT_EXERCISES = [
       'Bending the knees mid-rep, which shifts work to the soleus only and reduces the gastrocnemius work.',
       'Tipping forward at the hips for momentum instead of staying tall and pressing straight up.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-calf-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-calf-raise',
     custom: false
   },
@@ -5209,7 +5209,7 @@ const LAROFIT_EXERCISES = [
       'Letting the elbows drift forward at the top, which removes the biceps from the lift.',
       'Cutting the range short by stopping before full extension, missing the deepest part of the bicep stretch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-curl',
     custom: false
   },
@@ -5242,7 +5242,7 @@ const LAROFIT_EXERCISES = [
       'Holding your breath through the carry, which spikes blood pressure and shortens the working set.',
       'Setting the kettlebells down by collapsing the spine instead of hinging cleanly to the floor.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-farmers-carry.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-farmers-carry',
     custom: false
   },
@@ -5275,7 +5275,7 @@ const LAROFIT_EXERCISES = [
       'Bending the elbows mid-rep, which turns the raise into a partial curl and reduces shoulder isolation.',
       'Letting the lower back arch to help lift, which strains the spine and removes the brace.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-front-raise.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-front-raise',
     custom: false
   },
@@ -5308,7 +5308,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short by stopping before full extension, missing the bottom stretch of the curl.',
       'Letting the wrists bend back under the load, which strains the wrist joints and weakens the contraction.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-goblet-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-goblet-curl',
     custom: false
   },
@@ -5341,7 +5341,7 @@ const LAROFIT_EXERCISES = [
       'Rounding the lower back at the bottom of each rep, which strains the spine under load.',
       'Yanking the bell off the floor with the arm instead of pulling with the lat and mid-back.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-gorilla-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-gorilla-row',
     custom: false
   },
@@ -5374,7 +5374,7 @@ const LAROFIT_EXERCISES = [
       'Stopping short of full hip extension, which leaves the strongest part of the rep on the table.',
       'Resting the kettlebell on the stomach rather than the hip crease, which limits how high the hips can travel.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-hip-thrust.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-hip-thrust',
     custom: false
   },
@@ -5407,7 +5407,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing the bells off the shoulders instead of controlling the bottom of each rep.',
       'Lifting the hips off the bench to leverage the press, which kills the upper-chest stretch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-incline-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-incline-bench-press',
     custom: false
   },
@@ -5440,7 +5440,7 @@ const LAROFIT_EXERCISES = [
       'Letting the wrist bend backward at lockout, which loads the joint instead of the shoulder.',
       'Leaning back into the lower spine to finish the press instead of pressing straight up overhead.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-push-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-push-press',
     custom: false
   },
@@ -5473,7 +5473,7 @@ const LAROFIT_EXERCISES = [
       'Letting the kettlebell drift away from the body, which pulls the lifter forward and strains the back.',
       'Hyperextending the lower back at lockout instead of standing tall with squeezed glutes.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-romanian-deadlift.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-romanian-deadlift',
     custom: false
   },
@@ -5506,7 +5506,7 @@ const LAROFIT_EXERCISES = [
       'Letting the elbows flare wide, which shifts work off the lats and onto the rear shoulders.',
       'Rounding the lower back at the bottom, which loads the spine instead of the back muscles.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-row',
     custom: false
   },
@@ -5539,7 +5539,7 @@ const LAROFIT_EXERCISES = [
       'Rounding the lower back when the bell is on the floor, which strains the spine.',
       'Pulling with the biceps only and skipping the shoulder-blade squeeze at the top of the rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-row-single.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-row-single',
     custom: false
   },
@@ -5572,7 +5572,7 @@ const LAROFIT_EXERCISES = [
       'Pressing the bells out in front of the head instead of straight up over the shoulders.',
       'Bouncing the kettlebells off the shoulders at the bottom instead of pausing under control.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-seated-overhead-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-seated-overhead-press',
     custom: false
   },
@@ -5605,7 +5605,7 @@ const LAROFIT_EXERCISES = [
       'Jutting the chin forward at the top of the shrug, which loads the neck.',
       'Cutting the range short by barely lifting the shoulders, leaving most of the trap work undone.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-shrug.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-shrug',
     custom: false
   },
@@ -5638,7 +5638,7 @@ const LAROFIT_EXERCISES = [
       'Letting the shoulder shrug up at the top, swapping back work for trap involvement.',
       'Cutting the bottom of the rep short and losing the long stretch on the lat.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-single-arm-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-single-arm-row',
     custom: false
   },
@@ -5671,7 +5671,7 @@ const LAROFIT_EXERCISES = [
       'Rushing the descent instead of moving one segment at a time with control.',
       'Skipping the slow stack-up on the way back, which is where most of the strength gain lives.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-spinal-jefferson-curl.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-spinal-jefferson-curl',
     custom: false
   },
@@ -5704,7 +5704,7 @@ const LAROFIT_EXERCISES = [
       'Pulling with the arms instead of driving the floor away with the legs.',
       'Hyperextending the lower back at lockout instead of standing tall with squeezed glutes.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-sumo-deadlift.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-sumo-deadlift',
     custom: false
   },
@@ -5737,7 +5737,7 @@ const LAROFIT_EXERCISES = [
       'Rounding the lower back at the bottom, which puts the spine at risk under load.',
       'Hyperextending the lower back at the top of the swing instead of finishing with squeezed glutes.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-swing.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-swing',
     custom: false
   },
@@ -5770,7 +5770,7 @@ const LAROFIT_EXERCISES = [
       'Letting the knees cave inward at the bottom of the squat, which loads the joints unsafely.',
       'Going too heavy and turning the rep into a clean-and-press instead of a fluid thruster.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-thruster.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-thruster',
     custom: false
   },
@@ -5803,7 +5803,7 @@ const LAROFIT_EXERCISES = [
       'Loading too heavy too soon, which compromises shoulder stability under the bell.',
       'Looking forward instead of tracking the kettlebell, which often causes the arm to drift.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/kettlebell-windmill.mp4',
     exerciseUrl: 'https://movekit.com/exercises/kettlebell-windmill',
     custom: false
   },
@@ -5836,7 +5836,7 @@ const LAROFIT_EXERCISES = [
       'Yanking the bar up with momentum instead of pulling cleanly with the back.',
       'Cutting the bottom of the rep short and skipping the full lat stretch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/landmine-t-bar-rows.mp4',
     exerciseUrl: 'https://movekit.com/exercises/landmine-t-bar-rows',
     custom: false
   },
@@ -5869,7 +5869,7 @@ const LAROFIT_EXERCISES = [
       'Letting the torso fall forward over the front knee instead of staying tall.',
       'Pushing off the toes of the front foot instead of driving through the heel.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/walking-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/lunge-walking',
     custom: false
   },
@@ -5902,7 +5902,7 @@ const LAROFIT_EXERCISES = [
       'Adding weight too soon, which compromises the hinge and overloads the lower back.',
       'Rushing the descent instead of controlling the lowering phase for the full range.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-45-degree-back-extension.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-45-degree-back-extension',
     custom: false
   },
@@ -5935,7 +5935,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the lockout short instead of fully extending the arms at the bottom.',
       'Snapping the bar back to the start and skipping the controlled return.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-cable-v-bar-push-downs.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-cable-v-bar-push-downs',
     custom: false
   },
@@ -5968,7 +5968,7 @@ const LAROFIT_EXERCISES = [
       'Pressing with the shoulders shrugged up to the ears, which stresses the joint.',
       'Cutting the bottom of the rep short and missing the full chest stretch.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-chest-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-chest-press',
     custom: false
   },
@@ -6001,7 +6001,7 @@ const LAROFIT_EXERCISES = [
       'Letting the weight stack snap back at the top, killing the slow lowering where most growth tension lives.',
       'Setting the chest pad too high on the throat, which makes the lifter brace with the neck instead of the core.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-crunch.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-crunch',
     custom: false
   },
@@ -6034,7 +6034,7 @@ const LAROFIT_EXERCISES = [
       'Letting the stack drop fast at the top of each rep, removing the slow lowering phase.',
       'Hunching the shoulders forward under load instead of staying tall and proud through the chest.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-dips.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-dips',
     custom: false
   },
@@ -6067,7 +6067,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the range short and never bringing the rope to the face, which limits the muscle stretch.',
       'Letting the rope rip back forward and skipping the slow return, where most of the rear-delt work happens.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/cable-rope-face-pulls.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-face-pulls',
     custom: false
   },
@@ -6100,7 +6100,7 @@ const LAROFIT_EXERCISES = [
       'Locking the elbows out hard at the top, slamming the joint instead of stopping with control.',
       'Letting the weight drop fast on the way down and skipping the slow lowering portion of every rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-plate-loaded-front-military-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-front-military-press',
     custom: false
   },
@@ -6133,7 +6133,7 @@ const LAROFIT_EXERCISES = [
       'Lifting the hips off the seat to muscle the weight up, which shifts work away from the quads.',
       'Cutting the range short on the bottom half, which trains only the easy top portion of the lift.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-leg-extension.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-leg-extension',
     custom: false
   },
@@ -6166,7 +6166,7 @@ const LAROFIT_EXERCISES = [
       'Letting the knees cave inward on the press, which strains the knees and loses force production.',
       'Cutting the range short and pressing only the top few inches, which trains a fraction of the leg.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-leg-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-leg-press',
     custom: false
   },
@@ -6199,7 +6199,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the lowering short and dropping the handles fast, missing most of the muscle-building tension.',
       'Shrugging the shoulders up at the top of the row, swapping mid-back work for trap dominance.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-neutral-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-neutral-row',
     custom: false
   },
@@ -6232,7 +6232,7 @@ const LAROFIT_EXERCISES = [
       'Slamming the handles together with momentum instead of squeezing through the contraction.',
       'Cutting the stretch short and never letting the arms open fully, which trains a tiny portion of the lift.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-pec-fly.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-pec-fly',
     custom: false
   },
@@ -6265,7 +6265,7 @@ const LAROFIT_EXERCISES = [
       'Lifting the hips off the seat to muscle the lever up, shifting work away from the target.',
       'Hyperextending the knees at the top under heavy load, slamming the joint instead of stopping clean.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-plate-loaded-leg-extension.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-plate-loaded-leg-extension',
     custom: false
   },
@@ -6298,7 +6298,7 @@ const LAROFIT_EXERCISES = [
       'Yanking the bar with body english instead of pulling cleanly with the back.',
       'Cutting the lowering short and letting the bar drop, missing the muscle-building portion of every rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-plate-loaded-t-bar-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-plate-loaded-t-bar-row',
     custom: false
   },
@@ -6331,7 +6331,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the top range short and never letting the arms fully extend, which removes the lat stretch.',
       'Letting the stack snap back up at the top, killing the slow return where most muscle growth happens.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-pulldown.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-pulldown',
     custom: false
   },
@@ -6364,7 +6364,7 @@ const LAROFIT_EXERCISES = [
       'Shrugging the shoulders up at the top, swapping mid-back work for trap dominance.',
       'Letting the cable rip the arms forward fast and skipping the slow return portion of every rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-seated-cable-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-seated-cable-row',
     custom: false
   },
@@ -6397,7 +6397,7 @@ const LAROFIT_EXERCISES = [
       'Flaring the elbows wide and turning the row into an overhand-style pull, losing the underhand bias.',
       'Cutting the stretch short and never letting the arms fully extend at the bottom of each rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/machine-underhand-row.mp4',
     exerciseUrl: 'https://movekit.com/exercises/machine-underhand-row',
     custom: false
   },
@@ -6430,7 +6430,7 @@ const LAROFIT_EXERCISES = [
       'Putting the hands too far in front of the shoulders, which collapses the plank and stresses the wrists.',
       'Going too fast and losing range of motion, with knees barely moving instead of driving toward the chest.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/mountain-climber.mp4',
     exerciseUrl: 'https://movekit.com/exercises/mountain-climber',
     custom: false
   },
@@ -6463,7 +6463,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the top range short and never letting the arms fully extend overhead.',
       'Letting the stack snap up at the top, removing the slow return portion of each rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/narrow-pulldown.mp4',
     exerciseUrl: 'https://movekit.com/exercises/narrow-pulldown',
     custom: false
   },
@@ -6496,7 +6496,7 @@ const LAROFIT_EXERCISES = [
       'Swinging the legs to use momentum, which removes the controlled loading the dip is meant to deliver.',
       'Flaring the elbows wide on the press, which puts unnecessary strain on the joint.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/parallel-bar-dips.mp4',
     exerciseUrl: 'https://movekit.com/exercises/parralel-bar-dips',
     custom: false
   },
@@ -6529,7 +6529,7 @@ const LAROFIT_EXERCISES = [
       'Leaning the torso forward over the plate instead of staying upright through the descent.',
       'Pushing off the back foot to stand up, which steals work from the front leg the lunge is meant to load.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/plate-forward-lunge.mp4',
     exerciseUrl: 'https://movekit.com/exercises/plate-forward-lunge',
     custom: false
   },
@@ -6562,7 +6562,7 @@ const LAROFIT_EXERCISES = [
       'Leading with the chin instead of the chest, which puts strain on the neck.',
       'Dropping fast at the top and skipping the slow descent, where most pull-up strength is built.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/pull-ups.mp4',
     exerciseUrl: 'https://movekit.com/exercises/pull-ups',
     custom: false
   },
@@ -6595,7 +6595,7 @@ const LAROFIT_EXERCISES = [
       'Cutting the depth short and only pressing the top half of the rep instead of touching the chest down.',
       'Letting the head poke forward instead of keeping the neck in line with the spine.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/push-up.mp4',
     exerciseUrl: 'https://movekit.com/exercises/push-up',
     custom: false
   },
@@ -6628,7 +6628,7 @@ const LAROFIT_EXERCISES = [
       'Bending too much at the standing knee so the lift becomes a single-leg squat instead of a hinge.',
       'Bouncing back up at the bottom instead of controlling the descent and the reversal.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/single-legged-romanian-deadlifts.mp4',
     exerciseUrl: 'https://movekit.com/exercises/single-legged-romanian-deadlifts',
     custom: false
   },
@@ -6661,7 +6661,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing the bar off the chest to use momentum instead of a controlled touch and press.',
       'Forgetting to rotate the wrists to rack the bar at the end of the set, dropping it onto the safeties.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/smith-machine-close-grip-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/smith-machine-close-grip-bench-press',
     custom: false
   },
@@ -6694,7 +6694,7 @@ const LAROFIT_EXERCISES = [
       'Lifting the hips off the bench to use leverage, which destabilizes the lift.',
       'Bouncing the bar off the chest to use momentum instead of a controlled press.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/smith-machine-incline-bench-press.mp4',
     exerciseUrl: 'https://movekit.com/exercises/smith-machine-incline-bench-press',
     custom: false
   },
@@ -6727,7 +6727,7 @@ const LAROFIT_EXERCISES = [
       'Bouncing the bar at the bottom and using momentum instead of a controlled trap contraction.',
       'Cutting the range short and never reaching a full shoulder elevation at the top of the rep.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/smith-machine-standing-shrugs.mp4',
     exerciseUrl: 'https://movekit.com/exercises/smith-machine-standing-shrugs',
     custom: false
   },
@@ -6760,7 +6760,7 @@ const LAROFIT_EXERCISES = [
       'Letting the bar drift away from the body, which loads the lower back instead of the rear chain.',
       'Letting the knees cave inward, which strains the joint and loses the wide-stance bias.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/smith-machine-sumo-romanian-deadlift.mp4',
     exerciseUrl: 'https://movekit.com/exercises/smith-machine-sumo-romanian-deadlift',
     custom: false
   },
@@ -6793,7 +6793,7 @@ const LAROFIT_EXERCISES = [
       'Holding the breath through the rep, which spikes blood pressure unnecessarily.',
       'Trying to lift extremely high, which compresses the lower back instead of strengthening it.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/supermans.mp4',
     exerciseUrl: 'https://movekit.com/exercises/supermans',
     custom: false
   },
@@ -6826,7 +6826,7 @@ const LAROFIT_EXERCISES = [
       'Letting the knees cave inward as the hold gets hard, which strains the joint.',
       'Holding the breath to push through the burn, which spikes blood pressure unnecessarily.'
     ],
-    mediaUrl: null,
+    mediaUrl: 'https://media.larofit.com/wall-sit.mp4',
     exerciseUrl: 'https://movekit.com/exercises/wall-sit',
     custom: false
   }
