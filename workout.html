@@ -1149,7 +1149,7 @@ function buildExerciseList(exArr, workoutName) {
     sets:       ex.sets    || 3,
     reps:       ex.reps    || 10,
     restSec:    ex.restSec || 90,
-    type:       ex.type    || lookupExType(ex.id) || 'strength',
+    type:       exTypeOf(ex),
     mediaUrl:   ex.mediaUrl || lookupMediaUrl(ex.id),
     loggedSets: buildLoggedSets(ex)
   }));
@@ -1160,7 +1160,7 @@ function buildExerciseList(exArr, workoutName) {
 }
 
 function buildLoggedSets(ex) {
-  const t    = ex.type || lookupExType(ex.id) || 'strength';
+  const t    = exTypeOf(ex);
   const count = ex.sets || 3;
 
   if (t === 'cardio') {
@@ -2285,9 +2285,9 @@ function addExerciseFreeForm(exId) {
     sets:       3,
     reps:       10,
     restSec:    90,
-    type:       data.type || 'strength',
+    type:       exTypeOf(data),
     mediaUrl:   data.mediaUrl || null,
-    loggedSets: buildLoggedSets({ id: data.id, sets: 3, reps: 10, type: data.type })
+    loggedSets: buildLoggedSets({ id: data.id, sets: 3, reps: 10, type: exTypeOf(data), recordType: data.recordType })
   };
 
   exercises.push(newEx);
