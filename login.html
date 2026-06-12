@@ -260,6 +260,22 @@ input { font-size: 16px !important; }
 </div>
 
 <script>
+// ── iOS STANDALONE KEYBOARD FIX ───────────────────────────────
+// On first launch of the installed PWA, iOS sometimes won't open the
+// keyboard for inputs until the view is re-rendered. Toggling the view
+// (what showReset/showLogin do) fixes it — so do that invisibly on load.
+(function () {
+  const standalone = window.matchMedia('(display-mode: standalone)').matches
+                  || window.navigator.standalone === true;
+  if (!standalone) return;
+  window.addEventListener('load', () => {
+    const v = document.getElementById('view-login');
+    v.style.display = 'none';
+    void v.offsetHeight; // force reflow
+    v.style.display = 'block';
+  });
+})();
+
 // ── LOGIN ─────────────────────────────────────────────────────
 async function handleLogin() {
   const email = document.getElementById('l-email').value.trim();

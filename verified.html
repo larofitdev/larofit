@@ -179,8 +179,8 @@ button, a { touch-action: manipulation; }
       <div class="vf-card-title">INSTALL LAROFIT</div>
       <div class="vf-step">
         <div class="vf-step-num">1</div>
-        <div class="vf-step-body">
-          Tap the <strong>Share button <i class="ti ti-share-2"></i></strong> at the bottom of Safari
+        <div class="vf-step-body" id="ios-step1">
+          Tap the <strong>Share button <i class="ti ti-share-2"></i></strong> at the <strong>bottom center</strong> of Safari
         </div>
       </div>
       <div class="vf-step">
@@ -278,6 +278,10 @@ if (isStandalone) {
   document.getElementById('vf-sub').textContent = 'One more step to install the app.';
   show('view-inapp');
 } else if (isIOS) {
+  if (/CriOS/i.test(ua)) {
+    document.getElementById('ios-step1').innerHTML =
+      'Tap the <strong>Share button <i class="ti ti-share-2"></i></strong> at the <strong>top right</strong> of Chrome, next to the address bar';
+  }
   show('view-ios');
 } else if (isAndroid) {
   show('view-android');

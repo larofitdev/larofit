@@ -765,6 +765,10 @@ function checkInstallBanner() {
       : 'To install LaroFit, open <strong>larofit.com</strong> in <strong>Chrome</strong>';
   } else if (isAndroid) {
     txt.innerHTML = 'Install LaroFit: tap <strong>⋮</strong> → <strong>Add to Home screen</strong>';
+  } else if (/CriOS/i.test(ua)) {
+    txt.innerHTML = 'Install LaroFit: tap <strong>Share</strong> (top right) → <strong>Add to Home Screen</strong>';
+  } else {
+    txt.innerHTML = 'Install LaroFit: tap <strong>Share</strong> (bottom center) → <strong>Add to Home Screen</strong>';
   }
   document.getElementById('install-banner').style.display = 'block';
 }
