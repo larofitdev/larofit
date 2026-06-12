@@ -1544,9 +1544,7 @@ function renderBWTable(ex, lastSession) {
                onchange="updateSet(${currentExIdx},${i},'reps',this.value)"
                ${!isActive ? 'style="opacity:0.45;"' : ''}>
       </td>
-      <td style="text-align:center;">
-        ${isActive ? `<button class="log-btn" onclick="logBWSet(${currentExIdx},${i})">Log</button>` : ''}
-      </td>
+      <td style="text-align:center;"></td>
     </tr>`;
   }).join('');
 
