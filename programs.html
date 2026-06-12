@@ -544,6 +544,60 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ── RENDER ───────────────────────────────────────────────────
+// ── DAYS HELPERS — works with date-keyed { 'YYYY-MM-DD': { am, pm } } ──
+// Returns a flat array of all sessions across all days
+function allSessions(p) {
+  const days = p.days;
+  if (!days) return [];
+  // New format: object keyed by date
+  if (!Array.isArray(days)) {
+    const sessions = [];
+    Object.values(days).forEach(day => {
+      if (!day) return;
+      if (day.am && (day.am.exercises || []).length) sessions.push(day.am);
+      if (day.pm && (day.pm.exercises || []).length) sessions.push(day.pm);
+    });
+    return sessions;
+  }
+  // Old format: array of { name, exercises[], rest }
+  return days.filter(d => !d.rest);
+}
+
+// Returns a flat array of all exercises across all sessions
+function allExercises(p) {
+  return allSessions(p).flatMap(s => s.exercises || []);
+}
+
+// Returns number of unique training days (dates with at least one session)
+function trainingDayCount(p) {
+  const days = p.days;
+  if (!days) return 0;
+  if (!Array.isArray(days)) {
+    return Object.values(days).filter(day =>
+      day && ((day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length))
+    ).length;
+  }
+  return days.filter(d => !d.rest).length;
+}
+
+// Build 7 day-bar segments from whatever days data exists
+function dayBarSegs(p) {
+  const days = p.days;
+  if (!days) return Array(7).fill('<div class="prog-day-seg rest"></div>').join('');
+  if (!Array.isArray(days)) {
+    // Show up to 7 dated entries sorted
+    const entries = Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).slice(0,7);
+    const segs = entries.map(([, day]) => {
+      const hasWork = day && ((day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length));
+      return `<div class="prog-day-seg ${hasWork ? 'training' : 'rest'}"></div>`;
+    });
+    // Pad to 7
+    while (segs.length < 7) segs.push('<div class="prog-day-seg rest"></div>');
+    return segs.join('');
+  }
+  return days.slice(0,7).map(d => `<div class="prog-day-seg ${d.rest ? 'rest' : 'training'}"></div>`).join('');
+}
+
 function render() {
   const bannerEl   = document.getElementById('active-banner');
   const labelEl    = document.getElementById('programs-label');
@@ -567,8 +621,8 @@ function render() {
   // Active banner
   const active = programs.find(p => p.id === activeId);
   if (active) {
-    const trainingDays = active.days?.filter(d => !d.rest).length || 0;
-    const totalEx      = active.days?.reduce((s, d) => s + (d.exercises?.length || 0), 0) || 0;
+    const trainingDays = trainingDayCount(active);
+    const totalEx      = allExercises(active).length;
     bannerEl.innerHTML = `
       <div class="active-banner">
         <div class="active-pulse"></div>
@@ -595,16 +649,13 @@ function render() {
 
 function buildCard(p, idx) {
   const isActive     = p.id === activeId;
-  const trainingDays = p.days?.filter(d => !d.rest).length || 0;
-  const totalEx      = p.days?.reduce((s, d) => s + (d.exercises?.length || 0), 0) || 0;
-  const totalSets    = p.days?.reduce((s, d) =>
-    s + (d.exercises?.reduce((ss, ex) => ss + (ex.sets || 3), 0) || 0), 0) || 0;
+  const exList       = allExercises(p);
+  const trainingDays = trainingDayCount(p);
+  const totalEx      = exList.length;
+  const totalSets    = exList.reduce((s, ex) => s + (ex.sets || 3), 0);
 
   // 7-segment day bar
-  const daySegs = (p.days || Array(7).fill({ rest: true }))
-    .slice(0, 7)
-    .map(d => `<div class="prog-day-seg ${d.rest ? 'rest' : 'training'}"></div>`)
-    .join('');
+  const daySegs = dayBarSegs(p);
 
   // Badge
   let badge = '';
@@ -693,35 +744,48 @@ function openDetail(id) {
 
   document.getElementById('detail-title').textContent = p.name || 'My Program';
 
-  // Build day list
-  const daysHtml = (p.days || []).map((d, i) => {
-    if (d.rest) {
+  // Build day list — works with both date-keyed and legacy array formats
+  const days = p.days || {};
+  const dayEntries = Array.isArray(days)
+    ? days.map((d, i) => ({ label: d.name || 'Day ' + (i + 1), sessions: d.rest ? [] : [d] }))
+    : Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).map(([dateStr, day]) => {
+        const label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+        const sessions = [];
+        if (day && day.am && (day.am.exercises||[]).length) sessions.push({ ...day.am, _slot: 'AM' });
+        if (day && day.pm && (day.pm.exercises||[]).length) sessions.push({ ...day.pm, _slot: 'PM' });
+        return { label, sessions };
+      });
+
+  const daysHtml = dayEntries.map(({ label, sessions }) => {
+    if (!sessions.length) {
       return `<div class="sheet-day-block">
         <div class="sheet-day-header">
-          <div class="sheet-day-name rest-day">${esc(d.name || 'Day ' + (i + 1))}</div>
+          <div class="sheet-day-name rest-day">${esc(label)}</div>
           <div class="sheet-day-count">REST</div>
         </div>
       </div>`;
     }
-    const exRows = (d.exercises || []).map(ex => {
-      const name = lookupName(ex.id) || ex.name || ex.id || '—';
-      const meta = `${ex.sets || 3} × ${ex.reps || 10}`;
-      return `<div class="sheet-ex-row">
-        <div class="sheet-ex-name">${esc(name)}</div>
-        <div class="sheet-ex-meta">${meta}</div>
+    return sessions.map(session => {
+      const sessionLabel = session._slot ? `${label} · ${session._slot}` : label;
+      const exRows = (session.exercises || []).map(ex => {
+        const name = lookupName(ex.id) || ex.name || ex.id || '—';
+        const meta = `${ex.sets || 3} × ${ex.reps || 10}`;
+        return `<div class="sheet-ex-row">
+          <div class="sheet-ex-name">${esc(name)}</div>
+          <div class="sheet-ex-meta">${meta}</div>
+        </div>`;
+      }).join('');
+      return `<div class="sheet-day-block">
+        <div class="sheet-day-header" onclick="toggleDay(this)">
+          <div class="sheet-day-name">${esc(session.name || sessionLabel)}</div>
+          <div class="sheet-day-count">
+            ${session.exercises?.length || 0} exercises
+            <i class="ti ti-chevron-down" style="font-size:13px;transition:transform 0.2s;" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="sheet-day-exercises">${exRows || '<div style="font-size:12px;color:var(--text-3);padding:4px 0;">No exercises added</div>'}</div>
       </div>`;
     }).join('');
-
-    return `<div class="sheet-day-block">
-      <div class="sheet-day-header" onclick="toggleDay(this)">
-        <div class="sheet-day-name">${esc(d.name || 'Day ' + (i + 1))}</div>
-        <div class="sheet-day-count">
-          ${d.exercises?.length || 0} exercises
-          <i class="ti ti-chevron-down" style="font-size:13px;transition:transform 0.2s;" aria-hidden="true"></i>
-        </div>
-      </div>
-      <div class="sheet-day-exercises">${exRows || '<div style="font-size:12px;color:var(--text-3);padding:4px 0;">No exercises added</div>'}</div>
-    </div>`;
   }).join('');
 
   document.getElementById('detail-body').innerHTML = daysHtml;
@@ -862,7 +926,7 @@ function checkImportParam() {
       hypertrophy:'Muscle Growth', strength:'Strength', fat_loss:'Fat Loss',
       endurance:'Endurance', general:'General Fitness'
     };
-    const dayCount = (p.days || []).filter(d => !d.rest).length;
+    const dayCount = trainingDayCount(p);
     document.getElementById('import-prog-name').textContent = p.name;
     document.getElementById('import-prog-meta').textContent =
       (goalLabels[p.goal] || p.goal || 'General') + ' · ' +
