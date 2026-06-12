@@ -1021,7 +1021,7 @@ const store = {
 
 // ── SUPABASE CONFIG ───────────────────────────────────────────
 const SUPABASE_AI_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/ai-coach';
-// SUPABASE_ANON_KEY is declared in supabase-client.js — reuse it here
+// SUPABASE_ANON_KEY declared in supabase-client.js
 
 // ── STATE ─────────────────────────────────────────────────────
 let exercises      = [];
@@ -1034,7 +1034,14 @@ let restInterval   = null;
 let restRemaining  = 0;
 let totalPRs       = 0;
 let exNotes        = {};   // { exIdx: noteText }
-const todayKey     = new Date().toISOString().slice(0, 10);
+// ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+const todayKey = localDateStr();
 
 // ── EPLEY 1RM ────────────────────────────────────────────────
 function calc1RM(weight, reps) {
@@ -1079,13 +1086,49 @@ function init() {
   }
 }
 
+// Holds today's day object while session picker is shown
+let _todayDayPlan = null;
+
 function _loadFromProgram(program) {
-  const dayIndex = (new Date().getDay() + 6) % 7;
-  const dayPlan  = program.days && program.days[dayIndex];
+  const dateKey = localDateStr();
+  let dayPlan = program.days && program.days[dateKey];
 
-  if (!dayPlan || dayPlan.rest) { show('rest-day-state'); setHeader('Rest day'); return; }
+  // Legacy fallback: array indexed by day-of-week
+  if (!dayPlan && Array.isArray(program.days)) {
+    const idx = (new Date().getDay() + 6) % 7;
+    dayPlan = program.days[idx];
+  }
 
-  buildExerciseList(dayPlan.exercises || [], dayPlan.name || program.name);
+  if (!dayPlan) { show('rest-day-state'); setHeader('Rest day'); return; }
+
+  const hasAM = dayPlan.am && (dayPlan.am.exercises || []).length > 0;
+  const hasPM = dayPlan.pm && (dayPlan.pm.exercises || []).length > 0;
+
+  if (!hasAM && !hasPM) {
+    // Legacy flat format: exercises directly on dayPlan
+    if ((dayPlan.exercises || []).length > 0) {
+      buildExerciseList(dayPlan.exercises, dayPlan.name || program.name);
+      return;
+    }
+    show('rest-day-state'); setHeader('Rest day'); return;
+  }
+
+  if (hasAM && hasPM) {
+    _todayDayPlan = dayPlan;
+    show('session-picker-state');
+    setHeader('Workout');
+    return;
+  }
+
+  const session = hasAM ? dayPlan.am : dayPlan.pm;
+  buildExerciseList(session.exercises || [], session.name || program.name);
+}
+
+function loadSession(slot) {
+  if (!_todayDayPlan) return;
+  const session = _todayDayPlan[slot];
+  if (!session) return;
+  buildExerciseList(session.exercises || [], session.name || (slot === 'am' ? 'Morning' : 'Evening'));
 }
 
 function buildExerciseList(exArr, workoutName) {
@@ -1173,7 +1216,7 @@ function startFreeForm() {
 
 // ── SHOW/HIDE ─────────────────────────────────────────────────
 function show(id) {
-  ['no-program-state','rest-day-state','workout-state','completion-state'].forEach(s => {
+  ['no-program-state','rest-day-state','session-picker-state','workout-state','completion-state'].forEach(s => {
     const el = document.getElementById(s);
     if (!el) return;
     if (s === 'workout-state') {
@@ -1845,11 +1888,17 @@ function finishWorkout() {
   const programs = store.get('programs', []);
   const activeId = store.get('active_program', null);
   const program  = programs.find(p => p.id === activeId);
-  const dayIndex = (new Date().getDay() + 6) % 7;
-  const dayPlan  = !isFreeForm && program && program.days && program.days[dayIndex];
+  const _todayKey = localDateStr();
+  const _dayPlanFW = !isFreeForm && program && program.days && (
+    program.days[_todayKey] || (Array.isArray(program.days) && program.days[(new Date().getDay()+6)%7])
+  );
   const wName    = isFreeForm
     ? (document.getElementById('free-workout-name').value.trim() || 'Free Workout')
-    : (dayPlan ? dayPlan.name : 'Workout');
+    : (_dayPlanFW
+        ? (_dayPlanFW.am || _dayPlanFW.pm
+            ? ((_dayPlanFW.pm && _dayPlanFW.pm.name) || (_dayPlanFW.am && _dayPlanFW.am.name) || 'Workout')
+            : (_dayPlanFW.name || 'Workout'))
+        : 'Workout');
 
   history[todayKey] = {
     name:        wName,
