@@ -512,6 +512,14 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 .rest-overlay.show { display: flex; }
 body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
+/* Hold timer overlay */
+.hold-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  z-index: 502; display: none; align-items: center; justify-content: center;
+  padding: 24px; overscroll-behavior: contain;
+}
+.hold-overlay.show { display: flex; }
+
 /* Finish bar */
 .finish-bar { padding: 12px var(--page-pad); display: none; }
 .finish-bar.show { display: block; }
@@ -848,6 +856,16 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
   </div>
 </div>
 
+<!-- HOLD TIMER OVERLAY -->
+<div id="hold-overlay" class="hold-overlay">
+  <div style="background:#1a1a1a;border-radius:20px;padding:32px 24px;width:100%;max-width:320px;text-align:center;border:1px solid rgba(198,241,53,0.25);position:relative;z-index:503;">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.14em;text-transform:uppercase;font-family:var(--font-mono);margin-bottom:8px;">Hold</div>
+    <div id="hold-set-label" style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:6px;min-height:18px;"></div>
+    <div id="hold-display" style="font-family:var(--font-display);font-size:72px;color:#c6f135;letter-spacing:4px;line-height:1;margin-bottom:24px;">0:00</div>
+    <button id="btn-done-early" onclick="holdDoneEarly()" style="width:100%;padding:16px;background:#c6f135;border:none;border-radius:10px;color:#0a0a0a;font-size:16px;font-weight:700;font-family:var(--font-body);cursor:pointer;touch-action:manipulation;">Done early</button>
+  </div>
+</div>
+
 <!-- EXERCISE PICKER SHEET -->
 <div class="ex-picker-overlay" id="ex-picker-overlay" onclick="closeExPickerIfBackdrop(event)">
   <div class="ex-picker-sheet" id="ex-picker-sheet">
@@ -1052,18 +1070,7 @@ function calc1RM(weight, reps) {
 
 // ── EXERCISE TYPE HELPERS ─────────────────────────────────────
 function exTypeOf(ex) {
-  if (ex.type) return ex.type;
-  if (ex.recordType) {
-    const RT_MAP = {
-      weight_reps:   'strength',
-      reps_only:     'bodyweight',
-      duration:      'timed_bodyweight',
-      reps_duration: 'timed_bodyweight',
-      cardio:        'cardio'
-    };
-    return RT_MAP[ex.recordType] || 'strength';
-  }
-  return lookupExType(ex.id) || 'strength';
+  return ex.type || lookupExType(ex.id) || 'strength';
 }
 
 function isCardio(ex)   { const t = exTypeOf(ex); return t === 'cardio'; }
@@ -1149,7 +1156,7 @@ function buildExerciseList(exArr, workoutName) {
     sets:       ex.sets    || 3,
     reps:       ex.reps    || 10,
     restSec:    ex.restSec || 90,
-    type:       exTypeOf(ex),
+    type:       ex.type    || lookupExType(ex.id) || 'strength',
     mediaUrl:   ex.mediaUrl || lookupMediaUrl(ex.id),
     loggedSets: buildLoggedSets(ex)
   }));
@@ -1160,7 +1167,7 @@ function buildExerciseList(exArr, workoutName) {
 }
 
 function buildLoggedSets(ex) {
-  const t    = exTypeOf(ex);
+  const t    = ex.type || lookupExType(ex.id) || 'strength';
   const count = ex.sets || 3;
 
   if (t === 'cardio') {
@@ -1760,6 +1767,120 @@ function fillSet(exIdx, setIdx, weight, reps) {
   });
 }
 
+// ── AUDIO BEEPS ──────────────────────────────────────────────
+let _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return _audioCtx;
+}
+function playBeep(freq, duration, volume) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(volume || 0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) {}
+}
+function playCountdownBeep() { playBeep(880, 0.12, 0.5); }
+function playDoneBeep()      {
+  try {
+    const ctx = getAudioCtx();
+    // Two quick ascending tones
+    [0, 0.18].forEach((offset, i) => {
+      const freq = i === 0 ? 523 : 659;
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0.5, ctx.currentTime + offset);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.3);
+      osc.start(ctx.currentTime + offset);
+      osc.stop(ctx.currentTime + offset + 0.3);
+    });
+  } catch(e) {}
+}
+
+// ── HOLD TIMER ────────────────────────────────────────────────
+let holdInterval  = null;
+let holdRemaining = 0;
+let holdElapsed   = 0;
+let holdExIdx     = 0;
+let holdSetIdx    = 0;
+
+function startHold(exIdx, setIdx) {
+  const ex  = exercises[exIdx];
+  const set = ex.loggedSets[setIdx];
+  const tEl = document.getElementById('inp-t-' + exIdx + '-' + setIdx);
+  const secs = parseInt(tEl ? tEl.value : set.holdTime) || parseInt(ex.reps) || 30;
+
+  holdExIdx     = exIdx;
+  holdSetIdx    = setIdx;
+  holdRemaining = secs;
+  holdElapsed   = 0;
+
+  document.getElementById('hold-set-label').textContent =
+    'Set ' + (setIdx + 1) + ' of ' + ex.loggedSets.length + ' · ' + secs + 's target';
+  updateHoldDisplay();
+  document.getElementById('hold-overlay').classList.add('show');
+
+  try { getAudioCtx().resume(); } catch(e) {}
+
+  clearInterval(holdInterval);
+  holdInterval = setInterval(() => {
+    holdRemaining--;
+    holdElapsed++;
+    updateHoldDisplay();
+    if (holdRemaining <= 5 && holdRemaining > 0) playCountdownBeep();
+    if (holdRemaining <= 0) {
+      clearInterval(holdInterval);
+      playDoneBeep();
+      const totalSecs = holdElapsed;
+      setTimeout(() => finishHold(totalSecs), 400);
+    }
+  }, 1000);
+}
+
+function updateHoldDisplay() {
+  const m = Math.floor(holdRemaining / 60), s = holdRemaining % 60;
+  const el = document.getElementById('hold-display');
+  if (!el) return;
+  el.textContent = m + ':' + String(s).padStart(2, '0');
+  el.style.color = holdRemaining <= 5 ? '#ef4444' : '#c6f135';
+}
+
+function holdDoneEarly() {
+  clearInterval(holdInterval);
+  playDoneBeep();
+  const elapsed = holdElapsed || 1;
+  setTimeout(() => finishHold(elapsed), 400);
+}
+
+function finishHold(actualSecs) {
+  document.getElementById('hold-overlay').classList.remove('show');
+  const ex  = exercises[holdExIdx];
+  const set = ex.loggedSets[holdSetIdx];
+  const tEl = document.getElementById('inp-t-' + holdExIdx + '-' + holdSetIdx);
+  if (tEl) tEl.value = actualSecs;
+  set.holdTime = String(actualSecs);
+  set.logged   = true;
+  const allDone = ex.loggedSets.every(s => s.logged);
+  renderSets(ex, null); renderDots(); updateOverallProgress();
+  if (allDone) {
+    const ni = holdExIdx + 1;
+    if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: ' + exercises[ni].name);
+    else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
+  } else {
+    startRest(ex.restSec, () => renderSets(ex, null), 'Set ' + (holdSetIdx + 2) + ' of ' + ex.sets + ' up next');
+  }
+}
+
 // ── REST TIMER ────────────────────────────────────────────────
 let restCallback = null;
 
@@ -1773,8 +1894,12 @@ function startRest(seconds, onComplete, nextLabel) {
   clearInterval(restInterval);
   restInterval = setInterval(() => {
     restRemaining--;
-    if (restRemaining <= 0) { restRemaining = 0; updateRestDisplay(); stopRest(); if (restCallback) { restCallback(); restCallback = null; } }
-    else updateRestDisplay();
+    if (restRemaining <= 5 && restRemaining > 0) playCountdownBeep();
+    if (restRemaining <= 0) {
+      restRemaining = 0; updateRestDisplay();
+      playDoneBeep();
+      stopRest(); if (restCallback) { restCallback(); restCallback = null; }
+    } else updateRestDisplay();
   }, 1000);
 }
 
@@ -1841,7 +1966,7 @@ function handleLogBtnTap() {
   const ex = exercises[currentExIdx];
   if (!ex) return;
   if (isCardio(ex))    { logCardioSet(currentExIdx); return; }
-  if (isTimed(ex))     { logTimedSet(currentExIdx, activeSetIdx); return; }
+  if (isTimed(ex))     { startHold(currentExIdx, activeSetIdx); return; }
   if (isBW(ex))        { logBWSet(currentExIdx, activeSetIdx); return; }
   logSet(currentExIdx, activeSetIdx);
 }
@@ -1870,7 +1995,7 @@ function updateLogBtn() {
     logFixed.classList.add('show');
     const setNum = activeIdx + 1;
     if (isCardio(ex)) logMain.textContent = 'LOG CARDIO';
-    else if (isTimed(ex)) logMain.textContent = 'LOG SET ' + setNum;
+    else if (isTimed(ex)) logMain.textContent = 'START';
     else logMain.textContent = 'LOG SET ' + setNum;
   }
 
@@ -2285,9 +2410,9 @@ function addExerciseFreeForm(exId) {
     sets:       3,
     reps:       10,
     restSec:    90,
-    type:       exTypeOf(data),
+    type:       data.type || 'strength',
     mediaUrl:   data.mediaUrl || null,
-    loggedSets: buildLoggedSets({ id: data.id, sets: 3, reps: 10, type: exTypeOf(data), recordType: data.recordType })
+    loggedSets: buildLoggedSets({ id: data.id, sets: 3, reps: 10, type: data.type })
   };
 
   exercises.push(newEx);
