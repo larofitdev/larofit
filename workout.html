@@ -1065,8 +1065,21 @@ function init() {
   const activeId = store.get('active_program', null);
   const program  = programs.find(p => p.id === activeId);
 
-  if (!program) { show('no-program-state'); setHeader('Workout'); return; }
+  if (program) {
+    _loadFromProgram(program);
+  } else {
+    // Not in localStorage — try Supabase (fresh install / cleared cache)
+    LF.ready().then(() =>
+      LF.db.getPrograms().then(remote => {
+        const remoteActive = (remote || []).find(p => p.isActive) || (remote || [])[0] || null;
+        if (!remoteActive) { show('no-program-state'); setHeader('Workout'); return; }
+        _loadFromProgram(remoteActive);
+      })
+    ).catch(() => { show('no-program-state'); setHeader('Workout'); });
+  }
+}
 
+function _loadFromProgram(program) {
   const dayIndex = (new Date().getDay() + 6) % 7;
   const dayPlan  = program.days && program.days[dayIndex];
 
@@ -1861,6 +1874,9 @@ function finishWorkout() {
     })
   };
   store.set('workout_history', history);
+
+  // Sync to Supabase in the background
+  LF.ready().then(() => LF.db.saveWorkout(todayKey, history[todayKey]).catch(() => {}));
 
   // Completion screen
   show('completion-state');
