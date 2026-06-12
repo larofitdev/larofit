@@ -575,6 +575,70 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .lib-create-label { font-size: 14px; font-weight: 600; color: var(--volt-dark); }
 .lib-create-sub   { font-size: 11px; color: var(--text-3); margin-top: 1px; }
 
+/* ── EXERCISE DETAIL SHEET ── */
+.ex-detail-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 800; display: none; align-items: flex-end;
+}
+.ex-detail-overlay.show { display: flex; }
+.ex-detail-sheet {
+  width: 100%; max-height: 92vh;
+  background: var(--bg-card); border-radius: var(--radius) var(--radius) 0 0;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.ex-detail-video {
+  width: 100%; height: 260px; background: #000; flex-shrink: 0;
+  position: relative; overflow: hidden;
+}
+.ex-detail-video video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ex-detail-video-placeholder {
+  width: 100%; height: 100%; display: flex; align-items: center;
+  justify-content: center; flex-direction: column; gap: 8px;
+}
+.ex-detail-video-placeholder i { font-size: 40px; color: rgba(198,241,53,0.2); }
+.ex-detail-body {
+  flex: 1; overflow-y: auto; padding: 16px 16px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.ex-detail-name { font-family: var(--font-display); font-size: 22px; color: var(--text); line-height: 1.1; margin-bottom: 10px; }
+.ex-detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.ex-detail-tag { font-size: 10px; font-weight: 700; font-family: var(--font-mono); padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; }
+.ex-detail-tag.muscle { background: rgba(198,241,53,0.12); color: var(--volt); }
+.ex-detail-tag.equip  { background: var(--bg-dark); color: var(--text-2); }
+.ex-detail-tag.diff   { background: rgba(255,255,255,0.06); color: var(--text-3); }
+.ex-detail-section { margin-bottom: 14px; }
+.ex-detail-desc { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+.ex-detail-collapsible { border-top: 0.5px solid var(--border); }
+.ex-detail-collapse-btn {
+  width: 100%; background: none; border: none; padding: 12px 0;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ex-detail-collapse-btn span { font-size: 10px; font-weight: 700; font-family: var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3); }
+.ex-detail-collapse-btn i { font-size: 14px; color: var(--text-3); transition: transform 0.2s; }
+.ex-detail-collapse-btn.open i { transform: rotate(180deg); }
+.ex-detail-collapse-content { padding-bottom: 12px; display: none; }
+.ex-detail-collapse-content.open { display: block; }
+.ex-detail-list { margin: 0; padding: 0 0 0 16px; }
+.ex-detail-list li { font-size: 13px; color: var(--text-2); line-height: 1.5; margin-bottom: 4px; }
+.ex-detail-footer {
+  padding: 12px 16px; border-top: 0.5px solid var(--border);
+  display: flex; gap: 10px; flex-shrink: 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.ex-detail-close-btn {
+  flex: 0 0 48px; height: 48px; border-radius: var(--radius-sm);
+  background: var(--bg-dark); border: none; color: var(--text-2);
+  font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.ex-detail-add-btn {
+  flex: 1; height: 48px; border-radius: var(--radius-sm);
+  background: var(--volt); border: none; color: #000;
+  font-family: var(--font-display); font-size: 18px; letter-spacing: 0.05em;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ex-detail-add-btn:active { opacity: 0.85; }
+
 /* ══════════════════════════════════════════
    SESSION PICKER ACTION SHEET
    (shown when tapping an empty day)
@@ -1847,7 +1911,14 @@ function renderLibrary() {
         const meta  = [ex.primaryMuscle, ...(ex.secondaryMuscles||[])]
           .filter(Boolean).slice(0,2).map(m => m.replace('_',' ')).join(' · ');
         return `
-          <div class="lib-ex-row${added?' already-added':''}" onclick="addExercise('${ex.id}')">
+          <div class="lib-ex-row${added?' already-added':''}"
+               onclick="addExercise('${ex.id}')"
+               ontouchstart="startExDetailPress('${ex.id}',event)"
+               ontouchend="cancelExDetailPress()"
+               ontouchmove="cancelExDetailPress()"
+               onmousedown="startExDetailPress('${ex.id}',event)"
+               onmouseup="cancelExDetailPress()"
+               onmouseleave="cancelExDetailPress()">
             <div class="lib-ex-icon">${EQ_ICONS[ex.equipment] || '🏋️'}</div>
             <div class="lib-ex-body">
               <div class="lib-ex-name">${escHtml(ex.name)}${isCustom(ex.id)?'<span class="custom-badge">CUSTOM</span>':''}</div>
@@ -2012,9 +2083,132 @@ function showToast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
+// ── EXERCISE DETAIL SHEET ─────────────────────────────────────
+let _exDetailPressTimer = null;
+let _exDetailAddFn      = null;
+
+function startExDetailPress(exId, e) {
+  cancelExDetailPress();
+  _exDetailPressTimer = setTimeout(() => {
+    _exDetailPressTimer = null;
+    openExDetail(exId, () => addExercise(exId));
+  }, 500);
+}
+
+function cancelExDetailPress() {
+  if (_exDetailPressTimer) { clearTimeout(_exDetailPressTimer); _exDetailPressTimer = null; }
+}
+
+function openExDetail(exId, addFn) {
+  const customs = getCustomExercises();
+  const ex = customs.find(e => e.id === exId) || (LAROFIT_EXERCISES||[]).find(e => e.id === exId);
+  if (!ex) return;
+
+  _exDetailAddFn = addFn;
+
+  const video = document.getElementById('ex-detail-video');
+  const placeholder = document.getElementById('ex-detail-video-placeholder');
+  if (ex.mediaUrl) {
+    video.src = ex.mediaUrl; video.style.display = 'block';
+    placeholder.style.display = 'none';
+    video.load(); video.play().catch(()=>{});
+  } else {
+    video.src = ''; video.style.display = 'none';
+    placeholder.style.display = 'flex';
+  }
+
+  document.getElementById('ex-detail-name').textContent = ex.name;
+
+  const EQ_LABEL = { bodyweight:'Bodyweight', bands:'Bands', barbell:'Barbell', bench:'Bench',
+    cardio_machine:'Cardio Machine', dumbbells:'Dumbbells', exercise_ball:'Exercise Ball',
+    ez_bar:'EZ Bar', kettlebells:'Kettlebells', machine_cable:'Machine/Cable' };
+  const muscles = [ex.primaryMuscle, ...(ex.secondaryMuscles||[])].filter(Boolean);
+  document.getElementById('ex-detail-tags').innerHTML = [
+    ...muscles.map(m => `<span class="ex-detail-tag muscle">${m.replace('_',' ')}</span>`),
+    ex.equipment ? `<span class="ex-detail-tag equip">${EQ_LABEL[ex.equipment]||ex.equipment}</span>` : '',
+    ex.difficulty ? `<span class="ex-detail-tag diff">${ex.difficulty}</span>` : ''
+  ].filter(Boolean).join('');
+
+  document.getElementById('ex-detail-desc').textContent = ex.description || '';
+  document.getElementById('ex-detail-instructions').innerHTML = (ex.instructions||[]).map(s=>`<li>${escHtml(s)}</li>`).join('');
+  document.getElementById('ex-detail-benefits').innerHTML     = (ex.benefits||[]).map(s=>`<li>${escHtml(s)}</li>`).join('');
+  document.getElementById('ex-detail-mistakes').innerHTML     = (ex.commonMistakes||[]).map(s=>`<li>${escHtml(s)}</li>`).join('');
+
+  document.getElementById('ex-detail-overlay').classList.add('show');
+  document.getElementById('ex-detail-body').scrollTop = 0;
+}
+
+function closeExDetail(e) {
+  if (e && e.target !== document.getElementById('ex-detail-overlay')) return;
+  document.getElementById('ex-detail-overlay').classList.remove('show');
+  const video = document.getElementById('ex-detail-video');
+  video.pause(); video.src = '';
+  _exDetailAddFn = null;
+}
+
+function exDetailAdd() {
+  if (_exDetailAddFn) _exDetailAddFn();
+  document.getElementById('ex-detail-overlay').classList.remove('show');
+  const video = document.getElementById('ex-detail-video');
+  video.pause(); video.src = '';
+  _exDetailAddFn = null;
+}
+
+function toggleDetailSection(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
 // ── RUN ──
 document.addEventListener('DOMContentLoaded', init);
 </script>
+
+<!-- EXERCISE DETAIL SHEET -->
+<div class="ex-detail-overlay" id="ex-detail-overlay" onclick="closeExDetail(event)">
+  <div class="ex-detail-sheet" id="ex-detail-sheet">
+    <div class="ex-detail-video" id="ex-detail-video-wrap">
+      <video id="ex-detail-video" autoplay muted loop playsinline style="display:none;"></video>
+      <div class="ex-detail-video-placeholder" id="ex-detail-video-placeholder">
+        <i class="ti ti-barbell"></i>
+      </div>
+    </div>
+    <div class="ex-detail-body" id="ex-detail-body">
+      <div class="ex-detail-name" id="ex-detail-name"></div>
+      <div class="ex-detail-tags" id="ex-detail-tags"></div>
+      <div class="ex-detail-section">
+        <div class="ex-detail-desc" id="ex-detail-desc"></div>
+      </div>
+      <div class="ex-detail-collapsible">
+        <button class="ex-detail-collapse-btn open" onclick="toggleDetailSection(this)">
+          <span>Instructions</span><i class="ti ti-chevron-down"></i>
+        </button>
+        <div class="ex-detail-collapse-content open">
+          <ol class="ex-detail-list" id="ex-detail-instructions"></ol>
+        </div>
+      </div>
+      <div class="ex-detail-collapsible">
+        <button class="ex-detail-collapse-btn" onclick="toggleDetailSection(this)">
+          <span>Benefits</span><i class="ti ti-chevron-down"></i>
+        </button>
+        <div class="ex-detail-collapse-content">
+          <ul class="ex-detail-list" id="ex-detail-benefits"></ul>
+        </div>
+      </div>
+      <div class="ex-detail-collapsible">
+        <button class="ex-detail-collapse-btn" onclick="toggleDetailSection(this)">
+          <span>Common Mistakes</span><i class="ti ti-chevron-down"></i>
+        </button>
+        <div class="ex-detail-collapse-content">
+          <ul class="ex-detail-list" id="ex-detail-mistakes"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="ex-detail-footer">
+      <button class="ex-detail-close-btn" onclick="closeExDetail()"><i class="ti ti-x"></i></button>
+      <button class="ex-detail-add-btn" id="ex-detail-add-btn" onclick="exDetailAdd()">ADD EXERCISE</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

@@ -223,7 +223,7 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 .gif-slot {
   flex: 1;
   min-height: 0;
-  background: var(--bg-dark);
+  background: #000;
   border-bottom: 0.5px solid var(--border);
   display: flex;
   align-items: center;
@@ -233,7 +233,7 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   position: relative;
   -webkit-tap-highlight-color: transparent;
 }
-.gif-slot img {
+.gif-slot video {
   width: 100%; height: 100%; object-fit: contain;
   display: block;
 }
@@ -251,6 +251,96 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   font-family: var(--font-mono); pointer-events: none;
   border: 0.5px solid rgba(255,255,255,0.12);
 }
+
+/* ── EXERCISE DETAIL SHEET ── */
+.ex-detail-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  z-index: 800; display: none; align-items: flex-end;
+}
+.ex-detail-overlay.show { display: flex; }
+.ex-detail-sheet {
+  width: 100%; max-height: 92vh;
+  background: var(--bg-card); border-radius: var(--radius) var(--radius) 0 0;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.ex-detail-video {
+  width: 100%; height: 260px; background: #000; flex-shrink: 0;
+  position: relative; overflow: hidden;
+}
+.ex-detail-video video {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+}
+.ex-detail-video-placeholder {
+  width: 100%; height: 100%; display: flex; align-items: center;
+  justify-content: center; flex-direction: column; gap: 8px;
+}
+.ex-detail-video-placeholder i { font-size: 40px; color: rgba(198,241,53,0.2); }
+.ex-detail-body {
+  flex: 1; overflow-y: auto; padding: 16px 16px 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.ex-detail-name {
+  font-family: var(--font-display); font-size: 22px;
+  color: var(--text); line-height: 1.1; margin-bottom: 10px;
+}
+.ex-detail-tags {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;
+}
+.ex-detail-tag {
+  font-size: 10px; font-weight: 700; font-family: var(--font-mono);
+  padding: 3px 8px; border-radius: 999px; text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.ex-detail-tag.muscle  { background: rgba(198,241,53,0.12); color: var(--volt); }
+.ex-detail-tag.equip   { background: var(--bg-dark); color: var(--text-2); }
+.ex-detail-tag.diff    { background: rgba(255,255,255,0.06); color: var(--text-3); }
+.ex-detail-section { margin-bottom: 14px; }
+.ex-detail-section-title {
+  font-size: 10px; font-weight: 700; font-family: var(--font-mono);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--text-3); margin-bottom: 6px;
+}
+.ex-detail-desc {
+  font-size: 13px; color: var(--text-2); line-height: 1.5;
+}
+.ex-detail-list {
+  margin: 0; padding: 0 0 0 16px;
+}
+.ex-detail-list li {
+  font-size: 13px; color: var(--text-2); line-height: 1.5; margin-bottom: 4px;
+}
+.ex-detail-collapsible { border-top: 0.5px solid var(--border); }
+.ex-detail-collapse-btn {
+  width: 100%; background: none; border: none; padding: 12px 0;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ex-detail-collapse-btn span {
+  font-size: 10px; font-weight: 700; font-family: var(--font-mono);
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-3);
+}
+.ex-detail-collapse-btn i { font-size: 14px; color: var(--text-3); transition: transform 0.2s; }
+.ex-detail-collapse-btn.open i { transform: rotate(180deg); }
+.ex-detail-collapse-content { padding-bottom: 12px; display: none; }
+.ex-detail-collapse-content.open { display: block; }
+.ex-detail-footer {
+  padding: 12px 16px; border-top: 0.5px solid var(--border);
+  display: flex; gap: 10px; flex-shrink: 0;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+.ex-detail-close-btn {
+  flex: 0 0 48px; height: 48px; border-radius: var(--radius-sm);
+  background: var(--bg-dark); border: none; color: var(--text-2);
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.ex-detail-add-btn {
+  flex: 1; height: 48px; border-radius: var(--radius-sm);
+  background: var(--volt); border: none; color: #000;
+  font-family: var(--font-display); font-size: 18px; letter-spacing: 0.05em;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.ex-detail-add-btn:active { opacity: 0.85; }
 
 /* ── NOTES SECTION ── */
 .ex-notes-wrap {
@@ -553,14 +643,6 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 .ex-picker-sub  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 .ex-picker-add  { margin-left: auto; padding: 6px 14px; background: var(--bg-dark); color: var(--volt); border-radius: 999px; font-size: 12px; font-weight: 700; font-family: var(--font-mono); flex-shrink: 0; }
 
-/* GIF fullscreen overlay */
-.gif-full-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 700;
-  display: none; align-items: center; justify-content: center; padding: 24px;
-}
-.gif-full-overlay.show { display: flex; }
-.gif-full-img { max-width: 100%; max-height: 80vh; border-radius: var(--radius); }
-.gif-full-name { color: white; font-size: 16px; font-weight: 700; margin-top: 16px; text-align: center; }
 
 /* Active input highlight */
 .active-inp-highlight { border-color: var(--volt-dark) !important; background: var(--volt-bg) !important; }
@@ -635,14 +717,13 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <!-- Exercise card — fills remaining height -->
     <div class="ex-card" id="ex-card">
 
-      <!-- GIF slot — flexes to fill upper portion -->
-      <div class="gif-slot" id="gif-slot" onclick="openGifFull()">
-        <img id="gif-img" src="" alt="" style="display:none;">
+      <!-- Video slot — flexes to fill upper portion -->
+      <div class="gif-slot" id="gif-slot">
+        <video id="gif-video" autoplay muted loop playsinline style="display:none;"></video>
         <div class="gif-slot-placeholder" id="gif-placeholder">
           <i class="ti ti-player-play"></i>
-          <span>Animation coming soon</span>
+          <span>No animation</span>
         </div>
-        <span class="gif-expand-hint" id="gif-expand-hint" style="display:none;">Tap to expand</span>
       </div>
 
       <!-- Exercise name + 1RM bar -->
@@ -790,12 +871,50 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
   </div>
 </div>
 
-<!-- GIF FULLSCREEN -->
-<div class="gif-full-overlay" id="gif-full-overlay" onclick="closeGifFull()">
-  <div style="text-align:center;">
-    <img class="gif-full-img" id="gif-full-img" src="" alt="">
-    <div class="gif-full-name" id="gif-full-name"></div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:8px;">Tap anywhere to close</div>
+<!-- EXERCISE DETAIL SHEET -->
+<div class="ex-detail-overlay" id="ex-detail-overlay" onclick="closeExDetail(event)">
+  <div class="ex-detail-sheet" id="ex-detail-sheet">
+    <div class="ex-detail-video" id="ex-detail-video-wrap">
+      <video id="ex-detail-video" autoplay muted loop playsinline style="display:none;"></video>
+      <div class="ex-detail-video-placeholder" id="ex-detail-video-placeholder">
+        <i class="ti ti-barbell"></i>
+      </div>
+    </div>
+    <div class="ex-detail-body" id="ex-detail-body">
+      <div class="ex-detail-name" id="ex-detail-name"></div>
+      <div class="ex-detail-tags" id="ex-detail-tags"></div>
+      <div class="ex-detail-section">
+        <div class="ex-detail-desc" id="ex-detail-desc"></div>
+      </div>
+      <div class="ex-detail-collapsible">
+        <button class="ex-detail-collapse-btn open" onclick="toggleDetailSection(this)">
+          <span>Instructions</span><i class="ti ti-chevron-down"></i>
+        </button>
+        <div class="ex-detail-collapse-content open">
+          <ol class="ex-detail-list" id="ex-detail-instructions"></ol>
+        </div>
+      </div>
+      <div class="ex-detail-collapsible">
+        <button class="ex-detail-collapse-btn" onclick="toggleDetailSection(this)">
+          <span>Benefits</span><i class="ti ti-chevron-down"></i>
+        </button>
+        <div class="ex-detail-collapse-content">
+          <ul class="ex-detail-list" id="ex-detail-benefits"></ul>
+        </div>
+      </div>
+      <div class="ex-detail-collapsible">
+        <button class="ex-detail-collapse-btn" onclick="toggleDetailSection(this)">
+          <span>Common Mistakes</span><i class="ti ti-chevron-down"></i>
+        </button>
+        <div class="ex-detail-collapse-content">
+          <ul class="ex-detail-list" id="ex-detail-mistakes"></ul>
+        </div>
+      </div>
+    </div>
+    <div class="ex-detail-footer">
+      <button class="ex-detail-close-btn" onclick="closeExDetail()"><i class="ti ti-x"></i></button>
+      <button class="ex-detail-add-btn" id="ex-detail-add-btn" onclick="exDetailAdd()">ADD EXERCISE</button>
+    </div>
   </div>
 </div>
 
@@ -964,7 +1083,7 @@ function buildExerciseList(exArr, workoutName) {
     reps:       ex.reps    || 10,
     restSec:    ex.restSec || 90,
     type:       ex.type    || lookupExType(ex.id) || 'strength',
-    gifUrl:     ex.gifUrl  || lookupGifUrl(ex.id),
+    mediaUrl:   ex.mediaUrl || lookupMediaUrl(ex.id),
     loggedSets: buildLoggedSets(ex)
   }));
 
@@ -1182,34 +1301,23 @@ function renderExercise() {
   updateLogBtn();
 }
 
-// ── GIF SLOT ──────────────────────────────────────────────────
+// ── VIDEO SLOT ──────────────────────────────────────────────────
 function renderGifSlot(ex) {
-  const img         = document.getElementById('gif-img');
+  const video       = document.getElementById('gif-video');
   const placeholder = document.getElementById('gif-placeholder');
-  const hint        = document.getElementById('gif-expand-hint');
+  const mediaUrl    = ex.mediaUrl || lookupMediaUrl(ex.id);
 
-  if (ex.gifUrl) {
-    img.src                   = ex.gifUrl;
-    img.alt                   = ex.name;
-    img.style.display         = 'block';
+  if (mediaUrl) {
+    video.src                 = mediaUrl;
+    video.style.display       = 'block';
     placeholder.style.display = 'none';
-    hint.style.display        = 'block';
+    video.load();
+    video.play().catch(() => {});
   } else {
-    img.style.display         = 'none';
+    video.src                 = '';
+    video.style.display       = 'none';
     placeholder.style.display = 'flex';
-    hint.style.display        = 'none';
   }
-}
-
-function openGifFull() {
-  const ex = exercises[currentExIdx];
-  if (!ex || !ex.gifUrl) return;
-  document.getElementById('gif-full-img').src          = ex.gifUrl;
-  document.getElementById('gif-full-name').textContent = ex.name;
-  document.getElementById('gif-full-overlay').classList.add('show');
-}
-function closeGifFull() {
-  document.getElementById('gif-full-overlay').classList.remove('show');
 }
 
 // ── NOTES ─────────────────────────────────────────────────────
@@ -1908,10 +2016,10 @@ function lookupExType(id) {
   const f = LAROFIT_EXERCISES.find(e => e.id === id);
   return f ? (f.type || 'strength') : 'strength';
 }
-function lookupGifUrl(id) {
+function lookupMediaUrl(id) {
   if (!id || typeof LAROFIT_EXERCISES === 'undefined') return null;
   const f = LAROFIT_EXERCISES.find(e => e.id === id);
-  return f ? (f.gifUrl || null) : null;
+  return f ? (f.mediaUrl || null) : null;
 }
 
 // ── FREE FORM EXERCISE PICKER ─────────────────────────────────
@@ -1974,15 +2082,119 @@ function filterPicker() {
 
   document.getElementById('ex-picker-list').innerHTML = (results.length
     ? results.map(ex => `
-        <div class="ex-picker-row" onclick="addExerciseFreeForm('${ex.id}')">
-          <div class="ex-picker-icon">${catIcons[ex.category]||'💪'}</div>
+        <div class="ex-picker-row"
+             onclick="addExerciseFreeForm('${ex.id}')"
+             ontouchstart="startExDetailPress('${ex.id}',event)"
+             ontouchend="cancelExDetailPress()"
+             ontouchmove="cancelExDetailPress()"
+             onmousedown="startExDetailPress('${ex.id}',event)"
+             onmouseup="cancelExDetailPress()"
+             onmouseleave="cancelExDetailPress()">
+          <div class="ex-picker-icon">${catIcons[ex.primaryMuscle||ex.category]||'💪'}</div>
           <div style="flex:1;min-width:0;">
             <div class="ex-picker-name">${escHtml(ex.name)}${isCustom(ex.id) ? '<span class="custom-badge">CUSTOM</span>' : ''}</div>
-            <div class="ex-picker-sub">${ex.category||''} · ${(ex.eq||'').toUpperCase()}</div>
+            <div class="ex-picker-sub">${(ex.primaryMuscle||ex.category||'').replace('_',' ')} · ${(ex.equipment||ex.eq||'').replace('_',' ')}</div>
           </div>
           <span class="ex-picker-add">+ Add</span>
         </div>`).join('')
     : `<div style="padding:40px 16px;text-align:center;color:var(--text-3);font-size:14px;">No exercises found</div>`);
+}
+
+// ── EXERCISE DETAIL SHEET ─────────────────────────────────────
+let _exDetailPressTimer = null;
+let _exDetailPressId    = null;
+let _exDetailAddFn      = null;
+
+function startExDetailPress(exId, e) {
+  cancelExDetailPress();
+  _exDetailPressId = exId;
+  _exDetailPressTimer = setTimeout(() => {
+    _exDetailPressTimer = null;
+    openExDetail(exId, () => addExerciseFreeForm(exId));
+  }, 500);
+}
+
+function cancelExDetailPress() {
+  if (_exDetailPressTimer) { clearTimeout(_exDetailPressTimer); _exDetailPressTimer = null; }
+}
+
+function openExDetail(exId, addFn) {
+  const customs = getCustomExercises();
+  const ex = customs.find(e => e.id === exId) || (LAROFIT_EXERCISES||[]).find(e => e.id === exId);
+  if (!ex) return;
+
+  _exDetailAddFn = addFn;
+
+  // Video
+  const video = document.getElementById('ex-detail-video');
+  const placeholder = document.getElementById('ex-detail-video-placeholder');
+  const mediaUrl = ex.mediaUrl || lookupMediaUrl(ex.id);
+  if (mediaUrl) {
+    video.src = mediaUrl; video.style.display = 'block';
+    placeholder.style.display = 'none';
+    video.load(); video.play().catch(()=>{});
+  } else {
+    video.src = ''; video.style.display = 'none';
+    placeholder.style.display = 'flex';
+  }
+
+  // Name
+  document.getElementById('ex-detail-name').textContent = ex.name;
+
+  // Tags
+  const EQ_LABEL = { bodyweight:'Bodyweight', bands:'Bands', barbell:'Barbell', bench:'Bench',
+    cardio_machine:'Cardio Machine', dumbbells:'Dumbbells', exercise_ball:'Exercise Ball',
+    ez_bar:'EZ Bar', kettlebells:'Kettlebells', machine_cable:'Machine/Cable' };
+  const muscles = [ex.primaryMuscle, ...(ex.secondaryMuscles||[])].filter(Boolean);
+  const tags = [
+    ...muscles.map(m => `<span class="ex-detail-tag muscle">${m.replace('_',' ')}</span>`),
+    ex.equipment ? `<span class="ex-detail-tag equip">${EQ_LABEL[ex.equipment]||ex.equipment}</span>` : '',
+    ex.difficulty ? `<span class="ex-detail-tag diff">${ex.difficulty}</span>` : ''
+  ].filter(Boolean).join('');
+  document.getElementById('ex-detail-tags').innerHTML = tags;
+
+  // Description
+  document.getElementById('ex-detail-desc').textContent = ex.description || '';
+
+  // Instructions
+  const instr = ex.instructions || [];
+  document.getElementById('ex-detail-instructions').innerHTML =
+    instr.map(s => `<li>${escHtml(s)}</li>`).join('');
+
+  // Benefits
+  const ben = ex.benefits || [];
+  document.getElementById('ex-detail-benefits').innerHTML =
+    ben.map(s => `<li>${escHtml(s)}</li>`).join('');
+
+  // Mistakes
+  const mis = ex.commonMistakes || [];
+  document.getElementById('ex-detail-mistakes').innerHTML =
+    mis.map(s => `<li>${escHtml(s)}</li>`).join('');
+
+  document.getElementById('ex-detail-overlay').classList.add('show');
+  document.getElementById('ex-detail-body').scrollTop = 0;
+}
+
+function closeExDetail(e) {
+  if (e && e.target !== document.getElementById('ex-detail-overlay')) return;
+  document.getElementById('ex-detail-overlay').classList.remove('show');
+  const video = document.getElementById('ex-detail-video');
+  video.pause(); video.src = '';
+  _exDetailAddFn = null;
+}
+
+function exDetailAdd() {
+  if (_exDetailAddFn) _exDetailAddFn();
+  document.getElementById('ex-detail-overlay').classList.remove('show');
+  const video = document.getElementById('ex-detail-video');
+  video.pause(); video.src = '';
+  _exDetailAddFn = null;
+}
+
+function toggleDetailSection(btn) {
+  btn.classList.toggle('open');
+  const content = btn.nextElementSibling;
+  content.classList.toggle('open');
 }
 
 function addExerciseFreeForm(exId) {
@@ -1998,7 +2210,7 @@ function addExerciseFreeForm(exId) {
     reps:       10,
     restSec:    90,
     type:       data.type || 'strength',
-    gifUrl:     data.gifUrl || null,
+    mediaUrl:   data.mediaUrl || null,
     loggedSets: buildLoggedSets({ id: data.id, sets: 3, reps: 10, type: data.type })
   };
 
