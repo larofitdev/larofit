@@ -1070,7 +1070,18 @@ function calc1RM(weight, reps) {
 
 // ── EXERCISE TYPE HELPERS ─────────────────────────────────────
 function exTypeOf(ex) {
-  return ex.type || lookupExType(ex.id) || 'strength';
+  if (ex.type) return ex.type;
+  if (ex.recordType) {
+    const RT_MAP = {
+      weight_reps:   'strength',
+      reps_only:     'bodyweight',
+      duration:      'timed_bodyweight',
+      reps_duration: 'timed_bodyweight',
+      cardio:        'cardio'
+    };
+    return RT_MAP[ex.recordType] || 'strength';
+  }
+  return lookupExType(ex.id) || 'strength';
 }
 
 function isCardio(ex)   { const t = exTypeOf(ex); return t === 'cardio'; }
@@ -1156,7 +1167,7 @@ function buildExerciseList(exArr, workoutName) {
     sets:       ex.sets    || 3,
     reps:       ex.reps    || 10,
     restSec:    ex.restSec || 90,
-    type:       ex.type    || lookupExType(ex.id) || 'strength',
+    type:       exTypeOf(ex),
     mediaUrl:   ex.mediaUrl || lookupMediaUrl(ex.id),
     loggedSets: buildLoggedSets(ex)
   }));
@@ -1167,7 +1178,7 @@ function buildExerciseList(exArr, workoutName) {
 }
 
 function buildLoggedSets(ex) {
-  const t    = ex.type || lookupExType(ex.id) || 'strength';
+  const t    = exTypeOf(ex);
   const count = ex.sets || 3;
 
   if (t === 'cardio') {
@@ -2410,9 +2421,9 @@ function addExerciseFreeForm(exId) {
     sets:       3,
     reps:       10,
     restSec:    90,
-    type:       data.type || 'strength',
+    type:       exTypeOf(data),
     mediaUrl:   data.mediaUrl || null,
-    loggedSets: buildLoggedSets({ id: data.id, sets: 3, reps: 10, type: data.type })
+    loggedSets: buildLoggedSets({ id: data.id, sets: 3, reps: 10, type: exTypeOf(data), recordType: data.recordType })
   };
 
   exercises.push(newEx);
