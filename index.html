@@ -751,9 +751,20 @@ function checkInstallBanner() {
   if (isStandalone || (!isIOS && !isAndroid)) return;
   if (localStorage.getItem('lf_install_banner_dismissed')) return;
 
-  if (isAndroid) {
-    document.getElementById('install-banner-text').innerHTML =
-      'Install LaroFit: tap <strong>⋮</strong> → <strong>Add to Home screen</strong>';
+  // In-app browsers (Gmail, Instagram, etc.) have no Share button /
+  // install option — tell the user to escape to a real browser instead.
+  const inAppTokens = /(GSA|FBAN|FBAV|FB_IAB|Instagram|Messenger|Line\/|Twitter)/i.test(ua);
+  const isInApp = inAppTokens
+               || (isIOS && !/Safari/i.test(ua))
+               || (isAndroid && /;\s?wv\)/i.test(ua));
+
+  const txt = document.getElementById('install-banner-text');
+  if (isInApp) {
+    txt.innerHTML = isIOS
+      ? 'To install LaroFit, open <strong>larofit.com</strong> in <strong>Safari</strong> (tap ⋯ → Open in Safari)'
+      : 'To install LaroFit, open <strong>larofit.com</strong> in <strong>Chrome</strong>';
+  } else if (isAndroid) {
+    txt.innerHTML = 'Install LaroFit: tap <strong>⋮</strong> → <strong>Add to Home screen</strong>';
   }
   document.getElementById('install-banner').style.display = 'block';
 }
