@@ -547,16 +547,31 @@ let measUnit= 'in';
 
 function init() {
   const st = JSON.parse(localStorage.getItem('lf_settings') || '{}');
-  units     = st.units || 'imperial';
-  wtUnit    = units === 'metric' ? 'kg'  : 'lbs';
-  measUnit  = units === 'metric' ? 'cm'  : 'in';
+  units    = st.units || 'imperial';
+  wtUnit   = units === 'metric' ? 'kg' : 'lbs';
+  measUnit = units === 'metric' ? 'cm' : 'in';
 
+  // Render immediately from localStorage
   log = JSON.parse(localStorage.getItem('lf_measurements_log') || '[]');
-  // Sort newest first
   log.sort((a, b) => new Date(b.date) - new Date(a.date));
-
   applyUnitLabels();
   renderAll();
+
+  // Background sync from Supabase
+  LF.ready().then(() =>
+    LF.db.getMeasurements().then(remote => {
+      if (!remote || !remote.length) return;
+      // Remote entries use entry_date; normalise to date for local shape
+      const normalised = remote.map(r => {
+        const e = { ...r };
+        if (e.entry_date && !e.date) { e.date = e.entry_date; }
+        return e;
+      });
+      normalised.sort((a, b) => new Date(b.date) - new Date(a.date));
+      log = normalised;
+      renderAll();
+    }).catch(() => {})
+  );
 }
 
 function applyUnitLabels() {
@@ -773,9 +788,12 @@ function saveLog() {
 
   localStorage.setItem('lf_measurements_log', JSON.stringify(log));
 
-  // Also update lf_measurements_log for progress.html BW chart
-  // Mirror latest weight into workout history if needed
   syncBWToHistory(entry);
+
+  // Sync to Supabase in the background (map date → entry_date)
+  LF.ready().then(() =>
+    LF.db.saveMeasurement({ ...entry, entry_date: entry.date }).catch(() => {})
+  );
 
   closeLog();
   renderAll();
@@ -784,10 +802,26 @@ function saveLog() {
 
 function deleteEntry(i) {
   if (!confirm('Delete this entry?')) return;
+  const deleted = log[i];
   log.splice(i, 1);
   localStorage.setItem('lf_measurements_log', JSON.stringify(log));
   renderAll();
   showToast('Entry deleted');
+
+  // Sync deletion to Supabase in the background
+  if (deleted && deleted.date) {
+    LF.ready().then(async () => {
+      try {
+        const sb   = await LF.ready();
+        const user = await LF.auth.user();
+        if (!user) return;
+        await sb.from('measurements')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('entry_date', deleted.date);
+      } catch(e) {}
+    });
+  }
 }
 
 // Keep bodyweight synced so progress.html BW chart stays current
