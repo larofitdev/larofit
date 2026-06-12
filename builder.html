@@ -957,6 +957,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div class="lib-sheet-handle"></div>
   <div class="lib-sheet-top">
     <div class="lib-sheet-title">Add Exercise</div>
+    <div id="lib-debug" style="font-size:11px;color:var(--volt);font-family:monospace;padding:2px 0;"></div>
     <div class="lib-search-wrap">
       <i class="ti ti-search lib-search-icon"></i>
       <input
@@ -1815,7 +1816,12 @@ function renderLibrary() {
   const session  = currentSession();
   const addedIds = new Set((session?.exercises || []).map(e => e.id));
   const customs  = getCustomExercises();
-  let exercises  = [...customs, ...(LAROFIT_EXERCISES || [])];
+  const builtins = LAROFIT_EXERCISES || [];
+  let exercises  = [...customs, ...builtins];
+
+  // DEBUG — show counts visibly
+  const dbg = document.getElementById('lib-debug');
+  if (dbg) dbg.textContent = `customs:${customs.length} builtins:${builtins.length} total:${exercises.length}`;
 
   if (libMuscle !== 'all') exercises = exercises.filter(e => e.primaryMuscle === libMuscle);
   if (libEq     !== 'all') exercises = exercises.filter(e => e.equipment === libEq);
