@@ -97,7 +97,7 @@ window.LF = {
             full_name: fullName.trim(),
             name:      firstName,
           },
-          emailRedirectTo: 'https://larofit.com/index.html'
+          emailRedirectTo: 'https://larofit.com/verified.html'
         }
       });
       return { data, error };

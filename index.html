@@ -173,6 +173,23 @@ if ('serviceWorker' in navigator) {
     </div>
   </div>
 
+  <!-- INSTALL BANNER — only renders in a mobile browser tab, never in the installed app -->
+  <div id="install-banner" style="display:none;margin:12px var(--page-pad) 0;">
+    <div style="display:flex;align-items:center;gap:10px;background:var(--bg-card);
+                border:1px solid var(--volt-border);border-radius:var(--radius);
+                padding:10px 12px;">
+      <span style="font-size:18px;flex-shrink:0;">📲</span>
+      <div style="flex:1;font-size:12.5px;color:var(--text-2);line-height:1.4;" id="install-banner-text">
+        Install LaroFit: tap <strong>Share</strong> → <strong>Add to Home Screen</strong>
+      </div>
+      <button onclick="dismissInstallBanner()" aria-label="Dismiss"
+              style="flex-shrink:0;background:none;border:none;color:var(--text-3);
+                     font-size:16px;padding:4px;cursor:pointer;touch-action:manipulation;">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- TODAY'S WORKOUT CARD -->
   <div style="padding:14px var(--page-pad) 0;">
     <div class="lf-card-dark" id="today-card">
@@ -723,10 +740,35 @@ function closeBuildSheet() {
 }
 
 // ── INIT ─────────────────────────────────────────────────────
+// ── INSTALL BANNER (mobile browser tab only) ────────────────
+function checkInstallBanner() {
+  const ua = navigator.userAgent || '';
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+  const isIOS     = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+
+  if (isStandalone || (!isIOS && !isAndroid)) return;
+  if (localStorage.getItem('lf_install_banner_dismissed')) return;
+
+  if (isAndroid) {
+    document.getElementById('install-banner-text').innerHTML =
+      'Install LaroFit: tap <strong>⋮</strong> → <strong>Add to Home screen</strong>';
+  }
+  document.getElementById('install-banner').style.display = 'block';
+}
+
+function dismissInstallBanner() {
+  localStorage.setItem('lf_install_banner_dismissed', '1');
+  document.getElementById('install-banner').style.display = 'none';
+}
+
 async function init() {
   await LF.ready();
   const ok = await LF.guard();
   if (!ok) return;
+
+  checkInstallBanner();
 
   // Run all data loads in parallel for speed
   await Promise.all([
