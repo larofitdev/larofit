@@ -1166,6 +1166,7 @@ function buildExerciseList(exArr, workoutName) {
     name:       ex.name || lookupExName(ex.id),
     sets:       ex.sets    || 3,
     reps:       ex.reps    || 10,
+    durationSec: ex.durationSec || null,
     restSec:    ex.restSec || 90,
     type:       exTypeOf(ex),
     mediaUrl:   ex.mediaUrl || lookupMediaUrl(ex.id),
@@ -1560,7 +1561,7 @@ function renderBWTable(ex, lastSession) {
 }
 
 function renderTimedTable(ex) {
-  const targetSecs = ex.reps || 30;
+  const targetSecs = ex.durationSec || ex.reps || 30;
 
   const rows = ex.loggedSets.map((set, i) => {
     const isDone   = set.logged;
@@ -1829,7 +1830,7 @@ function startHold(exIdx, setIdx) {
   const ex  = exercises[exIdx];
   const set = ex.loggedSets[setIdx];
   const tEl = document.getElementById('inp-t-' + exIdx + '-' + setIdx);
-  const secs = parseInt(tEl ? tEl.value : set.holdTime) || parseInt(ex.reps) || 30;
+  const secs = parseInt(tEl ? tEl.value : set.holdTime) || ex.durationSec || parseInt(ex.reps) || 30;
 
   holdExIdx     = exIdx;
   holdSetIdx    = setIdx;
