@@ -667,7 +667,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
         <div class="danger-label" style="color:var(--danger);">Delete account</div>
         <div class="danger-sub">Permanently erase all your data</div>
       </div>
-      <button class="btn btn-sm" style="border:1px solid var(--danger);color:var(--danger);background:var(--danger-bg);" onclick="confirmDelete()">Delete</button>
+      <button class="btn btn-sm" id="delete-acct-btn" style="border:1px solid var(--danger);color:var(--danger);background:var(--danger-bg);" onclick="confirmDelete()">Delete</button>
     </div>
   </div>
 
@@ -1067,15 +1067,73 @@ async function confirmSignOut() {
   }
 }
 
-async function confirmDelete() {
-  if (confirm('Delete your account? This will erase ALL your data and cannot be undone.')) {
-    if (confirm('Are you sure? This is permanent.')) {
-      // Clear localStorage
-      Object.keys(localStorage).filter(k => k.startsWith('lf_')).forEach(k => localStorage.removeItem(k));
-      // Sign out (Supabase account deletion requires service key — for now sign out and redirect)
-      await LF.auth.signOut();
-      window.location.href = 'signup.html';
+let _deleteArmed = false;
+let _deleteArmTimer = null;
+
+function confirmDelete() {
+  const btn = document.getElementById('delete-acct-btn');
+
+  // First tap — arm the button (confirm() is unreliable in PWAs)
+  if (!_deleteArmed) {
+    _deleteArmed = true;
+    btn.textContent = 'Tap again to delete';
+    btn.style.background = 'var(--danger)';
+    btn.style.color = '#fff';
+    clearTimeout(_deleteArmTimer);
+    _deleteArmTimer = setTimeout(() => {
+      _deleteArmed = false;
+      btn.textContent = 'Delete';
+      btn.style.background = 'var(--danger-bg)';
+      btn.style.color = 'var(--danger)';
+    }, 4000);
+    return;
+  }
+
+  // Second tap — execute
+  clearTimeout(_deleteArmTimer);
+  _deleteArmed = false;
+  executeDelete(btn);
+}
+
+async function executeDelete(btn) {
+  if (!navigator.onLine) {
+    showToast('You\'re offline — connect to delete your account');
+    btn.textContent = 'Delete';
+    btn.style.background = 'var(--danger-bg)';
+    btn.style.color = 'var(--danger)';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+
+  try {
+    const session = await LF.auth.session();
+    if (!session) { throw new Error('No active session — sign in again first'); }
+
+    const res = await fetch(SUPABASE_URL + '/functions/v1/delete-account', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + session.access_token,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Delete failed (' + res.status + ')');
     }
+
+    // Server-side account + data gone — wipe everything local (lf_ keys,
+    // Supabase session, anything else on this origin)
+    localStorage.clear();
+    window.location.href = 'signup.html';
+  } catch (e) {
+    showToast('Delete failed: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = 'Delete';
+    btn.style.background = 'var(--danger-bg)';
+    btn.style.color = 'var(--danger)';
   }
 }
 
