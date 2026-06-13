@@ -1169,8 +1169,13 @@ function goBack() {
 function init() {
   document.getElementById('prog-start').value = localDateStr();
 
-  // Returning from custom-exercise creation? Restore the draft we stashed.
-  const _draft = loadDraft();
+  // Only restore a draft when we're actually returning from exercise-create
+  // (marked by ?openLibrary=1). Otherwise any leftover draft is stale —
+  // e.g. the user backed out without saving — so we discard it.
+  const _returningFromCreate =
+    new URLSearchParams(location.search).get('openLibrary') === '1';
+  const _draft = _returningFromCreate ? loadDraft() : null;
+  if (!_returningFromCreate) clearDraft();
   if (_draft) {
     program        = _draft.program;
     editingDate    = _draft.editingDate;
@@ -1287,25 +1292,37 @@ const DRAFT_KEY = 'lf_builder_draft';
 
 function goCreateCustom() {
   flushSetupToProgram();
+  // Use localStorage (the app's durable store) — sessionStorage can be
+  // partitioned/dropped across navigations in the installed PWA.
   try {
-    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
       program:        program,
       editingDate:    editingDate,
       editingSession: editingSession
     }));
-  } catch (e) {}
+  } catch (e) {
+    showToast('Could not save your draft — please save the program first');
+    return; // don't navigate away if we couldn't preserve the draft
+  }
   window.location.href = 'exercise-create.html?returnTo=builder';
 }
 
 function loadDraft() {
   try {
-    const raw = sessionStorage.getItem(DRAFT_KEY);
+    const raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return null;
-    sessionStorage.removeItem(DRAFT_KEY); // consume — one-time restore
+    localStorage.removeItem(DRAFT_KEY); // consume — one-time restore
     const d = JSON.parse(raw);
     if (!d || !d.program) return null;
     return d;
-  } catch (e) { return null; }
+  } catch (e) {
+    try { localStorage.removeItem(DRAFT_KEY); } catch (_) {}
+    return null;
+  }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
 }
 
 // Migrate old { name, exercises[] } days to { am: {...} | null, pm: null }
