@@ -1000,6 +1000,7 @@ function saveExercise() {
 function getReturnUrl() {
   const p = new URLSearchParams(location.search).get('returnTo');
   if (p === 'builder') return 'builder.html?openLibrary=1';
+  if (p === 'workout') return 'workout.html?openPicker=1';
   return 'programs.html';
 }
 

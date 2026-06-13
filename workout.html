@@ -900,7 +900,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     </div>
     <div class="ex-picker-cats" id="ex-picker-cats"></div>
     <!-- Create custom — always visible -->
-    <div class="ex-picker-create-row" onclick="window.location.href='exercise-create.html'">
+    <div class="ex-picker-create-row" onclick="goCreateCustomFromPicker()">
       <div class="ex-picker-create-icon">+</div>
       <div>
         <div class="ex-picker-create-label">Create custom exercise</div>
@@ -1157,7 +1157,14 @@ function resumeFromSnapshot(snap) {
   if (exercises.length > 0) goToEx(currentExIdx);
   checkAllDone();
   saveSnapshot();
-  showToast('Workout resumed — your sets were saved');
+
+  // If we came back from creating a custom exercise, re-open the picker
+  // (silently — no "resumed" toast, this was a deliberate round-trip)
+  if (new URLSearchParams(location.search).get('openPicker') === '1' && isFreeForm) {
+    setTimeout(openExPicker, 300);
+  } else {
+    showToast('Workout resumed — your sets were saved');
+  }
 }
 
 // ── LEAVE-WORKOUT GUARD ───────────────────────────────────────
@@ -2418,6 +2425,11 @@ function buildExPicker() {
   catsEl.innerHTML = cats.map(c =>
     `<button class="ex-picker-cat${c.id===pickerCat?' active':''}" onclick="setPickerCat('${c.id}')">${c.name}</button>`
   ).join('');
+}
+
+function goCreateCustomFromPicker() {
+  saveSnapshot(); // persist the in-progress workout before leaving the page
+  window.location.href = 'exercise-create.html?returnTo=workout';
 }
 
 function openExPicker() {
