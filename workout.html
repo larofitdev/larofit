@@ -687,7 +687,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 <body>
 
 <script src="supabase-client.js"></script>
-<script src="larofit-exercises.js?v=206"></script>
+<script src="larofit-exercises.js?v=207"></script>
 <script>window.LF_PAGE = 'workout';</script>
 <script src="larofit-nav.js"></script>
 
@@ -1321,18 +1321,39 @@ function loadSession(slot) {
   buildExerciseList(session.exercises || [], session.name || (slot === 'am' ? 'Morning' : 'Evening'));
 }
 
+// Weight unit label from profile setting (display only — no conversion)
+function weightUnit() {
+  try {
+    const s = JSON.parse(localStorage.getItem('lf_settings') || '{}');
+    return s.units === 'metric' ? 'kg' : 'lbs';
+  } catch (e) { return 'lbs'; }
+}
+
+// Library is authoritative for built-in exercises — refresh recordType so a
+// band saved as weight_reps becomes reps-only. Null for custom exercises.
+function libRecordType(id) {
+  if (!id || typeof LAROFIT_EXERCISES === 'undefined') return null;
+  const e = LAROFIT_EXERCISES.find(x => x.id === id);
+  return e ? (e.recordType || null) : null;
+}
+
 function buildExerciseList(exArr, workoutName) {
-  exercises = exArr.map(ex => ({
-    id:         ex.id,
-    name:       ex.name || lookupExName(ex.id),
-    sets:       ex.sets    || 3,
-    reps:       ex.reps    || 10,
-    durationSec: ex.durationSec || null,
-    restSec:    ex.restSec || 90,
-    type:       exTypeOf(ex),
-    mediaUrl:   ex.mediaUrl || lookupMediaUrl(ex.id),
-    loggedSets: buildLoggedSets(ex)
-  }));
+  exercises = exArr.map(ex => {
+    // Normalize built-in record types from the library before building the row
+    const lib = libRecordType(ex.id);
+    const exN = (lib && lib !== ex.recordType) ? { ...ex, recordType: lib } : ex;
+    return {
+      id:         exN.id,
+      name:       exN.name || lookupExName(exN.id),
+      sets:       exN.sets    || 3,
+      reps:       exN.reps    || 10,
+      durationSec: exN.durationSec || null,
+      restSec:    exN.restSec || 90,
+      type:       exTypeOf(exN),
+      mediaUrl:   exN.mediaUrl || lookupMediaUrl(exN.id),
+      loggedSets: buildLoggedSets(exN)
+    };
+  });
 
   if (!exercises.length && !isFreeForm) { show('no-program-state'); return; }
 
@@ -1489,7 +1510,7 @@ function renderExercise() {
   const prevEl = document.getElementById('prev-best');
   if (lastSession && isStrength(ex)) {
     prevEl.style.display = 'flex';
-    document.getElementById('prev-best-text').textContent = 'Last: ' + lastSession.bestWeight + ' lbs × ' + lastSession.bestReps + ' reps';
+    document.getElementById('prev-best-text').textContent = 'Last: ' + lastSession.bestWeight + ' ' + weightUnit() + ' × ' + lastSession.bestReps + ' reps';
   } else {
     prevEl.style.display = 'none';
   }
@@ -1637,7 +1658,7 @@ function renderStrengthTable(ex, lastSession) {
       return `<tr>
         <td><span class="set-num ${numCls}">${i+1}</span></td>
         <td style="text-align:center;">${lastChip}</td>
-        <td style="text-align:center;"><span style="font-size:15px;font-weight:700;">${set.weight||'—'}</span><span class="last-val">lbs</span>${ormLabel}</td>
+        <td style="text-align:center;"><span style="font-size:15px;font-weight:700;">${set.weight||'—'}</span><span class="last-val">${weightUnit()}</span>${ormLabel}</td>
         <td style="text-align:center;"><span style="font-size:15px;font-weight:700;">${set.reps||'—'}</span><span class="last-val">reps</span></td>
         <td style="text-align:center;">${isPR ? '<span class="pr-badge">🏆 PR</span>' : '<span style="font-size:18px;color:var(--success);">✓</span>'}</td>
       </tr>`;
@@ -1803,7 +1824,7 @@ function buildWarmupRow(ex) {
   return `<tr class="warmup-row">
     <td><span class="set-num" style="font-size:9px;width:28px;border-radius:4px;background:var(--bg-card2);color:var(--text-3);">WU</span></td>
     <td colspan="3" style="text-align:left;padding-left:12px;">
-      <span style="font-size:13px;font-weight:600;color:var(--text-2);">${warmupW} lbs</span>
+      <span style="font-size:13px;font-weight:600;color:var(--text-2);">${warmupW} ${weightUnit()}</span>
       <span class="warmup-label">Warm-up · ~55% · optional</span>
     </td>
     <td></td>

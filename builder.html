@@ -847,7 +847,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 <body>
 
 <script src="supabase-client.js"></script>
-<script src="larofit-exercises.js?v=206"></script>
+<script src="larofit-exercises.js?v=207"></script>
 <script>window.LF_PAGE = 'build';</script>
 <script src="larofit-nav.js"></script>
 
@@ -1448,6 +1448,39 @@ function clearDraft() {
 }
 
 // Migrate old { name, exercises[] } days to { am: {...} | null, pm: null }
+// Weight unit label from the user's profile setting (display only — no conversion)
+function weightUnitLabel() {
+  try {
+    const s = JSON.parse(localStorage.getItem('lf_settings') || '{}');
+    return s.units === 'metric' ? 'kg' : 'lbs';
+  } catch (e) { return 'lbs'; }
+}
+
+// Library is authoritative for built-in exercises. Returns its current
+// recordType so corrections (e.g. bands moving weight_reps -> reps) propagate
+// to programs that were saved before the change. Null for custom exercises.
+function libRecordType(id) {
+  if (!id || typeof LAROFIT_EXERCISES === 'undefined') return null;
+  const e = LAROFIT_EXERCISES.find(x => x.id === id);
+  return e ? (e.recordType || null) : null;
+}
+
+function normalizeProgramRecordTypes() {
+  if (!program || !program.days) return;
+  Object.keys(program.days).forEach(dateStr => {
+    const day = program.days[dateStr];
+    if (!day) return;
+    ['am', 'pm'].forEach(slot => {
+      const sess = day[slot];
+      if (!sess || !Array.isArray(sess.exercises)) return;
+      sess.exercises.forEach(ex => {
+        const lib = libRecordType(ex.id);
+        if (lib && lib !== ex.recordType) ex.recordType = lib;
+      });
+    });
+  });
+}
+
 function migrateLegacyDays() {
   if (!program.days) { program.days = {}; return; }
   Object.keys(program.days).forEach(dateStr => {
@@ -1460,6 +1493,8 @@ function migrateLegacyDays() {
       };
     }
   });
+  // Refresh built-in exercise record types from the library
+  normalizeProgramRecordTypes();
 }
 
 function loadProgramIntoSetup() {
@@ -1904,7 +1939,7 @@ function buildExParams(ex, ei) {
 
   if (rt === 'weight_reps') return `
     ${p('Sets',   'sets',        'sets', 1, 20)}
-    ${p('Weight', 'weight',      'kg',   0, 999, '0.5')}
+    ${p('Weight', 'weight',      weightUnitLabel(),   0, 999, '0.5')}
     ${p('Reps',   'reps',        'reps', 1, 100)}
     ${p('Rest',   'restSec',     'sec',  0, 600, '15')}`;
 
