@@ -660,6 +660,28 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
 /* Tighter input padding for compact rows */
 .sets-table .lf-num-input { padding: 4px 4px; font-size: 14px; }
+/* ── LEAVE-WORKOUT WARNING SHEET ── */
+.leave-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 500; display: none; align-items: flex-end; justify-content: center;
+}
+.leave-overlay.show { display: flex; }
+.leave-sheet {
+  background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%; padding: 22px var(--page-pad, 16px) calc(18px + env(safe-area-inset-bottom));
+}
+.leave-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 26px;
+  letter-spacing: 0.5px; color: var(--text); line-height: 1;
+}
+.leave-sub { font-size: 13px; color: var(--text-3); margin: 6px 0 18px; }
+.leave-btn {
+  display: block; width: 100%; padding: 15px; border-radius: 12px;
+  font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 10px;
+}
+.leave-btn-volt   { background: var(--volt); color: #1a1a1a; }
+.leave-btn-dark   { background: var(--bg-card2); color: var(--text); }
+.leave-btn-danger { background: transparent; color: var(--danger); margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -719,7 +741,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div id="free-name-bar" style="display:none;padding:6px var(--page-pad) 4px;flex-shrink:0;">
       <input class="free-name-input" id="free-workout-name" type="text"
              placeholder="Workout name (e.g. Push Day)" maxlength="60"
-             value="Free Workout">
+             oninput="saveSnapshot()" value="Free Workout">
     </div>
 
     <!-- Exercise card — fills remaining height -->
@@ -886,6 +908,17 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       </div>
     </div>
     <div class="ex-picker-list" id="ex-picker-list"></div>
+  </div>
+</div>
+
+<!-- LEAVE-WORKOUT WARNING SHEET -->
+<div class="leave-overlay" id="leave-overlay" onclick="if(event.target===this)closeLeaveSheet()">
+  <div class="leave-sheet">
+    <div class="leave-title">WORKOUT IN PROGRESS</div>
+    <div class="leave-sub">You're about to leave mid-workout. What would you like to do?</div>
+    <button class="leave-btn leave-btn-volt" onclick="closeLeaveSheet()">Keep training</button>
+    <button class="leave-btn leave-btn-dark" onclick="leaveSaveFinish()">Save &amp; finish workout</button>
+    <button class="leave-btn leave-btn-danger" onclick="leaveAbandon()">Abandon workout</button>
   </div>
 </div>
 
@@ -1061,6 +1094,122 @@ function localDateStr(d) {
 }
 const todayKey = localDateStr();
 
+// ── LIVE WORKOUT SNAPSHOT ─────────────────────────────────────
+// Every logged set is written to localStorage immediately so an
+// accidental nav-away, app kill, or dead battery never loses data.
+const SNAP_KEY = 'lf_active_workout';
+
+function saveSnapshot() {
+  if (!workoutStarted) return;
+  try {
+    const freeEl = document.getElementById('free-workout-name');
+    localStorage.setItem(SNAP_KEY, JSON.stringify({
+      date:         todayKey,
+      headerName:   document.getElementById('header-title').textContent || 'Workout',
+      isFreeForm:   isFreeForm,
+      freeName:     (isFreeForm && freeEl) ? freeEl.value : null,
+      startTime:    startTime,
+      totalPRs:     totalPRs,
+      exNotes:      exNotes,
+      currentExIdx: currentExIdx,
+      exercises:    exercises
+    }));
+  } catch (e) {}
+}
+
+function loadSnapshot() {
+  try {
+    const raw = localStorage.getItem(SNAP_KEY);
+    if (!raw) return null;
+    const snap = JSON.parse(raw);
+    // Stale snapshot from a previous day — drop it
+    if (!snap || snap.date !== todayKey || !Array.isArray(snap.exercises)) {
+      localStorage.removeItem(SNAP_KEY);
+      return null;
+    }
+    return snap;
+  } catch (e) { return null; }
+}
+
+function clearSnapshot() {
+  try { localStorage.removeItem(SNAP_KEY); } catch (e) {}
+}
+
+function resumeFromSnapshot(snap) {
+  exercises    = snap.exercises;
+  isFreeForm   = !!snap.isFreeForm;
+  totalPRs     = snap.totalPRs || 0;
+  exNotes      = snap.exNotes  || {};
+  currentExIdx = Math.min(snap.currentExIdx || 0, Math.max(exercises.length - 1, 0));
+
+  if (isFreeForm) buildExPicker();
+
+  startWorkout(snap.headerName || 'Workout');
+
+  // Restore the original start time so duration stays accurate
+  startTime = snap.startTime || Date.now();
+
+  if (isFreeForm && snap.freeName) {
+    const freeEl = document.getElementById('free-workout-name');
+    if (freeEl) freeEl.value = snap.freeName;
+  }
+
+  if (exercises.length > 0) goToEx(currentExIdx);
+  checkAllDone();
+  saveSnapshot();
+  showToast('Workout resumed — your sets were saved');
+}
+
+// ── LEAVE-WORKOUT GUARD ───────────────────────────────────────
+// Intercepts taps on any link (bottom nav, etc.) during an active
+// workout and shows a decision sheet instead of navigating away.
+let _pendingLeaveHref = null;
+
+document.addEventListener('click', function (e) {
+  if (!workoutStarted) return;
+  const a = e.target.closest('a[href]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  if (!href || href.charAt(0) === '#') return;
+  e.preventDefault();
+  e.stopPropagation();
+  _pendingLeaveHref = a.href;
+  openLeaveSheet();
+}, true); // capture phase — runs before the browser navigates
+
+function openLeaveSheet() {
+  document.getElementById('leave-overlay').classList.add('show');
+}
+
+function closeLeaveSheet() {
+  document.getElementById('leave-overlay').classList.remove('show');
+  _pendingLeaveHref = null;
+}
+
+function leaveSaveFinish() {
+  const anyLogged = exercises.some(ex => (ex.loggedSets || []).some(s => s.logged));
+  if (!anyLogged) { leaveAbandon(); return; } // nothing logged — nothing to save
+  document.getElementById('leave-overlay').classList.remove('show');
+  _pendingLeaveHref = null;
+  finishWorkout(); // saves history, clears snapshot, shows completion screen
+}
+
+function leaveAbandon() {
+  const href = _pendingLeaveHref;
+  workoutStarted = false;
+  clearSnapshot();
+  document.getElementById('leave-overlay').classList.remove('show');
+  _pendingLeaveHref = null;
+  if (href) window.location.href = href;
+}
+
+// Extra safety net: snapshot when the app is backgrounded or the page
+// is being unloaded (captures values typed since the last set log)
+document.addEventListener('visibilitychange', function () {
+  if (document.visibilityState === 'hidden') saveSnapshot();
+});
+window.addEventListener('pagehide', saveSnapshot);
+
 // ── EPLEY 1RM ────────────────────────────────────────────────
 function calc1RM(weight, reps) {
   if (!weight || !reps || reps <= 0) return null;
@@ -1098,6 +1247,10 @@ function typeIcon(ex) {
 
 // ── INIT ─────────────────────────────────────────────────────
 function init() {
+  // Resume an in-progress workout if one was interrupted today
+  const _snap = loadSnapshot();
+  if (_snap) { resumeFromSnapshot(_snap); return; }
+
   const programs = store.get('programs', []);
   const activeId = store.get('active_program', null);
   const program  = programs.find(p => p.id === activeId);
@@ -1235,6 +1388,8 @@ function startWorkout(workoutName) {
     document.getElementById('ex-card').style.display = 'none';
     document.getElementById('ex-dots').style.display  = 'none';
   }
+
+  saveSnapshot();
 }
 
 // ── FREE FORM ─────────────────────────────────────────────────
@@ -1423,6 +1578,7 @@ function saveNote() {
   // Refresh notes icon
   const notesIcon = document.getElementById('log-btn-notes-icon');
   if (notesIcon) notesIcon.classList.toggle('has-note', !!(exNotes[currentExIdx] && exNotes[currentExIdx].trim()));
+  saveSnapshot();
 }
 
 // ── SETS RENDERING ────────────────────────────────────────────
@@ -1667,6 +1823,8 @@ function logSet(exIdx, setIdx) {
     if (cur && prev && cur > prev) { totalPRs++; showToast('🏆 New personal record!'); }
   }
 
+  saveSnapshot();
+
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, lastSession);
   renderDots(); updateOverallProgress();
@@ -1722,6 +1880,7 @@ function logBWSet(exIdx, setIdx) {
   const reps = rEl ? rEl.value.trim() : set.reps;
   if (!reps) { showToast('Enter reps first'); return; }
   set.reps = reps; set.logged = true;
+  saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
   if (allDone) { const ni = exIdx+1; if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
@@ -1740,6 +1899,7 @@ function logTimedSet(exIdx, setIdx) {
   const t   = tEl ? tEl.value.trim() : set.holdTime;
   if (!t) { showToast('Enter hold time first'); return; }
   set.holdTime = t; set.logged = true;
+  saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
   if (allDone) { const ni = exIdx+1; if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
@@ -1756,6 +1916,7 @@ function logCardioSet(exIdx) {
   set.duration = dur;
   set.distance = distEl ? distEl.value.trim() : '';
   set.logged   = true;
+  saveSnapshot();
   renderSets(ex, null); renderDots(); updateOverallProgress();
   const ni = exIdx+1;
   if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name);
@@ -1764,6 +1925,7 @@ function logCardioSet(exIdx) {
 
 function updateSet(exIdx, setIdx, field, value) {
   exercises[exIdx].loggedSets[setIdx][field] = value;
+  saveSnapshot();
 }
 
 function fillSet(exIdx, setIdx, weight, reps) {
@@ -1881,6 +2043,7 @@ function finishHold(actualSecs) {
   if (tEl) tEl.value = actualSecs;
   set.holdTime = String(actualSecs);
   set.logged   = true;
+  saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
   if (allDone) {
@@ -2070,6 +2233,10 @@ function finishWorkout() {
     })
   };
   store.set('workout_history', history);
+
+  // Workout is complete — clear the live snapshot and release the nav guard
+  workoutStarted = false;
+  clearSnapshot();
 
   // Sync to Supabase in the background
   LF.ready().then(() => LF.db.saveWorkout(todayKey, history[todayKey]).catch(() => {}));
@@ -2427,6 +2594,7 @@ function addExerciseFreeForm(exId) {
   };
 
   exercises.push(newEx);
+  saveSnapshot();
   closeExPicker();
 
   // Show the exercise card if this is the first exercise
