@@ -563,11 +563,6 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 }
 .lf-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-/* Mode toggle */
-.mode-toggle { display: flex; background: var(--bg-card2); border-radius: 999px; padding: 3px; gap: 2px; border: 0.5px solid var(--border); }
-.mode-btn { padding: 5px 11px; border-radius: 999px; border: none; background: transparent; color: var(--text-3); font-size: 11px; font-weight: 700; font-family: var(--font-body); cursor: pointer; transition: all 0.18s; white-space: nowrap; letter-spacing: 0.03em; }
-.mode-btn.active { background: var(--bg-dark); color: var(--volt); }
-
 /* Warm-up row */
 .warmup-row td { background: var(--bg-card2); opacity: 0.75; }
 .warmup-label  { font-size: 9px; font-weight: 700; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-top: 2px; }
@@ -710,6 +705,21 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <button class="btn btn-outline lf-mt-sm" onclick="startFreeForm()">Log a workout anyway</button>
   </div>
 
+  <!-- PRE-START STATE — shown before the user taps Start -->
+  <div id="prestart-state" style="display:none;">
+    <div style="padding:32px var(--page-pad) 24px;">
+      <div id="prestart-title" style="font-family:var(--font-display);font-size:36px;color:var(--text);letter-spacing:1px;line-height:1.1;"></div>
+      <div id="prestart-sub" style="font-size:13px;color:var(--text-3);margin:6px 0 20px;"></div>
+      <div id="prestart-exercises" style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;"></div>
+      <button class="btn btn-volt btn-full btn-lg" onclick="showStartModal()" style="letter-spacing:0.08em;">
+        START WORKOUT
+      </button>
+      <button class="btn btn-ghost btn-full" onclick="startFreeForm()" style="margin-top:10px;color:var(--text-3);">
+        Log a different workout
+      </button>
+    </div>
+  </div>
+
   <!-- WORKOUT IN PROGRESS — full screen flex column -->
   <div id="workout-state">
 
@@ -717,13 +727,14 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div class="workout-topbar" id="workout-topbar">
       <div class="workout-topbar-left">
         <div class="workout-topbar-name" id="header-title">Workout</div>
+        <div id="workout-timer" style="display:none;font-size:11px;color:var(--text-3);font-family:var(--font-mono);font-weight:600;margin-top:1px;">0:00</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
-        <div id="workout-timer" style="display:none;">0:00</div>
-        <div class="mode-toggle" id="mode-toggle" style="display:none;">
-          <button class="mode-btn active" id="mode-manual" onclick="setMode('manual')">Manual</button>
-          <button class="mode-btn"        id="mode-voice"  onclick="setMode('voice')">&#127908; Voice</button>
-        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-pause-top"
+                style="display:none;color:var(--text-2);font-size:13px;font-weight:700;gap:4px;"
+                onclick="togglePause()">
+          <i class="ti ti-player-pause" id="pause-icon"></i> PAUSE
+        </button>
         <button class="btn btn-ghost btn-sm" id="btn-finish-top"
                 style="display:none;color:var(--volt-dark);font-weight:700;font-size:13px;"
                 onclick="finishWorkout()">Finish</button>
@@ -917,6 +928,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div class="leave-title">WORKOUT IN PROGRESS</div>
     <div class="leave-sub">You're about to leave mid-workout. What would you like to do?</div>
     <button class="leave-btn leave-btn-volt" onclick="closeLeaveSheet()">Keep training</button>
+    <button class="leave-btn leave-btn-dark" onclick="leavePause()"><i class="ti ti-player-pause" style="margin-right:6px;"></i>Pause &amp; leave</button>
     <button class="leave-btn leave-btn-dark" onclick="leaveSaveFinish()">Save &amp; finish workout</button>
     <button class="leave-btn leave-btn-danger" onclick="leaveAbandon()">Abandon workout</button>
   </div>
@@ -965,6 +977,39 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div class="ex-detail-footer">
       <button class="ex-detail-close-btn" onclick="closeExDetail()"><i class="ti ti-x"></i></button>
       <button class="ex-detail-add-btn" id="ex-detail-add-btn" onclick="exDetailAdd()">ADD EXERCISE</button>
+    </div>
+  </div>
+</div>
+
+<!-- START WORKOUT MODAL -->
+<div id="start-modal-overlay"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:600;align-items:flex-end;"
+     onclick="if(event.target===this)closeStartModal()">
+  <div style="background:var(--bg-card);border-radius:var(--radius-lg) var(--radius-lg) 0 0;width:100%;padding:24px var(--page-pad) calc(18px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;">
+    <div style="width:36px;height:4px;background:var(--border-md);border-radius:2px;margin:0 auto 20px;"></div>
+    <div style="font-family:var(--font-display);font-size:26px;letter-spacing:0.5px;color:var(--text);margin-bottom:4px;">How do you want to train?</div>
+    <div style="font-size:13px;color:var(--text-3);margin-bottom:22px;">Choose your logging style</div>
+    <button onclick="beginWorkout('manual')"
+            style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-dark);border:none;border-radius:var(--radius);padding:18px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--volt-bg);border:1px solid var(--volt-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="ti ti-pencil" style="font-size:20px;color:var(--volt-dark);"></i>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);">Manual</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Tap to log each set</div>
+      </div>
+    </button>
+    <div style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-card2);border:none;border-radius:var(--radius);padding:18px 16px;opacity:0.5;">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--bg-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="ti ti-microphone" style="font-size:20px;color:var(--text-3);"></i>
+      </div>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:16px;font-weight:700;color:var(--text);">Voice</div>
+          <div style="font-size:9px;font-weight:700;font-family:var(--font-mono);letter-spacing:0.08em;background:var(--bg-dark);color:var(--text-3);padding:2px 6px;border-radius:4px;border:0.5px solid var(--border-md);">COMING SOON</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Log hands-free with your voice</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1079,7 +1124,10 @@ let exercises      = [];
 let currentExIdx   = 0;
 let workoutStarted = false;
 let isFreeForm     = false;
-let startTime      = null;
+let startTime      = null;   // wall-clock of latest resume (null when paused)
+let elapsedSec     = 0;     // accumulated seconds before latest resume
+let isPaused       = false;
+let pausedAt       = null;  // wall-clock timestamp when workout was paused
 let elapsedTimer   = null;
 let restInterval   = null;
 let restRemaining  = 0;
@@ -1103,12 +1151,16 @@ function saveSnapshot() {
   if (!workoutStarted) return;
   try {
     const freeEl = document.getElementById('free-workout-name');
+    // Compute total elapsed: base + time since last resume (0 if paused)
+    const currentElapsed = elapsedSec + (startTime ? Math.floor((Date.now() - startTime) / 1000) : 0);
     localStorage.setItem(SNAP_KEY, JSON.stringify({
       date:         todayKey,
       headerName:   document.getElementById('header-title').textContent || 'Workout',
       isFreeForm:   isFreeForm,
       freeName:     (isFreeForm && freeEl) ? freeEl.value : null,
-      startTime:    startTime,
+      elapsedSec:   currentElapsed,
+      isPaused:     isPaused,
+      pausedAt:     pausedAt,
       totalPRs:     totalPRs,
       exNotes:      exNotes,
       currentExIdx: currentExIdx,
@@ -1122,8 +1174,18 @@ function loadSnapshot() {
     const raw = localStorage.getItem(SNAP_KEY);
     if (!raw) return null;
     const snap = JSON.parse(raw);
-    // Stale snapshot from a previous day — drop it
-    if (!snap || snap.date !== todayKey || !Array.isArray(snap.exercises)) {
+    if (!snap || !Array.isArray(snap.exercises)) {
+      localStorage.removeItem(SNAP_KEY);
+      return null;
+    }
+    // Paused workout older than 18 hours → auto-log it
+    if (snap.isPaused && snap.pausedAt && (Date.now() - snap.pausedAt) > 18 * 3600 * 1000) {
+      autoLogSnapshot(snap);
+      localStorage.removeItem(SNAP_KEY);
+      return null;
+    }
+    // Non-paused snapshot from a previous day → drop it
+    if (!snap.isPaused && snap.date !== todayKey) {
       localStorage.removeItem(SNAP_KEY);
       return null;
     }
@@ -1141,13 +1203,24 @@ function resumeFromSnapshot(snap) {
   totalPRs     = snap.totalPRs || 0;
   exNotes      = snap.exNotes  || {};
   currentExIdx = Math.min(snap.currentExIdx || 0, Math.max(exercises.length - 1, 0));
+  elapsedSec   = snap.elapsedSec || 0;
+  isPaused     = !!snap.isPaused;
+  pausedAt     = snap.pausedAt || null;
 
   if (isFreeForm) buildExPicker();
 
   startWorkout(snap.headerName || 'Workout');
 
-  // Restore the original start time so duration stays accurate
-  startTime = snap.startTime || Date.now();
+  // If workout was paused, keep timer stopped — user must tap Resume
+  if (isPaused) {
+    startTime = null;
+    clearInterval(elapsedTimer);
+    elapsedTimer = null;
+    updatePauseBtn();
+  } else {
+    // Active workout interrupted (e.g. app killed) — resume timer from saved elapsed
+    startTime = Date.now();
+  }
 
   if (isFreeForm && snap.freeName) {
     const freeEl = document.getElementById('free-workout-name');
@@ -1158,10 +1231,10 @@ function resumeFromSnapshot(snap) {
   checkAllDone();
   saveSnapshot();
 
-  // If we came back from creating a custom exercise, re-open the picker
-  // (silently — no "resumed" toast, this was a deliberate round-trip)
   if (new URLSearchParams(location.search).get('openPicker') === '1' && isFreeForm) {
     setTimeout(openExPicker, 300);
+  } else if (isPaused) {
+    showToast('Workout paused — tap Resume to continue');
   } else {
     showToast('Workout resumed — your sets were saved');
   }
@@ -1204,10 +1277,100 @@ function leaveSaveFinish() {
 function leaveAbandon() {
   const href = _pendingLeaveHref;
   workoutStarted = false;
+  isPaused = false; pausedAt = null;
   clearSnapshot();
   document.getElementById('leave-overlay').classList.remove('show');
   _pendingLeaveHref = null;
   if (href) window.location.href = href;
+}
+
+// ── PAUSE / RESUME ────────────────────────────────────────────
+function pauseWorkout() {
+  if (isPaused || !workoutStarted) return;
+  // Accumulate elapsed and stop the timer
+  elapsedSec += startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+  startTime  = null;
+  clearInterval(elapsedTimer);
+  elapsedTimer = null;
+  isPaused = true;
+  pausedAt = Date.now();
+  updatePauseBtn();
+  saveSnapshot();
+  showToast('Workout paused — progress saved');
+}
+
+function resumeWorkout() {
+  if (!isPaused || !workoutStarted) return;
+  startTime = Date.now();
+  isPaused  = false;
+  pausedAt  = null;
+  elapsedTimer = setInterval(updateElapsed, 1000);
+  updatePauseBtn();
+  saveSnapshot();
+  showToast('Workout resumed');
+}
+
+function togglePause() {
+  if (isPaused) resumeWorkout();
+  else          pauseWorkout();
+}
+
+function updatePauseBtn() {
+  const btn  = document.getElementById('btn-pause-top');
+  const icon = document.getElementById('pause-icon');
+  if (!btn) return;
+  if (isPaused) {
+    icon.className  = 'ti ti-player-play';
+    btn.innerHTML   = '<i class="ti ti-player-play" id="pause-icon"></i> RESUME';
+    btn.style.color = 'var(--volt-dark)';
+  } else {
+    btn.innerHTML   = '<i class="ti ti-player-pause" id="pause-icon"></i> PAUSE';
+    btn.style.color = 'var(--text-2)';
+  }
+}
+
+function leavePause() {
+  const href = _pendingLeaveHref;
+  document.getElementById('leave-overlay').classList.remove('show');
+  _pendingLeaveHref = null;
+  pauseWorkout();
+  if (href) setTimeout(() => { window.location.href = href; }, 400);
+}
+
+// Auto-log a stale paused snapshot (> 18 hrs) to preserve the user's work
+function autoLogSnapshot(snap) {
+  if (!snap || !Array.isArray(snap.exercises) || !snap.exercises.length) return;
+  try {
+    const durationMin = Math.round((snap.elapsedSec || 0) / 60);
+    let totalVolume = 0;
+    const snapExs = snap.exercises;
+    snapExs.forEach(ex => {
+      (ex.loggedSets || []).forEach(s => {
+        if (s.logged) totalVolume += (parseFloat(s.weight)||0) * (parseFloat(s.reps)||0);
+      });
+    });
+    const history   = store.get('workout_history', {});
+    const dateKey   = snap.date || localDateStr();
+    history[dateKey] = {
+      name:        snap.headerName || 'Workout',
+      durationMin,
+      totalVolume: Math.round(totalVolume),
+      prs:         snap.totalPRs || 0,
+      freeForm:    !!snap.isFreeForm,
+      notes:       Object.values(snap.exNotes || {}).filter(Boolean),
+      exercises:   snapExs.map(ex => {
+        const loggedSets = (ex.loggedSets || []).filter(s => s.logged).map(s => ({
+          weight: parseFloat(s.weight)||0, reps: parseFloat(s.reps)||0,
+          holdTime: parseFloat(s.holdTime)||0, duration: parseFloat(s.duration)||0,
+          distance: parseFloat(s.distance)||0
+        }));
+        return { id: ex.id, name: ex.name, sets: loggedSets };
+      })
+    };
+    store.set('workout_history', history);
+    LF.ready().then(() => LF.db.saveWorkout(dateKey, history[dateKey]).catch(() => {}));
+    showToast('Yesterday\'s workout was saved automatically');
+  } catch (e) {}
 }
 
 // Extra safety net: snapshot when the app is backgrounded or the page
@@ -1276,8 +1439,9 @@ function init() {
   }
 }
 
-// Holds today's day object while session picker is shown
-let _todayDayPlan = null;
+// Pending exercises/name for when user taps Start Workout
+let _prestartExercises = [];
+let _prestartName = '';
 
 function _loadFromProgram(program) {
   const dateKey = localDateStr();
@@ -1291,34 +1455,63 @@ function _loadFromProgram(program) {
 
   if (!dayPlan) { show('rest-day-state'); setHeader('Rest day'); return; }
 
-  const hasAM = dayPlan.am && (dayPlan.am.exercises || []).length > 0;
-  const hasPM = dayPlan.pm && (dayPlan.pm.exercises || []).length > 0;
-
-  if (!hasAM && !hasPM) {
-    // Legacy flat format: exercises directly on dayPlan
-    if ((dayPlan.exercises || []).length > 0) {
-      buildExerciseList(dayPlan.exercises, dayPlan.name || program.name);
-      return;
-    }
-    show('rest-day-state'); setHeader('Rest day'); return;
-  }
-
-  if (hasAM && hasPM) {
-    _todayDayPlan = dayPlan;
-    show('session-picker-state');
-    setHeader('Workout');
+  // Handle legacy AM/PM format: flatten to single exercise list
+  if ('am' in dayPlan || 'pm' in dayPlan) {
+    const amEx = (dayPlan.am && dayPlan.am.exercises) ? dayPlan.am.exercises : [];
+    const pmEx = (dayPlan.pm && dayPlan.pm.exercises) ? dayPlan.pm.exercises : [];
+    const name = (dayPlan.am && dayPlan.am.name) || (dayPlan.pm && dayPlan.pm.name) || program.name || 'Workout';
+    const allEx = [...amEx, ...pmEx];
+    if (!allEx.length) { show('rest-day-state'); setHeader('Rest day'); return; }
+    showPrestart(allEx, name);
     return;
   }
 
-  const session = hasAM ? dayPlan.am : dayPlan.pm;
-  buildExerciseList(session.exercises || [], session.name || program.name);
+  // Flat format: { name, exercises[] }
+  const exercises = dayPlan.exercises || [];
+  if (!exercises.length) {
+    // Legacy flat format with no exercises
+    show('rest-day-state'); setHeader('Rest day'); return;
+  }
+  showPrestart(exercises, dayPlan.name || program.name || 'Workout');
 }
 
-function loadSession(slot) {
-  if (!_todayDayPlan) return;
-  const session = _todayDayPlan[slot];
-  if (!session) return;
-  buildExerciseList(session.exercises || [], session.name || (slot === 'am' ? 'Morning' : 'Evening'));
+function showPrestart(exArr, name) {
+  _prestartExercises = exArr;
+  _prestartName      = name;
+
+  document.getElementById('prestart-title').textContent = name;
+  document.getElementById('prestart-sub').textContent   =
+    exArr.length + ' exercise' + (exArr.length !== 1 ? 's' : '');
+
+  // Quick exercise preview (up to 5)
+  const preview = exArr.slice(0, 5);
+  const more    = exArr.length > 5 ? exArr.length - 5 : 0;
+  document.getElementById('prestart-exercises').innerHTML =
+    preview.map(ex => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);">
+        <i class="ti ti-barbell" style="font-size:16px;color:var(--text-3);flex-shrink:0;width:20px;text-align:center;"></i>
+        <div style="font-size:14px;font-weight:600;color:var(--text);">${escHtml(ex.name)}</div>
+        <div style="font-size:11px;color:var(--text-3);margin-left:auto;font-family:var(--font-mono);">${ex.sets || 3}×${ex.reps || 10}</div>
+      </div>`).join('') +
+    (more ? `<div style="font-size:12px;color:var(--text-3);padding:10px 0;text-align:center;">+${more} more</div>` : '');
+
+  show('prestart-state');
+  setHeader(name);
+}
+
+function showStartModal() {
+  const el = document.getElementById('start-modal-overlay');
+  el.style.display = 'flex';
+}
+
+function closeStartModal() {
+  document.getElementById('start-modal-overlay').style.display = 'none';
+}
+
+function beginWorkout(mode) {
+  closeStartModal();
+  workoutMode = mode;
+  buildExerciseList(_prestartExercises, _prestartName);
 }
 
 // Weight unit label from profile setting (display only — no conversion)
@@ -1388,25 +1581,27 @@ function buildLoggedSets(ex) {
 
 function startWorkout(workoutName) {
   workoutStarted = true;
-  startTime      = Date.now();
+  // Only set startTime here if not resuming a paused workout
+  // (resumeFromSnapshot manages startTime for paused resumes)
+  if (!isPaused) startTime = Date.now();
   show('workout-state');
   // Hide main lf-header, show slim workout topbar
   document.body.classList.add('workout-active');
   setHeader(workoutName || 'Workout');
-  document.getElementById('workout-timer').style.display  = 'none'; // internal only
+  document.getElementById('workout-timer').style.display  = 'block';
   document.getElementById('btn-finish-top').style.display = 'block';
-  document.getElementById('mode-toggle').style.display    = 'flex';
-  workoutMode = getMode();
-  document.getElementById('mode-manual').classList.toggle('active', workoutMode === 'manual');
-  document.getElementById('mode-voice').classList.toggle('active',    workoutMode === 'voice');
-  if (workoutMode === 'voice') initVoice();
-  elapsedTimer = setInterval(updateElapsed, 1000);
+  document.getElementById('btn-pause-top').style.display  = 'flex';
+  updatePauseBtn();
+  if (!isPaused) {
+    elapsedTimer = setInterval(updateElapsed, 1000);
+  }
 
   if (isFreeForm) {
     document.getElementById('free-name-bar').style.display   = 'block';
     document.getElementById('free-add-wrap').style.display   = 'block';
     document.getElementById('finish-bar').classList.add('show');
-    document.getElementById('mode-toggle').style.display = 'none';
+    // Hide pause in free form (finish bar is always shown)
+    document.getElementById('btn-pause-top').style.display = 'none';
   }
 
   if (exercises.length > 0) {
@@ -1430,7 +1625,7 @@ function startFreeForm() {
 
 // ── SHOW/HIDE ─────────────────────────────────────────────────
 function show(id) {
-  ['no-program-state','rest-day-state','session-picker-state','workout-state','completion-state'].forEach(s => {
+  ['no-program-state','rest-day-state','prestart-state','workout-state','completion-state'].forEach(s => {
     const el = document.getElementById(s);
     if (!el) return;
     if (s === 'workout-state') {
@@ -1455,9 +1650,8 @@ function setHeader(title) {
 
 // ── ELAPSED TIMER ────────────────────────────────────────────
 function updateElapsed() {
-  if (!startTime) return;
-  const secs = Math.floor((Date.now() - startTime) / 1000);
-  const m = Math.floor(secs / 60), s = secs % 60;
+  const total = elapsedSec + (startTime ? Math.floor((Date.now() - startTime) / 1000) : 0);
+  const m = Math.floor(total / 60), s = total % 60;
   document.getElementById('workout-timer').textContent = m + ':' + String(s).padStart(2,'0');
 }
 
@@ -2209,8 +2403,8 @@ function updateLogBtn() {
 // ── FINISH WORKOUT ────────────────────────────────────────────
 function finishWorkout() {
   stopRest(); clearInterval(elapsedTimer);
-  const durationMs  = startTime ? Date.now() - startTime : 0;
-  const durationMin = Math.round(durationMs / 60000);
+  const totalElapsed = elapsedSec + (startTime ? Math.floor((Date.now() - startTime) / 1000) : 0);
+  const durationMin  = Math.round(totalElapsed / 60);
 
   let totalVolume = 0;
   exercises.forEach(ex => {
@@ -2226,16 +2420,12 @@ function finishWorkout() {
   const activeId = store.get('active_program', null);
   const program  = programs.find(p => p.id === activeId);
   const _todayKey = localDateStr();
-  const _dayPlanFW = !isFreeForm && program && program.days && (
-    program.days[_todayKey] || (Array.isArray(program.days) && program.days[(new Date().getDay()+6)%7])
-  );
+  const _dayPlanFW = !isFreeForm && program && program.days && program.days[_todayKey];
   const wName    = isFreeForm
     ? (document.getElementById('free-workout-name').value.trim() || 'Free Workout')
     : (_dayPlanFW
-        ? (_dayPlanFW.am || _dayPlanFW.pm
-            ? ((_dayPlanFW.pm && _dayPlanFW.pm.name) || (_dayPlanFW.am && _dayPlanFW.am.name) || 'Workout')
-            : (_dayPlanFW.name || 'Workout'))
-        : 'Workout');
+        ? (_dayPlanFW.name || document.getElementById('header-title').textContent || 'Workout')
+        : (document.getElementById('header-title').textContent || 'Workout'));
 
   history[todayKey] = {
     name:        wName,
@@ -2263,6 +2453,7 @@ function finishWorkout() {
 
   // Workout is complete — clear the live snapshot and release the nav guard
   workoutStarted = false;
+  isPaused = false; pausedAt = null; elapsedSec = 0; startTime = null;
   clearSnapshot();
 
   // Sync to Supabase in the background
@@ -2651,8 +2842,6 @@ function getMode() { const s = store.get('settings', {}); return s.workoutMode |
 function setMode(mode) {
   workoutMode = mode;
   const s = store.get('settings', {}); s.workoutMode = mode; store.set('settings', s);
-  document.getElementById('mode-manual').classList.toggle('active', mode === 'manual');
-  document.getElementById('mode-voice').classList.toggle('active',    mode === 'voice');
   if (mode === 'voice') initVoice();
   else { stopListening(); document.getElementById('voice-hud').classList.remove('show'); }
 }

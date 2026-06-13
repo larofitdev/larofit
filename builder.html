@@ -196,14 +196,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
   text-overflow: ellipsis;
   border-radius: 3px;
   padding: 1px 3px;
-}
-.cal-session-label.am {
-  color: #fbbf24;
-  background: rgba(251,191,36,0.18);
-}
-.cal-session-label.pm {
   color: var(--volt);
-  background: rgba(198,241,53,0.15);
+  background: rgba(198,241,53,0.12);
 }
 
 /* Paste mode banner */
@@ -281,27 +275,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 }
 .bldr-day-title-input::placeholder { color: var(--text-3); }
 
-/* Session badge in day editor header */
-.bldr-session-badge {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-family: var(--font-mono);
-  padding: 4px 9px;
-  border-radius: 999px;
-  flex-shrink: 0;
-}
-.bldr-session-badge.am {
-  background: rgba(251,191,36,0.18);
-  color: #b45309;
-  border: 1px solid rgba(251,191,36,0.4);
-}
-.bldr-session-badge.pm {
-  background: var(--volt-bg);
-  color: var(--volt-dark);
-  border: 1px solid var(--volt-border);
-}
+
 
 .bldr-ex-list {
   padding: 12px var(--page-pad);
@@ -639,42 +613,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
 }
 .ex-detail-add-btn:active { opacity: 0.85; }
 
-/* ══════════════════════════════════════════
-   SESSION PICKER ACTION SHEET
-   (shown when tapping an empty day)
-══════════════════════════════════════════ */
-.session-picker-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 300; opacity: 0; pointer-events: none;
-  transition: opacity 0.2s;
-}
-.session-picker-overlay.open { opacity: 1; pointer-events: all; }
-.session-picker-sheet {
-  position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--bg-card);
-  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  z-index: 301;
-  transform: translateY(100%);
-  transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
-  padding: 0 var(--page-pad) calc(env(safe-area-inset-bottom, 0px) + 20px);
-}
-.session-picker-sheet.open { transform: translateY(0); }
-.session-picker-handle {
-  width: 36px; height: 4px; background: var(--border-md);
-  border-radius: 2px; margin: 12px auto 0;
-}
-.session-picker-date {
-  font-size: 12px; font-weight: 700; color: var(--text-3);
-  text-align: center; padding: 12px 0 4px;
-  font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase;
-}
-.session-picker-title {
-  font-size: 18px; font-weight: 700; color: var(--text);
-  text-align: center; padding-bottom: 14px;
-  border-bottom: 0.5px solid var(--border); margin-bottom: 10px;
-}
-
 /* ── DAY ACTION SHEET (existing day) ── */
 .day-action-overlay {
   position: fixed; inset: 0;
@@ -943,15 +881,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div style="display:flex;gap:16px;padding:10px var(--page-pad) 0;flex-wrap:wrap;">
     <div style="display:flex;align-items:center;gap:5px;">
       <div style="width:12px;height:12px;border-radius:3px;background:var(--bg-dark);"></div>
-      <span style="font-size:11px;color:var(--text-3);">Has sessions</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px;">
-      <div style="width:12px;height:8px;border-radius:2px;background:rgba(251,191,36,0.3);border:1px solid rgba(251,191,36,0.5);"></div>
-      <span style="font-size:11px;color:var(--text-3);">AM</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:5px;">
-      <div style="width:12px;height:8px;border-radius:2px;background:rgba(198,241,53,0.2);border:1px solid rgba(198,241,53,0.4);"></div>
-      <span style="font-size:11px;color:var(--text-3);">PM</span>
+      <span style="font-size:11px;color:var(--text-3);">Has workout</span>
     </div>
     <div style="display:flex;align-items:center;gap:5px;">
       <div style="width:12px;height:12px;border-radius:3px;border:1.5px solid var(--volt-dark);"></div>
@@ -973,10 +903,9 @@ button, input, select, a, textarea { touch-action: manipulation; }
       class="bldr-day-title-input"
       type="text"
       id="day-title-input"
-      placeholder="Session name e.g. AM Cardio"
+      placeholder="e.g. Push Day, Leg Day"
       maxlength="40"
     >
-    <div class="bldr-session-badge" id="session-badge">AM</div>
     <button class="btn btn-volt btn-sm" onclick="saveDayAndBack()">Done</button>
   </div>
 
@@ -992,37 +921,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
   </button>
 
 </main>
-
-<!-- ══════════════════════════════════════
-     SESSION PICKER (empty day tap)
-══════════════════════════════════════ -->
-<div class="session-picker-overlay" id="session-picker-overlay" onclick="closeSessionPicker()"></div>
-<div class="session-picker-sheet" id="session-picker-sheet">
-  <div class="session-picker-handle"></div>
-  <div class="session-picker-date" id="session-picker-date"></div>
-  <div class="session-picker-title">Add a session</div>
-
-  <button class="day-action-btn" onclick="sessionPickerChoose('am')">
-    <div class="day-action-icon" style="background:rgba(251,191,36,0.15);">
-      <i class="ti ti-sun" style="color:#b45309;font-size:20px;"></i>
-    </div>
-    <div>
-      <div class="day-action-label">Morning (AM)</div>
-      <div class="day-action-sub">Add a morning session to this day</div>
-    </div>
-  </button>
-
-  <button class="day-action-btn" onclick="sessionPickerChoose('pm')">
-    <div class="day-action-icon" style="background:var(--volt-bg);">
-      <i class="ti ti-moon" style="color:var(--volt-dark);font-size:20px;"></i>
-    </div>
-    <div>
-      <div class="day-action-label">Evening (PM)</div>
-      <div class="day-action-sub">Add an evening session to this day</div>
-    </div>
-  </button>
-
-</div>
 
 <!-- ══════════════════════════════════════
      DAY ACTION SHEET (existing day)
@@ -1164,7 +1062,6 @@ LF.ready().then(() => LF.guard());
 // ══════════════════════════════════════════════════════════════════════
 let program          = null;   // program object being built
 let editingDate      = null;   // 'YYYY-MM-DD' of day being edited
-let editingSession   = null;   // 'am' | 'pm'
 let pasteMode        = false;
 let copiedDate       = null;
 let libMuscle         = 'all';
@@ -1207,11 +1104,10 @@ function programHasUnsavedChanges() {
   if (!program) return false;
   flushSetupToProgram();
   // Commit any pending day-title edit so the comparison is accurate
-  if (editingDate && editingSession &&
-      program.days[editingDate] && program.days[editingDate][editingSession]) {
+  if (editingDate && program.days[editingDate]) {
     const t = document.getElementById('day-title-input');
-    if (t) program.days[editingDate][editingSession].name = t.value.trim() ||
-      program.days[editingDate][editingSession].name || '';
+    if (t) program.days[editingDate].name = t.value.trim() ||
+      program.days[editingDate].name || '';
   }
 
   let saved = null;
@@ -1299,9 +1195,8 @@ function init() {
   const _draft = _returningFromCreate ? loadDraft() : null;
   if (!_returningFromCreate) clearDraft();
   if (_draft) {
-    program        = _draft.program;
-    editingDate    = _draft.editingDate;
-    editingSession = _draft.editingSession;
+    program     = _draft.program;
+    editingDate = _draft.editingDate;
     migrateLegacyDays();
     loadProgramIntoSetup();
 
@@ -1311,8 +1206,8 @@ function init() {
 
     // Re-enter the exact day editor and open the library so the new
     // exercise (pinned at top) is one tap away.
-    if (editingDate && editingSession) {
-      openDayEditor(editingDate, editingSession);
+    if (editingDate) {
+      openDayEditor(editingDate);
       setTimeout(openLibrary, 250);
     }
 
@@ -1418,9 +1313,8 @@ function goCreateCustom() {
   // partitioned/dropped across navigations in the installed PWA.
   try {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({
-      program:        program,
-      editingDate:    editingDate,
-      editingSession: editingSession
+      program:     program,
+      editingDate: editingDate
     }));
   } catch (e) {
     showToast('Could not save your draft — please save the program first');
@@ -1469,14 +1363,10 @@ function normalizeProgramRecordTypes() {
   if (!program || !program.days) return;
   Object.keys(program.days).forEach(dateStr => {
     const day = program.days[dateStr];
-    if (!day) return;
-    ['am', 'pm'].forEach(slot => {
-      const sess = day[slot];
-      if (!sess || !Array.isArray(sess.exercises)) return;
-      sess.exercises.forEach(ex => {
-        const lib = libRecordType(ex.id);
-        if (lib && lib !== ex.recordType) ex.recordType = lib;
-      });
+    if (!day || !Array.isArray(day.exercises)) return;
+    day.exercises.forEach(ex => {
+      const lib = libRecordType(ex.id);
+      if (lib && lib !== ex.recordType) ex.recordType = lib;
     });
   });
 }
@@ -1485,13 +1375,20 @@ function migrateLegacyDays() {
   if (!program.days) { program.days = {}; return; }
   Object.keys(program.days).forEach(dateStr => {
     const d = program.days[dateStr];
-    // If it has an exercises array at the top level it's the old format
-    if (Array.isArray(d.exercises)) {
-      program.days[dateStr] = {
-        am: { name: d.name || 'Workout', exercises: d.exercises },
-        pm: null,
-      };
+    if (!d) { delete program.days[dateStr]; return; }
+    // v2 AM/PM format → flatten: merge exercises, prefer am name
+    if ('am' in d || 'pm' in d) {
+      const amEx = (d.am && Array.isArray(d.am.exercises)) ? d.am.exercises : [];
+      const pmEx = (d.pm && Array.isArray(d.pm.exercises)) ? d.pm.exercises : [];
+      const name = (d.am && d.am.name) || (d.pm && d.pm.name) || 'Workout';
+      const allEx = [...amEx, ...pmEx];
+      if (allEx.length === 0 && !name.trim()) {
+        delete program.days[dateStr];
+      } else {
+        program.days[dateStr] = { name, exercises: allEx };
+      }
     }
+    // Legacy v1 flat {name, exercises[]} is already the new format — no change needed
   });
   // Refresh built-in exercise record types from the library
   normalizeProgramRecordTypes();
@@ -1572,29 +1469,19 @@ function renderCalendar() {
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const inRange = dateStr >= range.startStr && dateStr <= range.endStr;
     const isToday = dateStr === todayStr;
-    const day     = program.days[dateStr]; // { am, pm } | undefined
-    const hasAM   = day && day.am;
-    const hasPM   = day && day.pm;
-    const hasAny  = hasAM || hasPM;
+    const day     = program.days[dateStr]; // { name, exercises[] } | undefined
+    const hasDay  = !!day;
 
     let cls = 'cal-cell';
     if (!inRange) cls += ' out-of-range';
     if (isToday)  cls += ' is-today';
-    if (hasAny)   cls += ' has-workout';
+    if (hasDay)   cls += ' has-workout';
     if (pasteMode && inRange) cls += ' paste-target';
 
     let sessionsHtml = '';
-    if (hasAny) {
-      sessionsHtml = `<div class="cal-session-labels">`;
-      if (hasAM) {
-        const amName = day.am.name || 'AM';
-        sessionsHtml += `<div class="cal-session-label am">${escHtml(amName)}</div>`;
-      }
-      if (hasPM) {
-        const pmName = day.pm.name || 'PM';
-        sessionsHtml += `<div class="cal-session-label pm">${escHtml(pmName)}</div>`;
-      }
-      sessionsHtml += `</div>`;
+    if (hasDay) {
+      const wName = day.name || 'Workout';
+      sessionsHtml = `<div class="cal-session-labels"><div class="cal-session-label">${escHtml(wName)}</div></div>`;
     }
 
     html += `
@@ -1635,127 +1522,49 @@ function handleDayTap(dateStr) {
     return;
   }
 
-  const day  = program.days[dateStr];
-  const hasAM = day && day.am;
-  const hasPM = day && day.pm;
+  const day = program.days[dateStr];
 
-  if (!hasAM && !hasPM) {
-    // Empty day — show session picker
-    openSessionPicker(dateStr);
+  if (!day) {
+    // Empty day — open editor directly
+    openDayEditor(dateStr);
   } else {
-    // Has at least one session — show action sheet
+    // Has a workout — show action sheet
     openDayAction(dateStr);
   }
 }
 
 // ══════════════════════════════════════════════════════════════════════
-// SESSION PICKER (empty day — choose AM or PM)
-// ══════════════════════════════════════════════════════════════════════
-let pickerDate = null;
-
-function openSessionPicker(dateStr) {
-  pickerDate = dateStr;
-  const d = new Date(dateStr + 'T00:00:00');
-  const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-  document.getElementById('session-picker-date').textContent = label;
-  document.getElementById('session-picker-overlay').classList.add('open');
-  document.getElementById('session-picker-sheet').classList.add('open');
-}
-
-function closeSessionPicker() {
-  document.getElementById('session-picker-overlay').classList.remove('open');
-  document.getElementById('session-picker-sheet').classList.remove('open');
-  pickerDate = null;
-}
-
-function sessionPickerChoose(session) {
-  const date = pickerDate;
-  closeSessionPicker();
-  openDayEditor(date, session);
-}
-
-// ══════════════════════════════════════════════════════════════════════
-// DAY ACTION SHEET (days with existing sessions)
+// DAY ACTION SHEET
 // ══════════════════════════════════════════════════════════════════════
 let actionDate = null;
 
 function openDayAction(dateStr) {
   actionDate = dateStr;
-  const day   = program.days[dateStr];
-  const hasAM = day && day.am;
-  const hasPM = day && day.pm;
+  const day  = program.days[dateStr];
 
   const d = new Date(dateStr + 'T00:00:00');
   const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   document.getElementById('day-action-date').textContent = label;
+  document.getElementById('day-action-title').textContent = (day && day.name) || 'Edit workout';
 
-  // Title summarises what's on this day
-  const parts = [];
-  if (hasAM) parts.push(day.am.name || 'AM Session');
-  if (hasPM) parts.push(day.pm.name || 'PM Session');
-  document.getElementById('day-action-title').textContent = parts.join(' · ') || 'Edit day';
-
-  // Build dynamic buttons
-  let btns = '';
-
-  if (hasAM) {
-    const exCount = (day.am.exercises || []).length;
-    btns += `
-      <button class="day-action-btn" onclick="dayActionEditSession('am')">
-        <div class="day-action-icon" style="background:rgba(251,191,36,0.15);">
-          <i class="ti ti-sun" style="color:#b45309;font-size:18px;"></i>
-        </div>
-        <div>
-          <div class="day-action-label">${escHtml(day.am.name || 'AM Session')}</div>
-          <div class="day-action-sub">${exCount} exercise${exCount !== 1 ? 's' : ''} · tap to edit</div>
-        </div>
-      </button>`;
-  } else {
-    btns += `
-      <button class="day-action-btn" onclick="dayActionAddSession('am')">
-        <div class="day-action-icon" style="background:rgba(251,191,36,0.15);">
-          <i class="ti ti-sun" style="color:#b45309;font-size:18px;"></i>
-        </div>
-        <div>
-          <div class="day-action-label">Add Morning (AM) session</div>
-          <div class="day-action-sub">No AM session yet</div>
-        </div>
-      </button>`;
-  }
-
-  if (hasPM) {
-    const exCount = (day.pm.exercises || []).length;
-    btns += `
-      <button class="day-action-btn" onclick="dayActionEditSession('pm')">
-        <div class="day-action-icon" style="background:var(--volt-bg);">
-          <i class="ti ti-moon" style="color:var(--volt-dark);font-size:18px;"></i>
-        </div>
-        <div>
-          <div class="day-action-label">${escHtml(day.pm.name || 'PM Session')}</div>
-          <div class="day-action-sub">${exCount} exercise${exCount !== 1 ? 's' : ''} · tap to edit</div>
-        </div>
-      </button>`;
-  } else {
-    btns += `
-      <button class="day-action-btn" onclick="dayActionAddSession('pm')">
-        <div class="day-action-icon" style="background:var(--volt-bg);">
-          <i class="ti ti-moon" style="color:var(--volt-dark);font-size:18px;"></i>
-        </div>
-        <div>
-          <div class="day-action-label">Add Evening (PM) session</div>
-          <div class="day-action-sub">No PM session yet</div>
-        </div>
-      </button>`;
-  }
-
-  btns += `
+  const exCount = day ? (day.exercises || []).length : 0;
+  const btns = `
+    <button class="day-action-btn" onclick="dayActionEdit()">
+      <div class="day-action-icon" style="background:var(--volt-bg);">
+        <i class="ti ti-edit" style="color:var(--volt-dark);font-size:18px;"></i>
+      </div>
+      <div>
+        <div class="day-action-label">${escHtml((day && day.name) || 'Workout')}</div>
+        <div class="day-action-sub">${exCount} exercise${exCount !== 1 ? 's' : ''} · tap to edit</div>
+      </div>
+    </button>
     <button class="day-action-btn" onclick="dayActionCopy()">
       <div class="day-action-icon" style="background:var(--blue-bg);">
         <i class="ti ti-copy" style="color:var(--blue);font-size:18px;"></i>
       </div>
       <div>
-        <div class="day-action-label">Copy day to another date</div>
-        <div class="day-action-sub">Copies all sessions to another date</div>
+        <div class="day-action-label">Copy to another date</div>
+        <div class="day-action-sub">Paste this workout on another day</div>
       </div>
     </button>
     <button class="day-action-btn" id="clear-btn" onclick="dayActionClear()">
@@ -1764,7 +1573,7 @@ function openDayAction(dateStr) {
       </div>
       <div>
         <div class="day-action-label">Clear this day</div>
-        <div class="day-action-sub">Remove all sessions from this date</div>
+        <div class="day-action-sub">Remove workout from this date</div>
       </div>
     </button>`;
 
@@ -1779,25 +1588,16 @@ function closeDayAction() {
   actionDate = null;
 }
 
-function dayActionEditSession(session) {
+function dayActionEdit() {
   const date = actionDate;
   closeDayAction();
-  openDayEditor(date, session);
-}
-
-function dayActionAddSession(session) {
-  const date = actionDate;
-  closeDayAction();
-  openDayEditor(date, session);
+  openDayEditor(date);
 }
 
 function dayActionCopy() {
   copiedDate = actionDate;
   const day  = program.days[copiedDate];
-  const parts = [];
-  if (day.am) parts.push(day.am.name || 'AM');
-  if (day.pm) parts.push(day.pm.name || 'PM');
-  document.getElementById('paste-banner-name').textContent = parts.join(' + ');
+  document.getElementById('paste-banner-name').textContent = (day && day.name) || 'workout';
   document.getElementById('paste-banner').style.display = 'flex';
   pasteMode = true;
   closeDayAction();
@@ -1815,12 +1615,12 @@ function dayActionClear() {
     if (btn) {
       btn.dataset.confirming = 'true';
       btn.querySelector('.day-action-label').textContent = 'Tap again to confirm';
-      btn.querySelector('.day-action-sub').textContent   = 'This will remove all sessions';
+      btn.querySelector('.day-action-sub').textContent   = 'This will remove the workout';
       setTimeout(() => {
         if (btn && btn.dataset.confirming) {
           btn.dataset.confirming = '';
           btn.querySelector('.day-action-label').textContent = 'Clear this day';
-          btn.querySelector('.day-action-sub').textContent   = 'Remove all sessions from this date';
+          btn.querySelector('.day-action-sub').textContent   = 'Remove workout from this date';
         }
       }, 3000);
     }
@@ -1849,34 +1649,17 @@ function cancelPaste() {
 // ══════════════════════════════════════════════════════════════════════
 // SCREEN 3 — DAY EDITOR
 // ══════════════════════════════════════════════════════════════════════
-function openDayEditor(dateStr, session) {
-  editingDate    = dateStr;
-  editingSession = session; // 'am' | 'pm'
+function openDayEditor(dateStr) {
+  editingDate = dateStr;
 
-  // Ensure the day and session objects exist
+  // Ensure the day object exists
   if (!program.days[dateStr]) {
-    program.days[dateStr] = { am: null, pm: null };
-  }
-  if (!program.days[dateStr][session]) {
-    program.days[dateStr][session] = { name: '', exercises: [] };
+    program.days[dateStr] = { name: '', exercises: [] };
   }
 
-  const sessionData = program.days[dateStr][session];
-  document.getElementById('day-title-input').value = sessionData.name || '';
-
-  // Session badge
-  const badge = document.getElementById('session-badge');
-  if (session === 'am') {
-    badge.textContent = '☀ AM';
-    badge.className   = 'bldr-session-badge am';
-  } else {
-    badge.textContent = '🌙 PM';
-    badge.className   = 'bldr-session-badge pm';
-  }
-
-  // Placeholder hint
-  document.getElementById('day-title-input').placeholder =
-    session === 'am' ? 'e.g. AM Cardio, AM Abs' : 'e.g. PM Chest, PM Legs';
+  const dayData = program.days[dateStr];
+  document.getElementById('day-title-input').value = dayData.name || '';
+  document.getElementById('day-title-input').placeholder = 'e.g. Push Day, Leg Day';
 
   const d = new Date(dateStr + 'T00:00:00');
   document.getElementById('day-date-label').textContent =
@@ -1888,28 +1671,21 @@ function openDayEditor(dateStr, session) {
 }
 
 function saveDayAndBack() {
-  if (editingDate && editingSession) {
+  if (editingDate) {
     const nameVal = document.getElementById('day-title-input').value.trim();
-    const session = program.days[editingDate][editingSession];
+    const day     = program.days[editingDate];
 
-    if (session) {
-      // If no name and no exercises, remove this session
-      if (!nameVal && session.exercises.length === 0) {
-        program.days[editingDate][editingSession] = null;
+    if (day) {
+      if (!nameVal && (day.exercises || []).length === 0) {
+        // Empty day — remove it
+        delete program.days[editingDate];
       } else {
-        session.name = nameVal || (editingSession === 'am' ? 'AM Workout' : 'PM Workout');
+        day.name = nameVal || 'Workout';
       }
-    }
-
-    // If both sessions are now null, remove the day entirely
-    const day = program.days[editingDate];
-    if (!day.am && !day.pm) {
-      delete program.days[editingDate];
     }
   }
 
-  editingDate    = null;
-  editingSession = null;
+  editingDate = null;
   showScreen('main');
   renderCalendar();
 }
@@ -1922,8 +1698,8 @@ function backToCalendar() {
 // EXERCISE LIST
 // ══════════════════════════════════════════════════════════════════════
 function currentSession() {
-  if (!editingDate || !editingSession) return null;
-  return program.days[editingDate] && program.days[editingDate][editingSession];
+  if (!editingDate) return null;
+  return program.days[editingDate] || null;
 }
 
 function buildExParams(ex, ei) {
