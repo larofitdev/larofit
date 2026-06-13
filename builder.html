@@ -819,6 +819,29 @@ button, input, select, a, textarea { touch-action: manipulation; }
   border-radius: 4px; padding: 1px 5px; margin-left: 6px;
   font-family: var(--font-mono); vertical-align: middle;
 }
+/* ── UNSAVED-CHANGES LEAVE SHEET ── */
+.bldr-leave-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 600; display: none; align-items: flex-end; justify-content: center;
+}
+.bldr-leave-overlay.open { display: flex; }
+.bldr-leave-sheet {
+  background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  width: 100%; max-width: 520px;
+  padding: 22px var(--page-pad) calc(18px + env(safe-area-inset-bottom));
+}
+.bldr-leave-title {
+  font-family: 'Bebas Neue', sans-serif; font-size: 26px;
+  letter-spacing: 0.5px; color: var(--text); line-height: 1;
+}
+.bldr-leave-sub { font-size: 13px; color: var(--text-3); margin: 6px 0 18px; }
+.bldr-leave-btn {
+  display: block; width: 100%; padding: 15px; border-radius: 12px;
+  font-size: 15px; font-weight: 700; text-align: center; margin-bottom: 10px;
+}
+.bldr-leave-btn-volt   { background: var(--volt); color: #1a1a1a; }
+.bldr-leave-btn-dark   { background: var(--bg-card2); color: var(--text); }
+.bldr-leave-btn-danger { background: transparent; color: var(--danger); margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -1121,6 +1144,16 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </div>
 
 <!-- TOAST -->
+<div class="bldr-leave-overlay" id="bldr-leave-overlay" onclick="if(event.target===this)closeLeaveSheet()">
+  <div class="bldr-leave-sheet">
+    <div class="bldr-leave-title">UNSAVED CHANGES</div>
+    <div class="bldr-leave-sub">You have unsaved changes to this program. What would you like to do?</div>
+    <button class="bldr-leave-btn bldr-leave-btn-volt"   onclick="leaveSaveAndGo()">Save &amp; leave</button>
+    <button class="bldr-leave-btn bldr-leave-btn-dark"   onclick="closeLeaveSheet()">Keep editing</button>
+    <button class="bldr-leave-btn bldr-leave-btn-danger" onclick="leaveDiscardAndGo()">Discard &amp; leave</button>
+  </div>
+</div>
+
 <div class="lf-toast" id="toast"></div>
 
 <script>
@@ -1163,8 +1196,97 @@ function showScreen(name) {
 }
 
 function goBack() {
-  window.location.href = 'programs.html';
+  requestLeave('programs.html');
 }
+
+// ── UNSAVED-CHANGES LEAVE GUARD ──────────────────────────────────────────
+let _pendingLeaveHref = null;
+
+// True if the in-memory program differs from what's saved in localStorage.
+function programHasUnsavedChanges() {
+  if (!program) return false;
+  flushSetupToProgram();
+  // Commit any pending day-title edit so the comparison is accurate
+  if (editingDate && editingSession &&
+      program.days[editingDate] && program.days[editingDate][editingSession]) {
+    const t = document.getElementById('day-title-input');
+    if (t) program.days[editingDate][editingSession].name = t.value.trim() ||
+      program.days[editingDate][editingSession].name || '';
+  }
+
+  let saved = null;
+  try {
+    saved = (JSON.parse(localStorage.getItem('lf_programs') || '[]'))
+      .find(p => p.id === program.id) || null;
+  } catch (e) {}
+
+  if (!saved) {
+    // Never saved — dirty only if there's real content worth keeping
+    const hasName = program.name && program.name.trim();
+    const hasDays = Object.keys(program.days || {}).length > 0;
+    return !!(hasName || hasDays);
+  }
+  // Compare ignoring the savedAt timestamp
+  const norm = p => JSON.stringify({ ...p, savedAt: null });
+  return norm(program) !== norm(saved);
+}
+
+// Single entry point for any "leave the page" action
+function requestLeave(href) {
+  if (programHasUnsavedChanges()) {
+    _pendingLeaveHref = href;
+    document.getElementById('bldr-leave-overlay').classList.add('open');
+  } else {
+    window.location.href = href;
+  }
+}
+
+function closeLeaveSheet() {
+  document.getElementById('bldr-leave-overlay').classList.remove('open');
+  _pendingLeaveHref = null;
+}
+
+function leaveDiscardAndGo() {
+  const href = _pendingLeaveHref || 'programs.html';
+  clearDraft();
+  closeLeaveSheet();
+  window.location.href = href;
+}
+
+function leaveSaveAndGo() {
+  if (!program.name || !program.name.trim()) {
+    closeLeaveSheet();
+    showToast('Give your program a name first');
+    showScreen('main');
+    document.getElementById('prog-name').focus();
+    return;
+  }
+  const href = _pendingLeaveHref || 'programs.html';
+  // Persist without saveProgram's own redirect
+  program.savedAt = new Date().toISOString();
+  const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
+  const idx = programs.findIndex(p => p.id === program.id);
+  if (idx >= 0) programs[idx] = program; else programs.push(program);
+  localStorage.setItem('lf_programs', JSON.stringify(programs));
+  LF.ready().then(() => LF.db.saveProgram(program).catch(() => {}));
+  clearDraft();
+  closeLeaveSheet();
+  showToast('Program saved \u2713');
+  setTimeout(() => { window.location.href = href; }, 600);
+}
+
+// Intercept bottom-nav (and any other) <a href> clicks while editing.
+// goCreateCustom uses window.location.href directly, so it is NOT caught here.
+document.addEventListener('click', function (e) {
+  const a = e.target.closest('a[href]');
+  if (!a) return;
+  const href = a.getAttribute('href');
+  if (!href || href.charAt(0) === '#') return;
+  if (!programHasUnsavedChanges()) return; // allow free navigation when clean
+  e.preventDefault();
+  e.stopPropagation();
+  requestLeave(a.href);
+}, true);
 
 function init() {
   document.getElementById('prog-start').value = localDateStr();
