@@ -549,11 +549,17 @@ document.addEventListener('DOMContentLoaded', () => {
 function allSessions(p) {
   const days = p.days;
   if (!days) return [];
-  // New format: object keyed by date
+  // Date-keyed object format
   if (!Array.isArray(days)) {
     const sessions = [];
     Object.values(days).forEach(day => {
       if (!day) return;
+      // Flat format: { name, exercises[] }
+      if (Array.isArray(day.exercises)) {
+        if (day.exercises.length) sessions.push(day);
+        return;
+      }
+      // Legacy AM/PM format
       if (day.am && (day.am.exercises || []).length) sessions.push(day.am);
       if (day.pm && (day.pm.exercises || []).length) sessions.push(day.pm);
     });
@@ -573,9 +579,11 @@ function trainingDayCount(p) {
   const days = p.days;
   if (!days) return 0;
   if (!Array.isArray(days)) {
-    return Object.values(days).filter(day =>
-      day && ((day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length))
-    ).length;
+    return Object.values(days).filter(day => {
+      if (!day) return false;
+      if (Array.isArray(day.exercises)) return day.exercises.length > 0;
+      return (day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length);
+    }).length;
   }
   return days.filter(d => !d.rest).length;
 }
@@ -588,7 +596,11 @@ function dayBarSegs(p) {
     // Show up to 7 dated entries sorted
     const entries = Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).slice(0,7);
     const segs = entries.map(([, day]) => {
-      const hasWork = day && ((day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length));
+      const hasWork = day && (
+        Array.isArray(day.exercises)
+          ? day.exercises.length > 0
+          : ((day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length))
+      );
       return `<div class="prog-day-seg ${hasWork ? 'training' : 'rest'}"></div>`;
     });
     // Pad to 7
@@ -751,8 +763,14 @@ function openDetail(id) {
     : Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).map(([dateStr, day]) => {
         const label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
         const sessions = [];
-        if (day && day.am && (day.am.exercises||[]).length) sessions.push({ ...day.am, _slot: 'AM' });
-        if (day && day.pm && (day.pm.exercises||[]).length) sessions.push({ ...day.pm, _slot: 'PM' });
+        if (day && Array.isArray(day.exercises)) {
+          // Flat format
+          if (day.exercises.length) sessions.push({ ...day });
+        } else {
+          // Legacy AM/PM format
+          if (day && day.am && (day.am.exercises||[]).length) sessions.push({ ...day.am, _slot: 'AM' });
+          if (day && day.pm && (day.pm.exercises||[]).length) sessions.push({ ...day.pm, _slot: 'PM' });
+        }
         return { label, sessions };
       });
 

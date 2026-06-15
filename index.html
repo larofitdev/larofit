@@ -196,7 +196,7 @@ if ('serviceWorker' in navigator) {
 
       <!-- Has a workout -->
       <div id="today-has-workout" style="padding:16px;display:none;">
-        <div style="font-size:10px;font-weight:700;color:var(--volt);
+        <div id="today-eyebrow" style="font-size:10px;font-weight:700;color:var(--volt);
                     letter-spacing:0.12em;text-transform:uppercase;
                     font-family:var(--font-mono);margin-bottom:5px;">
           Today's workout
@@ -218,7 +218,7 @@ if ('serviceWorker' in navigator) {
             <span id="today-cal">— cal</span>
           </div>
         </div>
-        <button class="btn btn-volt btn-full" onclick="location.href='workout.html'" style="font-size:14px;padding:12px;">
+        <button id="today-start-btn" class="btn btn-volt btn-full" onclick="location.href='workout.html'" style="font-size:14px;padding:12px;">
           Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
@@ -495,6 +495,31 @@ async function loadTodayCard() {
   document.getElementById('today-duration').textContent = estMins + ' min';
   document.getElementById('today-excount').textContent  = exCount + ' exercise' + (exCount !== 1 ? 's' : '');
   document.getElementById('today-cal').textContent      = '~' + Math.round(estMins * 7) + ' cal';
+
+  applyPausedWorkoutState();
+}
+
+// If a workout is paused (and still within the 18-hour auto-save window),
+// surface "Resume workout" on the home card instead of "Start workout".
+function applyPausedWorkoutState() {
+  let snap = null;
+  try { snap = JSON.parse(localStorage.getItem('lf_active_workout')); } catch (e) {}
+
+  const eyebrow = document.getElementById('today-eyebrow');
+  const btn     = document.getElementById('today-start-btn');
+  if (!btn) return;
+
+  const isFreshPause = snap && snap.isPaused && snap.pausedAt &&
+                       (Date.now() - snap.pausedAt) < 18 * 3600 * 1000;
+
+  if (isFreshPause) {
+    if (eyebrow) eyebrow.textContent = 'Workout paused';
+    btn.innerHTML = 'Resume workout <i class="ti ti-player-play" aria-hidden="true"></i>';
+    if (snap.headerName) document.getElementById('today-name').textContent = snap.headerName;
+  } else {
+    if (eyebrow) eyebrow.textContent = "Today's workout";
+    btn.innerHTML = 'Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>';
+  }
 }
 
 // ── STREAK ───────────────────────────────────────────────────

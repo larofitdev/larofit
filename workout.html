@@ -232,7 +232,26 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   cursor: pointer;
   position: relative;
   -webkit-tap-highlight-color: transparent;
+  transition: flex-basis 0.28s cubic-bezier(0.32,0.72,0,1), height 0.28s cubic-bezier(0.32,0.72,0,1);
 }
+/* Collapsed: slim tappable bar that re-expands the animation */
+.gif-slot.collapsed {
+  flex: 0 0 34px;
+  height: 34px;
+  background: var(--bg-card2);
+  border-bottom: 0.5px solid var(--border);
+}
+.gif-slot.collapsed video,
+.gif-slot.collapsed .gif-slot-placeholder { display: none !important; }
+.gif-show-bar {
+  display: none;
+  align-items: center; justify-content: center; gap: 6px;
+  width: 100%; height: 100%;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  color: var(--text-3); font-family: var(--font-body);
+}
+.gif-show-bar i { font-size: 13px; color: var(--volt-dark); }
+.gif-slot.collapsed .gif-show-bar { display: flex; }
 .gif-slot video {
   width: 100%; height: 100%; object-fit: contain;
   display: block;
@@ -372,10 +391,11 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 /* ── SETS TABLE — fixed bottom half of card ── */
 /* Wrapper scrolls if too many sets */
 #sets-container {
-  flex-shrink: 0;
+  flex-shrink: 1;
   overflow-y: auto;
-  max-height: 45vh;
+  max-height: 50vh;
   border-top: 0.5px solid var(--border);
+  padding-bottom: 8px;
 }
 
 .sets-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -497,8 +517,15 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   background: var(--bg);
 }
 .ex-dot {
-  width: 6px; height: 6px; border-radius: 50%;
+  width: 6px; height: 6px; border-radius: 50%; padding: 0;
   background: var(--bg-card2); border: 1px solid var(--border-md); transition: all 0.2s;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  appearance: none; -webkit-appearance: none;
+  position: relative;
+}
+/* Invisible expanded hit area so the tiny dots are easy to tap */
+.ex-dot::after {
+  content: ''; position: absolute; top: -10px; bottom: -10px; left: -6px; right: -6px;
 }
 .ex-dot.done   { background: var(--volt); border-color: var(--volt); }
 .ex-dot.active { background: var(--bg-dark); border-color: var(--bg-dark); width: 18px; border-radius: 3px; }
@@ -759,11 +786,14 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div class="ex-card" id="ex-card">
 
       <!-- Video slot — flexes to fill upper portion -->
-      <div class="gif-slot" id="gif-slot">
-        <video id="gif-video" autoplay muted loop playsinline style="display:none;"></video>
+      <div class="gif-slot" id="gif-slot" onclick="toggleGifSlot()">
+        <video id="gif-video" muted playsinline style="display:none;"></video>
         <div class="gif-slot-placeholder" id="gif-placeholder">
           <i class="ti ti-player-play"></i>
           <span>No animation</span>
+        </div>
+        <div class="gif-show-bar" id="gif-show-bar">
+          <i class="ti ti-player-play"></i> Show animation
         </div>
       </div>
 
@@ -1202,7 +1232,10 @@ function resumeFromSnapshot(snap) {
   isFreeForm   = !!snap.isFreeForm;
   totalPRs     = snap.totalPRs || 0;
   exNotes      = snap.exNotes  || {};
-  currentExIdx = Math.min(snap.currentExIdx || 0, Math.max(exercises.length - 1, 0));
+  // Capture the target index locally — startWorkout() calls goToEx(0),
+  // which clobbers the module-level currentExIdx, so we re-apply after.
+  const targetIdx = Math.min(snap.currentExIdx || 0, Math.max(exercises.length - 1, 0));
+  currentExIdx = targetIdx;
   elapsedSec   = snap.elapsedSec || 0;
   isPaused     = !!snap.isPaused;
   pausedAt     = snap.pausedAt || null;
@@ -1227,7 +1260,7 @@ function resumeFromSnapshot(snap) {
     if (freeEl) freeEl.value = snap.freeName;
   }
 
-  if (exercises.length > 0) goToEx(currentExIdx);
+  if (exercises.length > 0) goToEx(targetIdx);
   checkAllDone();
   saveSnapshot();
 
@@ -1663,8 +1696,15 @@ function renderDots() {
     let cls = 'ex-dot';
     if (allLogged)              cls += ' done';
     else if (i === currentExIdx) cls += ' active';
-    return `<div class="${cls}" aria-hidden="true"></div>`;
+    return `<button class="${cls}" onclick="jumpToEx(${i})" aria-label="Go to exercise ${i+1}"></button>`;
   }).join('');
+}
+
+// Manual jump between exercises via the progress dots
+function jumpToEx(idx) {
+  if (idx === currentExIdx) return;
+  stopRest();
+  goToEx(idx);
 }
 
 // ── GO TO EXERCISE ────────────────────────────────────────────
@@ -1766,22 +1806,73 @@ function renderExercise() {
 }
 
 // ── VIDEO SLOT ──────────────────────────────────────────────────
+let _gifLoopCount   = 0;
+let _gifHasMedia    = false;
+let _gifEndedBound  = false;
+
+function onGifEnded() {
+  _gifLoopCount++;
+  if (_gifLoopCount >= 2) {
+    collapseGifSlot();          // played 2 loops → fold away to free space
+  } else {
+    const v = document.getElementById('gif-video');
+    if (v) { try { v.currentTime = 0; v.play().catch(() => {}); } catch (e) {} }
+  }
+}
+
 function renderGifSlot(ex) {
+  const slot        = document.getElementById('gif-slot');
   const video       = document.getElementById('gif-video');
   const placeholder = document.getElementById('gif-placeholder');
   const mediaUrl    = ex.mediaUrl || lookupMediaUrl(ex.id);
 
+  // Reset to expanded state for each new exercise
+  slot.classList.remove('collapsed');
+  _gifLoopCount = 0;
+
+  if (!_gifEndedBound) {
+    video.addEventListener('ended', onGifEnded);
+    _gifEndedBound = true;
+  }
+
   if (mediaUrl) {
+    _gifHasMedia = true;
     video.src                 = mediaUrl;
     video.style.display       = 'block';
     placeholder.style.display = 'none';
+    video.loop = false;        // we manage looping so we can count to 2
     video.load();
     video.play().catch(() => {});
   } else {
+    _gifHasMedia = false;
     video.src                 = '';
     video.style.display       = 'none';
     placeholder.style.display = 'flex';
   }
+}
+
+function collapseGifSlot() {
+  const slot  = document.getElementById('gif-slot');
+  const video = document.getElementById('gif-video');
+  slot.classList.add('collapsed');
+  if (video) { try { video.pause(); } catch (e) {} }
+}
+
+function expandGifSlot() {
+  const slot  = document.getElementById('gif-slot');
+  const video = document.getElementById('gif-video');
+  slot.classList.remove('collapsed');
+  _gifLoopCount = 0;
+  if (video && _gifHasMedia) {
+    try { video.currentTime = 0; video.play().catch(() => {}); } catch (e) {}
+  }
+}
+
+function toggleGifSlot() {
+  if (!_gifHasMedia) return;   // nothing to show
+  const slot = document.getElementById('gif-slot');
+  if (slot.classList.contains('collapsed')) expandGifSlot();
+  else collapseGifSlot();
 }
 
 // ── NOTES ─────────────────────────────────────────────────────
@@ -1818,6 +1909,16 @@ function renderSets(ex, lastSession) {
     container.innerHTML = renderStrengthTable(ex, lastSession);
   }
   updateLogBtn();
+
+  // Keep the active set visible — scroll it into view inside the sets list
+  // so a freed-up row (e.g. set 4) is always reachable.
+  requestAnimationFrame(() => {
+    const active = container.querySelector('.active-set');
+    if (active) {
+      const row = active.closest('tr') || active;
+      try { row.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) {}
+    }
+  });
 }
 
 function renderStrengthTable(ex, lastSession) {
@@ -2005,7 +2106,6 @@ function renderCardioTable(ex) {
                onchange="updateSet(${currentExIdx},0,'distance',this.value)">
       </div>
     </div>
-    <button class="btn btn-volt btn-full" onclick="logCardioSet(${currentExIdx})">Log cardio</button>
   </div>`;
 }
 
