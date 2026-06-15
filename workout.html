@@ -1837,6 +1837,7 @@ function renderGifSlot(ex) {
 
   if (mediaUrl) {
     _gifHasMedia = true;
+    slot.style.display        = '';   // restore CSS flex
     video.src                 = mediaUrl;
     video.style.display       = 'block';
     placeholder.style.display = 'none';
@@ -1844,10 +1845,13 @@ function renderGifSlot(ex) {
     video.load();
     video.play().catch(() => {});
   } else {
+    // No uploaded video / URL (e.g. custom exercise) — hide the whole
+    // animation window rather than showing an empty "No animation" box.
     _gifHasMedia = false;
+    slot.style.display        = 'none';
     video.src                 = '';
     video.style.display       = 'none';
-    placeholder.style.display = 'flex';
+    placeholder.style.display = 'none';
   }
 }
 

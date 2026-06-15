@@ -496,7 +496,36 @@ async function loadTodayCard() {
   document.getElementById('today-excount').textContent  = exCount + ' exercise' + (exCount !== 1 ? 's' : '');
   document.getElementById('today-cal').textContent      = '~' + Math.round(estMins * 7) + ' cal';
 
-  applyPausedWorkoutState();
+  // If today's workout is already logged, show a completed state
+  const history = await LF.db.getWorkoutHistory();
+  const todaySession = history && history[todayKey];
+  if (todaySession) {
+    applyCompletedState(todaySession);
+  } else {
+    applyPausedWorkoutState();
+  }
+}
+
+// Today's planned workout is already in history → show a "done" card.
+function applyCompletedState(session) {
+  const eyebrow = document.getElementById('today-eyebrow');
+  const btn     = document.getElementById('today-start-btn');
+
+  if (eyebrow) eyebrow.innerHTML = 'Workout complete <i class="ti ti-circle-check" style="font-size:12px;vertical-align:-1px;"></i>';
+  if (session.name) document.getElementById('today-name').textContent = session.name;
+
+  const exCount = (session.exercises || []).length;
+  const vol     = session.totalVolume || 0;
+  const volTxt  = vol >= 1000 ? (vol/1000).toFixed(1) + 'k lbs' : vol + ' lbs';
+
+  document.getElementById('today-duration').textContent = (session.durationMin || 0) + ' min';
+  document.getElementById('today-excount').textContent  = exCount + ' exercise' + (exCount !== 1 ? 's' : '');
+  document.getElementById('today-cal').textContent      = (session.prs ? session.prs + ' PR' + (session.prs !== 1 ? 's' : '') : volTxt);
+
+  if (btn) {
+    btn.innerHTML = 'View progress <i class="ti ti-arrow-right" aria-hidden="true"></i>';
+    btn.onclick   = () => location.href = 'progress.html';
+  }
 }
 
 // If a workout is paused (and still within the 18-hour auto-save window),
@@ -515,10 +544,12 @@ function applyPausedWorkoutState() {
   if (isFreshPause) {
     if (eyebrow) eyebrow.textContent = 'Workout paused';
     btn.innerHTML = 'Resume workout <i class="ti ti-player-play" aria-hidden="true"></i>';
+    btn.onclick   = () => location.href = 'workout.html';
     if (snap.headerName) document.getElementById('today-name').textContent = snap.headerName;
   } else {
     if (eyebrow) eyebrow.textContent = "Today's workout";
     btn.innerHTML = 'Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>';
+    btn.onclick   = () => location.href = 'workout.html';
   }
 }
 
@@ -652,9 +683,11 @@ async function loadPrograms() {
     const days = (() => {
       if (!p.days) return 0;
       if (Array.isArray(p.days)) return p.days.filter(d => !d.rest).length;
-      return Object.values(p.days).filter(day =>
-        day && ((day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length))
-      ).length;
+      return Object.values(p.days).filter(day => {
+        if (!day) return false;
+        if (Array.isArray(day.exercises)) return day.exercises.length > 0;
+        return (day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length);
+      }).length;
     })();
     return `
       <div class="lf-list-row" style="cursor:pointer;"

@@ -439,21 +439,22 @@ window.LF = {
     // ── WORKOUT HISTORY ──────────────────────────────────────
 
     async getWorkoutHistory() {
-      if (!isOnline()) return LS.get('workout_history', {});
+      const localHist = LS.get('workout_history', {});
+      if (!isOnline()) return localHist;
       try {
         const sb   = await lfReady();
         const user = await LF.auth.user();
-        if (!user) return LS.get('workout_history', {});
+        if (!user) return localHist;
         const { data, error } = await sb
           .from('workout_history')
           .select('*')
           .eq('user_id', user.id)
           .order('workout_date', { ascending: false });
-        if (error) return LS.get('workout_history', {});
+        if (error) return localHist;
         // Convert array → object keyed by YYYY-MM-DD (matches existing app shape)
-        const history = {};
+        const remote = {};
         (data || []).forEach(row => {
-          history[row.workout_date] = {
+          remote[row.workout_date] = {
             ...row.session_data,
             name:        row.name,
             durationMin: row.duration_min,
@@ -461,9 +462,13 @@ window.LF = {
             prs:         row.prs,
           };
         });
-        LS.set('workout_history', history);
-        return history;
-      } catch { return LS.get('workout_history', {}); }
+        // Merge — local first, remote overlaid on top. This preserves
+        // workouts saved locally but not yet synced (or mid-sync) so a
+        // background read can never wipe a fresh local save.
+        const merged = { ...localHist, ...remote };
+        LS.set('workout_history', merged);
+        return merged;
+      } catch { return localHist; }
     },
 
     async saveWorkout(dateStr, session) {
