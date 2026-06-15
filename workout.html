@@ -1162,6 +1162,7 @@ let elapsedTimer   = null;
 let restInterval   = null;
 let restRemaining  = 0;
 let totalPRs       = 0;
+let _prCredited    = new Set(); // exercise id/name credited a PR this session (1 max per exercise)
 let exNotes        = {};   // { exIdx: noteText }
 // ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
 function localDateStr(d) {
@@ -1192,6 +1193,7 @@ function saveSnapshot() {
       isPaused:     isPaused,
       pausedAt:     pausedAt,
       totalPRs:     totalPRs,
+      prCredited:   Array.from(_prCredited),
       exNotes:      exNotes,
       currentExIdx: currentExIdx,
       exercises:    exercises
@@ -1231,6 +1233,7 @@ function resumeFromSnapshot(snap) {
   exercises    = snap.exercises;
   isFreeForm   = !!snap.isFreeForm;
   totalPRs     = snap.totalPRs || 0;
+  _prCredited  = new Set(snap.prCredited || []);
   exNotes      = snap.exNotes  || {};
   // Capture the target index locally — startWorkout() calls goToEx(0),
   // which clobbers the module-level currentExIdx, so we re-apply after.
@@ -1564,6 +1567,7 @@ function libRecordType(id) {
 }
 
 function buildExerciseList(exArr, workoutName) {
+  totalPRs = 0; _prCredited = new Set();
   exercises = exArr.map(ex => {
     // Normalize built-in record types from the library before building the row
     const lib = libRecordType(ex.id);
@@ -1652,6 +1656,7 @@ function startWorkout(workoutName) {
 function startFreeForm() {
   isFreeForm = true;
   exercises  = [];
+  totalPRs = 0; _prCredited = new Set();
   buildExPicker();
   startWorkout('Free Workout');
 }
@@ -2140,13 +2145,9 @@ function logSet(exIdx, setIdx) {
   if (!reps) { showToast('Enter reps first'); return; }
   set.weight = weight; set.reps = reps; set.logged = true;
 
-  // PR check
+  // PR check (unified — one per exercise per session, first-time included)
   const lastSession = getLastSession(ex.id || ex.name);
-  if (lastSession && weight && reps) {
-    const cur  = calc1RM(parseFloat(weight), parseFloat(reps));
-    const prev = calc1RM(parseFloat(lastSession.bestWeight), parseFloat(lastSession.bestReps));
-    if (cur && prev && cur > prev) { totalPRs++; showToast('🏆 New personal record!'); }
-  }
+  checkPR(ex);
 
   saveSnapshot();
 
@@ -2205,6 +2206,7 @@ function logBWSet(exIdx, setIdx) {
   const reps = rEl ? rEl.value.trim() : set.reps;
   if (!reps) { showToast('Enter reps first'); return; }
   set.reps = reps; set.logged = true;
+  checkPR(ex);
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
@@ -2224,6 +2226,7 @@ function logTimedSet(exIdx, setIdx) {
   const t   = tEl ? tEl.value.trim() : set.holdTime;
   if (!t) { showToast('Enter hold time first'); return; }
   set.holdTime = t; set.logged = true;
+  checkPR(ex);
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
@@ -2241,6 +2244,7 @@ function logCardioSet(exIdx) {
   set.duration = dur;
   set.distance = distEl ? distEl.value.trim() : '';
   set.logged   = true;
+  checkPR(ex);
   saveSnapshot();
   renderSets(ex, null); renderDots(); updateOverallProgress();
   const ni = exIdx+1;
@@ -2368,6 +2372,7 @@ function finishHold(actualSecs) {
   if (tEl) tEl.value = actualSecs;
   set.holdTime = String(actualSecs);
   set.logged   = true;
+  checkPR(ex);
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
@@ -2458,7 +2463,91 @@ function getLastSession(exIdOrName) {
   return null;
 }
 
-// ── FIXED LOG BUTTON LOGIC ────────────────────────────────────
+// ── UNIFIED PR DETECTION ──────────────────────────────────────
+// One PR per exercise per session. Works for all types:
+//   strength → best estimated 1RM   bodyweight → most reps
+//   timed    → longest hold          cardio     → farthest distance / longest duration
+// First-ever time doing an exercise counts as a PR (it's your baseline best).
+function exPRMetric(ex) {
+  if (isCardio(ex)) return 'cardio';
+  if (isTimed(ex))  return 'timed';
+  if (isBW(ex))     return 'reps';
+  return 'strength';
+}
+
+// Best numbers for this exercise across all PRIOR sessions (excludes today).
+function getPrevBest(ex) {
+  const history = store.get('workout_history', {});
+  const dates   = Object.keys(history).sort().reverse();
+  let exists = false, oneRM = 0, reps = 0, hold = 0, dist = 0, dur = 0;
+  for (const date of dates) {
+    if (date === todayKey) continue;
+    const session = history[date];
+    if (!session || !session.exercises) continue;
+    const found = session.exercises.find(e => e.id === ex.id || e.name === ex.name);
+    if (!found || !found.sets || !found.sets.length) continue;
+    exists = true;
+    found.sets.forEach(s => {
+      const w = parseFloat(s.weight)||0, r = parseFloat(s.reps)||0;
+      const orm = calc1RM(w, r) || 0;
+      if (orm > oneRM) oneRM = orm;
+      if (r > reps)   reps = r;
+      const h  = parseFloat(s.holdTime)||0; if (h  > hold) hold = h;
+      const di = parseFloat(s.distance)||0; if (di > dist) dist = di;
+      const du = parseFloat(s.duration)||0; if (du > dur)  dur  = du;
+    });
+  }
+  return { exists, oneRM, reps, hold, dist, dur };
+}
+
+// Best numbers for this exercise from the CURRENT session's logged sets.
+function getCurBest(ex) {
+  let oneRM = 0, reps = 0, hold = 0, dist = 0, dur = 0;
+  ex.loggedSets.filter(s => s.logged).forEach(s => {
+    const w = parseFloat(s.weight)||0, r = parseFloat(s.reps)||0;
+    const orm = calc1RM(w, r) || 0;
+    if (orm > oneRM) oneRM = orm;
+    if (r > reps)   reps = r;
+    const h  = parseFloat(s.holdTime)||0; if (h  > hold) hold = h;
+    const di = parseFloat(s.distance)||0; if (di > dist) dist = di;
+    const du = parseFloat(s.duration)||0; if (du > dur)  dur  = du;
+  });
+  return { oneRM, reps, hold, dist, dur };
+}
+
+// Credit at most one PR per exercise per session. Call after logging a set.
+function checkPR(ex) {
+  const key = ex.id || ex.name;
+  if (_prCredited.has(key)) return;
+
+  const cur    = getCurBest(ex);
+  const prev   = getPrevBest(ex);
+  const metric = exPRMetric(ex);
+  let isPR = false;
+
+  if (!prev.exists) {
+    // First time ever — any meaningful logged value is a baseline PR
+    const curVal = metric === 'strength' ? cur.oneRM
+                 : metric === 'reps'     ? cur.reps
+                 : metric === 'timed'    ? cur.hold
+                 : (cur.dist || cur.dur);
+    isPR = curVal > 0;
+  } else if (metric === 'strength') {
+    isPR = cur.oneRM > prev.oneRM;
+  } else if (metric === 'reps') {
+    isPR = cur.reps > prev.reps;
+  } else if (metric === 'timed') {
+    isPR = cur.hold > prev.hold;
+  } else { // cardio — farther OR longer than before
+    isPR = (cur.dist > prev.dist) || (cur.dur > prev.dur);
+  }
+
+  if (isPR) {
+    _prCredited.add(key);
+    totalPRs++;
+    showToast(prev.exists ? '🏆 New personal record!' : '🏆 First-time PR!');
+  }
+}
 let activeSetIdx = 0; // tracks which set is currently active
 
 function handleLogBtnTap() {

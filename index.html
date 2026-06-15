@@ -836,12 +836,94 @@ function dismissInstallBanner() {
   document.getElementById('install-banner').style.display = 'none';
 }
 
+// One-time backfill: sessions saved before unified PR detection have stale
+// `prs` counts (often 0). Recompute them chronologically using the same rules
+// as the workout page so historical workouts show their personal bests.
+async function backfillPRs() {
+  if (localStorage.getItem('lf_pr_backfill_v1')) return;
+
+  let history;
+  try { history = await LF.db.getWorkoutHistory(); } catch { return; }
+  const dates = Object.keys(history).sort(); // oldest first
+  if (!dates.length) { localStorage.setItem('lf_pr_backfill_v1', '1'); return; }
+
+  const est1RM = (w, r) => {
+    if (!w || !r || r <= 0) return 0;
+    if (r === 1) return w;
+    return Math.round(w * (1 + r / 30));
+  };
+  const metricOf = (ex) => {
+    let t = ex.type || '';
+    if (!t) {
+      const s = (ex.sets || [])[0] || {};
+      if (parseFloat(s.distance) || (parseFloat(s.duration) && s.reps == null && s.weight == null)) t = 'cardio';
+      else if (s.holdTime != null) t = 'timed_bodyweight';
+      else if ((!s.weight || parseFloat(s.weight) === 0) && s.reps != null) t = 'bodyweight';
+      else t = 'strength';
+    }
+    if (t === 'cardio') return 'cardio';
+    if (t === 'timed_bodyweight' || t === 'hiit') return 'timed';
+    if (t === 'bodyweight' || t === 'reps_only') return 'reps';
+    return 'strength';
+  };
+
+  const best = {};       // running best per exercise key, across prior sessions
+  const changed = [];
+
+  dates.forEach(date => {
+    const session = history[date];
+    if (!session || !session.exercises) return;
+    let prs = 0;
+    session.exercises.forEach(ex => {
+      const key = ex.id || ex.name;
+      const b = best[key] || { exists:false, oneRM:0, reps:0, hold:0, dist:0, dur:0 };
+      const c = { oneRM:0, reps:0, hold:0, dist:0, dur:0 };
+      (ex.sets || []).forEach(s => {
+        const w = parseFloat(s.weight)||0, r = parseFloat(s.reps)||0;
+        const orm = est1RM(w, r);
+        if (orm > c.oneRM) c.oneRM = orm;
+        if (r > c.reps) c.reps = r;
+        const h  = parseFloat(s.holdTime)||0; if (h  > c.hold) c.hold = h;
+        const di = parseFloat(s.distance)||0; if (di > c.dist) c.dist = di;
+        const du = parseFloat(s.duration)||0; if (du > c.dur)  c.dur  = du;
+      });
+      const metric = metricOf(ex);
+      let isPR = false;
+      if (!b.exists) {
+        const cv = metric==='strength'?c.oneRM:metric==='reps'?c.reps:metric==='timed'?c.hold:(c.dist||c.dur);
+        isPR = cv > 0;
+      } else if (metric==='strength') isPR = c.oneRM > b.oneRM;
+      else if (metric==='reps')      isPR = c.reps > b.reps;
+      else if (metric==='timed')     isPR = c.hold > b.hold;
+      else                           isPR = (c.dist > b.dist) || (c.dur > b.dur);
+      if (isPR) prs++;
+      best[key] = {
+        exists: true,
+        oneRM: Math.max(b.oneRM, c.oneRM), reps: Math.max(b.reps, c.reps),
+        hold:  Math.max(b.hold,  c.hold),  dist: Math.max(b.dist, c.dist),
+        dur:   Math.max(b.dur,   c.dur)
+      };
+    });
+    if ((session.prs || 0) !== prs) { session.prs = prs; changed.push(date); }
+  });
+
+  if (changed.length) {
+    // saveWorkout updates both localStorage and Supabase per day
+    try { await Promise.all(changed.map(d => LF.db.saveWorkout(d, history[d]))); } catch {}
+  }
+  // Only mark done when online, so an offline run retries once it can sync
+  if (navigator.onLine) localStorage.setItem('lf_pr_backfill_v1', '1');
+}
+
 async function init() {
   await LF.ready();
   const ok = await LF.guard();
   if (!ok) return;
 
   checkInstallBanner();
+
+  // One-time: recompute PRs on historical sessions before reading stats
+  await backfillPRs();
 
   // Run all data loads in parallel for speed
   await Promise.all([
