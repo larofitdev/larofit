@@ -236,14 +236,28 @@ canvas {
 }
 
 .pr-name {
-  flex: 1;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text);
+  line-height: 1.25;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+}
+
+.pr-body { flex: 1; min-width: 0; }
+
+.pr-metric {
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+  line-height: 1.3;
+}
+.pr-metric .pr-val {
+  color: var(--volt-dark);
+  font-weight: 700;
+  font-family: var(--font-display);
+  letter-spacing: 0.3px;
 }
 
 .pr-vals {
@@ -937,42 +951,81 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 // ── PR / 1RM TABLE ────────────────────────────────────────────
+let _prRows = []; // cache so the chevron can navigate by index (avoids quoting issues)
+
+function exTypeFromStored(ex) {
+  let t = ex.type || '';
+  if (!t) {
+    const s = (ex.sets || [])[0] || {};
+    if (parseFloat(s.distance) || (parseFloat(s.duration) && s.reps == null && s.weight == null)) t = 'cardio';
+    else if (s.holdTime != null) t = 'timed_bodyweight';
+    else if ((!s.weight || parseFloat(s.weight) === 0) && s.reps != null) t = 'bodyweight';
+    else t = 'strength';
+  }
+  if (t === 'cardio') return 'cardio';
+  if (t === 'timed_bodyweight' || t === 'hiit') return 'timed';
+  if (t === 'bodyweight' || t === 'reps_only') return 'reps';
+  return 'strength';
+}
+
+function fmtHold(sec) {
+  sec = Math.round(sec);
+  if (sec < 60) return sec + 's';
+  return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+}
+
 function renderPRs() {
   const search = (document.getElementById('pr-search').value || '').toLowerCase();
 
-  // Build best 1RM per exercise from ALL history
-  const bests = {}; // { exName: { orm, weight, reps, date } }
+  // Build the best record per exercise, using the metric that fits its type.
+  const bests = {}; // name -> { name, type, val, disp, label, detail, date }
 
   allEntries().forEach(([dateStr, session]) => {
     (session.exercises || []).forEach(ex => {
-      // Use stored best1RM if available, otherwise calculate from sets
-      let sessionBest = ex.best1RM || 0;
-      let bestWeight  = 0, bestReps = 0;
+      const type = exTypeFromStored(ex);
+      let val = 0, disp = '', label = '', detail = '';
 
-      (ex.sets || []).forEach(s => {
-        const orm = calc1RM(s.weight, s.reps);
-        if (orm > sessionBest) {
-          sessionBest = orm;
-          bestWeight  = s.weight;
-          bestReps    = s.reps;
-        }
-        if (s.weight > bestWeight) { bestWeight = s.weight; bestReps = s.reps; }
-      });
+      if (type === 'strength') {
+        let orm = 0, bw = 0, br = 0;
+        (ex.sets || []).forEach(s => {
+          const o = calc1RM(s.weight, s.reps);
+          if (o > orm) { orm = o; bw = parseFloat(s.weight)||0; br = parseFloat(s.reps)||0; }
+        });
+        val = orm; disp = orm + ' lbs'; label = 'Est. 1RM'; detail = `${bw}×${br}`;
+      } else if (type === 'reps') {
+        let mr = 0;
+        (ex.sets || []).forEach(s => { const r = parseFloat(s.reps)||0; if (r > mr) mr = r; });
+        val = mr; disp = mr + ' reps'; label = 'Max reps';
+      } else if (type === 'timed') {
+        let mh = 0;
+        (ex.sets || []).forEach(s => { const h = parseFloat(s.holdTime)||0; if (h > mh) mh = h; });
+        val = mh; disp = fmtHold(mh); label = 'Longest hold';
+      } else { // cardio
+        let md = 0, mdur = 0;
+        (ex.sets || []).forEach(s => {
+          const d = parseFloat(s.distance)||0, du = parseFloat(s.duration)||0;
+          if (d > md) md = d; if (du > mdur) mdur = du;
+        });
+        if (md > 0) { val = md; disp = md + ' mi'; label = 'Best distance'; detail = mdur ? mdur + ' min' : ''; }
+        else        { val = mdur; disp = mdur + ' min'; label = 'Longest'; }
+      }
 
-      if (!bests[ex.name] || sessionBest > bests[ex.name].orm) {
-        bests[ex.name] = {
-          orm:    sessionBest,
-          weight: bestWeight,
-          reps:   bestReps,
-          date:   dateStr
-        };
+      if (val <= 0) return; // nothing meaningful logged
+
+      const cur = bests[ex.name];
+      if (!cur || val > cur.val) {
+        bests[ex.name] = { name: ex.name, type, val, disp, label, detail, date: dateStr };
       }
     });
   });
 
-  let rows = Object.entries(bests)
-    .filter(([name]) => !search || name.toLowerCase().includes(search))
-    .sort(([, a], [, b]) => b.orm - a.orm);
+  // Group by type (strength → reps → timed → cardio), best first within each group
+  const typeOrder = { strength: 0, reps: 1, timed: 2, cardio: 3 };
+  const rows = Object.values(bests)
+    .filter(r => !search || r.name.toLowerCase().includes(search))
+    .sort((a, b) => (typeOrder[a.type] - typeOrder[b.type]) || (b.val - a.val));
+
+  _prRows = rows;
 
   const listEl = document.getElementById('pr-list');
 
@@ -985,17 +1038,20 @@ function renderPRs() {
     return;
   }
 
-  listEl.innerHTML = rows.map(([name, data], i) => `
-    <div class="pr-row" onclick="openExHist(${JSON.stringify(esc(name))})" role="button" tabindex="0" aria-label="View history for ${esc(name)}">
+  listEl.innerHTML = rows.map((r, i) => `
+    <div class="pr-row" onclick="openExHistIdx(${i})" role="button" tabindex="0" aria-label="View history for ${esc(r.name)}">
       <div class="pr-rank">${i + 1}</div>
-      <div class="pr-name">${esc(name)}</div>
-      <div class="pr-vals">
-        <div class="pr-orm">${data.orm}<span style="font-size:11px;font-family:var(--font-body);color:var(--text-3);font-weight:400;"> lbs</span></div>
-        <div class="pr-orm-label">Est. 1RM</div>
-        <div class="pr-best">${data.weight}×${data.reps} · ${fmtDate(data.date)}</div>
+      <div class="pr-body">
+        <div class="pr-name">${esc(r.name)}</div>
+        <div class="pr-metric"><span class="pr-val">${esc(r.disp)}</span> ${esc(r.label)}${r.detail ? ' · ' + esc(r.detail) : ''} · ${fmtDate(r.date)}</div>
       </div>
       <i class="ti ti-chevron-right pr-row-chevron"></i>
     </div>`).join('');
+}
+
+function openExHistIdx(i) {
+  const r = _prRows[i];
+  if (r) openExHist(r.name);
 }
 
 // ── SESSION HISTORY ───────────────────────────────────────────
