@@ -547,6 +547,15 @@ function localDateStr(d) {
     String(d.getMonth() + 1).padStart(2, '0') + '-' +
     String(d.getDate()).padStart(2, '0');
 }
+// Parse a 'YYYY-MM-DD' string as LOCAL midnight, not UTC midnight.
+// new Date('2026-06-14') is UTC, which lands on the previous evening in
+// Phoenix (UTC-7) and shifts the weekday / displayed day by one.
+function parseLocalDate(s) {
+  if (typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    return new Date(s + 'T00:00:00');
+  }
+  return new Date(s);
+}
 let periodDays = 28;
 let history    = {};   // lf_workout_history: { 'YYYY-MM-DD': { name, durationMin, totalVolume, prs, exercises[] } }
 let measLogs   = [];   // lf_measurements_log: [{ date, weight }]
@@ -607,7 +616,7 @@ function cutoffTs() {
 function periodEntries() {
   const cutoff = cutoffTs();
   return Object.entries(history).filter(([dateStr]) => {
-    return !cutoff || new Date(dateStr).getTime() >= cutoff;
+    return !cutoff || parseLocalDate(dateStr).getTime() >= cutoff;
   });
 }
 
@@ -617,7 +626,7 @@ function allEntries() {
 
 function fmtDate(dateStr) {
   try {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return parseLocalDate(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   } catch { return dateStr; }
 }
 
@@ -639,7 +648,7 @@ function renderStats() {
   const prevCutoff = cutoffTs() ? cutoffTs() - periodDays * 86400000 : null;
   const prevEntries = prevCutoff
     ? Object.entries(history).filter(([d]) => {
-        const t = new Date(d).getTime();
+        const t = parseLocalDate(d).getTime();
         return t >= prevCutoff && t < cutoffTs();
       })
     : [];
@@ -738,7 +747,7 @@ function renderVolumeChart() {
   // Group by week (Mon-start)
   const weeks = {};
   entries.forEach(([dateStr, data]) => {
-    const d = new Date(dateStr);
+    const d = parseLocalDate(dateStr);
     const day = d.getDay(); // 0=Sun
     const diff = (day === 0 ? -6 : 1) - day;
     const mon = new Date(d);
@@ -765,7 +774,7 @@ function renderBWChart() {
 
   const cutoff = cutoffTs();
   const logs = measLogs
-    .filter(m => m.weight && (!cutoff || new Date(m.date).getTime() >= cutoff))
+    .filter(m => m.weight && (!cutoff || parseLocalDate(m.date).getTime() >= cutoff))
     .sort((a, b) => a.date.localeCompare(b.date));
 
   if (logs.length < 2) {
