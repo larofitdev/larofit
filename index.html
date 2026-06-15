@@ -567,7 +567,7 @@ async function loadStreak() {
   const todayLogged = !!history[todayKey];
   if (!todayLogged) check.setDate(check.getDate() - 1);
   while (true) {
-    const key = check.toISOString().slice(0, 10);
+    const key = localDateStr(check);
     if (history[key]) { streak++; }
     else { break; }
     check.setDate(check.getDate() - 1);
@@ -632,10 +632,21 @@ async function loadStats() {
     prs    += session.prs || 0;
   });
 
-  // Planned workouts this week
+  // Planned training days that fall within the current week
   let planned = 0;
   if (program && program.days) {
-    program.days.forEach(d => { if (!d.rest) planned++; });
+    if (Array.isArray(program.days)) {
+      program.days.forEach(d => { if (!d.rest) planned++; });
+    } else {
+      week.forEach(dateStr => {
+        const day = program.days[dateStr];
+        if (!day) return;
+        const hasWork = Array.isArray(day.exercises)
+          ? day.exercises.length > 0
+          : ((day.am && (day.am.exercises||[]).length) || (day.pm && (day.pm.exercises||[]).length));
+        if (hasWork) planned++;
+      });
+    }
   }
 
   document.getElementById('stat-workouts').textContent      = workouts;
@@ -739,7 +750,7 @@ async function loadHistory() {
   el.innerHTML = entries.map(([dateStr, session]) => {
     const d    = new Date(dateStr + 'T00:00:00');
     const label = dateStr === todayKey ? 'Today'
-      : dateStr === new Date(today.getTime() - 86400000).toISOString().slice(0,10) ? 'Yesterday'
+      : dateStr === localDateStr(new Date(today.getTime() - 86400000)) ? 'Yesterday'
       : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
     const vol  = session.totalVolume
