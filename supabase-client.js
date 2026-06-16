@@ -62,6 +62,19 @@ const LS = {
   }
 };
 
+// ── PENDING WORKOUT SYNC QUEUE ────────────────────────────────
+// Dates (YYYY-MM-DD) whose Supabase push failed or was deferred (offline /
+// not signed in). Retried automatically on next load and on reconnect.
+function _queuePending(dateStr) {
+  const q = LS.get('pending_sync', []);
+  if (!q.includes(dateStr)) { q.push(dateStr); LS.set('pending_sync', q); }
+}
+function _unqueuePending(dateStr) {
+  const q = LS.get('pending_sync', []);
+  const next = q.filter(d => d !== dateStr);
+  if (next.length !== q.length) LS.set('pending_sync', next);
+}
+
 // ── MAIN LF NAMESPACE ─────────────────────────────────────────
 window.LF = {
 
@@ -477,11 +490,13 @@ window.LF = {
       local[dateStr] = session;
       LS.set('workout_history', local);
 
-      if (!isOnline()) return { error: null, offline: true };
+      // Offline → can't push now. Queue it so it syncs on reconnect / next load.
+      if (!isOnline()) { _queuePending(dateStr); return { error: null, offline: true }; }
       try {
         const sb   = await lfReady();
         const user = await LF.auth.user();
-        if (!user) return { error: 'Not authenticated' };
+        // Not signed in yet in this context → queue, don't drop.
+        if (!user) { _queuePending(dateStr); return { error: 'Not authenticated' }; }
         const { data, error } = await sb
           .from('workout_history')
           .upsert({
@@ -495,8 +510,58 @@ window.LF = {
           }, { onConflict: 'user_id,workout_date' })
           .select()
           .single();
+        // Push failed (network/RLS/etc) → queue for retry. Succeeded → clear it.
+        if (error) _queuePending(dateStr); else _unqueuePending(dateStr);
         return { data, error };
-      } catch (e) { return { error: e.message }; }
+      } catch (e) { _queuePending(dateStr); return { error: e.message }; }
+    },
+
+    // Push any locally-saved workouts the cloud is missing. Safe to call
+    // anytime — it only ADDS dates remote doesn't have, never overwrites an
+    // existing remote workout, so a stale local copy can't clobber the cloud.
+    // This is what self-heals a workout that was logged offline (or before the
+    // device was signed in) and never got pushed.
+    async flushWorkoutSync() {
+      if (!isOnline()) return;
+      try {
+        const sb   = await lfReady();
+        const user = await LF.auth.user();
+        if (!user) return;  // not signed in here — leave queue intact, retry later
+        const local = LS.get('workout_history', {});
+        // Which dates does the cloud already have?
+        const { data, error } = await sb
+          .from('workout_history')
+          .select('workout_date')
+          .eq('user_id', user.id);
+        if (error) return;
+        const remoteDates = new Set((data || []).map(r => r.workout_date));
+
+        // Candidates: explicitly-queued dates + any local date missing remotely.
+        const pending  = LS.get('pending_sync', []);
+        const toPush    = new Set(pending);
+        Object.keys(local).forEach(d => { if (!remoteDates.has(d)) toPush.add(d); });
+
+        const stillPending = [];
+        for (const dateStr of toPush) {
+          // Never overwrite a workout the cloud already has.
+          if (remoteDates.has(dateStr)) continue;
+          const session = local[dateStr];
+          if (!session) continue;  // nothing local to push for this date
+          const { error: upErr } = await sb
+            .from('workout_history')
+            .upsert({
+              user_id:      user.id,
+              workout_date: dateStr,
+              name:         session.name        || 'Workout',
+              duration_min: session.durationMin || 0,
+              total_volume: session.totalVolume || 0,
+              prs:          session.prs         || 0,
+              session_data: session,
+            }, { onConflict: 'user_id,workout_date' });
+          if (upErr) stillPending.push(dateStr);
+        }
+        LS.set('pending_sync', stillPending);
+      } catch { /* swallow — will retry on next load / reconnect */ }
     },
 
     // ── MEASUREMENTS ─────────────────────────────────────────
@@ -564,3 +629,17 @@ window.LF = {
   }
 
 };
+
+// ── AUTOMATIC BACKGROUND SYNC ─────────────────────────────────
+// Self-heals any workout saved locally but not yet pushed to the cloud
+// (logged offline, or before the device was signed in). Runs once the
+// Supabase client is ready on every page load, and again whenever the
+// device regains connectivity. Fully behind the scenes — no user action.
+(function wireAutoSync() {
+  const flush = () => { try { LF.db.flushWorkoutSync(); } catch {} };
+  // 'lf:ready' fires when the SDK finishes loading; if it already loaded
+  // (cached), run immediately.
+  if (window._lf_sb) flush();
+  else window.addEventListener('lf:ready', flush, { once: true });
+  window.addEventListener('online', flush);
+})();
