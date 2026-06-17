@@ -6007,7 +6007,7 @@ const LAROFIT_EXERCISES = [
   },
   {
     id: 'b182',
-    name: 'Machine Dips',
+    name: 'Machine Chest Dip',
     primaryMuscle: 'chest',
     secondaryMuscles: ['triceps'],
     equipment: 'machine_cable',
@@ -6469,7 +6469,7 @@ const LAROFIT_EXERCISES = [
   },
   {
     id: 'b196',
-    name: 'Parallel Bar Dips',
+    name: 'Parallel Bar Chest Dip',
     primaryMuscle: 'chest',
     secondaryMuscles: ['triceps'],
     equipment: 'bodyweight',
@@ -9234,6 +9234,534 @@ const LAROFIT_EXERCISES = [
       'Bouncing out of the deep bottom stretch, which strains the elbows.',
       'Failing to fully straighten the arms and shortening the range.',
       'Setting the seat too low or high so the elbows don\'t align with the machine\'s pivot.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b280',
+    name: 'Wide Push Up',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['shoulders', 'triceps'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Push',
+    description: 'A push-up with the hands set wider than the shoulders — shifts the emphasis onto the chest for a bigger pec stretch and contraction.',
+    benefits: [
+      'Emphasizes the chest by widening the hand position.',
+      'Builds pressing strength and endurance with zero equipment.',
+      'Trains the chest through a deeper stretch at the bottom.'
+    ],
+    instructions: [
+      'Set your hands on the floor noticeably wider than shoulder width, fingers pointing forward.',
+      'Extend your legs behind you and form a straight line from head to heels.',
+      'Brace your core and squeeze your glutes to keep your hips from sagging.',
+      'Lower your chest toward the floor by bending the elbows out at about 45 degrees.',
+      'Descend until your chest nearly touches the floor, feeling a stretch across the pecs.',
+      'Press back up powerfully to full arm extension, squeezing the chest at the top.'
+    ],
+    commonMistakes: [
+      'Letting the hips sag or pike instead of holding a straight body line.',
+      'Flaring the elbows straight out to 90 degrees, which strains the shoulders.',
+      'Cutting the depth short and never lowering the chest near the floor.',
+      'Setting the hands so wide that the shoulders take over from the chest.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b281',
+    name: 'Archer Push Up',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['shoulders', 'triceps'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'advanced',
+    movement: 'Push',
+    description: 'A push-up that shifts weight onto one arm while the other extends out straight — builds toward the one-arm push-up and overloads each side of the chest.',
+    benefits: [
+      'Overloads one side of the chest at a time for greater strength.',
+      'Builds toward advanced single-arm pressing strength.',
+      'Develops control and stability through the shoulders and core.'
+    ],
+    instructions: [
+      'Set your hands wider than shoulder width with fingers turned slightly outward.',
+      'Form a straight line from head to heels and brace your core hard.',
+      'Lower yourself toward one hand, bending that elbow while the other arm stays straight out to the side.',
+      'Keep the straightened arm extended, using it only for light support.',
+      'Descend until your chest nears the bent-arm hand, then press back up to the center.',
+      'Alternate sides each rep, keeping the body rigid throughout.'
+    ],
+    commonMistakes: [
+      'Bending the straight arm and turning it into a regular wide push-up.',
+      'Letting the hips twist or sag instead of staying square and rigid.',
+      'Rushing the reps and losing control on the lowering phase.',
+      'Collapsing the chest to the floor instead of controlling the descent.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b282',
+    name: 'Suspension Trainer Chest Fly',
+    primaryMuscle: 'chest',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A chest fly on suspension straps — you lean into the handles and open the arms wide, stretching and contracting the chest under bodyweight tension.',
+    benefits: [
+      'Trains the chest through a wide fly arc using bodyweight resistance.',
+      'Scales difficulty simply by adjusting your foot position.',
+      'Challenges core and shoulder stability throughout the movement.'
+    ],
+    instructions: [
+      'Grip the suspension handles and face away from the anchor with arms extended in front of your chest.',
+      'Walk your feet forward and lean into the straps so your body is angled and rigid.',
+      'Brace your core and squeeze your glutes to hold a straight line.',
+      'Open your arms out wide in an arc, keeping a slight bend in the elbows, until you feel a chest stretch.',
+      'Squeeze your chest to pull the handles back together in front of you.',
+      'Control the tempo, resisting the stretch on the way out and squeezing on the way in.'
+    ],
+    commonMistakes: [
+      'Bending the elbows heavily and turning the fly into a press.',
+      'Letting the hips sag out of the straight-body line.',
+      'Standing too upright so there\'s little resistance on the chest.',
+      'Dropping into the stretch too fast and risking a shoulder strain.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b283',
+    name: 'Barbell Decline Bench Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Push',
+    description: 'A barbell press on a decline bench — targets the lower chest through a downward pressing angle.',
+    benefits: [
+      'Emphasizes the lower portion of the chest.',
+      'Lets you press heavy with a strong, supported pressing angle.',
+      'Builds overall chest mass and pressing strength.'
+    ],
+    instructions: [
+      'Lie back on a decline bench and hook your feet securely under the leg pads.',
+      'Grip the barbell slightly wider than shoulder width and unrack it over your lower chest.',
+      'Brace your core and pull your shoulder blades back into the bench.',
+      'Lower the bar under control to your lower chest, keeping your elbows at about 45 degrees.',
+      'Press the bar back up powerfully until your arms are fully extended.',
+      'Keep the movement controlled and avoid bouncing the bar off your chest.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows straight out, which strains the shoulders.',
+      'Bouncing the bar off the chest instead of a controlled press.',
+      'Lifting the hips or losing the shoulder-blade set under heavier loads.',
+      'Pressing without a spotter on heavy sets, which is risky on a decline.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b284',
+    name: 'Barbell Floor Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Push',
+    description: 'A barbell press performed lying on the floor — the limited range protects the shoulders and overloads the triceps and mid-chest lockout.',
+    benefits: [
+      'Builds pressing lockout strength by overloading the top range.',
+      'Protects the shoulders by limiting how far the elbows can travel.',
+      'Strengthens the triceps and mid-chest under heavy load.'
+    ],
+    instructions: [
+      'Lie on your back on the floor beneath a barbell in a rack or with a partner.',
+      'Grip the bar slightly wider than shoulder width and unrack it over your chest.',
+      'Brace your core and keep your shoulder blades pulled together.',
+      'Lower the bar under control until your upper arms rest lightly on the floor.',
+      'Pause briefly with the elbows on the floor to remove all momentum.',
+      'Press the bar back up powerfully to full arm extension.'
+    ],
+    commonMistakes: [
+      'Bouncing the elbows off the floor instead of pausing under control.',
+      'Flaring the elbows wide and stressing the shoulders.',
+      'Losing the shoulder-blade set and letting the chest cave.',
+      'Pressing heavy without a rack or spotter to unrack and re-rack safely.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b285',
+    name: 'Dumbbell Squeeze Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Push',
+    description: 'A dumbbell press with the bells pressed together hard throughout — the constant inward squeeze maximizes inner-chest contraction.',
+    benefits: [
+      'Maximizes inner-chest contraction through the constant squeeze.',
+      'Builds the chest with lighter loads, easing strain on the joints.',
+      'Improves the mind-muscle connection with the pecs.'
+    ],
+    instructions: [
+      'Lie back on a flat bench holding a dumbbell in each hand, palms facing each other.',
+      'Press the dumbbells together so they touch over your chest and keep them pressed together.',
+      'Squeeze the dumbbells inward hard using your chest throughout the set.',
+      'Lower the dumbbells together to your chest while maintaining the inward pressure.',
+      'Press them back up while still squeezing them together, contracting the chest.',
+      'Keep the bells in contact and the squeeze constant on every rep.'
+    ],
+    commonMistakes: [
+      'Letting the dumbbells drift apart and losing the inward squeeze.',
+      'Using too heavy a load so the bells can\'t be controlled together.',
+      'Flaring the elbows wide instead of keeping them tracking with the press.',
+      'Rushing the reps and skipping the chest contraction at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b286',
+    name: 'Dumbbell Floor Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Push',
+    description: 'A dumbbell press lying on the floor — the limited range is joint-friendly and lets you press heavy while sparing the shoulders.',
+    benefits: [
+      'Builds pressing strength while protecting the shoulders.',
+      'Overloads the triceps and chest lockout safely.',
+      'Lets you train pressing without a bench.'
+    ],
+    instructions: [
+      'Sit on the floor holding a dumbbell in each hand and lie back, knees bent or legs extended.',
+      'Press the dumbbells up over your chest with palms facing forward.',
+      'Brace your core and keep your shoulder blades pulled together.',
+      'Lower the dumbbells until your upper arms rest lightly on the floor.',
+      'Pause briefly with the triceps on the floor to remove momentum.',
+      'Press the dumbbells back up powerfully to full extension.'
+    ],
+    commonMistakes: [
+      'Bouncing the elbows off the floor instead of pausing.',
+      'Flaring the elbows wide and stressing the shoulders.',
+      'Letting the dumbbells drift toward the head or hips off the press line.',
+      'Rushing the lowering phase rather than controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b287',
+    name: 'Kettlebell Floor Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Push',
+    description: 'A kettlebell press from the floor — the offset weight challenges stability while the limited range keeps the shoulders safe.',
+    benefits: [
+      'Builds pressing strength with a shoulder-friendly range.',
+      'Challenges stability through the kettlebell\'s offset load.',
+      'Strengthens the triceps and chest lockout.'
+    ],
+    instructions: [
+      'Lie on your back on the floor with a kettlebell in each hand, bells resting on the backs of the wrists.',
+      'Press the kettlebells up over your chest until your arms are extended.',
+      'Brace your core and keep your shoulder blades pulled together.',
+      'Lower the kettlebells until your upper arms rest lightly on the floor.',
+      'Pause briefly with the triceps grounded to kill momentum.',
+      'Press the kettlebells back up powerfully to full extension.'
+    ],
+    commonMistakes: [
+      'Letting the bells roll back and bend the wrists out of a neutral line.',
+      'Bouncing the elbows off the floor instead of pausing.',
+      'Flaring the elbows wide and straining the shoulders.',
+      'Pressing unevenly so one arm lags behind the other.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b288',
+    name: 'Band Chest Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Push',
+    description: 'A standing chest press against a resistance band anchored behind you — the band\'s rising tension builds the chest with no bench needed.',
+    benefits: [
+      'Builds the chest with the band\'s rising tension at lockout.',
+      'Trains pressing anywhere with no bench or weights.',
+      'Keeps constant tension on the chest through the full press.'
+    ],
+    instructions: [
+      'Anchor a resistance band behind you at chest height and grip an end in each hand.',
+      'Step forward to create tension and stagger your stance for stability.',
+      'Start with your hands at chest level and elbows bent out to the sides.',
+      'Press your hands forward and together until your arms are extended in front of you.',
+      'Squeeze your chest at the end of the press where the band tension peaks.',
+      'Return your hands to chest level slowly, resisting the band on the way back.'
+    ],
+    commonMistakes: [
+      'Standing too close to the anchor so there\'s little tension at the start.',
+      'Letting the band yank the arms back instead of controlling the return.',
+      'Shrugging the shoulders up instead of pressing with the chest.',
+      'Pressing unevenly so one arm leads the other.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b289',
+    name: 'Band Chest Fly',
+    primaryMuscle: 'chest',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A standing chest fly against a band anchored behind you — opens and closes the arms in a wide arc to isolate the chest.',
+    benefits: [
+      'Isolates the chest through a wide fly arc.',
+      'Keeps constant tension on the pecs via the band.',
+      'Trains the chest anywhere with no machine needed.'
+    ],
+    instructions: [
+      'Anchor a resistance band behind you at chest height and hold an end in each hand.',
+      'Step forward to create tension and stagger your stance for balance.',
+      'Start with your arms open out to the sides and a slight bend in the elbows.',
+      'Bring your hands together in a wide arc in front of your chest, leading with the pecs.',
+      'Squeeze your chest where your hands meet at peak band tension.',
+      'Open your arms back out slowly, resisting the band into a chest stretch.'
+    ],
+    commonMistakes: [
+      'Bending the elbows heavily and turning the fly into a press.',
+      'Standing too close to the anchor, losing tension at the start.',
+      'Letting the band snap the arms open instead of controlling the stretch.',
+      'Shrugging the shoulders rather than moving from the chest.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b290',
+    name: 'EZ Bar Pullover',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['back'],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A pullover with the EZ-bar lying across a bench — stretches the chest and lats through a long overhead arc while the cambered grip eases the wrists.',
+    benefits: [
+      'Stretches and builds the chest and lats through a long arc.',
+      'Eases wrist strain with the angled EZ-bar grip.',
+      'Expands the rib cage and improves overhead mobility.'
+    ],
+    instructions: [
+      'Lie back on a flat bench gripping an EZ-bar on its angled sections with an overhand grip.',
+      'Press the bar up over your chest with a slight bend in the elbows.',
+      'Brace your core and keep your hips down on the bench.',
+      'Lower the bar back over your head in an arc until you feel a stretch across the chest and lats.',
+      'Keep the slight elbow bend fixed throughout the movement.',
+      'Pull the bar back over your chest by contracting the chest and lats.'
+    ],
+    commonMistakes: [
+      'Bending and straightening the elbows instead of keeping a fixed arc.',
+      'Lowering too far and overstretching the shoulders under load.',
+      'Lifting the hips off the bench to help move the weight.',
+      'Using too heavy a load and losing control in the stretched position.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b291',
+    name: 'Exercise Ball Push Up',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['shoulders', 'triceps'],
+    equipment: 'exercise_ball',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Push',
+    description: 'A push-up with the hands or feet on a stability ball — the unstable surface forces the chest, shoulders, and core to work harder to balance.',
+    benefits: [
+      'Builds the chest while the unstable ball challenges stability.',
+      'Recruits the core and shoulders harder than a floor push-up.',
+      'Improves balance and control through the pressing motion.'
+    ],
+    instructions: [
+      'Place your hands on a stability ball at shoulder width, or rest your feet on it for a harder version.',
+      'Extend into a straight line from head to heels and brace your core hard.',
+      'Steady the ball before you begin and keep your hips from sagging.',
+      'Lower your chest toward the ball (or floor) by bending your elbows.',
+      'Descend until you feel a stretch across the chest, keeping the ball stable.',
+      'Press back up to full arm extension, controlling the ball the whole time.'
+    ],
+    commonMistakes: [
+      'Letting the ball wobble out of control instead of bracing to steady it.',
+      'Sagging the hips out of the straight-body line.',
+      'Rushing the reps and losing balance on the descent.',
+      'Cutting the range short instead of lowering with control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b292',
+    name: 'Machine Incline Chest Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['shoulders', 'triceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Push',
+    description: 'A seated incline press machine that targets the upper chest through a fixed, guided pressing path — beginner-friendly upper-chest work.',
+    benefits: [
+      'Targets the upper chest with a stable, guided path.',
+      'Lets beginners press the incline angle safely without balancing a bar.',
+      'Makes it easy to load progressively and run drop sets.'
+    ],
+    instructions: [
+      'Adjust the seat so the handles line up with your upper chest.',
+      'Sit back with your shoulder blades pulled together against the pad.',
+      'Grip the handles and brace your core with feet flat on the floor.',
+      'Press the handles up and forward until your arms are extended.',
+      'Squeeze the upper chest at the top without locking the elbows hard.',
+      'Lower the handles slowly until your hands return to upper-chest level.'
+    ],
+    commonMistakes: [
+      'Setting the seat too high or low so the press angle is off.',
+      'Letting the shoulders roll forward off the pad.',
+      'Bouncing out of the bottom instead of a controlled press.',
+      'Letting the stack drop fast rather than controlling the return.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b293',
+    name: 'Cable Crossover',
+    primaryMuscle: 'chest',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A standing cable fly from high pulleys, crossing the hands low in front — constant cable tension builds the chest through a long, sweeping arc.',
+    benefits: [
+      'Keeps constant tension on the chest across the full arc.',
+      'Builds the lower and inner chest through the crossing motion.',
+      'Allows a strong peak squeeze where the hands cross.'
+    ],
+    instructions: [
+      'Set both pulleys high and grip a handle in each hand, then step forward into a staggered stance.',
+      'Lean slightly forward with a soft bend in the elbows and arms open out to the sides.',
+      'Brace your core and keep your chest up throughout.',
+      'Sweep your hands down and together in front of your hips, crossing them slightly.',
+      'Squeeze the chest hard where the hands cross at the bottom.',
+      'Return your arms out and up slowly, resisting into a chest stretch.'
+    ],
+    commonMistakes: [
+      'Bending the elbows heavily and turning the fly into a press.',
+      'Standing too upright instead of leaning slightly into the movement.',
+      'Using momentum and bodyweight to swing the handles together.',
+      'Letting the cables yank the arms back open without control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b294',
+    name: 'Machine Iso-Lateral Chest Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Push',
+    description: 'A plate-loaded chest press with independent arms — each side works on its own to build balanced pressing strength and mass.',
+    benefits: [
+      'Builds balanced chest strength by working each arm independently.',
+      'Lets you press heavy on a stable, plate-loaded path.',
+      'Exposes and corrects left-to-right strength imbalances.'
+    ],
+    instructions: [
+      'Adjust the seat so the handles line up with the middle of your chest.',
+      'Sit back with your shoulder blades pulled together against the pad.',
+      'Grip the handles and brace your core with feet flat on the floor.',
+      'Press both handles forward until your arms are extended, or alternate one side at a time.',
+      'Squeeze the chest at the end of the press without locking out hard.',
+      'Lower the handles slowly until your hands return to chest level.'
+    ],
+    commonMistakes: [
+      'Letting one arm push harder and compensate for the weaker side.',
+      'Setting the seat wrong so the handles don\'t track at chest level.',
+      'Rolling the shoulders forward off the pad as you press.',
+      'Bouncing out of the bottom instead of a controlled press.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b295',
+    name: 'Machine Decline Chest Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Push',
+    description: 'A seated decline press machine that targets the lower chest through a downward pressing path — common at commercial gyms.',
+    benefits: [
+      'Targets the lower chest with a guided decline path.',
+      'Lets beginners train the decline angle without a bench or spotter.',
+      'Makes heavy lower-chest pressing safe and easy to load.'
+    ],
+    instructions: [
+      'Adjust the seat so the handles line up with your lower chest.',
+      'Sit back with your shoulder blades pulled together against the pad.',
+      'Grip the handles and brace your core with feet flat on the floor.',
+      'Press the handles down and forward until your arms are extended.',
+      'Squeeze the lower chest at the end of the press.',
+      'Lower the handles slowly until your hands return to lower-chest level.'
+    ],
+    commonMistakes: [
+      'Setting the seat too high or low so the press angle is off.',
+      'Letting the shoulders roll forward off the pad.',
+      'Bouncing out of the bottom instead of a controlled press.',
+      'Letting the stack drop fast rather than controlling the return.'
     ],
     mediaUrl: '',
     exerciseUrl: '',
