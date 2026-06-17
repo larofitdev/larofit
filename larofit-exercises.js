@@ -9766,6 +9766,501 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b296',
+    name: 'Dead Hang',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'beginner',
+    movement: 'Carry',
+    description: 'A simple hang from a bar at full arm extension — builds crushing grip and forearm endurance while decompressing the shoulders and spine.',
+    benefits: [
+      'Builds grip strength and forearm endurance directly.',
+      'Decompresses the shoulders and spine through the passive hang.',
+      'Strengthens the connective tissue that supports all pulling work.'
+    ],
+    instructions: [
+      'Reach up and grip a pull-up bar with both hands at about shoulder width.',
+      'Hang with your arms fully extended and your feet off the floor or lightly tucked.',
+      'Engage your shoulders slightly by drawing the blades down, rather than hanging completely limp.',
+      'Keep your core gently braced and your body still, resisting the urge to swing.',
+      'Hold for time, focusing on a strong, unbroken grip on the bar.',
+      'Lower down under control when your grip begins to fail, never dropping suddenly.'
+    ],
+    commonMistakes: [
+      'Dropping off the bar suddenly instead of stepping down under control.',
+      'Letting the body swing and using momentum instead of a still hang.',
+      'Hanging completely limp through the shoulders, which strains the joints.',
+      'Gripping with just the fingertips rather than a full, deep grip.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b297',
+    name: 'Band Wrist Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A wrist curl against a resistance band — the rising tension builds the forearm flexors with no weights needed.',
+    benefits: [
+      'Builds the forearm flexors with the band\'s rising tension.',
+      'Trains grip and wrist strength anywhere, no weights required.',
+      'Keeps constant tension on the forearms through the curl.'
+    ],
+    instructions: [
+      'Stand or sit on the middle of a resistance band and hold an end in each hand, palms facing up.',
+      'Rest your forearms on your thighs or a bench with your wrists just past the edge.',
+      'Let your wrists drop down to fully stretch the forearm flexors.',
+      'Curl your wrists upward against the band as high as they will go.',
+      'Squeeze the forearms at the top of the curl.',
+      'Lower your wrists slowly back down, resisting the band.'
+    ],
+    commonMistakes: [
+      'Moving the whole arm instead of isolating the wrists.',
+      'Using too little band so there\'s no tension at the top.',
+      'Cutting the range short instead of fully stretching and curling.',
+      'Rushing the reps rather than controlling each one.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b298',
+    name: 'Band Reverse Wrist Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A reverse wrist curl against a band — targets the forearm extensors on the top of the forearm for balanced grip strength.',
+    benefits: [
+      'Builds the forearm extensors that balance the flexors.',
+      'Helps prevent elbow pain by strengthening the top of the forearm.',
+      'Trains the wrists anywhere with just a band.'
+    ],
+    instructions: [
+      'Stand or sit on the middle of a resistance band and hold an end in each hand, palms facing down.',
+      'Rest your forearms on your thighs or a bench with your wrists just past the edge.',
+      'Let your wrists drop down to stretch the forearm extensors.',
+      'Raise the backs of your hands upward against the band as high as they go.',
+      'Squeeze the top of the forearms at the top.',
+      'Lower your wrists slowly back down, resisting the band.'
+    ],
+    commonMistakes: [
+      'Lifting the whole forearm instead of isolating the wrist.',
+      'Using too little resistance to challenge the extensors.',
+      'Shortening the range instead of a full stretch and lift.',
+      'Rushing the lowering phase rather than controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b299',
+    name: 'Band Reverse Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: ['biceps'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A reverse curl against a band with an overhand grip — builds the brachioradialis and forearms while the band keeps constant tension.',
+    benefits: [
+      'Builds the brachioradialis and forearms through the overhand grip.',
+      'Keeps constant tension on the forearms via the band.',
+      'Trains the wrist-friendly reverse curl anywhere.'
+    ],
+    instructions: [
+      'Stand on the middle of a resistance band with feet shoulder-width apart.',
+      'Grip an end of the band in each hand with palms facing down.',
+      'Pin your elbows to your sides and brace your core.',
+      'Curl your hands up toward your shoulders, keeping the overhand grip.',
+      'Squeeze the forearms and brachioradialis at the top against the band.',
+      'Lower your hands slowly back down with control.'
+    ],
+    commonMistakes: [
+      'Letting the wrists bend instead of keeping them firm and straight.',
+      'Swinging the torso to help curl against the top tension.',
+      'Letting the elbows drift forward off the sides.',
+      'Standing on too little band, losing tension at the bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b300',
+    name: 'Barbell Reverse Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: ['biceps'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A barbell curl with an overhand grip — shifts the work to the brachioradialis and forearms while still hitting the biceps.',
+    benefits: [
+      'Builds the brachioradialis and forearms through the overhand grip.',
+      'Strengthens the often-neglected top of the forearm.',
+      'Carries over to grip strength in rows and deadlifts.'
+    ],
+    instructions: [
+      'Stand tall and grip a barbell at shoulder width with palms facing down.',
+      'Let the bar hang at arm\'s length against your thighs and pin your elbows to your sides.',
+      'Brace your core and keep your wrists firm and straight.',
+      'Curl the bar up toward your shoulders by contracting the forearms and biceps.',
+      'Squeeze at the top without letting the wrists bend back.',
+      'Lower the bar slowly over 2 to 3 seconds to full extension.'
+    ],
+    commonMistakes: [
+      'Letting the wrists curl back instead of keeping them straight.',
+      'Swinging the body to heave the bar up.',
+      'Letting the elbows drift forward off the sides.',
+      'Using too heavy a load so form breaks down.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b301',
+    name: 'Barbell Reverse Wrist Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A reverse wrist curl with a barbell — isolates the forearm extensors on the top of the forearm.',
+    benefits: [
+      'Builds the forearm extensors for balanced forearm development.',
+      'Helps prevent elbow pain from overworked flexors.',
+      'Strengthens wrist stability for pressing and gripping.'
+    ],
+    instructions: [
+      'Sit on a bench and grip a barbell at shoulder width with palms facing down.',
+      'Rest your forearms on your thighs with your wrists just past your knees.',
+      'Let your wrists drop down to stretch the forearm extensors.',
+      'Raise the backs of your hands upward as high as they will go.',
+      'Squeeze the top of the forearms at the top of the lift.',
+      'Lower the bar slowly back down under control.'
+    ],
+    commonMistakes: [
+      'Lifting the forearms off the thighs instead of isolating the wrists.',
+      'Using too heavy a load, which limits the range and strains the wrists.',
+      'Cutting the range short instead of a full stretch and lift.',
+      'Rushing the reps rather than controlling each one.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b302',
+    name: 'Barbell Behind The Back Wrist Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A wrist curl with the barbell held behind the back — the standing position loads the forearm flexors through a full range.',
+    benefits: [
+      'Builds the forearm flexors through a long, loaded range.',
+      'Trains grip strength in a standing, functional position.',
+      'Allows heavier loading than seated wrist curls.'
+    ],
+    instructions: [
+      'Stand tall holding a barbell behind your back with an overhand grip, arms straight.',
+      'Let the bar rest against the backs of your thighs and glutes.',
+      'Let your wrists relax so the bar rolls down toward your fingers.',
+      'Curl your wrists up, rolling the bar back into your palms and lifting it slightly.',
+      'Squeeze the forearm flexors at the top.',
+      'Lower the bar slowly back down under control.'
+    ],
+    commonMistakes: [
+      'Bending the elbows or shrugging instead of moving only the wrists.',
+      'Using too heavy a load so the bar slips from the fingers.',
+      'Cutting the range short instead of letting the bar roll fully.',
+      'Rushing the reps rather than controlling each one.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b303',
+    name: 'EZ Bar Reverse Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: ['biceps'],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A reverse curl on the angled EZ-bar — builds the brachioradialis and forearms while the cambered grip eases wrist strain.',
+    benefits: [
+      'Builds the brachioradialis and forearms through the overhand grip.',
+      'Eases wrist strain with the angled EZ-bar grip.',
+      'Strengthens grip for all pulling movements.'
+    ],
+    instructions: [
+      'Stand tall and grip an EZ-bar on its angled sections with palms facing down.',
+      'Let the bar hang at arm\'s length against your thighs and pin your elbows to your sides.',
+      'Brace your core and keep your wrists firm and straight.',
+      'Curl the bar up toward your shoulders by contracting the forearms and biceps.',
+      'Squeeze at the top without letting the wrists bend.',
+      'Lower the bar slowly over 2 to 3 seconds to full extension.'
+    ],
+    commonMistakes: [
+      'Letting the wrists curl back instead of keeping them straight.',
+      'Swinging the body to heave the bar up.',
+      'Letting the elbows drift forward off the sides.',
+      'Gripping the straight center of the bar and losing the wrist-friendly angle.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b304',
+    name: 'EZ Bar Wrist Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A wrist curl on the EZ-bar — builds the forearm flexors while the angled grip keeps the wrists comfortable.',
+    benefits: [
+      'Builds the forearm flexors for grip and wrist strength.',
+      'Keeps the wrists comfortable with the cambered grip.',
+      'Easy to load progressively for steady forearm growth.'
+    ],
+    instructions: [
+      'Sit on a bench and grip an EZ-bar on its angled sections with palms facing up.',
+      'Rest your forearms on your thighs with your wrists just past your knees.',
+      'Let your wrists drop down to fully stretch the forearm flexors.',
+      'Curl your wrists upward as high as they will go.',
+      'Squeeze the forearms at the top.',
+      'Lower the bar slowly back down under control.'
+    ],
+    commonMistakes: [
+      'Moving the forearms instead of isolating the wrists.',
+      'Using too heavy a load, which shortens the range.',
+      'Cutting the stretch short at the bottom.',
+      'Rushing the reps rather than controlling them.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b305',
+    name: 'EZ Bar Reverse Wrist Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A reverse wrist curl on the EZ-bar — targets the forearm extensors with a wrist-friendly grip.',
+    benefits: [
+      'Builds the forearm extensors for balanced forearm strength.',
+      'Eases wrist strain with the angled grip.',
+      'Helps prevent elbow pain from flexor dominance.'
+    ],
+    instructions: [
+      'Sit on a bench and grip an EZ-bar on its angled sections with palms facing down.',
+      'Rest your forearms on your thighs with your wrists just past your knees.',
+      'Let your wrists drop down to stretch the forearm extensors.',
+      'Raise the backs of your hands upward as high as they will go.',
+      'Squeeze the top of the forearms at the top.',
+      'Lower the bar slowly back down under control.'
+    ],
+    commonMistakes: [
+      'Lifting the forearms instead of isolating the wrists.',
+      'Using too heavy a load, limiting the range.',
+      'Shortening the range at the top or bottom.',
+      'Rushing the lowering phase rather than controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b306',
+    name: 'Dumbbell Reverse Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: ['biceps'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A reverse curl with dumbbells and an overhand grip — builds the brachioradialis and forearms while training each arm independently.',
+    benefits: [
+      'Builds the brachioradialis and forearms through the overhand grip.',
+      'Trains each arm independently to fix imbalances.',
+      'Strengthens grip for rows, deadlifts, and carries.'
+    ],
+    instructions: [
+      'Stand tall holding a dumbbell in each hand, then rotate to an overhand grip with palms facing back.',
+      'Pin your elbows to your sides and brace your core.',
+      'Keep your wrists firm and straight throughout.',
+      'Curl the dumbbells up toward your shoulders, leading with the backs of your hands.',
+      'Squeeze the forearms at the top without bending the wrists.',
+      'Lower the dumbbells slowly over 2 to 3 seconds to full extension.'
+    ],
+    commonMistakes: [
+      'Letting the wrists curl back instead of staying firm.',
+      'Swinging the torso to help lift the weight.',
+      'Letting the elbows drift forward off the sides.',
+      'Using too heavy a load so form breaks down.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b307',
+    name: 'Kettlebell Wrist Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A wrist curl holding a kettlebell — the offset weight challenges the forearm flexors and grip through the curl.',
+    benefits: [
+      'Builds the forearm flexors and grip with the kettlebell\'s offset load.',
+      'Challenges wrist stability as the bell shifts.',
+      'Trains forearm strength with a single accessible tool.'
+    ],
+    instructions: [
+      'Sit on a bench holding a kettlebell in one hand with the palm facing up.',
+      'Rest your forearm on your thigh with your wrist just past your knee.',
+      'Let your wrist drop down to fully stretch the forearm flexors.',
+      'Curl your wrist upward as high as it will go, controlling the bell.',
+      'Squeeze the forearm at the top.',
+      'Lower the kettlebell slowly back down, then repeat and switch hands.'
+    ],
+    commonMistakes: [
+      'Moving the forearm instead of isolating the wrist.',
+      'Letting the bell swing and pull the wrist off line.',
+      'Cutting the stretch short at the bottom.',
+      'Rushing the reps rather than controlling them.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b308',
+    name: 'Kettlebell Bottoms-Up Carry',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'duration',
+    difficulty: 'intermediate',
+    movement: 'Carry',
+    description: 'A loaded carry holding the kettlebell upside-down by the handle — the unstable bell demands a crushing grip and braced shoulder the whole way.',
+    benefits: [
+      'Builds a crushing grip as you fight to keep the bell upright.',
+      'Strengthens the forearms and wrist stabilizers under load.',
+      'Trains shoulder and core stability through the unstable carry.'
+    ],
+    instructions: [
+      'Clean a kettlebell to the rack position with the bell balanced upside-down over your fist.',
+      'Grip the handle hard and keep your forearm vertical and wrist straight.',
+      'Brace your core and pack your shoulder down before you move.',
+      'Walk forward with controlled steps, keeping the bell balanced upright.',
+      'Maintain the crushing grip and steady forearm the entire distance.',
+      'Set the bell down under control, then repeat on the other side.'
+    ],
+    commonMistakes: [
+      'Gripping too loosely so the bell tips and falls.',
+      'Letting the wrist bend back instead of keeping it straight.',
+      'Rushing the steps and losing the bell\'s balance.',
+      'Letting the shoulder shrug up instead of staying packed down.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b309',
+    name: 'Cable Reverse Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: ['biceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A reverse curl at a low cable with a straight bar — constant cable tension builds the brachioradialis and forearms through the full range.',
+    benefits: [
+      'Keeps constant tension on the forearms and brachioradialis.',
+      'Builds the top of the forearm through the overhand grip.',
+      'Allows a smooth, controlled curl with no momentum.'
+    ],
+    instructions: [
+      'Attach a straight bar to a low cable pulley and grip it with palms facing down.',
+      'Stand a step back with the bar at arm\'s length and pin your elbows to your sides.',
+      'Brace your core and keep your wrists firm and straight.',
+      'Curl the bar up toward your shoulders by contracting the forearms and biceps.',
+      'Squeeze at the top without letting the wrists bend.',
+      'Lower the bar slowly back down, resisting the cable.'
+    ],
+    commonMistakes: [
+      'Letting the wrists curl back instead of staying firm.',
+      'Leaning back to pull the bar up with the body.',
+      'Letting the elbows drift forward off the sides.',
+      'Letting the stack yank the arms down rather than controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b310',
+    name: 'Cable Wrist Curl',
+    primaryMuscle: 'forearms',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A wrist curl at a low cable — the constant tension builds the forearm flexors smoothly through the full range.',
+    benefits: [
+      'Keeps constant tension on the forearm flexors via the cable.',
+      'Builds grip and wrist strength with a smooth resistance curve.',
+      'Easy to load precisely for steady progression.'
+    ],
+    instructions: [
+      'Attach a straight bar to a low cable pulley and grip it with palms facing up.',
+      'Kneel or sit so your forearms rest on a bench with wrists just past the edge.',
+      'Let your wrists drop down to fully stretch the forearm flexors.',
+      'Curl your wrists upward against the cable as high as they go.',
+      'Squeeze the forearms at the top.',
+      'Lower your wrists slowly back down, resisting the cable.'
+    ],
+    commonMistakes: [
+      'Moving the forearms instead of isolating the wrists.',
+      'Setting up too far from the pulley so the angle is off.',
+      'Cutting the stretch short at the bottom.',
+      'Letting the cable snap the wrists down rather than controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
