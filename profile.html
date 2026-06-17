@@ -676,17 +676,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
     <button class="btn btn-volt btn-full btn-lg" onclick="saveProfile()">Save Profile</button>
   </div>
 
-  <!-- ===== TEMP SYNC DIAGNOSTIC (remove after debugging) ===== -->
-  <div style="margin:16px var(--page-pad,16px) 110px;padding:14px;border:1px solid var(--volt,#c6f135);border-radius:12px;background:var(--bg-card,#161616);">
-    <div style="font-weight:800;font-size:13px;color:var(--volt,#c6f135);margin-bottom:8px;">SYNC DIAGNOSTIC (temporary)</div>
-    <div style="display:flex;gap:8px;margin-bottom:10px;">
-      <button id="lf-sync-diag-refresh" class="btn btn-sm" style="flex:1;border:1px solid var(--border,#333);">Refresh</button>
-      <button id="lf-sync-diag-push" class="btn btn-sm" style="flex:1;border:1px solid var(--volt,#c6f135);color:var(--volt,#c6f135);">Force-push &amp; report</button>
-    </div>
-    <pre id="lf-sync-diag-out" style="white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.45;color:var(--text-1,#eee);margin:0;font-family:ui-monospace,Menlo,monospace;"></pre>
-  </div>
-  <!-- ===== END TEMP SYNC DIAGNOSTIC ===== -->
-
 </main>
 
 <!-- TOAST -->
@@ -1161,71 +1150,6 @@ function showToast(msg) {
 // ── RUN ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', init);
 </script>
-
-<!-- ===== TEMP SYNC DIAGNOSTIC SCRIPT (remove after debugging) ===== -->
-<script>
-(function syncDiag(){
-  const out = document.getElementById('lf-sync-diag-out');
-  if (!out) return;
-  const readHist    = () => { try { return JSON.parse(localStorage.getItem('lf_workout_history') || '{}'); } catch { return {}; } };
-  const readPending = () => { try { return JSON.parse(localStorage.getItem('lf_pending_sync')   || '[]'); } catch { return []; } };
-
-  async function render(extra) {
-    const hist  = readHist();
-    const dates = Object.keys(hist).sort();
-    let user = null, sbReady = false;
-    try { await LF.ready(); sbReady = true; user = await LF.auth.user(); } catch {}
-    const L = [];
-    L.push('online: ' + navigator.onLine);
-    L.push('sb client ready: ' + sbReady);
-    L.push('signed-in user id: ' + (user ? user.id : 'NULL (not signed in here)'));
-    L.push('user email: ' + (user ? user.email : '-'));
-    L.push('flushWorkoutSync present: ' + (typeof (window.LF && LF.db && LF.db.flushWorkoutSync) === 'function'));
-    L.push('');
-    L.push('LOCAL workout dates (' + dates.length + '):');
-    dates.forEach(d => {
-      const s = hist[d] || {};
-      L.push('  ' + d + '  "' + (s.name || '?') + '"  ex:' + ((s.exercises || []).length) + '  vol:' + (s.totalVolume || 0));
-    });
-    L.push('');
-    L.push('pending_sync queue: ' + JSON.stringify(readPending()));
-    if (extra) { L.push(''); L.push('--- force-push report ---'); L.push(extra); }
-    out.textContent = L.join('\n');
-  }
-
-  async function forcePush() {
-    const R = [];
-    try {
-      const sb   = await LF.ready();
-      const user = await LF.auth.user();
-      if (!user) { render('No signed-in user — cannot push.'); return; }
-      const hist = readHist();
-      const { data, error } = await sb.from('workout_history').select('workout_date').eq('user_id', user.id);
-      if (error) { render('remote fetch error: ' + JSON.stringify(error)); return; }
-      const remote = new Set((data || []).map(r => r.workout_date));
-      R.push('remote dates: ' + JSON.stringify([...remote].sort()));
-      const missing = Object.keys(hist).sort().filter(d => !remote.has(d));
-      R.push('local-only (to push): ' + JSON.stringify(missing));
-      for (const d of missing) {
-        const s = hist[d];
-        const { error: upErr } = await sb.from('workout_history').upsert({
-          user_id: user.id, workout_date: d,
-          name: s.name || 'Workout', duration_min: s.durationMin || 0,
-          total_volume: s.totalVolume || 0, prs: s.prs || 0, session_data: s
-        }, { onConflict: 'user_id,workout_date' }).select().single();
-        R.push(d + ' -> ' + (upErr ? 'ERROR: ' + JSON.stringify(upErr) : 'OK'));
-      }
-      if (!missing.length) R.push('(nothing missing — local already matches remote)');
-    } catch (e) { R.push('exception: ' + (e && e.message ? e.message : String(e))); }
-    render(R.join('\n'));
-  }
-
-  document.getElementById('lf-sync-diag-refresh').addEventListener('click', () => render());
-  document.getElementById('lf-sync-diag-push').addEventListener('click', forcePush);
-  render();
-})();
-</script>
-<!-- ===== END TEMP SYNC DIAGNOSTIC SCRIPT ===== -->
 
 </body>
 </html>
