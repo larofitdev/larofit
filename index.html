@@ -122,7 +122,31 @@
   flex-shrink: 0;
 }
 </style>
+<style>
+/* ===== Read-only session detail sheet ===== */
+.sess-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: flex-end; justify-content: center; }
+.sess-overlay.show { display: flex; }
+.sess-sheet { background: var(--bg-card); border-radius: var(--radius-lg) var(--radius-lg) 0 0; width: 100%; max-width: 560px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+.sess-header { padding: 16px 16px 12px; border-bottom: 0.5px solid var(--border); display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0; }
+.sess-title { font-size: 17px; font-weight: 700; color: var(--text); line-height: 1.25; }
+.sess-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; font-family: var(--font-mono); }
+.sess-close { padding: 6px; color: var(--text-3); font-size: 20px; flex-shrink: 0; background: none; border: none; cursor: pointer; line-height: 1; }
+.sess-body { overflow-y: auto; flex: 1; padding: 0 0 28px; -webkit-overflow-scrolling: touch; }
+.sess-stats { display: flex; gap: 10px; margin: 14px 16px 4px; }
+.sess-stat { flex: 1; background: var(--bg-card2); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; }
+.sess-stat-val { font-family: var(--font-display); font-size: 20px; color: var(--volt-dark); letter-spacing: 0.5px; line-height: 1; }
+.sess-stat-label { font-size: 10px; color: var(--text-3); margin-top: 4px; }
+.sess-ex { padding: 14px 16px 6px; border-top: 0.5px solid var(--border); }
+.sess-ex-name { font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sess-ex-orm { font-size: 10px; color: var(--volt-dark); font-family: var(--font-mono); font-weight: 700; }
+.sess-ex-note { font-size: 12px; color: var(--text-3); margin-top: 4px; font-style: italic; }
+.sess-set { display: flex; align-items: center; gap: 10px; padding: 5px 0; font-family: var(--font-mono); font-size: 12px; }
+.sess-set-num { width: 26px; color: var(--text-3); flex-shrink: 0; }
+.sess-set-val { color: var(--text); }
+.sess-empty { padding: 40px 24px; text-align: center; color: var(--text-3); font-size: 14px; }
+</style>
 </head>
+
 <body>
 
 <!-- Force SW refresh: unregister old SW and re-register fresh -->
@@ -751,8 +775,8 @@ async function loadHistory() {
 
     return `
       <div class="lf-list-row" style="cursor:pointer;"
-           onclick="location.href='workout.html?date=${dateStr}'"
-           role="link" aria-label="View workout on ${label}">
+           onclick="openSessionSheet('${dateStr}')"
+           role="button" tabindex="0" aria-label="View workout on ${label}">
         <div class="lf-list-row-icon">
           <i class="ti ti-barbell" aria-hidden="true"></i>
         </div>
@@ -766,6 +790,65 @@ async function loadHistory() {
       </div>`;
   }).join('');
 }
+
+// ── READ-ONLY SESSION DETAIL SHEET ───────────────────────────
+function sessEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function sessNum(n){n=Number(n)||0;return Number.isInteger(n)?n:Math.round(n*100)/100;}
+function sessDur(sec){sec=Math.round(Number(sec)||0);if(sec>=60){const m=Math.floor(sec/60),s=sec%60;return m+':'+String(s).padStart(2,'0');}return sec+'s';}
+function sessVol(lbs){lbs=Number(lbs)||0;return lbs>=1000?(lbs/1000).toFixed(1)+'k':Math.round(lbs).toString();}
+function sessFmtDate(dateStr){try{return new Date(dateStr+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});}catch(e){return dateStr;}}
+function sessSetLabel(set){
+  const w=Number(set.weight)||0,r=Number(set.reps)||0,h=Number(set.holdTime)||0,d=Number(set.duration)||0,dist=Number(set.distance)||0;
+  if(w>0&&r>0){let s=sessNum(w)+' lbs × '+r;if(h>0)s+=' · '+h+'s';return s;}
+  if(r>0&&h>0)return r+' × '+h+'s hold';
+  if(h>0)return h+'s hold';
+  if(d>0&&dist>0)return sessDur(d)+' · '+sessNum(dist);
+  if(d>0)return sessDur(d);
+  if(dist>0)return sessNum(dist)+'';
+  if(r>0)return r+' reps';
+  if(w>0)return sessNum(w)+' lbs';
+  return '—';
+}
+function openSessionSheet(dateStr){
+  let hist={};
+  try{hist=JSON.parse(localStorage.getItem('lf_workout_history')||'{}');}catch(e){}
+  const s=hist[dateStr];
+  const titleEl=document.getElementById('sess-title');
+  const subEl=document.getElementById('sess-sub');
+  const bodyEl=document.getElementById('sess-body');
+  if(!titleEl||!bodyEl)return;
+  if(!s){
+    titleEl.textContent='Workout';subEl.textContent='';
+    bodyEl.innerHTML='<div class="sess-empty">This workout couldn\'t be found.</div>';
+    document.getElementById('sess-overlay').classList.add('show');return;
+  }
+  const exs=Array.isArray(s.exercises)?s.exercises:[];
+  titleEl.textContent=s.name||'Workout';
+  subEl.textContent=sessFmtDate(dateStr);
+  let html='<div class="sess-stats">'
+    +'<div class="sess-stat"><div class="sess-stat-val">'+(s.durationMin||'—')+'</div><div class="sess-stat-label">min</div></div>'
+    +'<div class="sess-stat"><div class="sess-stat-val">'+sessVol(s.totalVolume||0)+'</div><div class="sess-stat-label">lbs vol</div></div>'
+    +'<div class="sess-stat"><div class="sess-stat-val">'+exs.length+'</div><div class="sess-stat-label">exercise'+(exs.length!==1?'s':'')+'</div></div>'
+    +(s.prs?'<div class="sess-stat"><div class="sess-stat-val">'+s.prs+'</div><div class="sess-stat-label">PR'+(s.prs!==1?'s':'')+'</div></div>':'')
+    +'</div>';
+  if(!exs.length){
+    html+='<div class="sess-empty">No exercises were logged in this session.</div>';
+  }else{
+    html+=exs.map(function(ex){
+      const sets=Array.isArray(ex.sets)?ex.sets:[];
+      const orm=ex.best1RM?'<span class="sess-ex-orm">'+sessNum(ex.best1RM)+' est. 1RM</span>':'';
+      const note=ex.note?'<div class="sess-ex-note">'+sessEsc(ex.note)+'</div>':'';
+      const setRows=sets.length
+        ? sets.map(function(set,i){return '<div class="sess-set"><span class="sess-set-num">'+(i+1)+'</span><span class="sess-set-val">'+sessEsc(sessSetLabel(set))+'</span></div>';}).join('')
+        : '<div class="sess-set"><span class="sess-set-val" style="color:var(--text-3);">No sets logged</span></div>';
+      return '<div class="sess-ex"><div class="sess-ex-name">'+sessEsc(ex.name||'Exercise')+orm+'</div>'+note+setRows+'</div>';
+    }).join('');
+  }
+  bodyEl.innerHTML=html;
+  document.getElementById('sess-overlay').classList.add('show');
+}
+function closeSess(){document.getElementById('sess-overlay').classList.remove('show');}
+function closeSessIfBackdrop(e){if(e.target===document.getElementById('sess-overlay'))closeSess();}
 
 // ── UTILITIES ────────────────────────────────────────────────
 function escHtml(str) {
@@ -939,6 +1022,20 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
+
+<!-- Read-only session detail sheet -->
+<div class="sess-overlay" id="sess-overlay" onclick="closeSessIfBackdrop(event)">
+  <div class="sess-sheet" id="sess-sheet" role="dialog" aria-modal="true" aria-label="Workout details">
+    <div class="sess-header">
+      <div style="flex:1;min-width:0;">
+        <div class="sess-title" id="sess-title">Workout</div>
+        <div class="sess-sub" id="sess-sub"></div>
+      </div>
+      <button class="sess-close" onclick="closeSess()" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="sess-body" id="sess-body"></div>
+  </div>
+</div>
 
 </body>
 </html>
