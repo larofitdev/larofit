@@ -8677,6 +8677,534 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b263',
+    name: 'Bodyweight Bicep Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A bodyweight curl performed by leaning back from a fixed waist-height bar and curling yourself up — biceps isolation with no weights needed.',
+    benefits: [
+      'Isolates the biceps using only your bodyweight and a fixed bar.',
+      'Scales instantly by changing your body angle — more upright is easier, more horizontal is harder.',
+      'Builds the supinated curl strength that carries over to every other curl.'
+    ],
+    instructions: [
+      'Set a bar at about waist height in a rack or Smith machine and grip it underhand, hands shoulder width apart.',
+      'Walk your feet forward and lean back so your arms are straight and your body forms a straight, angled line.',
+      'Brace your core and squeeze your glutes to keep your body rigid from head to heels.',
+      'Curl your body up toward the bar by bending only at the elbows, keeping the upper arms still.',
+      'Squeeze the biceps hard at the top with your hands near your shoulders.',
+      'Lower yourself slowly over 2 to 3 seconds back to full arm extension.'
+    ],
+    commonMistakes: [
+      'Letting the hips sag or pike instead of keeping the body in one rigid line.',
+      'Bending at the shoulders and using the back instead of isolating the elbows.',
+      'Setting the body too upright so there\'s almost no resistance on the biceps.',
+      'Rushing the lowering phase rather than controlling the descent.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b264',
+    name: 'Suspension Trainer Bicep Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A bodyweight biceps curl on suspension straps — you lean back and curl your body up, hitting the biceps through a smooth, joint-friendly arc.',
+    benefits: [
+      'Isolates the biceps with adjustable bodyweight resistance on the straps.',
+      'Lets you dial difficulty up or down just by changing your foot position.',
+      'Trains the biceps while the straps challenge stability and control.'
+    ],
+    instructions: [
+      'Grip the suspension handles with palms facing up and arms extended in front of you.',
+      'Walk your feet forward and lean back until your arms are straight and your body is angled and rigid.',
+      'Brace your core and squeeze your glutes to hold a straight line from head to heels.',
+      'Curl your body up by bending only at the elbows, bringing your hands toward your forehead.',
+      'Pause and squeeze the biceps hard at the top of the curl.',
+      'Lower yourself slowly over 2 to 3 seconds until your arms are fully straight again.'
+    ],
+    commonMistakes: [
+      'Letting the elbows drift and drop instead of keeping the upper arms fixed and high.',
+      'Sagging the hips out of the straight-body line, shifting work off the biceps.',
+      'Standing too upright so the straps provide little resistance.',
+      'Swinging up with momentum rather than curling under control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b265',
+    name: 'Dumbbell Spider Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A dumbbell curl done face-down on an incline bench with the arms hanging straight — the prone angle kills momentum and keeps constant tension on the biceps peak.',
+    benefits: [
+      'Maximizes tension on the biceps by removing all body momentum.',
+      'Emphasizes the biceps peak through the hanging, prone arm position.',
+      'Builds the short head of the biceps with a strict, isolated curl.'
+    ],
+    instructions: [
+      'Set an incline bench to about 45 degrees and lie face-down with your chest against the pad.',
+      'Hold a dumbbell in each hand and let your arms hang straight down toward the floor.',
+      'Keep your upper arms vertical and still throughout the entire movement.',
+      'Curl the dumbbells up toward your shoulders by squeezing the biceps hard.',
+      'Pause at the top with a strong peak contraction.',
+      'Lower the dumbbells slowly over 2 to 3 seconds to a full stretch.'
+    ],
+    commonMistakes: [
+      'Swinging the upper arms forward instead of keeping them locked vertical.',
+      'Cutting the range short and never letting the arms fully straighten at the bottom.',
+      'Lifting the chest off the pad to cheat the weight up.',
+      'Using too heavy a load, which forces momentum and ruins the isolation.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b266',
+    name: 'Dumbbell Cross Body Hammer Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A neutral-grip dumbbell curl swept across the body toward the opposite shoulder — builds the brachialis and biceps for thicker-looking arms.',
+    benefits: [
+      'Builds the brachialis beneath the biceps for greater arm thickness.',
+      'Strengthens the forearms through the neutral hammer grip.',
+      'Lets you handle solid loads with the strong cross-body line.'
+    ],
+    instructions: [
+      'Stand tall with a dumbbell in each hand, palms facing your thighs in a neutral grip.',
+      'Keep your elbow pinned to your side and brace your core.',
+      'Curl one dumbbell up and across your body toward the opposite shoulder.',
+      'Squeeze at the top with the dumbbell near the opposite collarbone.',
+      'Lower the dumbbell slowly over 2 to 3 seconds back to your side.',
+      'Alternate arms for the prescribed reps, keeping the torso still.'
+    ],
+    commonMistakes: [
+      'Swinging the torso to throw the weight across instead of curling with the arm.',
+      'Letting the elbow drift forward off the side of the body.',
+      'Rushing the reps and losing the squeeze at the top.',
+      'Using momentum on the descent rather than lowering under control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b267',
+    name: 'Dumbbell Zottman Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: ['forearms'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A curl that rotates from underhand on the way up to overhand on the way down — training the biceps in the lift and the forearms in the lowering.',
+    benefits: [
+      'Trains the biceps and forearms in a single, efficient movement.',
+      'Builds forearm and grip strength through the pronated lowering phase.',
+      'Develops well-rounded arm strength across two grip positions.'
+    ],
+    instructions: [
+      'Stand tall holding a dumbbell in each hand with palms facing forward in an underhand grip.',
+      'Keep your elbows pinned to your sides and curl the dumbbells up to your shoulders.',
+      'At the top, rotate your wrists so your palms now face down in an overhand grip.',
+      'Lower the dumbbells slowly with the overhand grip, resisting hard with the forearms.',
+      'At the bottom, rotate your palms back to facing forward to begin the next rep.',
+      'Keep the tempo slow, especially on the lowering phase where the forearms work hardest.'
+    ],
+    commonMistakes: [
+      'Rushing the lowering phase, which is the whole point of the exercise.',
+      'Swinging the elbows forward instead of keeping them fixed at your sides.',
+      'Going too heavy and losing control during the pronated descent.',
+      'Forgetting to rotate the wrists fully at the top and bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b268',
+    name: 'Barbell Preacher Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A barbell curl performed with the arms braced on a preacher bench — the locked elbows force strict form and hammer the lower biceps.',
+    benefits: [
+      'Locks the elbows in place to enforce strict, momentum-free curls.',
+      'Emphasizes the lower biceps through the braced-arm position.',
+      'Builds peak biceps strength out of a deep stretch.'
+    ],
+    instructions: [
+      'Sit at a preacher bench and rest the backs of your upper arms flat on the pad.',
+      'Grip the barbell underhand at shoulder width with your arms extended down the pad.',
+      'Brace your core and keep your upper arms pressed into the pad throughout.',
+      'Curl the bar up toward your shoulders by contracting the biceps.',
+      'Squeeze hard at the top without letting the elbows lift off the pad.',
+      'Lower the bar slowly over 2 to 3 seconds until your arms are nearly straight.'
+    ],
+    commonMistakes: [
+      'Lifting the elbows off the pad to cheat the weight up.',
+      'Bouncing out of the bottom stretch, which risks elbow strain.',
+      'Failing to fully straighten the arms and shortening the range.',
+      'Using too much weight and turning the curl into a heave.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b269',
+    name: 'Barbell Spider Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A barbell curl done leaning chest-first over an incline bench with the arms hanging — strict, constant-tension biceps work with zero momentum.',
+    benefits: [
+      'Removes all momentum for pure, isolated biceps tension.',
+      'Emphasizes the biceps peak through the hanging arm position.',
+      'Builds strict curl strength that exposes and fixes weak points.'
+    ],
+    instructions: [
+      'Set an incline bench to about 45 degrees and lean your chest against the pad facing down.',
+      'Grip a barbell underhand at shoulder width and let your arms hang straight toward the floor.',
+      'Keep your upper arms vertical and motionless throughout the movement.',
+      'Curl the bar up toward your shoulders, squeezing the biceps hard.',
+      'Pause at the top for a strong peak contraction.',
+      'Lower the bar slowly over 2 to 3 seconds back to a full stretch.'
+    ],
+    commonMistakes: [
+      'Swinging the upper arms forward instead of keeping them locked vertical.',
+      'Lifting the chest off the pad to generate momentum.',
+      'Cutting the bottom range short and skipping the full stretch.',
+      'Loading too heavy, which reintroduces the momentum the exercise is meant to remove.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b270',
+    name: 'EZ Bar Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'The classic standing biceps curl on an angled EZ-bar — builds the whole biceps while the cambered grip eases strain on the wrists.',
+    benefits: [
+      'Builds the entire biceps with a comfortable, wrist-friendly grip.',
+      'Lets you load heavier than dumbbells for overall biceps mass.',
+      'Reduces wrist and elbow strain compared to a straight bar.'
+    ],
+    instructions: [
+      'Stand tall and grip an EZ-bar on its inner angled sections with an underhand grip.',
+      'Let the bar hang at arm\'s length against your thighs and pin your elbows to your sides.',
+      'Brace your core and keep your upper arms still throughout.',
+      'Curl the bar up toward your shoulders by contracting the biceps.',
+      'Squeeze hard at the top without swinging the elbows forward.',
+      'Lower the bar slowly over 2 to 3 seconds until your arms are fully extended.'
+    ],
+    commonMistakes: [
+      'Swinging the hips and torso to heave the bar up.',
+      'Letting the elbows drift forward instead of keeping them at your sides.',
+      'Using a partial range and never fully straightening the arms.',
+      'Gripping too wide or too narrow and straining the wrists.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b271',
+    name: 'EZ Bar Spider Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A spider curl on the EZ-bar with the chest braced on an incline bench — strict, constant-tension biceps work that\'s kind to the wrists.',
+    benefits: [
+      'Combines strict spider-curl isolation with a wrist-friendly grip.',
+      'Keeps constant tension on the biceps by removing momentum.',
+      'Emphasizes the biceps peak through the hanging arm angle.'
+    ],
+    instructions: [
+      'Set an incline bench to about 45 degrees and lean chest-first against the pad.',
+      'Grip an EZ-bar on its angled sections underhand and let your arms hang straight down.',
+      'Keep your upper arms vertical and locked in place throughout.',
+      'Curl the bar up toward your shoulders, squeezing the biceps at the top.',
+      'Pause briefly for a strong peak contraction.',
+      'Lower the bar slowly over 2 to 3 seconds to a full stretch.'
+    ],
+    commonMistakes: [
+      'Letting the upper arms swing forward instead of staying vertical.',
+      'Lifting the chest off the pad to cheat the rep.',
+      'Shortening the range at the bottom and missing the stretch.',
+      'Going too heavy, which forces momentum back into the lift.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b272',
+    name: 'Cable Rope Hammer Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A neutral-grip curl on a cable rope — constant cable tension builds the brachialis and biceps through the full range.',
+    benefits: [
+      'Keeps constant tension on the biceps and brachialis via the cable.',
+      'Builds the brachialis and forearms through the neutral rope grip.',
+      'Allows a strong, controlled squeeze at the top of every rep.'
+    ],
+    instructions: [
+      'Attach a rope to a low cable pulley and grip both ends with palms facing each other.',
+      'Stand tall a step back from the stack and pin your elbows to your sides.',
+      'Brace your core and keep your upper arms still throughout.',
+      'Curl the rope up toward your shoulders, spreading the ends slightly at the top.',
+      'Squeeze the biceps and brachialis hard at the peak.',
+      'Lower the rope slowly over 2 to 3 seconds back to full extension.'
+    ],
+    commonMistakes: [
+      'Leaning back and using the body to pull the weight up.',
+      'Letting the elbows drift forward off the sides.',
+      'Cutting the range short instead of fully straightening the arms.',
+      'Letting the stack yank the arms down rather than controlling the descent.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b273',
+    name: 'Cable Single Arm Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A single-arm cable curl that delivers constant tension and lets you fix side-to-side imbalances one arm at a time.',
+    benefits: [
+      'Provides constant cable tension through the full curl range.',
+      'Isolates each arm to correct strength imbalances.',
+      'Lets you focus on a strong, deliberate peak contraction.'
+    ],
+    instructions: [
+      'Attach a single handle to a low cable pulley and grip it underhand.',
+      'Stand a step back with your elbow pinned to your side and your core braced.',
+      'Keep your upper arm still and curl the handle up toward your shoulder.',
+      'Squeeze the biceps hard at the top of the rep.',
+      'Lower the handle slowly over 2 to 3 seconds to full arm extension.',
+      'Complete all reps on one arm, then switch sides.'
+    ],
+    commonMistakes: [
+      'Twisting the torso to help pull the handle up.',
+      'Letting the elbow drift forward instead of staying fixed.',
+      'Shortening the range and skipping full extension at the bottom.',
+      'Rushing the lowering phase rather than controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b274',
+    name: 'Cable Overhead Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A curl performed with the arms out to the sides at a high cable, like a double-biceps pose — maximizes the peak contraction of the biceps.',
+    benefits: [
+      'Trains the biceps in a fully shortened, peak-contracted position.',
+      'Builds the biceps peak through the unique overhead angle.',
+      'Keeps constant cable tension across the whole movement.'
+    ],
+    instructions: [
+      'Set two high pulleys and grip a handle in each hand with your arms extended out to your sides.',
+      'Stand in the center with your arms raised to shoulder height, palms facing up.',
+      'Keep your upper arms fixed and parallel to the floor throughout.',
+      'Curl both handles toward your head by squeezing the biceps hard.',
+      'Pause at the peak in a double-biceps position.',
+      'Return the handles slowly over 2 to 3 seconds to full arm extension.'
+    ],
+    commonMistakes: [
+      'Dropping the upper arms instead of keeping them fixed at shoulder height.',
+      'Using the body to lean and pull the handles in.',
+      'Going too heavy and losing the strict peak contraction.',
+      'Cutting the range short and never fully straightening the arms.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b275',
+    name: 'Cable Bayesian Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A single-arm cable curl with the cable running behind your body — the back position keeps the biceps under a deep stretch through the whole rep.',
+    benefits: [
+      'Loads the biceps in a deep stretch for a strong growth stimulus.',
+      'Maintains constant tension through the entire range via the cable.',
+      'Isolates each arm to build balanced biceps strength.'
+    ],
+    instructions: [
+      'Set a handle on a low-to-mid pulley, grip it underhand, then step forward so the cable runs behind you.',
+      'Let the working arm extend back and down behind your torso to feel a deep stretch in the biceps.',
+      'Keep your upper arm roughly fixed and your core braced.',
+      'Curl the handle forward and up toward your shoulder, squeezing the biceps at the top.',
+      'Lower the handle slowly over 2 to 3 seconds back into the stretched position.',
+      'Finish all reps on one arm before switching sides.'
+    ],
+    commonMistakes: [
+      'Stepping too far forward and turning it into a standard curl with no stretch.',
+      'Letting the upper arm swing forward instead of keeping it back and fixed.',
+      'Using momentum to pull out of the deep stretch instead of curling smoothly.',
+      'Going too heavy and losing control in the stretched bottom position.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b276',
+    name: 'Machine Bicep Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A seated biceps curl machine that braces the arms on a pad — beginner-friendly isolation with a fixed, guided path.',
+    benefits: [
+      'Isolates the biceps with a stable, guided movement path.',
+      'Braces the arms so beginners can train with strict form.',
+      'Makes it easy to load progressively and safely.'
+    ],
+    instructions: [
+      'Sit at the machine and adjust the seat so your armpits rest at the top of the pad.',
+      'Rest the backs of your upper arms flat on the pad and grip the handles underhand.',
+      'Brace your core and keep your upper arms pressed into the pad.',
+      'Curl the handles up toward your shoulders by contracting the biceps.',
+      'Squeeze hard at the top of the rep.',
+      'Lower the handles slowly over 2 to 3 seconds until your arms are nearly straight.'
+    ],
+    commonMistakes: [
+      'Lifting the upper arms off the pad to cheat the weight up.',
+      'Setting the seat wrong so the elbows don\'t line up with the machine\'s pivot.',
+      'Failing to fully extend the arms and shortening the range.',
+      'Letting the weight stack drop fast instead of controlling the descent.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b277',
+    name: 'Kettlebell Hammer Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A neutral-grip curl holding the kettlebell by the handle — the offset weight challenges the biceps and forearms through the curl.',
+    benefits: [
+      'Builds the brachialis and biceps through the neutral hammer grip.',
+      'Challenges grip and forearm strength via the kettlebell\'s offset load.',
+      'Trains stability as the bell\'s weight shifts through the curl.'
+    ],
+    instructions: [
+      'Stand tall holding a kettlebell in each hand by the handle, palms facing each other.',
+      'Pin your elbows to your sides and brace your core.',
+      'Curl the kettlebells up toward your shoulders, keeping the neutral grip.',
+      'Control the bells so they don\'t swing into your forearms at the top.',
+      'Squeeze the biceps and brachialis at the peak.',
+      'Lower the kettlebells slowly over 2 to 3 seconds to full extension.'
+    ],
+    commonMistakes: [
+      'Letting the bells swing and bang into the wrists at the top.',
+      'Swinging the torso to heave the weight up.',
+      'Allowing the elbows to drift forward off the sides.',
+      'Rushing the descent instead of lowering under control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b278',
+    name: 'Band Hammer Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A neutral-grip curl against a resistance band — the band\'s increasing tension hits the biceps and brachialis hardest at the top.',
+    benefits: [
+      'Builds the brachialis and biceps with the band\'s rising tension.',
+      'Loads the top of the curl hardest, where many curls go easy.',
+      'Offers a joint-friendly, travel-ready way to train the biceps.'
+    ],
+    instructions: [
+      'Stand on the middle of a resistance band with feet shoulder-width apart.',
+      'Grip an end of the band in each hand with palms facing each other.',
+      'Pin your elbows to your sides and brace your core.',
+      'Curl your hands up toward your shoulders, keeping the neutral grip.',
+      'Squeeze the biceps and brachialis hard at the top against the band\'s peak tension.',
+      'Lower your hands slowly back down with control to full extension.'
+    ],
+    commonMistakes: [
+      'Letting the band snap the arms back down instead of controlling the descent.',
+      'Swinging the torso to help curl against the heavier top tension.',
+      'Letting the elbows drift forward off the sides.',
+      'Standing on too little of the band, losing tension at the bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
