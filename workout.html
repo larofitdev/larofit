@@ -529,6 +529,21 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 }
 .ex-dot.done   { background: var(--volt); border-color: var(--volt); }
 .ex-dot.active { background: var(--bg-dark); border-color: var(--bg-dark); width: 18px; border-radius: 3px; }
+/* Started but not finished — distinguishes a skipped/in-progress exercise from an untouched one */
+.ex-dot.partial { background: var(--volt); border-color: var(--volt); opacity: 0.4; }
+
+/* Skip-to-next button in the exercise name bar */
+.ex-name-bar-skip {
+  flex-shrink: 0; align-self: center;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 999px;
+  background: var(--bg-card2); border: 1px solid var(--border-md);
+  color: var(--text-3); font-size: 12px; font-weight: 700;
+  font-family: var(--font-body); cursor: pointer;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.ex-name-bar-skip:active { background: var(--border); }
+.ex-name-bar-skip i { font-size: 14px; }
 
 /* Rest timer */
 .rest-overlay {
@@ -801,6 +816,9 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       <div class="ex-name-bar">
         <div class="ex-name-bar-title" id="ex-name">—</div>
         <div class="ex-name-bar-1rm"   id="ex-1rm" style="display:none;"></div>
+        <button class="ex-name-bar-skip" id="ex-skip-btn" onclick="skipExercise()" aria-label="Skip to next exercise" style="display:none;">
+          <span>Skip</span><i class="ti ti-player-skip-forward"></i>
+        </button>
       </div>
 
       <!-- FMW prompt — shown for first-time exercises -->
@@ -1698,9 +1716,11 @@ function renderDots() {
   if (!exercises.length) { document.getElementById('ex-dots').innerHTML = ''; return; }
   document.getElementById('ex-dots').innerHTML = exercises.map((ex, i) => {
     const allLogged = ex.loggedSets.every(s => s.logged);
+    const anyLogged = ex.loggedSets.some(s => s.logged);
     let cls = 'ex-dot';
-    if (allLogged)              cls += ' done';
+    if (allLogged)               cls += ' done';
     else if (i === currentExIdx) cls += ' active';
+    else if (anyLogged)          cls += ' partial';
     return `<button class="${cls}" onclick="jumpToEx(${i})" aria-label="Go to exercise ${i+1}"></button>`;
   }).join('');
 }
@@ -1721,12 +1741,35 @@ function goToEx(idx) {
   updateOverallProgress();
 }
 
+// Next exercise (after `from`, wrapping) whose sets aren't all logged. -1 if none.
+function nextIncompleteIdx(from) {
+  const n = exercises.length;
+  for (let k = 1; k <= n; k++) {
+    const i = (from + k) % n;
+    if (i === from) continue;
+    if (!exercises[i].loggedSets.every(s => s.logged)) return i;
+  }
+  return -1;
+}
+
+// "Skip for now" — jump to the next incomplete exercise, leaving this one to return to.
+function skipExercise() {
+  const idx = nextIncompleteIdx(currentExIdx);
+  if (idx === -1) { showToast('No other exercises left to skip to'); return; }
+  stopRest();
+  goToEx(idx);
+}
+
 function renderExercise() {
   const ex          = exercises[currentExIdx];
   const lastSession = isStrength(ex) ? getLastSession(ex.id || ex.name) : null;
 
   // Name bar
   document.getElementById('ex-name').textContent = ex.name;
+
+  // Skip button — only meaningful when there's more than one exercise
+  const skipBtn = document.getElementById('ex-skip-btn');
+  if (skipBtn) skipBtn.style.display = exercises.length > 1 ? '' : 'none';
 
   // 1RM display (strength only, if we have prior data)
   const rmEl = document.getElementById('ex-1rm');
@@ -2145,6 +2188,10 @@ function logSet(exIdx, setIdx) {
   if (!reps) { showToast('Enter reps first'); return; }
   set.weight = weight; set.reps = reps; set.logged = true;
 
+  // Prefill the next un-logged set with what was just logged, to cut data entry
+  const _nxt = ex.loggedSets[setIdx + 1];
+  if (_nxt && !_nxt.logged) { if (weight) _nxt.weight = weight; if (reps) _nxt.reps = reps; }
+
   // PR check (unified — one per exercise per session, first-time included)
   const lastSession = getLastSession(ex.id || ex.name);
   checkPR(ex);
@@ -2165,8 +2212,8 @@ function logSet(exIdx, setIdx) {
   if (workoutMode === 'voice' && !allDone) voicePending = { exIdx, setIdx: setIdx+1, sugWeight: parseFloat(weight)||0 };
 
   if (allDone) {
-    const nextIdx = exIdx + 1;
-    if (nextIdx < exercises.length) startRest(ex.restSec, () => goToEx(nextIdx), 'Next: ' + exercises[nextIdx].name);
+    const nextIdx = nextIncompleteIdx(exIdx);
+    if (nextIdx !== -1) startRest(ex.restSec, () => goToEx(nextIdx), 'Next: ' + exercises[nextIdx].name);
     else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
     fetchSetCoaching(ex, setIdx, weight, reps);
   } else {
@@ -2206,11 +2253,13 @@ function logBWSet(exIdx, setIdx) {
   const reps = rEl ? rEl.value.trim() : set.reps;
   if (!reps) { showToast('Enter reps first'); return; }
   set.reps = reps; set.logged = true;
+  const _nxtBW = ex.loggedSets[setIdx + 1];
+  if (_nxtBW && !_nxtBW.logged && reps) _nxtBW.reps = reps;
   checkPR(ex);
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
-  if (allDone) { const ni = exIdx+1; if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
+  if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
   else { startRest(ex.restSec, () => renderSets(ex, null), 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
 }
 
@@ -2226,11 +2275,13 @@ function logTimedSet(exIdx, setIdx) {
   const t   = tEl ? tEl.value.trim() : set.holdTime;
   if (!t) { showToast('Enter hold time first'); return; }
   set.holdTime = t; set.logged = true;
+  const _nxtT = ex.loggedSets[setIdx + 1];
+  if (_nxtT && !_nxtT.logged && t) _nxtT.holdTime = t;
   checkPR(ex);
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
-  if (allDone) { const ni = exIdx+1; if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
+  if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
   else { startRest(ex.restSec, () => renderSets(ex, null), 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
 }
 
@@ -2247,8 +2298,8 @@ function logCardioSet(exIdx) {
   checkPR(ex);
   saveSnapshot();
   renderSets(ex, null); renderDots(); updateOverallProgress();
-  const ni = exIdx+1;
-  if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name);
+  const ni = nextIncompleteIdx(exIdx);
+  if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name);
   else { checkAllDone(); }
 }
 
