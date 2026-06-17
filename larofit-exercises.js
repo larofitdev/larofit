@@ -8050,6 +8050,633 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b244',
+    name: 'Wide Grip Pull Up',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'advanced',
+    movement: 'Pull',
+    description: 'A wide-hand vertical pull that biases the outer lats — the go-to bodyweight move for building back width.',
+    benefits: [
+      'Emphasizes the outer lats to build a wider, more V-tapered back.',
+      'Develops serious relative pulling strength using only bodyweight.',
+      'Reinforces shoulder stability through a full overhead pulling range.'
+    ],
+    instructions: [
+      'Grip a fixed pull-up bar with palms facing forward and hands set well outside shoulder width.',
+      'Hang at full arm extension, then pull your shoulder blades down to engage the lats before moving.',
+      'Brace your core and squeeze your glutes to keep your body from swinging.',
+      'Pull yourself up by driving your elbows down and out toward your sides until your chin clears the bar.',
+      'Pause briefly at the top, focusing on squeezing the outer lats.',
+      'Lower yourself under control over 2 to 3 seconds back to a full dead hang.'
+    ],
+    commonMistakes: [
+      'Shortening the range and never reaching a full dead hang, which trains only part of the lift.',
+      'Kipping or swinging the legs to generate momentum instead of pulling with the back.',
+      'Craning the neck to clear the bar with the chin instead of raising the chest.',
+      'Setting the grip so wide that the shoulders are forced into a strained, vulnerable position.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b245',
+    name: 'Neutral Grip Pull Up',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Pull',
+    description: 'A palms-facing vertical pull on parallel handles that hits the lats and biceps while sparing the shoulders and elbows.',
+    benefits: [
+      'Builds the lats and biceps in a joint-friendly position that\'s easier on the shoulders.',
+      'Often allows more reps than a standard pull-up, building pulling volume.',
+      'Strengthens the grip and forearms through the neutral hand position.'
+    ],
+    instructions: [
+      'Grip a set of parallel handles with palms facing each other, hands about shoulder width apart.',
+      'Hang at full extension and set the lats by pulling your shoulder blades down and back.',
+      'Brace your core and cross your ankles to keep your body still.',
+      'Pull yourself up by driving your elbows down toward your ribs until your chin clears the handles.',
+      'Squeeze the lats and mid-back hard at the top for a brief pause.',
+      'Lower yourself slowly over 2 to 3 seconds to a full hang before the next rep.'
+    ],
+    commonMistakes: [
+      'Using a half-range pull and never returning to a dead hang at the bottom.',
+      'Swinging the body to kip reps up instead of pulling cleanly.',
+      'Letting the shoulders shrug up toward the ears instead of staying packed down.',
+      'Rushing the descent and skipping the slow lowering where strength is built.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b246',
+    name: 'Scapular Pull Up',
+    primaryMuscle: 'back',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Pull',
+    description: 'A short-range hang-and-retract drill that strengthens the scapular control and lat engagement behind every pulling movement.',
+    benefits: [
+      'Teaches the scapular control that makes full pull-ups stronger and safer.',
+      'Strengthens the lower traps and lats that stabilize the shoulder blades.',
+      'Builds the foundation toward a first pull-up for those still working up to one.'
+    ],
+    instructions: [
+      'Hang from a pull-up bar with palms facing forward and arms completely straight.',
+      'Keep your arms locked straight throughout — this is a movement of the shoulder blades only.',
+      'Pull your shoulder blades down and together to raise your body a few inches without bending the elbows.',
+      'Hold the top position for a second, feeling the lats and lower traps engage.',
+      'Lower back down slowly until the shoulders relax and the body hangs at full stretch.',
+      'Repeat for controlled reps, keeping every movement slow and deliberate.'
+    ],
+    commonMistakes: [
+      'Bending the elbows and turning it into a partial pull-up instead of a pure scapular movement.',
+      'Rushing the reps so fast that the shoulder blades never fully retract or release.',
+      'Shrugging the shoulders up instead of pulling them down and together.',
+      'Letting the body swing rather than keeping it still and vertical.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b247',
+    name: 'Pendlay Row',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Pull',
+    description: 'A strict barbell row from a dead stop on the floor each rep — builds explosive mid-back power with zero momentum.',
+    benefits: [
+      'Builds raw mid-back and lat strength by starting each rep from a dead stop.',
+      'Removes momentum so the back does all the work on every pull.',
+      'Carries over directly to deadlift strength and bench-press back stability.'
+    ],
+    instructions: [
+      'Set a loaded barbell on the floor and stand with feet hip-width under the bar.',
+      'Hinge at the hips until your torso is roughly parallel to the floor with a flat back.',
+      'Grip the bar slightly wider than shoulder width with palms facing you.',
+      'Pull the bar explosively from the floor to your lower chest, driving the elbows up and back.',
+      'Squeeze the shoulder blades together at the top, then lower the bar all the way back to the floor.',
+      'Let the bar settle on the floor for a moment to reset before pulling the next rep.'
+    ],
+    commonMistakes: [
+      'Letting the torso rise up with each pull instead of holding the parallel position.',
+      'Rounding the lower back as the bar leaves the floor, risking spinal injury.',
+      'Bouncing the bar off the floor to cheat the next rep instead of a controlled reset.',
+      'Pulling with the arms and shrugging instead of driving the elbows and squeezing the back.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b248',
+    name: 'Barbell Underhand Row',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Pull',
+    description: 'A bent-over barbell row with an underhand grip and a slightly more upright torso — the classic Yates row that loads the lower lats and biceps.',
+    benefits: [
+      'Shifts the row emphasis toward the lower lats for back thickness.',
+      'Lets you handle heavy load through the more upright, supinated position.',
+      'Builds the biceps hard alongside the back from the underhand grip.'
+    ],
+    instructions: [
+      'Grip a barbell about shoulder-width apart with palms facing forward, away from your body.',
+      'Hinge at the hips with a flat back until your torso is at roughly a 60-degree angle to the floor.',
+      'Brace your core and let the bar hang at arm\'s length below your shoulders.',
+      'Pull the bar to your lower abdomen, driving your elbows down and back along your sides.',
+      'Squeeze the lats and lower back at the top, keeping the wrists straight.',
+      'Lower the bar under control over 2 to 3 seconds back to full arm extension.'
+    ],
+    commonMistakes: [
+      'Standing too upright and turning the movement into a shrug or partial deadlift.',
+      'Curling the bar with the biceps instead of leading the pull with the elbows.',
+      'Rounding the lower back under the heavier loads this variation invites.',
+      'Using leg drive and momentum to heave the bar rather than rowing with control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b249',
+    name: 'Barbell Good Morning',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['glutes', 'upper_legs'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'advanced',
+    movement: 'Hinge',
+    description: 'A hip hinge with the bar on your back that overloads the spinal erectors, hamstrings, and glutes — a powerful posterior-chain builder.',
+    benefits: [
+      'Strengthens the spinal erectors and lower back that protect you under every heavy lift.',
+      'Builds the hamstrings and glutes through a deeply loaded hip hinge.',
+      'Reinforces the hinge pattern that powers the deadlift.'
+    ],
+    instructions: [
+      'Rack a barbell across your upper back as you would for a squat, with feet shoulder-width apart.',
+      'Soften your knees slightly and brace your core hard before you begin.',
+      'Push your hips straight back, hinging forward with a flat back until your torso nears parallel to the floor.',
+      'Keep the bar path over your midfoot and feel the stretch build through your hamstrings.',
+      'Drive your hips forward to stand tall, squeezing the glutes at the top.',
+      'Move slowly with a light load until the pattern is grooved, never bouncing at the bottom.'
+    ],
+    commonMistakes: [
+      'Rounding the lower back instead of keeping it flat throughout the hinge.',
+      'Bending the knees too much and turning the movement into a squat.',
+      'Going too heavy too soon on a lift that punishes poor form severely.',
+      'Letting the bar drift forward off the back instead of staying hinged at the hips.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b250',
+    name: 'EZ Bar Bent Over Row',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Pull',
+    description: 'A bent-over row using the angled EZ-bar grips — easier on the wrists while still building the lats, mid-back, and biceps.',
+    benefits: [
+      'Builds the lats and mid-back while the angled grip eases wrist strain.',
+      'Offers a comfortable rowing option for lifters with cranky wrists or elbows.',
+      'Trains the biceps and forearms alongside the back.'
+    ],
+    instructions: [
+      'Grip an EZ-bar on its angled sections with palms facing down and back toward you.',
+      'Hinge at the hips with a flat back until your torso is around 45 degrees to the floor.',
+      'Brace your core and let the bar hang at arm\'s length beneath your shoulders.',
+      'Pull the bar to your lower chest, driving your elbows back and keeping them close to your sides.',
+      'Squeeze your shoulder blades together at the top for a brief pause.',
+      'Lower the bar with control over 2 to 3 seconds to a full stretch.'
+    ],
+    commonMistakes: [
+      'Standing too upright so the back stops doing the work.',
+      'Rounding the lower back as you pull under load.',
+      'Yanking the bar with momentum instead of a controlled row.',
+      'Gripping the straight center of the bar and losing the wrist-friendly angle.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b251',
+    name: 'EZ Bar Underhand Row',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Pull',
+    description: 'A bent-over EZ-bar row with an underhand grip that drives lower-lat and biceps engagement while sparing the wrists.',
+    benefits: [
+      'Targets the lower lats through the supinated underhand grip.',
+      'Spares the wrists thanks to the angled EZ-bar handles.',
+      'Builds the biceps hard alongside the back.'
+    ],
+    instructions: [
+      'Grip an EZ-bar on its angled sections with palms facing up and away from your body.',
+      'Hinge forward with a flat back to roughly a 60-degree torso angle.',
+      'Brace your core and let the bar hang at arm\'s length below your shoulders.',
+      'Pull the bar toward your lower abdomen, driving the elbows down and back.',
+      'Squeeze the lats and lower back at the top, keeping the wrists neutral.',
+      'Lower the bar slowly over 2 to 3 seconds back to full extension.'
+    ],
+    commonMistakes: [
+      'Letting the torso pop upright and shortening the rowing range.',
+      'Pulling with the biceps and bending the wrists instead of leading with the elbows.',
+      'Rounding the lower back as fatigue sets in.',
+      'Using body english to swing the bar up rather than rowing under control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b252',
+    name: 'Dumbbell Chest Supported Row',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Pull',
+    description: 'A two-dumbbell row performed face-down on an incline bench — removes momentum and lower-back strain so the back works in isolation.',
+    benefits: [
+      'Isolates the lats and mid-back by removing all momentum and cheating.',
+      'Takes the lower back out of the lift, making it safe for high volume.',
+      'Builds balanced left-and-right back strength with independent dumbbells.'
+    ],
+    instructions: [
+      'Set an adjustable bench to about a 30-degree incline and lie face-down with your chest on the pad.',
+      'Hold a dumbbell in each hand, letting them hang straight down at arm\'s length.',
+      'Plant your feet and pull your shoulder blades down to set the lats before moving.',
+      'Row both dumbbells up toward your hips, driving your elbows up and back.',
+      'Squeeze the shoulder blades together hard at the top for a brief pause.',
+      'Lower the dumbbells slowly over 2 to 3 seconds to a full stretch.'
+    ],
+    commonMistakes: [
+      'Lifting the chest off the pad to cheat the weight up with momentum.',
+      'Shrugging the shoulders toward the ears instead of rowing with the back.',
+      'Cutting the range short and never letting the arms fully extend at the bottom.',
+      'Flaring the elbows wide so the rear delts take over from the lats.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b253',
+    name: 'Dumbbell Renegade Row',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps', 'abs'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'advanced',
+    movement: 'Pull',
+    description: 'A plank-position dumbbell row that builds the back while forcing the core to resist rotation — a full-body anti-rotation pull.',
+    benefits: [
+      'Builds the lats and mid-back while training the core to resist rotation.',
+      'Strengthens the shoulders and grip through the plank position.',
+      'Delivers a back and core workout in one time-efficient movement.'
+    ],
+    instructions: [
+      'Start in a high plank gripping a dumbbell in each hand, feet set wider than your hips for stability.',
+      'Brace your core hard and squeeze your glutes to lock your body into a straight line.',
+      'Shift your weight slightly and row one dumbbell up to your hip, keeping your hips square to the floor.',
+      'Pause briefly at the top, fighting any urge for your torso to twist.',
+      'Lower the dumbbell under control and place it back down before switching sides.',
+      'Alternate sides for the prescribed reps, keeping the hips as still as possible throughout.'
+    ],
+    commonMistakes: [
+      'Letting the hips rotate or pike up instead of staying square and flat.',
+      'Setting the feet too narrow, which makes balance and anti-rotation far harder.',
+      'Rushing through reps so the core never actually resists the rotation.',
+      'Sagging the lower back out of the plank, straining the spine.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b254',
+    name: 'Dumbbell Deadlift',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['glutes', 'upper_legs'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Hinge',
+    description: 'A hip hinge holding a dumbbell in each hand — a beginner-friendly way to build the lower back, glutes, and hamstrings.',
+    benefits: [
+      'Builds the lower back, glutes, and hamstrings through a loaded hinge.',
+      'Teaches the deadlift pattern with a forgiving, easy-to-control load.',
+      'Strengthens the grip and core that stabilize every heavy lift.'
+    ],
+    instructions: [
+      'Stand with feet hip-width apart, holding a dumbbell in each hand in front of your thighs.',
+      'Soften your knees and brace your core before you begin.',
+      'Push your hips back and hinge forward with a flat back, lowering the dumbbells along your legs.',
+      'Lower until you feel a stretch in your hamstrings, keeping the dumbbells close to your body.',
+      'Drive your hips forward to stand tall, squeezing the glutes at the top.',
+      'Lower under control on each rep, never rounding the lower back.'
+    ],
+    commonMistakes: [
+      'Rounding the lower back instead of keeping it flat through the hinge.',
+      'Squatting the weight down by bending the knees too much instead of hinging.',
+      'Letting the dumbbells drift away from the body, straining the lower back.',
+      'Jerking the weight up with the back instead of driving through the hips.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b255',
+    name: 'Kettlebell Deadlift',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['glutes', 'upper_legs'],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Hinge',
+    description: 'A hip hinge lifting a single kettlebell from the floor — the foundational pattern that teaches a strong, safe deadlift.',
+    benefits: [
+      'Teaches the hip-hinge pattern that underpins every deadlift and swing.',
+      'Builds the lower back, glutes, and hamstrings with a single, accessible tool.',
+      'Strengthens the grip and core through the loaded lift.'
+    ],
+    instructions: [
+      'Stand with feet shoulder-width apart and a kettlebell on the floor between your feet.',
+      'Push your hips back and hinge down with a flat back to grip the kettlebell handle with both hands.',
+      'Brace your core and pull your shoulders down and back to set the lats.',
+      'Drive through your heels and extend your hips to stand tall, lifting the bell straight up.',
+      'Squeeze your glutes at the top without leaning back or shrugging.',
+      'Hinge at the hips to lower the kettlebell back to the floor under control.'
+    ],
+    commonMistakes: [
+      'Rounding the lower back when reaching down for the bell.',
+      'Squatting the weight up with the knees instead of driving through the hips.',
+      'Leaning back and overarching at the top instead of standing tall and neutral.',
+      'Yanking the kettlebell off the floor rather than lifting it smoothly.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b256',
+    name: 'Kettlebell Renegade Row',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps', 'abs'],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'advanced',
+    movement: 'Pull',
+    description: 'A plank-position kettlebell row that hammers the back and forces the core to resist rotation under an unstable load.',
+    benefits: [
+      'Builds the lats and mid-back while the core fights to resist rotation.',
+      'Strengthens the shoulders and grip in the demanding plank position.',
+      'Combines back, core, and stability training in one movement.'
+    ],
+    instructions: [
+      'Set two kettlebells shoulder-width apart and grip the handles in a high plank position.',
+      'Set your feet wider than your hips and brace your core to lock your body straight.',
+      'Row one kettlebell up to your hip, driving the elbow back while keeping your hips square.',
+      'Pause at the top, resisting any twist through the torso.',
+      'Lower the kettlebell under control and set it down before switching sides.',
+      'Alternate sides for the prescribed reps, keeping the hips level throughout.'
+    ],
+    commonMistakes: [
+      'Allowing the hips to rotate or rise instead of staying square and flat.',
+      'Placing the feet too close together, making balance much harder.',
+      'Sagging the hips and losing the plank, which strains the lower back.',
+      'Rushing the reps so the core never has to control the rotation.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b257',
+    name: 'Straight Arm Cable Pulldown',
+    primaryMuscle: 'back',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A standing cable pulldown with locked arms that isolates the lats through a long arc — pure lat work with no biceps involvement.',
+    benefits: [
+      'Isolates the lats by removing the biceps from the pulling motion.',
+      'Teaches you to feel and engage the lats, improving every other back lift.',
+      'Trains the lats through a long stretch-to-contraction arc.'
+    ],
+    instructions: [
+      'Attach a straight bar to a high cable pulley and grip it with palms down at shoulder width.',
+      'Step back and hinge slightly forward at the hips with a flat back and a soft bend in the elbows.',
+      'Keep your arms nearly straight and locked for the entire movement.',
+      'Pull the bar down in a wide arc toward your thighs by contracting the lats.',
+      'Squeeze the lats hard at the bottom with the bar near your thighs.',
+      'Let the bar rise back up slowly over 2 to 3 seconds until you feel a full lat stretch overhead.'
+    ],
+    commonMistakes: [
+      'Bending the elbows and turning the move into a pressdown or partial pulldown.',
+      'Using the lower back to heave the bar down instead of pulling with the lats.',
+      'Cutting the top range short and missing the stretch where the lats lengthen.',
+      'Going too heavy, which forces the arms to bend and removes the lat isolation.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b258',
+    name: 'Wide Grip Lat Pulldown',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Pull',
+    description: 'A seated cable pulldown with a wide overhand grip that biases the outer lats for back width.',
+    benefits: [
+      'Emphasizes the outer lats to build a wider, V-tapered back.',
+      'Provides a scalable vertical pull for any strength level.',
+      'Bridges the gap toward unassisted wide-grip pull-ups.'
+    ],
+    instructions: [
+      'Sit at a lat pulldown station and lock your thighs under the pad with feet flat.',
+      'Grip the bar well outside shoulder width with palms facing forward.',
+      'Lean back about 10 to 15 degrees and pull your shoulder blades down to set the lats.',
+      'Pull the bar to your upper chest by driving your elbows down and out toward your sides.',
+      'Pause at the bottom with the bar near your collarbones, squeezing the outer lats.',
+      'Let the bar travel back up slowly over 2 to 3 seconds to a full overhead stretch.'
+    ],
+    commonMistakes: [
+      'Pulling the bar behind the neck, which strains the shoulders for no extra benefit.',
+      'Leaning too far back so the movement becomes a row instead of a pulldown.',
+      'Yanking with the arms and biceps instead of leading with the elbows.',
+      'Letting the stack slam back up and skipping the controlled return.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b259',
+    name: 'Reverse Grip Lat Pulldown',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Pull',
+    description: 'A seated pulldown with a shoulder-width underhand grip that shifts emphasis to the lower lats and biceps.',
+    benefits: [
+      'Targets the lower lats for back thickness through the supinated grip.',
+      'Builds the biceps strongly alongside the back.',
+      'Allows a strong, natural pulling line that many lifters can load heavily.'
+    ],
+    instructions: [
+      'Sit at the station and secure your thighs under the pad with feet flat on the floor.',
+      'Grip the bar at shoulder width with palms facing you.',
+      'Lean back slightly and set the lats by pulling the shoulder blades down.',
+      'Pull the bar to your upper chest, driving your elbows straight down toward your hips.',
+      'Squeeze the lower lats and mid-back at the bottom for a brief pause.',
+      'Return the bar overhead slowly over 2 to 3 seconds to a full stretch.'
+    ],
+    commonMistakes: [
+      'Curling the bar down with the biceps instead of driving with the elbows and back.',
+      'Leaning way back and rowing rather than performing a vertical pulldown.',
+      'Shortening the range and never reaching a full overhead stretch.',
+      'Letting the weight pull the arms up fast instead of controlling the return.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b260',
+    name: 'Machine Assisted Pull Up',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['biceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Pull',
+    description: 'A counterweighted machine that supports part of your bodyweight, letting you build toward full pull-ups with clean form.',
+    benefits: [
+      'Builds pull-up strength by scaling the assistance to your level.',
+      'Lets beginners train the full pull-up range they can\'t yet do unassisted.',
+      'Strengthens the lats and biceps through a complete vertical pull.'
+    ],
+    instructions: [
+      'Set the assistance weight, then kneel or stand on the machine\'s platform or pad.',
+      'Grip the handles with palms forward, slightly wider than shoulder width.',
+      'Let your body hang at full extension and set the lats by drawing the shoulder blades down.',
+      'Pull yourself up by driving the elbows down until your chin clears the handles.',
+      'Pause at the top, squeezing the lats and mid-back.',
+      'Lower yourself slowly over 2 to 3 seconds to a full hang before the next rep.'
+    ],
+    commonMistakes: [
+      'Using so much assistance that the back barely works — reduce the help as you get stronger.',
+      'Bouncing off the bottom instead of controlling a full hang each rep.',
+      'Pulling with the arms and shrugging rather than leading with the back.',
+      'Cutting the descent short and missing the controlled lowering phase.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b261',
+    name: 'Exercise Ball Back Extension',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['glutes', 'upper_legs'],
+    equipment: 'exercise_ball',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Hinge',
+    description: 'A bodyweight spinal extension performed over a stability ball that strengthens the lower-back erectors and glutes through a controlled range.',
+    benefits: [
+      'Strengthens the spinal erectors that support posture and protect the spine.',
+      'Builds the glutes and hamstrings as part of the posterior chain.',
+      'Offers a joint-friendly, low-impact way to train the lower back.'
+    ],
+    instructions: [
+      'Lie face-down with your hips and stomach draped over a stability ball, the balls of your feet anchored against a wall or the floor.',
+      'Let your torso round gently over the ball with your hands lightly by your head or crossed on your chest.',
+      'Brace your core and squeeze your glutes to begin the movement.',
+      'Raise your torso by extending the spine until your body forms a straight line from head to heels.',
+      'Pause briefly at the top, squeezing the lower back and glutes without overarching.',
+      'Lower yourself slowly back over the ball under full control.'
+    ],
+    commonMistakes: [
+      'Hyperextending at the top and cranking the lower back past a neutral line.',
+      'Using momentum to bounce up rather than lifting with the erectors.',
+      'Letting the ball roll because the feet aren\'t anchored securely.',
+      'Jerking the head and neck up instead of moving the whole torso as a unit.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b262',
+    name: 'Exercise Ball Prone Cobra',
+    primaryMuscle: 'back',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'exercise_ball',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'An upper-back hold performed face-down over a stability ball, drawing the shoulder blades back to build the postural muscles of the mid and upper back.',
+    benefits: [
+      'Strengthens the lower traps and rhomboids that pull the shoulders back.',
+      'Counteracts the rounded, hunched posture from sitting and pressing.',
+      'Builds mid- and upper-back endurance with nothing but a ball.'
+    ],
+    instructions: [
+      'Lie face-down over a stability ball with the ball under your hips and lower chest, toes anchored on the floor.',
+      'Let your arms hang down with thumbs pointing up and your head in a neutral line.',
+      'Brace your core and gently lift your chest off the ball into extension.',
+      'Draw your shoulder blades down and back, sweeping your arms out and back like wings.',
+      'Hold the squeezed position for a second or two, feeling the upper back work.',
+      'Lower your chest and arms back down slowly under control.'
+    ],
+    commonMistakes: [
+      'Cranking the neck up instead of keeping it in line with the spine.',
+      'Shrugging the shoulders toward the ears rather than pulling them down and back.',
+      'Overarching the lower back to lift higher instead of moving from the upper back.',
+      'Rushing through the holds so the postural muscles never fully engage.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
