@@ -6829,6 +6829,1227 @@ const LAROFIT_EXERCISES = [
     mediaUrl: 'https://media.larofit.com/wall-sit.mp4',
     exerciseUrl: 'https://movekit.com/exercises/wall-sit',
     custom: false
+  },
+  {
+    id: 'b207',
+    name: 'Captain\'s Chair',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A vertical knee raise performed on the captain\'s chair station, with the back supported and the legs lifted to train the lower abs through a full, controlled range.',
+    benefits: [
+      'Targets the lower portion of the abs, which is hard to load directly with floor-based crunches.',
+      'The padded back support isolates the core and keeps momentum out of the movement.',
+      'Builds the hip and trunk control that carries over to leg raises, hanging work, and athletic movement.'
+    ],
+    instructions: [
+      'Step up onto the captain\'s chair and rest your forearms on the pads, gripping the handles with your back flat against the support.',
+      'Let your legs hang straight down with your shoulders pulled down away from your ears.',
+      'Brace your core and raise your knees toward your chest, curling your pelvis up slightly at the top.',
+      'Pause briefly at the top where your abs are fully contracted, without swinging.',
+      'Lower your legs slowly under control until they hang straight again.',
+      'Repeat for the target reps, keeping every rep smooth rather than relying on momentum.'
+    ],
+    commonMistakes: [
+      'Swinging the legs up with momentum instead of lifting with the abs, which takes the load off the muscle you\'re trying to train.',
+      'Stopping where the hips do all the work — failing to curl the pelvis means the lower abs never fully engage.',
+      'Letting the legs drop quickly on the way down rather than lowering under control, wasting the hardest part of the rep.',
+      'Shrugging the shoulders up toward the ears, which loads the traps and neck instead of keeping tension on the core.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b208',
+    name: 'Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'The classic floor-based abdominal curl that trains the upper abs through a short, focused range of spinal flexion.',
+    benefits: [
+      'Directly targets the rectus abdominis with a simple movement that needs no equipment.',
+      'Easy to learn and scale, making it a reliable entry point for building core strength.',
+      'Keeps tension on the abs without the hip-flexor involvement of a full sit-up.'
+    ],
+    instructions: [
+      'Lie on your back with your knees bent and your feet flat on the floor, hip-width apart.',
+      'Place your hands lightly behind your head or crossed over your chest, without pulling on your neck.',
+      'Brace your core and curl your shoulder blades up off the floor, exhaling as you rise.',
+      'Squeeze your abs hard at the top of the movement for a brief pause.',
+      'Lower your shoulders back down with control until they just touch the floor.',
+      'Repeat for the target reps, keeping the movement slow and deliberate.'
+    ],
+    commonMistakes: [
+      'Pulling on the head and neck with the hands, which strains the neck and takes work away from the abs.',
+      'Using momentum to bounce up off the floor rather than curling up slowly with the core.',
+      'Lifting the entire back off the floor — a crunch is a short curl of the upper spine, not a full sit-up.',
+      'Holding the breath instead of exhaling on the way up, which limits how hard the abs can contract.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b209',
+    name: 'Dumbbell Close Grip Press',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['triceps'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Push',
+    description: 'A dumbbell press performed with the weights held close together and the elbows tucked, shifting emphasis onto the inner chest and triceps.',
+    benefits: [
+      'Loads the inner chest and triceps together, building pressing strength and mid-chest thickness.',
+      'The neutral, close grip is easier on the shoulders than a wide barbell press for many lifters.',
+      'Keeping the dumbbells pressed together creates constant tension across the chest throughout the rep.'
+    ],
+    instructions: [
+      'Lie back on a flat bench holding a dumbbell in each hand, pressed together over your chest with palms facing each other.',
+      'Keep the dumbbells in contact and your elbows tucked close to your sides.',
+      'Lower the weights together to your mid-chest in a slow, controlled line.',
+      'Press the dumbbells back up while actively squeezing them together to keep tension on the chest.',
+      'Lock out gently at the top without letting the dumbbells drift apart.',
+      'Repeat for the target reps, keeping the squeeze constant from start to finish.'
+    ],
+    commonMistakes: [
+      'Letting the dumbbells separate during the press, which releases the inner-chest tension that makes this variation effective.',
+      'Flaring the elbows out wide, which turns it into a standard press and loses the close-grip emphasis.',
+      'Lowering too far or too fast and losing control, putting unnecessary strain on the shoulders.',
+      'Using a weight so heavy that the dumbbells drift apart — load should never break the squeeze.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b210',
+    name: 'Dumbbell Drag Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A biceps curl where the dumbbells are dragged up close to the body and the elbows travel back, maximizing the contraction at the top.',
+    benefits: [
+      'Shifts tension onto the biceps by keeping the front delts out of the movement.',
+      'The dragging path produces a strong peak contraction that standard curls often miss.',
+      'Reinforces strict form, making it a useful tool for breaking curl plateaus.'
+    ],
+    instructions: [
+      'Stand tall holding a dumbbell in each hand at your sides with palms facing forward.',
+      'Instead of curling the weights out and up, drag them straight up the front of your body.',
+      'Let your elbows travel backward behind your torso as the dumbbells rise toward your chest.',
+      'Squeeze the biceps hard at the top, keeping the dumbbells close to your body the whole time.',
+      'Lower the weights back down along the same dragging path under control.',
+      'Repeat for the target reps, prioritizing a clean path over heavy weight.'
+    ],
+    commonMistakes: [
+      'Curling the dumbbells out and away from the body like a standard curl, which defeats the purpose of the drag.',
+      'Keeping the elbows pinned at the sides instead of letting them drift back, which limits the contraction.',
+      'Using too much weight and turning the movement into a shrug or a swing.',
+      'Rushing the lowering phase rather than controlling the dumbbells back down along the body.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b211',
+    name: 'Dumbbell Pullover',
+    primaryMuscle: 'chest',
+    secondaryMuscles: ['back'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A single-dumbbell movement performed across a bench, taking the weight in an arc behind the head to stretch and work the lats and chest.',
+    benefits: [
+      'Trains the lats through a long stretch that few other dumbbell movements reach.',
+      'Opens up the rib cage and chest, improving overhead mobility alongside building the upper back.',
+      'Works the back and chest together in a single arcing movement with minimal equipment.'
+    ],
+    instructions: [
+      'Lie back on a flat bench holding a single dumbbell with both hands, arms extended above your chest.',
+      'Cup the top end of the dumbbell with both palms, keeping a slight bend in your elbows.',
+      'Lower the dumbbell back in a slow arc over and behind your head until you feel a stretch across your lats and chest.',
+      'Keep your hips down and core braced as the weight travels behind you.',
+      'Pull the dumbbell back over your chest along the same arc, leading with your lats.',
+      'Repeat for the target reps, keeping the elbow angle fixed throughout.'
+    ],
+    commonMistakes: [
+      'Bending and straightening the elbows to lift the weight, which turns the movement into a triceps exercise.',
+      'Lowering too far and overstretching the shoulders, especially with a heavy dumbbell.',
+      'Letting the hips rise to help heave the weight, which removes tension from the back and chest.',
+      'Rushing the stretch instead of controlling the dumbbell slowly through the bottom of the arc.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b212',
+    name: 'Plank',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'An isometric core hold performed on the forearms, training the abs and deep stabilizers to resist movement and keep the spine neutral.',
+    benefits: [
+      'Builds deep core stability by training the abs to hold the spine still under tension.',
+      'Strengthens the entire midsection without any spinal flexion, making it joint-friendly.',
+      'Carries over to nearly every lift by improving your ability to brace and stay rigid.'
+    ],
+    instructions: [
+      'Set your forearms on the floor shoulder-width apart with your elbows directly under your shoulders.',
+      'Extend your legs straight behind you and rise onto your toes so your body forms a straight line.',
+      'Brace your core, squeeze your glutes, and tuck your pelvis slightly so your lower back stays flat.',
+      'Keep your neck neutral by looking at the floor just ahead of your hands.',
+      'Hold the position for the target time, breathing steadily throughout.',
+      'Lower your knees to the floor to finish once your form starts to break.'
+    ],
+    commonMistakes: [
+      'Letting the hips sag toward the floor, which strains the lower back instead of working the core.',
+      'Piking the hips up high, which makes the hold easier and takes tension off the abs.',
+      'Holding the breath, which spikes tension and shortens how long you can maintain good form.',
+      'Craning the neck up to look forward rather than keeping it in line with the spine.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b213',
+    name: 'Sit-Up',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A full-range abdominal curl that lifts the entire torso off the floor, training the abs through their complete shortening range.',
+    benefits: [
+      'Trains the abs through a longer range than a crunch by lifting the whole torso.',
+      'Builds functional core strength used in getting up, bracing, and sport.',
+      'Needs no equipment and scales easily by changing arm position.'
+    ],
+    instructions: [
+      'Lie on your back with your knees bent and feet flat on the floor, hooked under a support if needed.',
+      'Place your hands across your chest or lightly behind your head without pulling on your neck.',
+      'Brace your core and curl your torso all the way up until your chest approaches your thighs.',
+      'Exhale as you rise and keep the movement driven by the abs rather than momentum.',
+      'Lower yourself back down with control until your shoulders return to the floor.',
+      'Repeat for the target reps, keeping each rep smooth from top to bottom.'
+    ],
+    commonMistakes: [
+      'Yanking on the head and neck to throw yourself up, which strains the neck and offloads the abs.',
+      'Using momentum to bounce off the floor instead of controlling the lift.',
+      'Letting the lower back arch hard off the floor at the bottom rather than staying braced.',
+      'Holding the breath instead of exhaling on the way up, limiting how hard the abs contract.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b214',
+    name: 'Bicycle Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A dynamic crunch that pairs spinal flexion with a pedaling rotation, hitting the upper abs and obliques together.',
+    benefits: [
+      'Works the rectus abdominis and obliques at the same time in one continuous movement.',
+      'The rotation makes it one of the most effective bodyweight moves for the side abs.',
+      'Builds coordination and core endurance with no equipment.'
+    ],
+    instructions: [
+      'Lie on your back with your hands lightly behind your head and your knees raised to a tabletop position.',
+      'Brace your core and lift your shoulder blades off the floor.',
+      'Rotate your torso to bring one elbow toward the opposite knee while extending the other leg out straight.',
+      'Switch sides in a smooth pedaling motion, drawing the opposite elbow and knee together.',
+      'Keep your lower back pressed to the floor and your shoulders lifted throughout.',
+      'Continue alternating for the target reps, moving with control rather than speed.'
+    ],
+    commonMistakes: [
+      'Pulling on the neck with the hands instead of rotating from the torso.',
+      'Racing through the reps so fast the rotation becomes a flail with no real contraction.',
+      'Letting the lower back arch up off the floor as the legs extend, straining the spine.',
+      'Extending the straight leg so low it drags the lower back off the floor.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b215',
+    name: 'Reverse Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A crunch driven from the bottom up, curling the pelvis toward the ribs to bias the lower portion of the abs.',
+    benefits: [
+      'Targets the lower abs by curling the pelvis rather than the upper torso.',
+      'Keeps strain off the neck since the head stays relaxed on the floor.',
+      'Teaches posterior pelvic tilt, a key skill for bracing and protecting the lower back.'
+    ],
+    instructions: [
+      'Lie on your back with your hands flat at your sides and your knees bent to about ninety degrees.',
+      'Lift your feet so your thighs are roughly vertical and your shins parallel to the floor.',
+      'Brace your core and curl your pelvis up toward your ribs, lifting your hips slightly off the floor.',
+      'Pause at the top where the lower abs are fully contracted.',
+      'Lower your hips back down with control without letting your feet drop to the floor.',
+      'Repeat for the target reps, keeping the movement small and controlled.'
+    ],
+    commonMistakes: [
+      'Swinging the legs to generate momentum instead of curling with the lower abs.',
+      'Lifting only the legs without curling the pelvis, which removes the abs from the movement.',
+      'Letting the feet drop and rest on the floor between reps, releasing the tension.',
+      'Using such a large range that the hips slam back down rather than lowering under control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b216',
+    name: 'Lying Leg Raise',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A straight-leg raise from the floor that loads the lower abs through a long range of motion.',
+    benefits: [
+      'Strongly targets the lower abs through a full hip and pelvis range.',
+      'Requires no equipment and scales by bending the knees to make it easier.',
+      'Builds control of the pelvis that protects the lower back under load.'
+    ],
+    instructions: [
+      'Lie flat on your back with your legs straight and your hands at your sides or tucked under your glutes for support.',
+      'Brace your core and press your lower back gently into the floor.',
+      'Keeping your legs straight, raise them together until they point toward the ceiling.',
+      'Squeeze your abs at the top, then lower your legs slowly back toward the floor.',
+      'Stop just before your heels touch and before your lower back arches up.',
+      'Repeat for the target reps, keeping the lower back flat the whole time.'
+    ],
+    commonMistakes: [
+      'Letting the lower back arch off the floor as the legs lower, which strains the spine.',
+      'Dropping the legs quickly instead of lowering them under control.',
+      'Bending the knees to cheat the range when fatigue sets in rather than shortening it honestly.',
+      'Tucking the chin and tensing the neck rather than keeping the head relaxed.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b217',
+    name: 'Flutter Kicks',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A small, rapid alternating leg kick held just off the floor that builds lower-ab endurance under constant tension.',
+    benefits: [
+      'Keeps the lower abs under continuous tension for an endurance-focused burn.',
+      'Strengthens the deep core that stabilizes the pelvis when running or walking.',
+      'Portable and equipment-free, easy to add to the end of any session.'
+    ],
+    instructions: [
+      'Lie flat on your back with your hands at your sides or under your glutes and your legs straight.',
+      'Brace your core and lift both heels a few inches off the floor.',
+      'Press your lower back into the floor to lock the pelvis in place.',
+      'Kick your legs up and down in small, quick alternating motions without touching the floor.',
+      'Keep your legs nearly straight and the movement controlled rather than frantic.',
+      'Continue for the target reps or time, keeping the core braced throughout.'
+    ],
+    commonMistakes: [
+      'Letting the lower back arch off the floor, which shifts strain to the spine.',
+      'Kicking from the knees rather than driving from the hips with near-straight legs.',
+      'Holding the legs too high, which lets the hip flexors take over and eases the abs.',
+      'Holding the breath instead of breathing steadily through the set.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b218',
+    name: 'V-Up',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'An explosive full-body crunch that lifts the torso and legs to meet over the hips, working the abs end to end.',
+    benefits: [
+      'Trains the upper and lower abs together in one powerful movement.',
+      'Builds the coordination and control to fold and unfold the body under tension.',
+      'Needs no equipment and delivers a high-intensity core stimulus.'
+    ],
+    instructions: [
+      'Lie flat on your back with your arms extended overhead and your legs straight.',
+      'Brace your core and simultaneously lift your legs and torso, reaching your hands toward your feet.',
+      'Aim to form a V shape with your body balanced on your glutes at the top.',
+      'Keep your legs as straight as your flexibility allows and your back from rounding hard.',
+      'Lower your arms and legs back down with control to the starting position.',
+      'Repeat for the target reps without letting momentum take over.'
+    ],
+    commonMistakes: [
+      'Throwing the arms and legs up with momentum instead of contracting the abs.',
+      'Bending the knees excessively, which shortens the lever and reduces the work.',
+      'Crashing back down to the floor rather than lowering with control.',
+      'Rounding the upper back aggressively instead of folding from the hips and abs.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b219',
+    name: 'Toe Touches',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A top-range crunch with the legs raised vertically, reaching the hands toward the toes to bias the upper abs.',
+    benefits: [
+      'Concentrates the work in the upper abs through a short, sharp crunch.',
+      'The raised legs keep the lower back supported and the hip flexors quiet.',
+      'Simple to learn and easy to feel working from the first rep.'
+    ],
+    instructions: [
+      'Lie on your back and raise your legs straight up toward the ceiling.',
+      'Extend your arms up toward your feet with your shoulders resting on the floor.',
+      'Brace your core and crunch up, reaching your hands toward your toes.',
+      'Lift your shoulder blades off the floor and squeeze your abs at the top.',
+      'Lower your shoulders back down with control while keeping your legs vertical.',
+      'Repeat for the target reps, keeping the legs still and the movement crisp.'
+    ],
+    commonMistakes: [
+      'Bouncing off the floor with momentum instead of crunching with the abs.',
+      'Letting the legs drift forward or back instead of holding them vertical.',
+      'Reaching with the arms and shoulders while the abs stay relaxed.',
+      'Straining the neck upward rather than leading with the chest and ribs.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b220',
+    name: 'Hollow Body Hold',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'An isometric hold with the arms and legs extended and the lower back pinned, training whole-core tension and control.',
+    benefits: [
+      'Builds total anterior-core strength and the ability to brace hard.',
+      'Teaches the pelvic tilt and rib position that protect the spine in every lift.',
+      'Carries over directly to gymnastics, sprinting, and heavy compound lifts.'
+    ],
+    instructions: [
+      'Lie on your back and press your lower back firmly into the floor.',
+      'Brace your core and lift your shoulder blades and legs a few inches off the floor.',
+      'Extend your arms overhead and your legs out straight to form a shallow banana shape.',
+      'Keep your lower back glued to the floor for the entire hold.',
+      'Hold the position for the target time, breathing steadily in short breaths.',
+      'Lower down with control once you can no longer keep the lower back flat.'
+    ],
+    commonMistakes: [
+      'Letting the lower back lift off the floor, which is the cue to shorten the position or stop.',
+      'Holding the arms and legs so high it becomes easy and the core relaxes.',
+      'Holding the breath, which makes the position harder to maintain safely.',
+      'Letting the head crane forward and the neck tense instead of staying long.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b221',
+    name: 'Dead Bug',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A controlled anti-extension drill where opposite arm and leg extend while the lower back stays pinned to the floor.',
+    benefits: [
+      'Trains the core to resist movement and keep the spine stable, the basis of good bracing.',
+      'Gentle on the back, making it a safe entry point for core strength.',
+      'Improves coordination between opposite limbs while the trunk stays still.'
+    ],
+    instructions: [
+      'Lie on your back with your arms reaching toward the ceiling and your knees bent to a tabletop position.',
+      'Press your lower back into the floor and brace your core.',
+      'Slowly extend one arm overhead while straightening the opposite leg toward the floor.',
+      'Keep your lower back flat as the limbs reach away from each other.',
+      'Return to the start with control and repeat on the other side.',
+      'Continue alternating for the target reps, moving slowly throughout.'
+    ],
+    commonMistakes: [
+      'Letting the lower back arch off the floor as the limbs extend, which defeats the drill.',
+      'Rushing the reps instead of moving slowly under control.',
+      'Extending the leg so low it pulls the pelvis out of position.',
+      'Holding the breath rather than exhaling as the limbs reach out.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b222',
+    name: 'Bird Dog',
+    primaryMuscle: 'abs',
+    secondaryMuscles: ['back'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A quadruped anti-rotation drill extending opposite arm and leg while keeping the spine level and stable.',
+    benefits: [
+      'Trains the core and lower back to resist rotation and stay braced.',
+      'Strengthens the deep spinal stabilizers that protect the back.',
+      'Improves balance and the mind-muscle link between the core and the limbs.'
+    ],
+    instructions: [
+      'Start on all fours with your hands under your shoulders and knees under your hips.',
+      'Brace your core and set your spine in a flat, neutral position.',
+      'Extend one arm straight forward and the opposite leg straight back at the same time.',
+      'Keep your hips and shoulders square to the floor without twisting.',
+      'Hold briefly, then return to all fours and switch to the other side.',
+      'Repeat for the target reps, keeping the spine still throughout.'
+    ],
+    commonMistakes: [
+      'Letting the hips rotate or tilt as the leg lifts instead of staying square.',
+      'Arching or rounding the back rather than holding it flat and neutral.',
+      'Lifting the limbs higher than the torso, which overextends the lower back.',
+      'Rushing each rep instead of moving with control and a brief hold.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b223',
+    name: 'Oblique Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A side-bending crunch that targets the obliques through lateral flexion of the trunk.',
+    benefits: [
+      'Directly works the obliques along the sides of the waist.',
+      'Strengthens the muscles that resist side bending and protect the spine.',
+      'Requires no equipment and pairs easily with standard crunches.'
+    ],
+    instructions: [
+      'Lie on your back with your knees bent and dropped to one side, stacking your legs.',
+      'Place the hand on your working side lightly behind your head.',
+      'Brace your core and crunch your upper body up and slightly toward your hip.',
+      'Squeeze the oblique on the working side at the top of the movement.',
+      'Lower back down with control and finish all reps before switching sides.',
+      'Repeat for the target reps on each side.'
+    ],
+    commonMistakes: [
+      'Pulling on the neck with the hand instead of crunching from the obliques.',
+      'Twisting the torso instead of bending it to the side.',
+      'Using momentum to swing up rather than contracting the side abs.',
+      'Rushing through reps without pausing to squeeze at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b224',
+    name: 'Side Plank Hip Dips',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A dynamic side plank that lowers and lifts the hips, loading the obliques through a moving range.',
+    benefits: [
+      'Adds movement to the side plank to work the obliques dynamically.',
+      'Builds lateral core strength and hip stability at the same time.',
+      'Strengthens the muscles that keep the pelvis level when standing and walking.'
+    ],
+    instructions: [
+      'Set up in a side plank on your forearm with your elbow under your shoulder and feet stacked.',
+      'Lift your hips so your body forms a straight line from head to feet.',
+      'Brace your core and lower your hips toward the floor under control.',
+      'Stop just before your hip touches, then drive back up to the straight-line position.',
+      'Keep your shoulders and hips stacked and facing forward throughout.',
+      'Repeat for the target reps, then switch to the other side.'
+    ],
+    commonMistakes: [
+      'Letting the hips rotate forward or back instead of staying stacked.',
+      'Dropping the hips fast and bouncing off the bottom rather than controlling the dip.',
+      'Letting the top shoulder collapse toward the floor instead of staying tall.',
+      'Sagging the bottom shoulder into the joint rather than pressing actively away from the floor.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b225',
+    name: 'Plank Shoulder Taps',
+    primaryMuscle: 'abs',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A high-plank variation that taps each hand to the opposite shoulder, forcing the core to resist rotation.',
+    benefits: [
+      'Trains the core to resist rotation while one hand leaves the floor.',
+      'Adds shoulder stability and control on top of standard plank work.',
+      'Builds the anti-rotation strength used to keep the torso steady in sport and lifting.'
+    ],
+    instructions: [
+      'Start in a high plank with your hands under your shoulders and feet about hip-width apart.',
+      'Brace your core and squeeze your glutes to lock your body in a straight line.',
+      'Lift one hand and tap it to the opposite shoulder without rocking your hips.',
+      'Return the hand to the floor and repeat with the other hand.',
+      'Keep your hips as still and level as possible throughout.',
+      'Continue alternating for the target reps, slowing down if the hips start to sway.'
+    ],
+    commonMistakes: [
+      'Letting the hips rock side to side instead of staying square and still.',
+      'Widening the feet so far it makes the anti-rotation challenge too easy.',
+      'Rushing the taps so the body sways rather than staying braced.',
+      'Letting the hips pike up or sag down instead of holding a flat line.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b226',
+    name: 'Hanging Leg Raise',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A straight-leg raise from a dead hang that loads the lower abs through a long, demanding range.',
+    benefits: [
+      'Loads the lower abs harder than knee raises by using straight legs.',
+      'Builds grip and shoulder stability alongside core strength.',
+      'Trains control of the pelvis through a full hanging range of motion.'
+    ],
+    instructions: [
+      'Hang from a pull-up bar with an overhand grip and your arms straight.',
+      'Brace your core and pull your shoulders down slightly to engage the lats.',
+      'Keeping your legs straight, raise them together until they reach about hip height or higher.',
+      'Curl your pelvis up at the top so the abs do the work rather than just the hip flexors.',
+      'Lower your legs slowly under control without swinging.',
+      'Repeat for the target reps, keeping the body from rocking.'
+    ],
+    commonMistakes: [
+      'Swinging the body to kip the legs up instead of raising them with the abs.',
+      'Stopping at hip flexion without curling the pelvis, which leaves the abs underworked.',
+      'Dropping the legs quickly and using the rebound to start the next rep.',
+      'Bending the knees to cheat the range rather than reducing the height honestly.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b227',
+    name: 'Ab Wheel Rollout',
+    primaryMuscle: 'abs',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'advanced',
+    movement: 'Core',
+    description: 'An advanced anti-extension movement rolling a wheel forward and back while the core fights to keep the spine from sagging.',
+    benefits: [
+      'One of the most demanding anti-extension exercises for total core strength.',
+      'Builds the bracing strength that protects the lower back under heavy loads.',
+      'Works the abs, lats, and shoulders together through a long range.'
+    ],
+    instructions: [
+      'Kneel on the floor holding the ab wheel with both hands directly under your shoulders.',
+      'Brace your core hard and tuck your pelvis so your lower back is flat.',
+      'Roll the wheel slowly forward, extending your body while keeping the core tight.',
+      'Go only as far as you can without letting your lower back sag toward the floor.',
+      'Pull the wheel back toward your knees using your abs and lats to return to the start.',
+      'Repeat for the target reps, shortening the range before form breaks.'
+    ],
+    commonMistakes: [
+      'Letting the lower back sag and arch at full extension, which strains the spine.',
+      'Rolling out further than the core can control in search of a bigger range.',
+      'Pulling back with the arms and hip flexors instead of the abs.',
+      'Starting with full rollouts before building strength with a partial range.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b228',
+    name: 'Cable Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A kneeling crunch against a rope attachment that loads spinal flexion with adjustable cable resistance.',
+    benefits: [
+      'Adds external load to the crunch so the abs can be trained for strength, not just endurance.',
+      'Easy to progress by adding weight as you get stronger.',
+      'The cable keeps constant tension on the abs through the whole range.'
+    ],
+    instructions: [
+      'Attach a rope to a high cable and kneel facing the machine, holding the rope by your head.',
+      'Brace your core and keep your hips fixed in place throughout the movement.',
+      'Crunch down by flexing your spine, bringing your elbows toward your thighs.',
+      'Drive the contraction with your abs rather than pulling with your arms or sitting back.',
+      'Return to the upright position under control without letting the weight pull you up.',
+      'Repeat for the target reps, keeping the hips stationary the whole time.'
+    ],
+    commonMistakes: [
+      'Pulling the rope down with the arms instead of crunching with the abs.',
+      'Rocking back at the hips so it becomes a lat pulldown rather than an ab crunch.',
+      'Using so much weight that the spine barely flexes through its range.',
+      'Letting the weight yank you upright between reps instead of controlling the return.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b229',
+    name: 'Cable Pallof Press',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'An anti-rotation press where you hold a cable handle at the chest and press it out, resisting the pull to one side.',
+    benefits: [
+      'Trains the core to resist rotation, a key function for protecting the spine.',
+      'Builds bracing strength that transfers to squats, carries, and pressing.',
+      'Easy to load progressively by adjusting the cable weight.'
+    ],
+    instructions: [
+      'Set a cable to chest height and stand side-on, holding the handle with both hands at your sternum.',
+      'Step away to create tension and brace your core against the sideways pull.',
+      'Press the handle straight out in front of your chest until your arms are extended.',
+      'Resist the cable trying to rotate your torso, keeping your hips and shoulders square.',
+      'Hold briefly at full extension, then bring the handle back to your chest under control.',
+      'Repeat for the target reps, then turn around and work the other side.'
+    ],
+    commonMistakes: [
+      'Letting the torso rotate toward the cable instead of staying square.',
+      'Using the arms and shoulders to fight the weight rather than bracing the core.',
+      'Standing too close to the machine so there is little tension to resist.',
+      'Holding the breath instead of breathing while keeping the trunk locked.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b230',
+    name: 'Cable Reverse Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A reverse crunch performed against cable resistance, curling the pelvis toward the ribs under load.',
+    benefits: [
+      'Adds resistance to the lower-ab curl that bodyweight versions lack.',
+      'Keeps constant tension on the lower abs through the cable.',
+      'Progresses easily by adding weight as control improves.'
+    ],
+    instructions: [
+      'Attach ankle straps or hold a low cable and lie on your back with your hips near the machine.',
+      'Raise your knees so your thighs are vertical and the cable is taut.',
+      'Brace your core and curl your pelvis up toward your ribs against the cable.',
+      'Lift your hips slightly off the floor at the top of the curl.',
+      'Lower your hips back down slowly, resisting the pull of the cable.',
+      'Repeat for the target reps, keeping the movement driven by the lower abs.'
+    ],
+    commonMistakes: [
+      'Swinging the legs to move the weight instead of curling the pelvis.',
+      'Pulling with the hip flexors rather than the lower abs.',
+      'Letting the cable yank the hips down quickly instead of lowering with control.',
+      'Using too much weight so the pelvis never actually curls.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b231',
+    name: 'Machine Rotary Torso',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Rotation',
+    description: 'A seated machine that loads trunk rotation, training the obliques through a controlled twisting range.',
+    benefits: [
+      'Isolates the obliques with stable, guided resistance.',
+      'Lets you load rotation safely and progress the weight over time.',
+      'Beginner-friendly since the machine controls the movement path.'
+    ],
+    instructions: [
+      'Sit in the rotary torso machine and secure your torso against the pads.',
+      'Set a comfortable weight and grip the handles or rest your arms on the pads.',
+      'Brace your core and rotate your trunk smoothly to one side.',
+      'Squeeze the obliques at the end of the rotation without forcing past your range.',
+      'Return to the center under control rather than letting the weight snap back.',
+      'Finish your reps on one side, then set up and repeat on the other.'
+    ],
+    commonMistakes: [
+      'Using momentum to whip into the rotation instead of controlling it.',
+      'Setting too much weight and twisting the spine through an excessive range.',
+      'Letting the weight pull you back to center rather than resisting it.',
+      'Rotating from the arms and shoulders instead of the trunk.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b232',
+    name: 'Decline Sit-Up',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bench',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A sit-up performed on a decline bench, increasing the range and resistance against gravity for the abs.',
+    benefits: [
+      'The decline angle increases the challenge over a flat sit-up.',
+      'Trains the abs through a long range with bodyweight resistance.',
+      'Can be loaded by holding a plate to progress further.'
+    ],
+    instructions: [
+      'Set a decline bench and hook your feet securely under the pads.',
+      'Lie back with your hands across your chest or lightly behind your head.',
+      'Brace your core and curl your torso up toward your thighs.',
+      'Lead with your abs rather than yanking with your arms or neck.',
+      'Lower yourself back down with control without crashing onto the bench.',
+      'Repeat for the target reps, keeping each rep smooth.'
+    ],
+    commonMistakes: [
+      'Pulling on the head and neck to drive the movement.',
+      'Dropping back quickly and using the bounce to start the next rep.',
+      'Setting a steeper decline than your strength allows, forcing momentum.',
+      'Letting the lower back overarch at the bottom instead of staying braced.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b233',
+    name: 'Decline Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bench',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A short-range crunch on a decline bench that keeps constant tension on the upper abs.',
+    benefits: [
+      'The decline keeps tension on the abs even at the bottom of the crunch.',
+      'Targets the upper abs through a controlled, shorter range than a full sit-up.',
+      'Easy to load with a plate held on the chest.'
+    ],
+    instructions: [
+      'Set a decline bench and hook your feet under the pads.',
+      'Lie back and place your hands across your chest or behind your head.',
+      'Brace your core and crunch your shoulder blades up off the bench.',
+      'Squeeze your abs at the top without rising all the way to a full sit-up.',
+      'Lower back down with control, stopping before you fully relax.',
+      'Repeat for the target reps, keeping the movement tight and controlled.'
+    ],
+    commonMistakes: [
+      'Turning it into a full sit-up rather than a short, controlled crunch.',
+      'Pulling on the neck instead of curling with the abs.',
+      'Using momentum to bounce up off the bottom.',
+      'Relaxing fully at the bottom and losing the constant tension.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b234',
+    name: 'Decline Bench Leg Raise',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bench',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A leg raise on a decline bench that loads the lower abs through a long range against gravity.',
+    benefits: [
+      'The decline increases the lower-ab challenge compared to floor leg raises.',
+      'Lets you hold the bench for stability so the abs do the work.',
+      'Trains pelvic control through a long, demanding range.'
+    ],
+    instructions: [
+      'Lie on a decline bench with your head at the top and grip the bench behind your head.',
+      'Brace your core and keep your legs straight or slightly bent.',
+      'Raise your legs up until your hips curl slightly off the bench.',
+      'Squeeze the lower abs at the top of the movement.',
+      'Lower your legs slowly back down without letting your lower back arch off the bench.',
+      'Repeat for the target reps, keeping the motion controlled.'
+    ],
+    commonMistakes: [
+      'Letting the lower back arch off the bench as the legs lower.',
+      'Swinging the legs with momentum instead of raising with the abs.',
+      'Dropping the legs quickly rather than lowering under control.',
+      'Failing to curl the pelvis at the top, leaving the work to the hip flexors.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b235',
+    name: 'Dumbbell Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A weighted crunch holding a dumbbell on the chest to load spinal flexion for the upper abs.',
+    benefits: [
+      'Adds resistance so the abs can be trained for strength, not just endurance.',
+      'Simple to progress by increasing the dumbbell weight.',
+      'Keeps the upper abs under load through a focused crunch range.'
+    ],
+    instructions: [
+      'Lie on your back with your knees bent and feet flat, holding a dumbbell against your chest.',
+      'Brace your core and curl your shoulder blades up off the floor.',
+      'Keep the dumbbell snug to your chest as you crunch up.',
+      'Squeeze your abs hard at the top of the movement.',
+      'Lower back down with control until your shoulders touch the floor.',
+      'Repeat for the target reps, keeping the weight steady throughout.'
+    ],
+    commonMistakes: [
+      'Using momentum to heave the weight up instead of crunching with the abs.',
+      'Letting the dumbbell drift away from the chest and pull you off balance.',
+      'Lifting the whole back off the floor instead of a controlled crunch.',
+      'Holding the breath rather than exhaling on the way up.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b236',
+    name: 'Kettlebell Russian Twist',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Rotation',
+    description: 'A seated rotational twist holding a kettlebell, training the obliques against added load.',
+    benefits: [
+      'Loads trunk rotation to build stronger, more defined obliques.',
+      'Trains the rotational strength used in throwing, swinging, and sport.',
+      'Easy to progress by using a heavier kettlebell.'
+    ],
+    instructions: [
+      'Sit on the floor with your knees bent and lean back slightly to engage your core.',
+      'Hold a kettlebell with both hands in front of your chest.',
+      'Lift your feet off the floor or keep them down for an easier version.',
+      'Brace your core and rotate your torso to move the kettlebell to one side.',
+      'Rotate smoothly to the other side, keeping the movement controlled.',
+      'Continue alternating for the target reps, twisting from the trunk.'
+    ],
+    commonMistakes: [
+      'Swinging the arms side to side while the torso barely rotates.',
+      'Rounding the back hard instead of keeping a tall, braced posture.',
+      'Moving so fast the rotation becomes a flail with no control.',
+      'Using a kettlebell so heavy the lower back rounds and strains.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b237',
+    name: 'Kettlebell Sit-Up',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A full sit-up holding a kettlebell, often pressed overhead at the top, loading the abs through a long range.',
+    benefits: [
+      'Adds significant load to the sit-up to build core strength.',
+      'The overhead position challenges core and shoulder stability together.',
+      'Trains the abs through their full shortening range under weight.'
+    ],
+    instructions: [
+      'Lie on your back with your knees bent and hold a kettlebell at your chest or pressed overhead.',
+      'Brace your core and anchor your feet for stability.',
+      'Curl your torso all the way up to a seated position, keeping the kettlebell steady.',
+      'If pressing overhead, keep your arms locked and the bell stacked over your shoulders.',
+      'Lower back down with control to the starting position.',
+      'Repeat for the target reps, moving smoothly throughout.'
+    ],
+    commonMistakes: [
+      'Using momentum from the weight to throw yourself up.',
+      'Letting the kettlebell drift forward and pull you off balance overhead.',
+      'Crashing back down instead of lowering with control.',
+      'Holding the breath rather than exhaling as you sit up.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b238',
+    name: 'Band Pallof Press',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'An anti-rotation press using a resistance band, holding it at the chest and pressing out while resisting the pull.',
+    benefits: [
+      'Trains the core to resist rotation with band tension you can set up anywhere.',
+      'Builds the bracing strength that protects the spine under load.',
+      'A joint-friendly, beginner-accessible way to start anti-rotation work.'
+    ],
+    instructions: [
+      'Anchor a band at chest height and stand side-on, holding it with both hands at your sternum.',
+      'Step away from the anchor to create tension and brace your core.',
+      'Press the band straight out in front of your chest until your arms extend.',
+      'Resist the band trying to twist your torso, keeping your hips and shoulders square.',
+      'Bring your hands back to your chest under control without rotating.',
+      'Repeat for the target reps, then face the other way and switch sides.'
+    ],
+    commonMistakes: [
+      'Letting the torso rotate toward the anchor instead of staying square.',
+      'Fighting the band with the arms rather than bracing the core.',
+      'Standing too close so the band offers little resistance.',
+      'Rushing the press instead of holding a controlled, braced position.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b239',
+    name: 'Stability Ball Crunch',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'exercise_ball',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Core',
+    description: 'A crunch performed on a stability ball, using the ball to extend the range and stretch the abs at the bottom.',
+    benefits: [
+      'The ball allows a deeper stretch at the bottom for a longer ab range.',
+      'Engages stabilizers as the core works to balance on the ball.',
+      'Comfortable on the back while still challenging the abs.'
+    ],
+    instructions: [
+      'Sit on a stability ball and walk your feet out until the ball supports your lower back.',
+      'Place your hands across your chest or lightly behind your head.',
+      'Let your torso extend back over the ball to stretch the abs.',
+      'Brace your core and crunch up, curling your ribs toward your hips.',
+      'Squeeze your abs at the top, then lower back over the ball under control.',
+      'Repeat for the target reps, keeping your balance steady on the ball.'
+    ],
+    commonMistakes: [
+      'Pushing with the legs to rock the ball instead of crunching with the abs.',
+      'Pulling on the neck rather than curling from the core.',
+      'Letting the ball roll around because the feet and core are not stable.',
+      'Skipping the stretch at the bottom and using only a tiny range.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b240',
+    name: 'Stability Ball Plank',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'exercise_ball',
+    recordType: 'duration',
+    difficulty: 'intermediate',
+    movement: 'Core',
+    description: 'A forearm plank with the elbows on a stability ball, forcing the core to stabilize against the rolling surface.',
+    benefits: [
+      'The unstable ball dramatically increases the core demand over a floor plank.',
+      'Builds deep stabilizer strength and control.',
+      'Improves balance and bracing under an added stability challenge.'
+    ],
+    instructions: [
+      'Place your forearms on a stability ball with your elbows under your shoulders.',
+      'Extend your legs behind you and rise onto your toes in a plank position.',
+      'Brace your core and squeeze your glutes to hold a straight line.',
+      'Keep the ball as still as possible by resisting any wobble.',
+      'Hold the position for the target time, breathing steadily.',
+      'Lower your knees to finish once your form starts to break.'
+    ],
+    commonMistakes: [
+      'Letting the hips sag toward the floor, which strains the lower back.',
+      'Piking the hips up to make the hold easier and offload the core.',
+      'Letting the ball roll and the body wobble instead of staying locked.',
+      'Holding the breath rather than breathing through the hold.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b241',
+    name: 'Stability Ball Pike',
+    primaryMuscle: 'abs',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'exercise_ball',
+    recordType: 'reps',
+    difficulty: 'advanced',
+    movement: 'Core',
+    description: 'An advanced movement piking the hips up while the feet rest on a stability ball, demanding strong core and shoulder control.',
+    benefits: [
+      'A high-level core move that trains the abs through a large, controlled range.',
+      'Builds shoulder stability alongside serious core strength.',
+      'Challenges balance and full-body coordination at once.'
+    ],
+    instructions: [
+      'Start in a high plank with your shins or feet resting on a stability ball.',
+      'Brace your core and set your shoulders directly over your hands.',
+      'Pike your hips up toward the ceiling, rolling the ball toward you with your feet.',
+      'Keep your legs straight and your back flat as your hips rise.',
+      'Lower back down to the plank position with control, resisting the ball.',
+      'Repeat for the target reps, moving slowly to stay balanced.'
+    ],
+    commonMistakes: [
+      'Letting the hips sag in the plank position before starting the pike.',
+      'Bending the knees to roll the ball instead of piking from the hips with straight legs.',
+      'Rushing the movement and losing control of the ball.',
+      'Letting the shoulders drift behind the hands rather than staying stacked.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b242',
+    name: 'Landmine Rotation',
+    primaryMuscle: 'abs',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Rotation',
+    description: 'A standing rotational movement swinging the end of a landmine-anchored barbell across the body to load the obliques.',
+    benefits: [
+      'Loads powerful trunk rotation to build strong, athletic obliques.',
+      'Trains the rotational power used in swinging, throwing, and striking.',
+      'The arc keeps the core working through a long rotational range.'
+    ],
+    instructions: [
+      'Anchor one end of a barbell in a landmine and hold the other end with both hands at chest height.',
+      'Stand with your feet shoulder-width apart and your arms extended in front of you.',
+      'Brace your core and rotate the bar in an arc from one side down toward your hip.',
+      'Pivot your back foot and rotate from the trunk and hips, not just the arms.',
+      'Control the bar back up and across to the other side in a smooth arc.',
+      'Repeat for the target reps, keeping the movement controlled.'
+    ],
+    commonMistakes: [
+      'Moving the bar with the arms while the torso stays rigid.',
+      'Using momentum to fling the bar rather than controlling the rotation.',
+      'Keeping the feet planted instead of pivoting to let the hips rotate.',
+      'Using too much weight so the lower back rounds and takes the strain.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b243',
+    name: 'Barbell Rollout',
+    primaryMuscle: 'abs',
+    secondaryMuscles: ['shoulders'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'advanced',
+    movement: 'Core',
+    description: 'An advanced anti-extension rollout using a loaded barbell, rolling it forward and back while the core fights spinal extension.',
+    benefits: [
+      'Delivers an intense anti-extension challenge for serious core strength.',
+      'Builds the bracing power that stabilizes the spine under heavy lifts.',
+      'Works the abs, lats, and shoulders together through a long range.'
+    ],
+    instructions: [
+      'Load a barbell with plates and kneel behind it, gripping the bar at shoulder width.',
+      'Brace your core hard and tuck your pelvis so your lower back is flat.',
+      'Roll the bar forward slowly, extending your body while keeping the core tight.',
+      'Go only as far as you can without your lower back sagging toward the floor.',
+      'Pull the bar back toward your knees using your abs and lats.',
+      'Repeat for the target reps, shortening the range before form breaks down.'
+    ],
+    commonMistakes: [
+      'Letting the lower back sag and arch at full extension, straining the spine.',
+      'Rolling out further than the core can control to chase a bigger range.',
+      'Pulling back with the arms and hip flexors instead of the abs.',
+      'Attempting full rollouts before building up with partial-range reps.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
