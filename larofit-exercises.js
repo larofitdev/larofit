@@ -9109,7 +9109,7 @@ const LAROFIT_EXERCISES = [
   },
   {
     id: 'b276',
-    name: 'Machine Bicep Curl',
+    name: 'Machine Seated Bicep Curl',
     primaryMuscle: 'biceps',
     secondaryMuscles: [],
     equipment: 'machine_cable',
@@ -9201,6 +9201,39 @@ const LAROFIT_EXERCISES = [
       'Swinging the torso to help curl against the heavier top tension.',
       'Letting the elbows drift forward off the sides.',
       'Standing on too little of the band, losing tension at the bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b279',
+    name: 'Machine Preacher Curl',
+    primaryMuscle: 'biceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A plate-stack preacher curl machine with the arms braced on a steep angled pad — locks out momentum and hammers the lower biceps through a deep stretch.',
+    benefits: [
+      'Locks the arms on the pad to enforce strict, momentum-free curls.',
+      'Emphasizes the lower biceps through the deep preacher stretch.',
+      'Makes heavy, isolated biceps work easy and safe to load.'
+    ],
+    instructions: [
+      'Sit at the machine and adjust the seat so your armpits rest near the top of the angled pad.',
+      'Rest the backs of your upper arms flat on the pad and grip the handles underhand.',
+      'Brace your core and keep your upper arms pressed into the pad throughout.',
+      'Curl the handles up toward your shoulders by contracting the biceps.',
+      'Squeeze hard at the top without letting the elbows lift off the pad.',
+      'Lower the handles slowly over 2 to 3 seconds until your arms are nearly straight.'
+    ],
+    commonMistakes: [
+      'Lifting the elbows off the pad to cheat the weight up.',
+      'Bouncing out of the deep bottom stretch, which strains the elbows.',
+      'Failing to fully straighten the arms and shortening the range.',
+      'Setting the seat too low or high so the elbows don\'t align with the machine\'s pivot.'
     ],
     mediaUrl: '',
     exerciseUrl: '',
