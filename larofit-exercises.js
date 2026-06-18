@@ -12472,6 +12472,666 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b378',
+    name: 'Assisted Dip Machine',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: ['chest', 'shoulders'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A dip machine with a knee or foot platform that counterbalances bodyweight, letting you train triceps dips with adjustable assistance.',
+    benefits: [
+      'Lets beginners build dip strength with adjustable help.',
+      'Targets the triceps through a full dip range safely.',
+      'Easy to scale assistance down as you get stronger.'
+    ],
+    instructions: [
+      'Set the assistance weight and kneel or step onto the platform.',
+      'Grip the parallel handles and press up to the start, arms straight.',
+      'Keep your torso upright and elbows pointing back to bias the triceps.',
+      'Bend your elbows to lower until they reach about ninety degrees.',
+      'Drive through your palms to press back up to lockout.',
+      'Squeeze the triceps at the top, then repeat.'
+    ],
+    commonMistakes: [
+      'Leaning the torso forward, shifting work to the chest.',
+      'Flaring the elbows wide instead of tucking them.',
+      'Using a short range and not reaching ninety degrees.',
+      'Setting so much assistance the triceps barely work.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b379',
+    name: 'Tricep Extension Machine',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A seated selectorized machine that isolates the triceps through a guided pressdown or extension against the pads.',
+    benefits: [
+      'Isolates the triceps with a fixed, stable path.',
+      'Back support removes momentum and cheating.',
+      'Beginner-friendly and easy to load progressively.'
+    ],
+    instructions: [
+      'Adjust the seat so your elbows align with the machine\'s pivot.',
+      'Sit tall with your back on the pad and grip the handles.',
+      'Keep your upper arms pinned and elbows tight to your sides.',
+      'Extend your arms by driving the handles down and forward.',
+      'Squeeze the triceps hard at full extension.',
+      'Return slowly under control, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the upper arms drift instead of staying pinned.',
+      'Using momentum or body english to move the handles.',
+      'Cutting the extension short of lockout.',
+      'Letting the weight snap the arms back up.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b380',
+    name: 'Cable Overhead Tricep Extension',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A rope extension performed facing away from the stack with arms overhead, stretching and loading the long head of the triceps.',
+    benefits: [
+      'Loads the long head through a deep overhead stretch.',
+      'Constant cable tension keeps the triceps working throughout.',
+      'Builds triceps size that pushdowns alone miss.'
+    ],
+    instructions: [
+      'Set a rope on a high pulley and face away from the stack.',
+      'Grab the rope and bring your hands overhead, elbows bent.',
+      'Step forward into a staggered stance and brace your core.',
+      'Extend your arms forward and up until they are nearly straight.',
+      'Squeeze the triceps at full extension.',
+      'Lower under control back into the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the elbows flare wide instead of pointing forward.',
+      'Dropping the upper arms and turning it into a pressdown.',
+      'Arching the lower back as you extend.',
+      'Using a short range that skips the stretch.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b381',
+    name: 'Cable Single-Arm Overhead Extension',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A one-arm overhead cable extension that isolates each triceps long head with constant tension.',
+    benefits: [
+      'Isolates each triceps to fix side-to-side imbalances.',
+      'The overhead angle emphasizes the long head.',
+      'Constant cable tension loads the full range.'
+    ],
+    instructions: [
+      'Set a single handle on a low pulley and grip it with one hand.',
+      'Raise your elbow overhead, hand behind your head, upper arm vertical.',
+      'Brace your core and keep the upper arm still.',
+      'Extend your arm overhead until it is nearly straight.',
+      'Squeeze the triceps at the top.',
+      'Lower under control into the stretch, finish your reps, then switch arms.'
+    ],
+    commonMistakes: [
+      'Letting the upper arm drift forward or down.',
+      'Flaring the elbow out to the side.',
+      'Arching the back to push the weight up.',
+      'Cutting the range short of full extension.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b382',
+    name: 'Cable Tricep Kickback',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A single-arm cable kickback that extends the arm back against constant tension to peak-contract the triceps.',
+    benefits: [
+      'Constant cable tension peaks at full extension.',
+      'Isolates the triceps with strict, controlled reps.',
+      'Builds the triceps\' contracted position and detail.'
+    ],
+    instructions: [
+      'Set a handle on a low pulley and hinge forward at the hips.',
+      'Grip the handle and pin your upper arm parallel to your torso.',
+      'Keep your back flat and core braced.',
+      'Extend your forearm back until your arm is straight.',
+      'Squeeze the triceps hard at the top.',
+      'Lower under control, finish your reps, then switch arms.'
+    ],
+    commonMistakes: [
+      'Letting the upper arm drop instead of staying pinned.',
+      'Swinging the torso to fling the arm back.',
+      'Cutting the extension short of lockout.',
+      'Rounding the lower back in the hinge.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b383',
+    name: 'Reverse-Grip Cable Pushdown',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A pushdown performed with an underhand grip, shifting emphasis toward the medial head of the triceps.',
+    benefits: [
+      'The underhand grip emphasizes the medial triceps head.',
+      'Adds variety to standard pushdowns for fuller development.',
+      'Constant cable tension keeps the triceps loaded.'
+    ],
+    instructions: [
+      'Attach a straight bar to a high pulley and grip it underhand.',
+      'Stand tall with elbows tucked tight to your sides.',
+      'Brace your core and keep your wrists straight.',
+      'Press the bar down until your arms are fully extended.',
+      'Squeeze the triceps hard at the bottom.',
+      'Return slowly under control, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the elbows drift forward off your sides.',
+      'Leaning over the bar to push with bodyweight.',
+      'Letting the wrists bend back under load.',
+      'Cutting the extension short at the bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b384',
+    name: 'EZ Bar Skullcrusher',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A lying triceps extension with an EZ bar lowered to the forehead, a classic mass builder for all three heads.',
+    benefits: [
+      'Builds triceps mass through a long extension range.',
+      'The EZ bar\'s angled grip is easier on the wrists.',
+      'Loads all three triceps heads heavily.'
+    ],
+    instructions: [
+      'Lie on a bench holding an EZ bar with a narrow overhand grip.',
+      'Press the bar up so your arms are straight over your shoulders.',
+      'Keep your upper arms angled slightly back and elbows tucked.',
+      'Bend the elbows to lower the bar toward your forehead.',
+      'Stop just above your head, then extend back to the start.',
+      'Squeeze the triceps at the top, then repeat.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows wide as you lower.',
+      'Letting the upper arms drift straight vertical, killing tension.',
+      'Lowering toward the nose and risking a hit.',
+      'Bouncing the bar off the bottom instead of controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b385',
+    name: 'EZ Bar Overhead Tricep Extension',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A seated or standing overhead extension with an EZ bar, stretching and building the triceps long head.',
+    benefits: [
+      'Emphasizes the long head through a deep overhead stretch.',
+      'The EZ bar grip is gentler on the wrists than a straight bar.',
+      'Builds triceps size that pushdowns miss.'
+    ],
+    instructions: [
+      'Hold an EZ bar overhead with a narrow overhand grip, arms straight.',
+      'Sit or stand tall with your core braced and chest up.',
+      'Keep your upper arms close to your head and elbows pointing forward.',
+      'Bend the elbows to lower the bar behind your head.',
+      'Lower until you feel a deep triceps stretch.',
+      'Extend back overhead and squeeze, then repeat.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows wide instead of pointing them forward.',
+      'Arching the lower back as you extend.',
+      'Lowering with no control and straining the elbows.',
+      'Using a short range that skips the stretch.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b386',
+    name: 'EZ Bar Close-Grip Bench Press',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: ['chest', 'shoulders'],
+    equipment: 'ez_bar',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A close-grip bench press with an EZ bar, loading the triceps heavily with a wrist-friendly grip.',
+    benefits: [
+      'Builds triceps mass and pressing strength.',
+      'The EZ bar\'s angles ease wrist strain at a close grip.',
+      'A compound move that lets you load the triceps heavy.'
+    ],
+    instructions: [
+      'Lie on a bench and grip an EZ bar with hands close together.',
+      'Unrack the bar and hold it over your chest, arms straight.',
+      'Keep your elbows tucked toward your sides.',
+      'Lower the bar to your lower chest under control.',
+      'Press the bar back up by driving through the triceps.',
+      'Lock out and squeeze at the top, then repeat.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows out wide off the body.',
+      'Gripping so narrow the wrists strain.',
+      'Bouncing the bar off the chest.',
+      'Letting the bar drift toward the face on the press.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b387',
+    name: 'Barbell Skullcrusher',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A lying triceps extension with a straight barbell lowered to the forehead or behind the head for a long-range stretch.',
+    benefits: [
+      'Builds triceps mass through a long extension range.',
+      'Loads all three heads with a heavy straight bar.',
+      'Lowering behind the head adds a long-head stretch.'
+    ],
+    instructions: [
+      'Lie on a bench holding a barbell with a narrow overhand grip.',
+      'Press the bar up so your arms are straight over your shoulders.',
+      'Angle your upper arms slightly back and keep elbows tucked.',
+      'Bend the elbows to lower the bar toward your forehead.',
+      'Stop just above your head, then extend back to the start.',
+      'Squeeze the triceps at the top, then repeat.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows wide as you lower.',
+      'Letting the upper arms drift vertical and losing tension.',
+      'Lowering too fast and straining the elbows.',
+      'Using a grip so narrow the wrists ache.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b388',
+    name: 'Barbell Overhead Tricep Extension',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A seated or standing overhead extension with a barbell, building the triceps long head through a big stretch.',
+    benefits: [
+      'Emphasizes the long head with a deep overhead stretch.',
+      'Loads the triceps heavily with a straight bar.',
+      'Builds overhead arm strength and size.'
+    ],
+    instructions: [
+      'Hold a barbell overhead with a narrow overhand grip, arms straight.',
+      'Sit or stand tall with your core braced and chest up.',
+      'Keep your upper arms close to your head, elbows forward.',
+      'Bend the elbows to lower the bar behind your head.',
+      'Lower until you feel a deep triceps stretch.',
+      'Extend back overhead and squeeze, then repeat.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows out instead of pointing them forward.',
+      'Arching the lower back to press the bar up.',
+      'Lowering with no control near the head.',
+      'Cutting the range short and skipping the stretch.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b389',
+    name: 'Dumbbell Single-Arm Overhead Tricep Extension',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A one-arm overhead dumbbell extension that isolates each triceps long head through a full stretch.',
+    benefits: [
+      'Isolates each triceps to fix imbalances.',
+      'The overhead position stretches and builds the long head.',
+      'Simple to set up with a single dumbbell.'
+    ],
+    instructions: [
+      'Hold a dumbbell overhead in one hand with your arm straight.',
+      'Sit or stand tall with your core braced.',
+      'Keep your upper arm close to your head, elbow pointing up.',
+      'Bend the elbow to lower the dumbbell behind your head.',
+      'Lower until you feel a stretch, then extend back overhead.',
+      'Squeeze the triceps at the top, finish your reps, then switch arms.'
+    ],
+    commonMistakes: [
+      'Letting the elbow flare out to the side.',
+      'Dropping the upper arm forward as you extend.',
+      'Arching the back to push the weight up.',
+      'Using a short range that skips the stretch.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b390',
+    name: 'Dumbbell Close-Grip Press',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: ['chest', 'shoulders'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A bench press with dumbbells held together and elbows tucked, shifting the load onto the triceps.',
+    benefits: [
+      'Loads the triceps with a pressing movement.',
+      'Holding the dumbbells together keeps the elbows tucked.',
+      'Builds pressing strength alongside triceps size.'
+    ],
+    instructions: [
+      'Lie on a bench holding two dumbbells pressed together over your chest.',
+      'Keep the dumbbells touching and your elbows tucked to your sides.',
+      'Brace your core and plant your feet.',
+      'Lower the dumbbells to your chest, keeping them pressed together.',
+      'Press back up by driving through the triceps.',
+      'Squeeze at the top, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the dumbbells separate and the elbows flare.',
+      'Lowering only part-way and skipping the stretch.',
+      'Pressing the weights apart at the top.',
+      'Bouncing the dumbbells off the chest.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b391',
+    name: 'Parallel Bar Tricep Dip',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: ['chest', 'shoulders'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A dip on parallel bars with an upright torso and tucked elbows to bias the triceps over the chest.',
+    benefits: [
+      'Builds serious triceps strength and mass with bodyweight.',
+      'The upright torso shifts the load onto the triceps.',
+      'Easy to add weight later as you progress.'
+    ],
+    instructions: [
+      'Grip the parallel bars and press up to the start, arms straight.',
+      'Keep your torso upright and your chest tall.',
+      'Tuck your elbows so they point straight back.',
+      'Bend your elbows to lower until they reach about ninety degrees.',
+      'Drive through your palms to press back to lockout.',
+      'Squeeze the triceps at the top, then repeat.'
+    ],
+    commonMistakes: [
+      'Leaning the torso forward and shifting work to the chest.',
+      'Flaring the elbows wide instead of tucking them.',
+      'Dropping too low and straining the shoulders.',
+      'Using a short range and not reaching ninety degrees.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b392',
+    name: 'Close-Grip Push-Up',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: ['chest', 'shoulders'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A push-up with the hands close and elbows tucked, biasing the triceps more than a standard push-up.',
+    benefits: [
+      'Builds triceps strength with no equipment.',
+      'The narrow hand position tucks the elbows onto the triceps.',
+      'Scales easily from knees to feet.'
+    ],
+    instructions: [
+      'Set your hands close together under your chest, fingers forward.',
+      'Extend your legs into a plank with a straight body line.',
+      'Brace your core and keep your elbows tucked to your sides.',
+      'Lower your chest toward your hands under control.',
+      'Press back up by driving through the triceps.',
+      'Lock out at the top, then repeat.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows out wide away from the body.',
+      'Letting the hips sag or pike out of the plank line.',
+      'Lowering only part-way and skipping the range.',
+      'Placing the hands so close the wrists strain.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b393',
+    name: 'Banded Tricep Pushdown',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A pushdown with a band anchored overhead, extending the arms down against band tension.',
+    benefits: [
+      'Adds portable resistance that peaks at lockout.',
+      'Isolates the triceps anywhere with just a band.',
+      'Easy on the joints with smooth tension.'
+    ],
+    instructions: [
+      'Anchor a band overhead and grip an end in each hand.',
+      'Stand tall with elbows tucked tight to your sides.',
+      'Brace your core and keep your wrists straight.',
+      'Press your hands down until your arms are fully extended.',
+      'Squeeze the triceps hard at the bottom.',
+      'Return slowly under control, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the elbows drift forward off your sides.',
+      'Using momentum or leaning to push down.',
+      'Letting the band snap the arms back up.',
+      'Cutting the extension short at the bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b394',
+    name: 'Banded Overhead Tricep Extension',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'An overhead extension with a band anchored low, pressing the arms overhead against tension to load the long head.',
+    benefits: [
+      'Emphasizes the long head with portable band tension.',
+      'Tension increases as you reach full extension.',
+      'A travel-friendly triceps builder.'
+    ],
+    instructions: [
+      'Anchor a band low or stand on it, then grip an end in each hand.',
+      'Raise your hands overhead with your elbows bent behind your head.',
+      'Brace your core and keep your upper arms close to your head.',
+      'Extend your arms overhead until they are nearly straight.',
+      'Squeeze the triceps at the top.',
+      'Lower under control into the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows out instead of pointing them forward.',
+      'Arching the back as you extend.',
+      'Using a band so light there\'s no tension at lockout.',
+      'Cutting the range short and skipping the stretch.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b395',
+    name: 'Banded Tricep Kickback',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A kickback with a band anchored in front, extending the arm back against tension to peak-contract the triceps.',
+    benefits: [
+      'Band tension peaks at full extension where the triceps work hardest.',
+      'Isolates the triceps with portable resistance.',
+      'Easy to set up anywhere for high-rep work.'
+    ],
+    instructions: [
+      'Anchor a band in front of you at about hip height.',
+      'Hinge forward at the hips and grip the band in one hand.',
+      'Pin your upper arm parallel to your torso, back flat.',
+      'Extend your forearm back until your arm is straight.',
+      'Squeeze the triceps hard at the top.',
+      'Return under control, finish your reps, then switch arms.'
+    ],
+    commonMistakes: [
+      'Letting the upper arm drop instead of staying pinned.',
+      'Swinging the torso to fling the arm back.',
+      'Cutting the extension short of lockout.',
+      'Rounding the lower back in the hinge.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b396',
+    name: 'Kettlebell Overhead Tricep Extension',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A two-hand overhead extension holding a kettlebell behind the head, building the triceps long head.',
+    benefits: [
+      'Stretches and builds the long head overhead.',
+      'The kettlebell\'s hanging load adds a unique feel.',
+      'Simple to set up with one kettlebell.'
+    ],
+    instructions: [
+      'Hold a kettlebell by the horns with both hands overhead, arms straight.',
+      'Sit or stand tall with your core braced.',
+      'Keep your upper arms close to your head, elbows forward.',
+      'Bend the elbows to lower the bell behind your head.',
+      'Lower until you feel a stretch, then extend back overhead.',
+      'Squeeze the triceps at the top, then repeat.'
+    ],
+    commonMistakes: [
+      'Flaring the elbows wide instead of forward.',
+      'Arching the back to press the bell up.',
+      'Lowering with no control near the head.',
+      'Cutting the range short and skipping the stretch.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b397',
+    name: 'Kettlebell Tricep Kickback',
+    primaryMuscle: 'triceps',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A single-arm kickback holding a kettlebell, extending the arm back to peak-contract the triceps.',
+    benefits: [
+      'Isolates the triceps with the kettlebell\'s offset load.',
+      'Builds the contracted position and triceps detail.',
+      'A simple option needing just one kettlebell.'
+    ],
+    instructions: [
+      'Hold a kettlebell in one hand and hinge forward at the hips.',
+      'Pin your upper arm parallel to your torso, back flat.',
+      'Brace your core and let the bell hang from a bent elbow.',
+      'Extend your forearm back until your arm is straight.',
+      'Squeeze the triceps hard at the top.',
+      'Lower under control, finish your reps, then switch arms.'
+    ],
+    commonMistakes: [
+      'Letting the upper arm drop instead of staying pinned.',
+      'Swinging the torso to throw the bell back.',
+      'Cutting the extension short of lockout.',
+      'Rounding the lower back in the hinge.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
