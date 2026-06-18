@@ -11878,6 +11878,600 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b360',
+    name: 'Machine Shoulder Press',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A selectorized machine that presses handles overhead on a fixed path, building the shoulders with back support.',
+    benefits: [
+      'Builds overhead pressing strength with a stable, guided path.',
+      'Back support lets you push hard without stabilizing free weight.',
+      'Beginner-friendly and easy to load and progress.'
+    ],
+    instructions: [
+      'Adjust the seat so the handles start at about shoulder height.',
+      'Sit tall with your back flat against the pad and feet planted.',
+      'Grip the handles with a full grip and brace your core.',
+      'Press the handles overhead until your arms are nearly straight.',
+      'Pause briefly without locking the elbows hard.',
+      'Lower under control back to shoulder height, then repeat.'
+    ],
+    commonMistakes: [
+      'Setting the seat so low the start position strains the shoulders.',
+      'Arching the lower back off the pad to press heavier.',
+      'Locking the elbows aggressively at the top.',
+      'Cutting the range short on the way down.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b361',
+    name: 'Machine Lateral Raise',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A selectorized machine that lifts pads out to the sides, isolating the lateral deltoids for shoulder width.',
+    benefits: [
+      'Isolates the side delts with a fixed, consistent path.',
+      'Removes momentum so the lateral delt does the work.',
+      'Easy to load progressively for shoulder width.'
+    ],
+    instructions: [
+      'Adjust the seat so the pads sit against your outer upper arms.',
+      'Sit tall with your back on the pad and forearms against the levers.',
+      'Brace your core and keep your shoulders down.',
+      'Raise your arms out to the sides until your elbows reach shoulder height.',
+      'Pause and squeeze the side delts at the top.',
+      'Lower slowly under control, then repeat.'
+    ],
+    commonMistakes: [
+      'Shrugging the traps up to lift the pads.',
+      'Using momentum to swing the arms up.',
+      'Raising the elbows well above shoulder height.',
+      'Letting the weight drop fast instead of controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b362',
+    name: 'Reverse Pec Deck',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['back'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A machine rear-delt fly where you press the handles back from a chest-supported seat, targeting the rear deltoids.',
+    benefits: [
+      'Isolates the often-neglected rear deltoids.',
+      'Chest support removes momentum and lower-back strain.',
+      'Builds shoulder balance and better posture.'
+    ],
+    instructions: [
+      'Adjust the seat so the handles are at shoulder height and sit chest-against the pad.',
+      'Grip the handles with arms extended in front of you.',
+      'Keep a slight bend in the elbows and brace your core.',
+      'Sweep the handles back in an arc by squeezing the rear delts.',
+      'Pause when your arms are in line with your shoulders.',
+      'Return slowly under control, then repeat.'
+    ],
+    commonMistakes: [
+      'Bending the elbows more to turn it into a row.',
+      'Using momentum to fling the handles back.',
+      'Shrugging the traps instead of driving the rear delts.',
+      'Pulling past the point where the shoulders stay square.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b363',
+    name: 'Cable Lateral Raise',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A single-arm side raise on a low cable, keeping constant tension on the lateral deltoid through the full range.',
+    benefits: [
+      'Constant cable tension loads the side delt even at the bottom.',
+      'Builds shoulder width with a smooth, controllable resistance.',
+      'Works one side at a time to fix imbalances.'
+    ],
+    instructions: [
+      'Set the pulley to its lowest point and stand side-on to the stack.',
+      'Grab the handle with the outside hand, arm across the front of your body.',
+      'Keep a slight bend in the elbow and brace your core.',
+      'Raise the handle out to the side until your elbow reaches shoulder height.',
+      'Pause and squeeze the side delt at the top.',
+      'Lower slowly against the cable, finish your reps, then switch sides.'
+    ],
+    commonMistakes: [
+      'Shrugging the trap to hoist the arm up.',
+      'Leaning away from the stack to use momentum.',
+      'Raising the arm well above shoulder height.',
+      'Letting the cable pull the arm down fast.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b364',
+    name: 'Cable Single-Arm Rear Delt Fly',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['back'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A cross-body cable fly that isolates one rear deltoid against constant tension.',
+    benefits: [
+      'Isolates each rear delt with constant cable tension.',
+      'The cross-body angle hits the rear delt through a full arc.',
+      'Improves shoulder balance and posture.'
+    ],
+    instructions: [
+      'Set the pulley to about shoulder height and stand side-on.',
+      'Grab the handle with the far hand so the cable crosses your body.',
+      'Keep a slight bend in the elbow and brace your core.',
+      'Sweep the handle out and back by squeezing the rear delt.',
+      'Pause when your arm is in line with your shoulder.',
+      'Return slowly under control, finish your reps, then switch sides.'
+    ],
+    commonMistakes: [
+      'Bending the elbow more and turning it into a row.',
+      'Rotating the torso to add momentum.',
+      'Shrugging the trap instead of using the rear delt.',
+      'Letting the cable snap the arm back across the body.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b365',
+    name: 'Cable Front Raise',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A front raise on a low cable, loading the anterior deltoid with constant tension.',
+    benefits: [
+      'Constant cable tension keeps the front delt loaded throughout.',
+      'Builds the anterior deltoid with a smooth resistance curve.',
+      'Easy to control for strict, momentum-free reps.'
+    ],
+    instructions: [
+      'Set the pulley low and stand holding a single handle in front of your thigh.',
+      'Grab the handle with a slight bend in the elbow, arm at your side.',
+      'Brace your core and keep your shoulders down.',
+      'Raise the handle straight up in front to about shoulder height.',
+      'Pause and squeeze the front delt at the top.',
+      'Lower slowly against the cable, then repeat.'
+    ],
+    commonMistakes: [
+      'Swinging the torso to throw the weight up.',
+      'Raising the arm well above shoulder height.',
+      'Shrugging the trap to assist the lift.',
+      'Letting the cable yank the arm down.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b366',
+    name: 'Smith Machine Overhead Press',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A seated or standing overhead press on the Smith machine, pressing a fixed bar path for stable heavy loading.',
+    benefits: [
+      'Loads the shoulders heavily on a guided, balanced bar path.',
+      'Easy to rack and unrack for safe overhead pressing.',
+      'Lets you focus on driving rather than stabilizing the bar.'
+    ],
+    instructions: [
+      'Set a bench or stand under the bar so it lines up with your shoulders.',
+      'Grip the bar just wider than shoulder-width and unrack it.',
+      'Brace your core and keep your wrists stacked over your elbows.',
+      'Press the bar overhead until your arms are nearly straight.',
+      'Pause briefly without locking the elbows hard.',
+      'Lower under control to chin or chest level, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back to press heavier.',
+      'Flaring the elbows too far forward off the bar line.',
+      'Lowering the bar too far and straining the shoulders.',
+      'Locking the elbows aggressively at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b367',
+    name: 'Cable Upright Row',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['back', 'biceps'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'An upright row on a low cable, pulling a bar or rope up the front of the body to hit the side delts and traps.',
+    benefits: [
+      'Constant cable tension loads the side delts and traps smoothly.',
+      'Builds shoulder and upper-back thickness.',
+      'Easier on the wrists than a fixed barbell for many lifters.'
+    ],
+    instructions: [
+      'Attach a straight bar or rope to a low pulley and stand facing the stack.',
+      'Grip the attachment with hands about shoulder-width, arms straight.',
+      'Brace your core and keep your chest tall.',
+      'Pull the attachment up the front of your body, leading with the elbows.',
+      'Stop when your elbows reach about shoulder height.',
+      'Lower slowly against the cable, then repeat.'
+    ],
+    commonMistakes: [
+      'Pulling too high and cranking the shoulders into impingement.',
+      'Using a grip so narrow it strains the wrists.',
+      'Swinging the torso to heave the weight up.',
+      'Letting the elbows drop below the hands on the pull.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b368',
+    name: 'Arnold Press',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A seated dumbbell overhead press that rotates the palms from facing you to facing forward, hitting all three delt heads.',
+    benefits: [
+      'Trains the front and side delts through a rotating press.',
+      'The rotation adds range and time under tension.',
+      'Builds well-rounded shoulder development in one move.'
+    ],
+    instructions: [
+      'Sit tall with dumbbells at shoulder height, palms facing you.',
+      'Brace your core and keep your back flat against the pad.',
+      'Press the dumbbells up while rotating your palms to face forward.',
+      'Finish with arms nearly straight overhead.',
+      'Reverse the rotation as you lower back to the start.',
+      'Control the descent to palms-facing-you, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back to press heavier.',
+      'Rushing the rotation instead of timing it with the press.',
+      'Clashing the dumbbells together at the top.',
+      'Lowering with no control and bouncing out of the bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b369',
+    name: 'Dumbbell Standing Overhead Press',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A standing overhead dumbbell press that builds the shoulders while demanding core and full-body stability.',
+    benefits: [
+      'Builds overhead strength with a free range of motion.',
+      'Demands core and stabilizer work standing.',
+      'Lets each arm work independently to fix imbalances.'
+    ],
+    instructions: [
+      'Stand with feet shoulder-width and dumbbells at shoulder height.',
+      'Brace your core and squeeze your glutes to lock the torso.',
+      'Keep your wrists stacked over your elbows.',
+      'Press the dumbbells overhead until your arms are nearly straight.',
+      'Pause briefly without leaning back.',
+      'Lower under control to shoulder height, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back and leaning away to press up.',
+      'Pressing the dumbbells forward instead of straight up.',
+      'Clashing the dumbbells together overhead.',
+      'Using leg drive by bouncing at the knees.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b370',
+    name: 'Dumbbell Push Press',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['triceps', 'upper_legs'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'An overhead dumbbell press that uses a slight dip and leg drive to move heavier loads through the sticking point.',
+    benefits: [
+      'Lets you press heavier by adding leg drive.',
+      'Builds explosive overhead power.',
+      'Trains full-body coordination from legs to shoulders.'
+    ],
+    instructions: [
+      'Stand with dumbbells at shoulder height, feet shoulder-width.',
+      'Dip slightly by bending the knees, keeping your torso upright.',
+      'Drive explosively through your legs to start the press.',
+      'Push the dumbbells overhead until your arms are nearly straight.',
+      'Pause briefly at lockout under control.',
+      'Lower the dumbbells back to your shoulders, then repeat.'
+    ],
+    commonMistakes: [
+      'Turning the dip into a deep squat instead of a quick dip.',
+      'Leaning back and arching to press the weight up.',
+      'Pressing before the leg drive finishes.',
+      'Letting the dumbbells crash down onto the shoulders.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b371',
+    name: 'Seated Barbell Overhead Press',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A seated barbell military press that removes leg drive to build strict overhead shoulder strength.',
+    benefits: [
+      'Builds strict overhead pressing strength with no leg drive.',
+      'The seated position isolates the shoulders and triceps.',
+      'Allows heavy, stable loading with back support.'
+    ],
+    instructions: [
+      'Sit on an upright bench with the barbell racked at shoulder height.',
+      'Grip the bar just wider than shoulder-width and unrack it.',
+      'Brace your core and keep your wrists stacked over your elbows.',
+      'Press the bar overhead until your arms are nearly straight.',
+      'Move your head slightly back so the bar travels straight.',
+      'Lower under control to your upper chest, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back hard off the bench.',
+      'Pressing the bar forward instead of straight up.',
+      'Lowering the bar too far below the chin.',
+      'Flaring the elbows far forward off the bar line.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b372',
+    name: 'Barbell Front Raise',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A front raise holding a barbell with both hands, loading the anterior deltoids together.',
+    benefits: [
+      'Builds the front delts with a bar both arms share.',
+      'The fixed bar keeps both sides moving evenly.',
+      'Simple to load and progress for front-delt strength.'
+    ],
+    instructions: [
+      'Hold a barbell with an overhand grip, hands shoulder-width, arms down.',
+      'Stand tall with a slight bend in the elbows and core braced.',
+      'Keep your shoulders down and chest tall.',
+      'Raise the bar straight up in front to about shoulder height.',
+      'Pause and squeeze the front delts at the top.',
+      'Lower under control, then repeat.'
+    ],
+    commonMistakes: [
+      'Swinging the torso to heave the bar up.',
+      'Raising the bar well above shoulder height.',
+      'Shrugging the traps to assist.',
+      'Dropping the bar fast instead of controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b373',
+    name: 'Band Front Raise',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A front raise standing on a band, lifting the handles in front to load the anterior deltoids.',
+    benefits: [
+      'Adds portable resistance that increases toward the top.',
+      'Builds the front delts anywhere with just a band.',
+      'Easy to control for strict, momentum-free reps.'
+    ],
+    instructions: [
+      'Stand on the middle of a band with feet hip-width, a handle in each hand.',
+      'Let your arms hang in front with a slight bend in the elbows.',
+      'Brace your core and keep your shoulders down.',
+      'Raise the handles straight up in front to shoulder height.',
+      'Pause and squeeze the front delts at the top.',
+      'Lower under control against the band, then repeat.'
+    ],
+    commonMistakes: [
+      'Swinging the torso to throw the handles up.',
+      'Raising the arms well above shoulder height.',
+      'Shrugging the traps to assist the lift.',
+      'Letting the band snap the arms down.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b374',
+    name: 'Band Overhead Press',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'An overhead press standing on a band, pressing the handles overhead against increasing band tension.',
+    benefits: [
+      'Builds overhead pressing strength with portable resistance.',
+      'Band tension peaks at lockout where the shoulders work hardest.',
+      'A joint-friendly press you can do anywhere.'
+    ],
+    instructions: [
+      'Stand on the middle of a band with feet shoulder-width.',
+      'Bring the handles to shoulder height, palms facing forward.',
+      'Brace your core and keep your wrists stacked over your elbows.',
+      'Press the handles overhead until your arms are nearly straight.',
+      'Pause briefly at the top under control.',
+      'Lower the handles to shoulder height against the band, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back to press the handles up.',
+      'Pressing forward instead of straight overhead.',
+      'Using too light a band so there\'s no tension at lockout.',
+      'Letting the band pull the arms down fast.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b375',
+    name: 'Band Reverse Fly',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['back'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A rear-delt fly with a band held in front, sweeping the arms out to the sides against tension.',
+    benefits: [
+      'Targets the rear delts with portable band resistance.',
+      'Builds shoulder balance and better posture.',
+      'Easy on the joints and doable anywhere.'
+    ],
+    instructions: [
+      'Hold a band in front of you at shoulder height with both hands.',
+      'Set your hands shoulder-width with a slight bend in the elbows.',
+      'Brace your core and keep your shoulders down.',
+      'Sweep your arms out to the sides by squeezing the rear delts.',
+      'Pause when your arms are in line with your shoulders.',
+      'Return slowly against the band, then repeat.'
+    ],
+    commonMistakes: [
+      'Bending the elbows more to turn it into a row.',
+      'Shrugging the traps instead of using the rear delts.',
+      'Using momentum to fling the arms open.',
+      'Letting the band snap the hands back together.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b376',
+    name: 'Kettlebell Single-Arm Overhead Press',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: ['triceps'],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A standing single-arm overhead press with a kettlebell in the rack position, building shoulder strength and stability.',
+    benefits: [
+      'Builds overhead strength one arm at a time to fix imbalances.',
+      'The offset kettlebell load challenges core and shoulder stability.',
+      'The rack position grooves a strong pressing path.'
+    ],
+    instructions: [
+      'Clean a kettlebell to the rack position at your shoulder.',
+      'Stand tall with feet shoulder-width and brace your core.',
+      'Keep your wrist straight and the bell resting on your forearm.',
+      'Press the kettlebell overhead until your arm is nearly straight.',
+      'Pause briefly with the bell stacked over your shoulder.',
+      'Lower under control to the rack, finish your reps, then switch arms.'
+    ],
+    commonMistakes: [
+      'Leaning away from the working arm to press up.',
+      'Letting the wrist bend back under the bell.',
+      'Pressing the bell forward instead of straight overhead.',
+      'Losing core tension and twisting the torso.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b377',
+    name: 'Kettlebell Lateral Raise',
+    primaryMuscle: 'shoulders',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A side raise holding kettlebells, lifting them out to the sides to load the lateral deltoids.',
+    benefits: [
+      'Builds the side delts with the kettlebell\'s offset load.',
+      'Adds a unique tension feel versus dumbbells.',
+      'Strengthens shoulder width and stability.'
+    ],
+    instructions: [
+      'Hold a kettlebell in each hand at your sides, palms facing in.',
+      'Stand tall with a slight bend in the elbows and core braced.',
+      'Keep your shoulders down and chest tall.',
+      'Raise the kettlebells out to the sides to shoulder height.',
+      'Pause and squeeze the side delts at the top.',
+      'Lower slowly under control, then repeat.'
+    ],
+    commonMistakes: [
+      'Shrugging the traps to hoist the bells up.',
+      'Swinging the torso to use momentum.',
+      'Raising the bells well above shoulder height.',
+      'Letting the bells drop fast instead of controlling them.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
