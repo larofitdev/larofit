@@ -13132,6 +13132,369 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b398',
+    name: 'Lying Leg Curl Machine',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['lower_legs'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A prone machine where you curl a padded lever toward your glutes, isolating the hamstrings.',
+    benefits: [
+      'Isolates the hamstrings with a stable, guided path.',
+      'Builds knee-flexion strength that squats and hinges miss.',
+      'Easy to load and progress for hamstring size.'
+    ],
+    instructions: [
+      'Lie face down with the ankle pad resting just above your heels.',
+      'Adjust the pad so your knees sit just off the bench edge.',
+      'Grip the handles and keep your hips pressed into the pad.',
+      'Curl the pad toward your glutes by flexing the knees.',
+      'Squeeze the hamstrings hard at the top.',
+      'Lower under control to a full stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Lifting the hips off the pad to swing the weight up.',
+      'Using a short range that skips the stretch or squeeze.',
+      'Letting the weight drop fast instead of controlling it.',
+      'Setting the ankle pad too high up the calf.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b399',
+    name: 'Seated Leg Curl Machine',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['lower_legs'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A seated machine where you curl a padded lever down and back, targeting the hamstrings with a strong stretch.',
+    benefits: [
+      'Targets the hamstrings from a stretched, seated position.',
+      'Back support removes momentum and cheating.',
+      'Builds hamstring size with heavy, stable loading.'
+    ],
+    instructions: [
+      'Sit with the ankle pad against the back of your lower calves.',
+      'Set the thigh pad snugly over your lower thighs.',
+      'Grip the handles and keep your back against the seat.',
+      'Curl your heels down and back by flexing the knees.',
+      'Squeeze the hamstrings hard at the bottom.',
+      'Return slowly under control to a stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the hips lift off the seat to force the weight.',
+      'Using a short range and skipping the squeeze.',
+      'Setting the thigh pad too loose so the legs shift.',
+      'Letting the weight snap the legs back up.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b400',
+    name: 'Smith Machine Squat',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['glutes'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A squat performed on the Smith machine\'s fixed bar path, building the quads with added stability.',
+    benefits: [
+      'Builds the quads and glutes on a guided, stable path.',
+      'Easier to balance than a free barbell squat.',
+      'Simple to rack and unrack for safe heavy sets.'
+    ],
+    instructions: [
+      'Set the bar across your upper back and position your feet slightly forward.',
+      'Unrack the bar by rotating it off the hooks.',
+      'Brace your core and keep your chest tall.',
+      'Bend your knees and hips to lower until your thighs reach parallel.',
+      'Drive through your whole foot to stand back up.',
+      'Lock out tall without bouncing, then repeat.'
+    ],
+    commonMistakes: [
+      'Setting the feet straight under the bar so the knees overload.',
+      'Letting the knees cave inward on the drive.',
+      'Cutting the squat short above parallel.',
+      'Rounding the lower back at the bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b401',
+    name: 'Barbell Front Squat',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['glutes', 'abs'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A squat with the barbell racked across the front of the shoulders, emphasizing the quads and an upright torso.',
+    benefits: [
+      'Shifts the load onto the quads with an upright torso.',
+      'Builds core and upper-back strength to hold the rack position.',
+      'Reinforces clean squat depth and posture.'
+    ],
+    instructions: [
+      'Rack the bar across your front delts with elbows high.',
+      'Set your feet shoulder-width with toes slightly out.',
+      'Brace your core and keep your elbows up throughout.',
+      'Bend your knees and hips to lower until your thighs reach parallel.',
+      'Keep your torso upright and chest tall at the bottom.',
+      'Drive through your whole foot to stand back up, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the elbows drop so the bar rolls forward.',
+      'Rounding the upper back under the bar.',
+      'Letting the knees cave inward on the drive.',
+      'Cutting the squat short above parallel.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b402',
+    name: 'Barbell Romanian Deadlift',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['glutes', 'back'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A hip-hinge with a barbell lowered along the legs with soft knees, loading the hamstrings through a deep stretch.',
+    benefits: [
+      'Builds the hamstrings through a loaded stretch.',
+      'Strengthens the hip hinge for pulls and athletic power.',
+      'Develops the glutes and lower back as supporting movers.'
+    ],
+    instructions: [
+      'Hold a barbell at your hips with an overhand grip, feet hip-width.',
+      'Keep a soft bend in the knees and brace your core.',
+      'Hinge at the hips, pushing your glutes back.',
+      'Lower the bar along your thighs and shins, keeping it close.',
+      'Stop when you feel a deep hamstring stretch, back flat.',
+      'Drive your hips forward to stand tall, then repeat.'
+    ],
+    commonMistakes: [
+      'Rounding the lower back as you lower.',
+      'Turning it into a squat by bending the knees too much.',
+      'Letting the bar drift away from the legs.',
+      'Overextending and leaning back hard at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b403',
+    name: 'Nordic Hamstring Curl',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['glutes'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'advanced',
+    movement: 'Isolation',
+    description: 'A demanding bodyweight knee-flexion exercise where you lower your torso forward against hamstring resistance with the ankles anchored.',
+    benefits: [
+      'Builds powerful eccentric hamstring strength.',
+      'Helps protect against hamstring strains.',
+      'Needs no equipment beyond an ankle anchor.'
+    ],
+    instructions: [
+      'Kneel on a pad with your ankles anchored under a sturdy support.',
+      'Keep your hips extended so your body forms a straight line.',
+      'Brace your core and keep your hands ready to catch yourself.',
+      'Lower your torso forward as slowly as you can using the hamstrings.',
+      'Catch yourself with your hands near the bottom if needed.',
+      'Push off and pull yourself back up with the hamstrings, then repeat.'
+    ],
+    commonMistakes: [
+      'Bending at the hips instead of keeping a straight line.',
+      'Dropping fast instead of resisting the descent.',
+      'Anchoring the ankles too loosely so the feet lift.',
+      'Rushing back up with the arms instead of the hamstrings.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b404',
+    name: 'Sissy Squat',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A knee-dominant squat where you lean back and bend only at the knees, deeply stretching and isolating the quads.',
+    benefits: [
+      'Isolates the quads through a deep knee-flexion stretch.',
+      'Builds quad strength and control with no equipment.',
+      'Improves balance and knee stability over time.'
+    ],
+    instructions: [
+      'Stand tall holding a support lightly for balance.',
+      'Rise onto the balls of your feet and keep your hips extended.',
+      'Lean your torso back as your knees travel forward.',
+      'Lower by bending only at the knees until you feel a deep quad stretch.',
+      'Keep your hips and shoulders in a straight line throughout.',
+      'Drive through your toes to return to standing, then repeat.'
+    ],
+    commonMistakes: [
+      'Bending at the hips instead of keeping them extended.',
+      'Dropping too fast and stressing the knees.',
+      'Using a tiny range with no quad stretch.',
+      'Losing the straight torso-to-knee line.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b405',
+    name: 'Pistol Squat',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['glutes', 'abs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'advanced',
+    movement: 'Compound',
+    description: 'A single-leg squat performed all the way down with the other leg extended in front, demanding strength, balance, and mobility.',
+    benefits: [
+      'Builds serious single-leg strength and balance.',
+      'Exposes and fixes left-to-right leg imbalances.',
+      'Develops mobility and control through a full range.'
+    ],
+    instructions: [
+      'Stand on one leg with the other extended straight in front.',
+      'Hold your arms forward for balance and brace your core.',
+      'Bend the standing knee to lower under control.',
+      'Keep the free leg off the floor as you descend.',
+      'Lower until your hamstring meets your calf, chest tall.',
+      'Drive through the standing foot to stand back up, then switch legs.'
+    ],
+    commonMistakes: [
+      'Letting the standing knee cave inward.',
+      'Collapsing into the bottom instead of controlling it.',
+      'Letting the heel lift off the floor.',
+      'Rounding the back to reach depth.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b406',
+    name: 'Dumbbell Romanian Deadlift',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['glutes', 'back'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A hip-hinge holding dumbbells lowered along the legs with soft knees, building the hamstrings through a stretch.',
+    benefits: [
+      'Builds the hamstrings with an accessible dumbbell load.',
+      'Teaches a strong hip hinge with a comfortable grip.',
+      'Develops the glutes and lower back as supporting movers.'
+    ],
+    instructions: [
+      'Hold a dumbbell in each hand in front of your thighs, feet hip-width.',
+      'Keep a soft bend in the knees and brace your core.',
+      'Hinge at the hips, pushing your glutes back.',
+      'Lower the dumbbells along your legs, keeping them close.',
+      'Stop when you feel a deep hamstring stretch, back flat.',
+      'Drive your hips forward to stand tall, then repeat.'
+    ],
+    commonMistakes: [
+      'Rounding the lower back as you lower.',
+      'Bending the knees too much and turning it into a squat.',
+      'Letting the dumbbells drift away from the legs.',
+      'Overextending and leaning back at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b407',
+    name: 'Banded Leg Curl',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['lower_legs'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A lying hamstring curl with a band anchored at your feet, curling the heel toward the glutes against tension.',
+    benefits: [
+      'Isolates the hamstrings with portable band resistance.',
+      'Tension peaks at the top where the hamstrings contract.',
+      'A travel-friendly way to train knee flexion.'
+    ],
+    instructions: [
+      'Anchor a band low and loop it around one ankle.',
+      'Lie face down with your legs straight and band under tension.',
+      'Brace your core and keep your hips pressed down.',
+      'Curl your heel toward your glutes by flexing the knee.',
+      'Squeeze the hamstring hard at the top.',
+      'Lower under control against the band, finish your reps, then switch legs.'
+    ],
+    commonMistakes: [
+      'Lifting the hips to help curl the leg.',
+      'Letting the band snap the leg back straight.',
+      'Using a short range with no squeeze.',
+      'Anchoring the band so high there\'s no tension at the bottom.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b408',
+    name: 'Kettlebell Goblet Squat',
+    primaryMuscle: 'upper_legs',
+    secondaryMuscles: ['glutes', 'abs'],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A squat holding a kettlebell at chest height, building the quads while reinforcing an upright, clean squat pattern.',
+    benefits: [
+      'Builds the quads with a beginner-friendly front load.',
+      'The goblet position keeps the torso upright and core braced.',
+      'Teaches solid squat depth and form.'
+    ],
+    instructions: [
+      'Hold a kettlebell by the horns against your chest, elbows down.',
+      'Set your feet shoulder-width with toes slightly out.',
+      'Brace your core and keep your chest tall.',
+      'Bend your knees and hips to lower until your thighs reach parallel.',
+      'Keep your elbows inside your knees at the bottom.',
+      'Drive through your whole foot to stand back up, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the chest drop and the back round.',
+      'Letting the knees cave inward on the drive.',
+      'Cutting the squat short above parallel.',
+      'Letting the kettlebell drift away from the chest.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
