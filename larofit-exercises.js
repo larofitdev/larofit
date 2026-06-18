@@ -11383,6 +11383,501 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b345',
+    name: 'Standing Calf Raise Machine',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A machine with shoulder pads that loads straight-leg calf raises, emphasizing the gastrocnemius.',
+    benefits: [
+      'Builds the gastrocnemius with heavy, stable loading.',
+      'Shoulder pads let you focus purely on the calf drive.',
+      'Easy to load and progress for steady calf growth.'
+    ],
+    instructions: [
+      'Step under the shoulder pads with the balls of your feet on the platform edge.',
+      'Stand tall with your legs straight and heels hanging off the edge.',
+      'Brace your core and let your heels drop for a full stretch.',
+      'Drive up onto your toes as high as possible by contracting the calves.',
+      'Squeeze hard at the top for a beat.',
+      'Lower under control to a deep stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Bouncing out of the bottom instead of controlling the stretch.',
+      'Using a short range and never reaching a full stretch or peak.',
+      'Bending the knees and turning it into a partial soleus move.',
+      'Rushing reps so the calves never fully contract.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b346',
+    name: 'Seated Calf Raise Machine',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A seated machine with a knee pad that loads bent-knee calf raises, targeting the soleus.',
+    benefits: [
+      'Targets the soleus, the deeper calf muscle straight-leg work misses.',
+      'Builds calf thickness and ankle strength for endurance.',
+      'The seated setup isolates the calves with no balance demand.'
+    ],
+    instructions: [
+      'Sit with the balls of your feet on the platform and knees under the pad.',
+      'Adjust the pad snugly over your lower thighs.',
+      'Release the safety and let your heels drop into a full stretch.',
+      'Drive your heels up by pushing through the balls of your feet.',
+      'Squeeze the calves hard at the top.',
+      'Lower slowly to a deep stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Cutting the range short at the bottom and top.',
+      'Bouncing the weight instead of controlling each rep.',
+      'Setting the pad too loose so it shifts during reps.',
+      'Rushing through reps without a peak contraction.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b347',
+    name: 'Leg Press Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'Calf raises done on the leg press by placing the balls of your feet at the bottom of the platform.',
+    benefits: [
+      'Loads the calves heavily using the leg press you already have access to.',
+      'The fixed platform keeps the movement safe and stable.',
+      'Lets you push big weight through a full calf range.'
+    ],
+    instructions: [
+      'Sit in the leg press and place the balls of your feet low on the platform.',
+      'Extend your legs with a soft knee bend and release the safeties.',
+      'Let your toes point back so your heels travel toward you for a stretch.',
+      'Press the platform away by driving through the balls of your feet.',
+      'Squeeze the calves hard at full extension.',
+      'Lower under control to a deep stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Locking the knees hard instead of keeping a soft bend.',
+      'Letting the feet slip toward the edge of the platform.',
+      'Using a tiny range and skipping the stretch.',
+      'Bouncing the platform with momentum.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b348',
+    name: 'Smith Machine Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'Standing calf raises with the Smith bar on your shoulders and toes on a block, for a stable straight-leg drive.',
+    benefits: [
+      'Loads the gastrocnemius heavily on a guided bar path.',
+      'A block under the toes gives a full stretch and range.',
+      'Easy to rack and unrack for safe heavy sets.'
+    ],
+    instructions: [
+      'Set the bar on your upper back and place your toes on a block or plate.',
+      'Unrack the bar and stand tall with legs straight, heels hanging off.',
+      'Brace your core and let your heels sink into a full stretch.',
+      'Drive up onto your toes as high as you can by contracting the calves.',
+      'Squeeze hard at the top for a beat.',
+      'Lower under control to the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Bouncing out of the bottom instead of controlling the stretch.',
+      'Bending the knees and shifting work off the gastrocnemius.',
+      'Using a short, partial range.',
+      'Letting the heels barely move above neutral.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b349',
+    name: 'Barbell Standing Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A free-weight standing calf raise with a barbell across your back and toes on a block.',
+    benefits: [
+      'Builds the gastrocnemius with heavy free-weight loading.',
+      'Demands extra ankle and core stability versus a machine.',
+      'A great calf builder when no calf machine is available.'
+    ],
+    instructions: [
+      'Rack a barbell across your upper back as you would for a squat.',
+      'Place the balls of your feet on a block with heels hanging off.',
+      'Stand tall with legs straight and brace your core.',
+      'Let your heels drop for a full stretch under the bar.',
+      'Drive up onto your toes as high as possible and squeeze.',
+      'Lower under control to the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Losing balance by letting the bar drift forward.',
+      'Bending the knees and turning it into a partial move.',
+      'Using a short range with no real stretch or peak.',
+      'Bouncing the reps instead of controlling them.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b350',
+    name: 'Barbell Seated Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A bent-knee calf raise with a barbell resting across your thighs, biasing the soleus.',
+    benefits: [
+      'Targets the soleus when no seated calf machine is around.',
+      'Builds calf thickness through the bent-knee position.',
+      'Loads the deeper calf with a barbell you already have.'
+    ],
+    instructions: [
+      'Sit on a bench with the balls of your feet on a block, knees bent ninety degrees.',
+      'Rest a padded barbell across your lower thighs and hold it steady.',
+      'Let your heels drop below the block for a full stretch.',
+      'Drive your heels up by pushing through the balls of your feet.',
+      'Squeeze the calves hard at the top.',
+      'Lower slowly to the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the bar roll toward the knees off the thighs.',
+      'Using a short range that skips the stretch.',
+      'Bouncing the weight instead of controlling it.',
+      'Forgetting to pad the bar so it digs into the thighs.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b351',
+    name: 'Standing Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A bodyweight calf raise off a step, using the edge for a full stretch and rise.',
+    benefits: [
+      'Builds calf strength and ankle stability anywhere.',
+      'The step edge allows a full stretch the floor can\'t.',
+      'Easy to learn and scale by going single-leg later.'
+    ],
+    instructions: [
+      'Stand with the balls of your feet on the edge of a step, heels hanging off.',
+      'Hold a wall or rail lightly for balance and stand tall.',
+      'Let your heels drop below the step for a full stretch.',
+      'Drive up onto your toes as high as possible.',
+      'Squeeze the calves at the top for a beat.',
+      'Lower under control to the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Using a tiny range and never reaching a full stretch.',
+      'Bouncing quickly instead of controlling each rep.',
+      'Leaning heavily on the support to cheat the lift.',
+      'Bending the knees instead of keeping the legs straight.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b352',
+    name: 'Single-Leg Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A one-legged bodyweight calf raise off a step that doubles the load on each calf.',
+    benefits: [
+      'Loads each calf individually to fix imbalances.',
+      'Doubles the resistance using only bodyweight.',
+      'Builds ankle stability and single-leg control.'
+    ],
+    instructions: [
+      'Stand on one foot with the ball of your foot on a step edge.',
+      'Hold a wall or rail lightly for balance and tuck the other foot back.',
+      'Let your heel drop below the step for a full stretch.',
+      'Drive up onto your toes as high as possible.',
+      'Squeeze the calf at the top for a beat.',
+      'Lower under control, finish your reps, then switch legs.'
+    ],
+    commonMistakes: [
+      'Pulling on the support to hoist yourself up.',
+      'Using a short range with no stretch.',
+      'Letting the ankle wobble instead of staying stable.',
+      'Rushing reps so the calf never fully contracts.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b353',
+    name: 'Tibialis Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A shin-strengthening move where you lift your toes toward your shins, training the tibialis anterior.',
+    benefits: [
+      'Strengthens the tibialis anterior to balance strong calves.',
+      'Helps with shin health, ankle control, and running.',
+      'Needs no equipment and can be done against any wall.'
+    ],
+    instructions: [
+      'Stand with your back and hips against a wall, feet a step out front.',
+      'Keep your legs straight and weight on your heels.',
+      'Brace your core and let your toes rest on the floor.',
+      'Lift your toes and the balls of your feet up toward your shins as high as you can.',
+      'Squeeze the front of your shins at the top.',
+      'Lower under control, then repeat for high reps.'
+    ],
+    commonMistakes: [
+      'Bending the knees to help raise the toes.',
+      'Using momentum to flick the feet up.',
+      'Standing too close to the wall so the shins barely work.',
+      'Cutting the range short at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b354',
+    name: 'Banded Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A standing calf raise with a band looped under the foot and held at the top for added resistance.',
+    benefits: [
+      'Adds portable resistance to the bodyweight calf raise.',
+      'Tension increases at the top where the calf contracts hardest.',
+      'Trains calves anywhere with just a band.'
+    ],
+    instructions: [
+      'Loop a band under the balls of your feet and hold the ends at hip height.',
+      'Stand tall with legs straight and band under tension.',
+      'Let your heels drop toward the floor for a stretch.',
+      'Drive up onto your toes against the band resistance.',
+      'Squeeze the calves hard at the top.',
+      'Lower under control, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the band go slack at the bottom.',
+      'Using a short range with no stretch or peak.',
+      'Bending the knees instead of keeping legs straight.',
+      'Bouncing the reps with momentum.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b355',
+    name: 'Banded Seated Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A bent-knee calf raise with a band over the knee for resistance, biasing the soleus.',
+    benefits: [
+      'Targets the soleus with portable band tension.',
+      'The bent-knee position shifts work to the deeper calf.',
+      'A travel-friendly way to train calves without machines.'
+    ],
+    instructions: [
+      'Sit with the balls of your feet on a low block, knees bent ninety degrees.',
+      'Loop a band over your lower thigh and anchor the ends under your foot or hands.',
+      'Let your heels drop below the block for a full stretch.',
+      'Drive your heels up against the band by pushing through your toes.',
+      'Squeeze the calves at the top.',
+      'Lower slowly to the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the band slip off the thigh mid-set.',
+      'Using a short range that skips the stretch.',
+      'Straightening the knees and losing the soleus focus.',
+      'Rushing reps without a peak squeeze.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b356',
+    name: 'Banded Tibialis Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A shin exercise with a band around the foot providing resistance as you pull your toes up.',
+    benefits: [
+      'Loads the tibialis anterior harder than the bodyweight version.',
+      'Builds shin strength for balanced lower legs and ankle health.',
+      'Portable and easy to set up anywhere.'
+    ],
+    instructions: [
+      'Sit or stand and anchor a band in front of you at floor level.',
+      'Loop the band over the top of your foot near the toes.',
+      'Keep your leg straight and your heel planted.',
+      'Pull your toes up toward your shin against the band.',
+      'Squeeze the front of your shin at the top.',
+      'Lower under control, finish your reps, then switch feet.'
+    ],
+    commonMistakes: [
+      'Bending the knee to help lift the toes.',
+      'Letting the band yank the foot back down.',
+      'Using a slack band with little resistance.',
+      'Cutting the range short at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b357',
+    name: 'Dumbbell Standing Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A standing calf raise holding dumbbells at your sides, with toes on a block for a full range.',
+    benefits: [
+      'Adds load to the calf raise with dumbbells you already have.',
+      'The block gives a full stretch the floor can\'t.',
+      'A simple, scalable way to build the gastrocnemius.'
+    ],
+    instructions: [
+      'Hold a dumbbell in each hand and place the balls of your feet on a block.',
+      'Stand tall with legs straight and heels hanging off the edge.',
+      'Brace your core and let your heels drop for a full stretch.',
+      'Drive up onto your toes as high as possible.',
+      'Squeeze the calves at the top for a beat.',
+      'Lower under control to the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Using a short range with no stretch.',
+      'Bending the knees and shifting off the gastrocnemius.',
+      'Bouncing reps instead of controlling them.',
+      'Losing balance and cutting the rise short.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b358',
+    name: 'Dumbbell Seated Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A bent-knee calf raise with dumbbells resting on your thighs, biasing the soleus.',
+    benefits: [
+      'Targets the soleus with simple dumbbell loading.',
+      'The bent-knee position trains the deeper calf.',
+      'No machine needed for soleus work.'
+    ],
+    instructions: [
+      'Sit on a bench with the balls of your feet on a block, knees bent.',
+      'Rest a dumbbell vertically on each thigh and hold them steady.',
+      'Let your heels drop below the block for a full stretch.',
+      'Drive your heels up by pushing through the balls of your feet.',
+      'Squeeze the calves at the top.',
+      'Lower slowly to the stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the dumbbells slide off the thighs.',
+      'Using a short range that skips the stretch.',
+      'Bouncing the weight instead of controlling it.',
+      'Rushing reps without a peak contraction.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b359',
+    name: 'Kettlebell Single-Leg Calf Raise',
+    primaryMuscle: 'lower_legs',
+    secondaryMuscles: [],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Isolation',
+    description: 'A one-legged calf raise holding a kettlebell, loading each calf through a full range off a step.',
+    benefits: [
+      'Loads each calf individually with a kettlebell for balance.',
+      'Builds single-leg calf strength and ankle stability.',
+      'A simple loaded option needing just one kettlebell.'
+    ],
+    instructions: [
+      'Hold a kettlebell in one hand and stand on the same-side foot on a step edge.',
+      'Hold a wall or rail with the free hand for balance.',
+      'Let your heel drop below the step for a full stretch.',
+      'Drive up onto your toes as high as possible.',
+      'Squeeze the calf at the top for a beat.',
+      'Lower under control, finish your reps, then switch sides.'
+    ],
+    commonMistakes: [
+      'Pulling on the support to hoist yourself up.',
+      'Using a short range with no stretch.',
+      'Letting the ankle wobble instead of staying stable.',
+      'Rushing reps so the calf never fully contracts.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
