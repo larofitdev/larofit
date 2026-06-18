@@ -10261,6 +10261,1128 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b311',
+    name: 'Glute Kickback Machine',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A selectorized machine that isolates the glutes through a standing, padded hip-extension drive against a fixed weight stack.',
+    benefits: [
+      'Isolates the glutes with a guided path that\'s easy to learn.',
+      'Lets you load hip extension safely without balancing free weight.',
+      'Great for high-rep finishing work and mind-muscle focus.'
+    ],
+    instructions: [
+      'Set the weight and position the working foot on the platform or pad.',
+      'Grip the handles and brace your torso against the support pad.',
+      'Keep a slight bend in the working knee and your hips square.',
+      'Drive the foot back and up by squeezing the glute through full extension.',
+      'Pause and squeeze hard at the top without arching your lower back.',
+      'Lower under control to the start and repeat, then switch legs.'
+    ],
+    commonMistakes: [
+      'Arching the lower back to push the pad farther.',
+      'Using momentum to swing the leg instead of driving with the glute.',
+      'Letting the hips rotate open to cheat the rep.',
+      'Cutting the range short and skipping the top squeeze.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b312',
+    name: 'Hip Abductor Machine',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A seated machine where you press your legs outward against pads, targeting the gluteus medius and outer hips.',
+    benefits: [
+      'Targets the gluteus medius for hip stability and a rounder side-glute.',
+      'Strengthens hip abduction that squats and deadlifts miss.',
+      'Simple seated setup that\'s easy to load and progress.'
+    ],
+    instructions: [
+      'Sit tall with your back against the pad and outer thighs against the levers.',
+      'Select a weight and grip the handles to anchor your torso.',
+      'Keep your feet flat and your spine neutral.',
+      'Press your knees outward by driving through the glutes.',
+      'Pause at the widest point and squeeze the outer glutes.',
+      'Return slowly under control without letting the stack slam, then repeat.'
+    ],
+    commonMistakes: [
+      'Leaning forward or rocking the torso to force more range.',
+      'Letting the weight snap the knees back together on the return.',
+      'Using a load so heavy the range shrinks to a few inches.',
+      'Flaring only at the knees instead of driving from the hips.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b313',
+    name: 'Hip Adductor Machine',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A seated machine where you squeeze your legs together against pads, training the inner-thigh adductors and hip stability.',
+    benefits: [
+      'Strengthens the inner-thigh adductors for balanced hip development.',
+      'Improves hip stability and control for squats and lunges.',
+      'Easy to set up and progress with a guided path.'
+    ],
+    instructions: [
+      'Sit tall with your back on the pad and inner thighs against the levers.',
+      'Set the start width and select your weight.',
+      'Grip the handles and keep your spine neutral and feet flat.',
+      'Squeeze your knees together by driving through the inner thighs.',
+      'Pause briefly at the fully closed position.',
+      'Open slowly under control back to the start, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the legs spring open fast instead of controlling the return.',
+      'Setting the start position so wide it strains the groin.',
+      'Using momentum and bouncing out of the bottom.',
+      'Slouching or rounding the back against the pad.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b314',
+    name: 'Cable Glute Kickback',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A standing cable kickback using an ankle strap to isolate the glutes against constant tension.',
+    benefits: [
+      'Isolates each glute one side at a time for even development.',
+      'Constant cable tension keeps the glute working through the whole range.',
+      'Carries over to hip extension power for hinges and sprints.'
+    ],
+    instructions: [
+      'Attach an ankle cuff to the low pulley and strap it to your working leg.',
+      'Face the stack and hold the frame for balance, hips square.',
+      'Brace your core with a soft bend in the standing knee.',
+      'Drive the working leg straight back by squeezing the glute.',
+      'Pause and squeeze at the top without arching your back.',
+      'Lower under control against the cable, then finish your reps and switch.'
+    ],
+    commonMistakes: [
+      'Leaning the torso forward to swing the leg higher.',
+      'Arching the lower back instead of moving from the hip.',
+      'Bending the working knee and turning it into a hamstring move.',
+      'Letting the cable yank the leg back to the start.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b315',
+    name: 'Cable Pull-Through',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'back'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A standing hip-hinge where you drive a rope between your legs forward by extending the hips against the cable.',
+    benefits: [
+      'Teaches a powerful hip hinge with built-in glute tension at lockout.',
+      'Builds the glutes and hamstrings while sparing the lower back.',
+      'A joint-friendly way to train the hinge pattern with constant load.'
+    ],
+    instructions: [
+      'Set a rope on the low pulley and face away from the stack.',
+      'Straddle the cable and grab the rope between your legs.',
+      'Step forward to set tension, feet shoulder-width, soft knees.',
+      'Hinge at the hips and let the rope travel back as your torso bows forward.',
+      'Drive your hips forward to stand tall, squeezing the glutes at lockout.',
+      'Control the return into the next hinge and repeat.'
+    ],
+    commonMistakes: [
+      'Turning it into a squat by bending the knees instead of hinging.',
+      'Using the arms to pull the rope rather than driving with the hips.',
+      'Overextending and leaning back hard at the top.',
+      'Rounding the lower back at the bottom of the hinge.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b316',
+    name: 'Cable Hip Abduction',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: [],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A standing cable raise to the side using an ankle strap, isolating the gluteus medius and outer hip.',
+    benefits: [
+      'Targets the gluteus medius for stronger, more stable hips.',
+      'Works one side at a time to fix side-to-side imbalances.',
+      'Constant tension keeps the outer glute loaded through the range.'
+    ],
+    instructions: [
+      'Cuff your outer ankle to the low pulley and stand side-on to the stack.',
+      'Hold the frame for balance with hips and shoulders square.',
+      'Brace your core and keep the working leg straight.',
+      'Raise the leg out to the side by driving from the outer glute.',
+      'Pause at the top without leaning your torso away.',
+      'Lower under control against the cable, then switch sides.'
+    ],
+    commonMistakes: [
+      'Leaning the upper body away to hoist the leg higher.',
+      'Letting the hip hike up instead of moving from the glute.',
+      'Swinging the leg with momentum.',
+      'Rotating the toe up so the move shifts off the glute.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b317',
+    name: 'Smith Machine Hip Thrust',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A bench-supported hip thrust loaded on the Smith machine bar for a fixed, stable path through hip extension.',
+    benefits: [
+      'Loads the glutes heavily with a guided, balanced bar path.',
+      'Bench support lets you focus on driving the hips without stabilizing.',
+      'Easy to rack and unrack between sets for safe heavy work.'
+    ],
+    instructions: [
+      'Set the bar low and sit on the floor with your upper back on a bench.',
+      'Position the padded bar over your hips, feet flat and shoulder-width.',
+      'Unrack the bar and tuck your chin, ribs down.',
+      'Drive through your heels to extend the hips until your torso is parallel to the floor.',
+      'Squeeze the glutes hard at the top with a neutral spine.',
+      'Lower under control until your hips sink just below the bar path, then repeat.'
+    ],
+    commonMistakes: [
+      'Hyperextending the lower back at the top instead of squeezing the glutes.',
+      'Pushing through the toes and letting the knees cave in.',
+      'Setting the feet too far out so it becomes a hamstring move.',
+      'Bouncing the hips off the bottom instead of controlling each rep.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b318',
+    name: 'Plate-Loaded Glute Drive Machine',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'machine_cable',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A dedicated hip-thrust machine with a padded lap belt and back support that loads glute-driven hip extension on a fixed path.',
+    benefits: [
+      'Lets you load hip thrusts heavily with no setup or bar balancing.',
+      'The fixed path keeps tension on the glutes through the full rep.',
+      'Back and seat support make heavy hip extension beginner-friendly.'
+    ],
+    instructions: [
+      'Sit in the machine with your upper back on the pad and the lap belt over your hips.',
+      'Place your feet flat on the platform at shoulder-width.',
+      'Release the safety and brace your core with ribs down.',
+      'Drive through your heels to extend the hips into the pad.',
+      'Squeeze the glutes hard at full extension without arching the back.',
+      'Lower under control to a deep stretch, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back to push the pad farther.',
+      'Letting the knees collapse inward on the drive.',
+      'Cutting the bottom range short and losing the stretch.',
+      'Pushing through the toes instead of the heels.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b319',
+    name: 'Barbell Hip Thrust',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'The benchmark loaded glute builder, a barbell driven through hip extension with your upper back braced on a bench.',
+    benefits: [
+      'Loads the glutes more directly and heavily than almost any other lift.',
+      'Builds hip-extension power for sprinting, jumping, and heavy hinges.',
+      'Trains the glutes through a full, controlled range under big loads.'
+    ],
+    instructions: [
+      'Sit on the floor with your shoulder blades against a bench, knees bent.',
+      'Roll a padded barbell over your hips, feet flat and shoulder-width.',
+      'Tuck your chin, brace your core, and drive through your heels.',
+      'Extend your hips until your torso reaches parallel to the floor.',
+      'Squeeze the glutes hard at the top with a neutral spine and level pelvis.',
+      'Lower the bar under control until your hips sink low, then repeat.'
+    ],
+    commonMistakes: [
+      'Overarching the lower back at lockout instead of finishing with the glutes.',
+      'Letting the knees cave inward as you drive up.',
+      'Pushing through the toes so the quads and hamstrings take over.',
+      'Using a short, bouncy range instead of full hip extension.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b320',
+    name: 'Barbell Glute Bridge',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'barbell',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A floor-based loaded hip extension with a barbell across the hips, a simpler, lower-setup cousin of the hip thrust.',
+    benefits: [
+      'Builds the glutes with a short, easy-to-learn range from the floor.',
+      'No bench needed, so it\'s quick to set up and load.',
+      'A great entry point to loaded hip extension before hip thrusts.'
+    ],
+    instructions: [
+      'Lie on your back with knees bent and feet flat, shoulder-width apart.',
+      'Roll a padded barbell over your hips and grip it to keep it stable.',
+      'Brace your core and tuck your chin slightly.',
+      'Drive through your heels to lift your hips until your body forms a straight line.',
+      'Squeeze the glutes hard at the top without arching the back.',
+      'Lower under control until your hips nearly touch the floor, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back to gain height instead of squeezing the glutes.',
+      'Letting the bar drift toward the ribs off the hip crease.',
+      'Pushing through the toes and lifting the heels.',
+      'Rushing the reps and losing tension at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b321',
+    name: 'Glute Bridge',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A floor-based bodyweight hip extension that activates and strengthens the glutes with no equipment.',
+    benefits: [
+      'Builds glute strength and activation with zero equipment.',
+      'Teaches proper hip extension before adding load.',
+      'Gentle on the joints and easy to do anywhere.'
+    ],
+    instructions: [
+      'Lie on your back with knees bent and feet flat, hip-width apart.',
+      'Rest your arms at your sides and tuck your chin slightly.',
+      'Brace your core and press your lower back lightly into the floor.',
+      'Drive through your heels to lift your hips into a straight line.',
+      'Squeeze the glutes hard at the top for a beat.',
+      'Lower under control until your hips nearly touch down, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back instead of finishing with the glutes.',
+      'Pushing through the toes and lifting the heels.',
+      'Letting the knees fall inward.',
+      'Bouncing the hips off the floor between reps.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b322',
+    name: 'Single-Leg Glute Bridge',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A one-legged glute bridge that doubles the load on each glute and exposes side-to-side imbalances.',
+    benefits: [
+      'Loads each glute individually to fix strength imbalances.',
+      'Builds hip stability along with glute strength.',
+      'Needs no equipment yet meaningfully harder than the two-leg version.'
+    ],
+    instructions: [
+      'Lie on your back with one knee bent, that foot flat on the floor.',
+      'Extend the other leg straight or hold the knee tucked.',
+      'Brace your core and keep your hips level.',
+      'Drive through the planted heel to lift your hips into a straight line.',
+      'Squeeze the working glute at the top without letting the pelvis tilt.',
+      'Lower under control, finish your reps, then switch legs.'
+    ],
+    commonMistakes: [
+      'Letting the hips drop or rotate toward the non-working side.',
+      'Pushing through the toes instead of the heel.',
+      'Arching the lower back to gain height.',
+      'Rushing reps and losing the top squeeze.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b323',
+    name: 'Single-Leg Hip Thrust',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'advanced',
+    movement: 'Compound',
+    description: 'A bench-supported hip thrust performed on one leg, demanding strong unilateral glute drive and hip control.',
+    benefits: [
+      'Builds powerful single-leg glute strength and balance.',
+      'Exposes and corrects left-to-right strength gaps.',
+      'Loads each glute heavily using only bodyweight.'
+    ],
+    instructions: [
+      'Sit with your upper back on a bench and one foot flat on the floor.',
+      'Extend the other leg out or hold the knee toward your chest.',
+      'Brace your core, ribs down, and tuck your chin.',
+      'Drive through the planted heel to lift your hips to parallel.',
+      'Squeeze the working glute at the top with a level pelvis.',
+      'Lower under control, complete your reps, then switch sides.'
+    ],
+    commonMistakes: [
+      'Letting the pelvis dip toward the free-leg side.',
+      'Pushing through the toes instead of the heel.',
+      'Hyperextending the lower back at the top.',
+      'Using momentum from the free leg to swing up.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b324',
+    name: 'Frog Pump',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A glute bridge variation with the soles of the feet together and knees splayed, biasing the glutes through external hip rotation.',
+    benefits: [
+      'Hits the glutes hard with minimal hamstring involvement.',
+      'The frog position emphasizes glute contraction at the top.',
+      'A perfect high-rep burnout or activation move with no equipment.'
+    ],
+    instructions: [
+      'Lie on your back and press the soles of your feet together.',
+      'Let your knees fall open into a diamond shape.',
+      'Brace your core and keep your heels close to your body.',
+      'Drive through the outer edges of your feet to lift your hips.',
+      'Squeeze the glutes hard at the top of each pump.',
+      'Lower under control and repeat for high reps.'
+    ],
+    commonMistakes: [
+      'Letting the knees drift up rather than staying open.',
+      'Arching the lower back to gain height.',
+      'Moving so fast you lose the glute squeeze.',
+      'Letting the feet slide away from the body.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b325',
+    name: 'Donkey Kick',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A quadruped hip extension where you drive one bent leg up behind you, isolating the glute.',
+    benefits: [
+      'Isolates the glute with a simple, equipment-free move.',
+      'Easy to learn and gentle on the joints.',
+      'Great for activation and high-rep glute work.'
+    ],
+    instructions: [
+      'Start on all fours with hands under shoulders and knees under hips.',
+      'Brace your core and keep your back flat.',
+      'Keep the working knee bent at about ninety degrees.',
+      'Drive the foot toward the ceiling by squeezing the glute.',
+      'Stop when your thigh is in line with your torso, pelvis level.',
+      'Lower under control, finish your reps, then switch legs.'
+    ],
+    commonMistakes: [
+      'Arching the lower back to kick higher.',
+      'Rotating the hips open instead of keeping them square.',
+      'Swinging the leg with momentum.',
+      'Letting the back sag toward the floor.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b326',
+    name: 'Fire Hydrant',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['abs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A quadruped move where you lift one bent leg out to the side, targeting the gluteus medius and outer hip.',
+    benefits: [
+      'Targets the side glutes for hip stability and shape.',
+      'Strengthens hip abduction with no equipment.',
+      'A great warm-up or activation drill before leg training.'
+    ],
+    instructions: [
+      'Start on all fours with hands under shoulders and knees under hips.',
+      'Brace your core and keep your back flat and hips square.',
+      'Keep the working knee bent at ninety degrees.',
+      'Raise the knee out to the side by driving from the outer glute.',
+      'Pause at the top without shifting your weight or twisting.',
+      'Lower under control, complete your reps, then switch sides.'
+    ],
+    commonMistakes: [
+      'Leaning toward the opposite side to lift the leg higher.',
+      'Letting the lower back arch or the hips rotate.',
+      'Using momentum to swing the knee up.',
+      'Raising the leg past the point where the hips stay level.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b327',
+    name: 'Step-Up',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'lower_legs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A single-leg step onto a raised platform that builds glutes and legs through a tall, controlled drive.',
+    benefits: [
+      'Builds single-leg strength and glute drive.',
+      'Improves balance and corrects leg imbalances.',
+      'Carries over to stairs, hiking, and athletic movement.'
+    ],
+    instructions: [
+      'Stand facing a sturdy box or bench at about knee height.',
+      'Place one full foot on the platform with your weight mid-foot.',
+      'Brace your core and keep your chest tall.',
+      'Drive through the top heel to stand fully upright on the platform.',
+      'Squeeze the glute at the top, then control the descent.',
+      'Lower the back foot softly to the floor and repeat, then switch legs.'
+    ],
+    commonMistakes: [
+      'Pushing off the bottom foot instead of driving with the top leg.',
+      'Letting the top knee cave inward.',
+      'Choosing a box so high the form breaks down.',
+      'Dropping back down without controlling the descent.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b328',
+    name: 'Curtsy Lunge',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A lunge where the rear leg crosses diagonally behind, biasing the gluteus medius and outer hip.',
+    benefits: [
+      'Targets the side glutes more than a standard lunge.',
+      'Builds hip stability and single-leg control.',
+      'Needs no equipment and works in any space.'
+    ],
+    instructions: [
+      'Stand tall with feet hip-width and your core braced.',
+      'Step one leg diagonally back and behind the other.',
+      'Bend both knees to lower into the curtsy, chest tall.',
+      'Keep the front knee tracking over the foot.',
+      'Drive through the front heel to return to standing.',
+      'Squeeze the glutes at the top and repeat, then switch sides.'
+    ],
+    commonMistakes: [
+      'Letting the front knee cave inward.',
+      'Leaning the torso too far forward.',
+      'Stepping too short so the glutes barely stretch.',
+      'Losing balance by rushing the descent.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b329',
+    name: 'Glute Bridge March',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'bodyweight',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A glute bridge held at the top while you alternate lifting each foot, challenging the glutes and core to keep the hips level.',
+    benefits: [
+      'Builds glute endurance and anti-rotation core control.',
+      'Trains each glute to stabilize the pelvis under tension.',
+      'A no-equipment progression from the basic bridge.'
+    ],
+    instructions: [
+      'Set up in a glute bridge with hips lifted into a straight line.',
+      'Brace your core and keep your pelvis level.',
+      'Slowly lift one foot a few inches off the floor.',
+      'Hold briefly without letting the hips dip or twist.',
+      'Lower the foot and immediately lift the other, like a slow march.',
+      'Keep alternating for the prescribed reps while holding the bridge.'
+    ],
+    commonMistakes: [
+      'Letting the hips drop each time a foot lifts.',
+      'Twisting the pelvis toward the lifted leg.',
+      'Rushing the march and losing the bridge height.',
+      'Lowering the hips between reps instead of holding the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b330',
+    name: 'Banded Glute Bridge',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A glute bridge with a loop band above the knees, adding outward resistance that fires the glutes harder.',
+    benefits: [
+      'Adds glute-medius work to the standard bridge via the band.',
+      'Keeps the knees driving out to prevent inward collapse.',
+      'A cheap, portable way to load glute activation.'
+    ],
+    instructions: [
+      'Loop a band just above your knees and lie on your back, feet flat.',
+      'Set your feet hip-width with slight outward pressure on the band.',
+      'Brace your core and tuck your chin slightly.',
+      'Drive through your heels to lift your hips into a straight line.',
+      'Push your knees out against the band while squeezing the glutes.',
+      'Lower under control, keeping band tension, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the knees cave inward against the band.',
+      'Arching the lower back to gain height.',
+      'Pushing through the toes instead of the heels.',
+      'Losing band tension by letting the knees relax.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b331',
+    name: 'Banded Hip Thrust',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A bench-supported hip thrust with a loop band above the knees, combining hip extension with outward glute-medius drive.',
+    benefits: [
+      'Pairs hip extension with knee-out drive for full glute work.',
+      'The band keeps the glutes engaged through the whole range.',
+      'Portable load you can use without weights.'
+    ],
+    instructions: [
+      'Loop a band above your knees and rest your upper back on a bench.',
+      'Set your feet flat and shoulder-width with the band under tension.',
+      'Brace your core and tuck your chin, ribs down.',
+      'Drive through your heels to lift your hips to parallel.',
+      'Press your knees out against the band and squeeze the glutes at the top.',
+      'Lower under control, holding band tension, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the knees collapse in against the band.',
+      'Hyperextending the lower back at the top.',
+      'Pushing through the toes instead of the heels.',
+      'Losing the knee-out pressure on the way down.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b332',
+    name: 'Clamshell',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['abs'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A side-lying move with a band above the knees, opening the top knee to target the gluteus medius.',
+    benefits: [
+      'Directly targets the gluteus medius for hip stability.',
+      'A staple rehab and activation drill for the side glutes.',
+      'Portable and easy on the joints.'
+    ],
+    instructions: [
+      'Lie on your side with a band above your knees, hips and knees bent.',
+      'Stack your hips and keep your feet together.',
+      'Brace your core and rest your head on your lower arm.',
+      'Open the top knee toward the ceiling against the band.',
+      'Pause at the top without rolling your hips back.',
+      'Lower under control, finish your reps, then switch sides.'
+    ],
+    commonMistakes: [
+      'Rolling the top hip backward to open the knee farther.',
+      'Letting the feet separate instead of staying together.',
+      'Using momentum to flap the knee open.',
+      'Opening so far the lower back arches.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b333',
+    name: 'Lateral Band Walk',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A side-stepping walk with a band above the knees or ankles that keeps constant tension on the outer glutes.',
+    benefits: [
+      'Builds gluteus-medius strength and lateral hip stability.',
+      'Keeps the glutes under continuous tension as you step.',
+      'A great warm-up or burnout that needs only a band.'
+    ],
+    instructions: [
+      'Loop a band above your knees or around your ankles.',
+      'Drop into a quarter-squat with feet hip-width and chest tall.',
+      'Push your knees out to load the band.',
+      'Step one foot out to the side, keeping tension on the band.',
+      'Bring the trailing foot in part-way, never letting the band go slack.',
+      'Continue stepping in one direction, then reverse.'
+    ],
+    commonMistakes: [
+      'Letting the knees cave inward between steps.',
+      'Standing too upright and losing the athletic stance.',
+      'Letting the band go slack by stepping the feet fully together.',
+      'Bobbing the torso up and down with each step.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b334',
+    name: 'Monster Walk',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A forward-and-back walking drill with a band above the knees, driving the legs out and forward to load the glutes.',
+    benefits: [
+      'Builds glute-medius and hip-stabilizer strength.',
+      'Trains forward and diagonal hip drive against resistance.',
+      'A portable activation move for before leg day.'
+    ],
+    instructions: [
+      'Loop a band above your knees and drop into a quarter-squat.',
+      'Keep your chest tall and push your knees out against the band.',
+      'Step one foot forward and out at a slight diagonal.',
+      'Step the other foot forward and out to match, staying low.',
+      'Keep constant outward and forward tension on the band.',
+      'Walk forward for several steps, then reverse the pattern.'
+    ],
+    commonMistakes: [
+      'Letting the knees collapse inward as you step.',
+      'Standing up tall and losing the squat stance.',
+      'Taking steps so big the band goes slack.',
+      'Leaning the torso forward instead of staying upright.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b335',
+    name: 'Banded Standing Kickback',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A standing glute kickback with a loop band around the ankles, driving one leg back against band tension.',
+    benefits: [
+      'Isolates the glute with portable band resistance.',
+      'Builds hip extension you can train anywhere.',
+      'Keeps tension on the glute through the whole range.'
+    ],
+    instructions: [
+      'Loop a band around both ankles and stand tall, holding support for balance.',
+      'Brace your core with a soft bend in the standing knee.',
+      'Keep the working leg straight and hips square.',
+      'Drive the working leg straight back against the band.',
+      'Squeeze the glute at the top without arching your back.',
+      'Return under control, finish your reps, then switch legs.'
+    ],
+    commonMistakes: [
+      'Leaning the torso forward to swing the leg back.',
+      'Arching the lower back instead of moving from the hip.',
+      'Bending the working knee and losing glute tension.',
+      'Letting the band snap the leg back to the start.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b336',
+    name: 'Banded Fire Hydrant',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['abs'],
+    equipment: 'bands',
+    recordType: 'reps',
+    difficulty: 'beginner',
+    movement: 'Isolation',
+    description: 'A quadruped fire hydrant with a band above the knees, adding resistance as you lift the knee out to the side.',
+    benefits: [
+      'Loads the gluteus medius harder than the bodyweight version.',
+      'Builds side-hip strength and stability with a band.',
+      'Keeps the outer glute under tension throughout.'
+    ],
+    instructions: [
+      'Loop a band above your knees and start on all fours.',
+      'Set hands under shoulders and knees under hips, back flat.',
+      'Brace your core and keep the working knee bent.',
+      'Raise the knee out to the side against the band.',
+      'Pause at the top without twisting the hips or shifting weight.',
+      'Lower under control, complete your reps, then switch sides.'
+    ],
+    commonMistakes: [
+      'Leaning to the opposite side to lift higher.',
+      'Letting the hips rotate instead of staying square.',
+      'Arching the lower back under the band tension.',
+      'Snapping the knee up with momentum.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b337',
+    name: 'Dumbbell Glute Bridge',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A floor glute bridge with a dumbbell held across the hips, adding load without a barbell setup.',
+    benefits: [
+      'Loads the glute bridge with a single accessible dumbbell.',
+      'Builds glute strength with a short, joint-friendly range.',
+      'Quick to set up anywhere with one weight.'
+    ],
+    instructions: [
+      'Lie on your back with knees bent and feet flat, hip-width apart.',
+      'Hold a dumbbell on its end over your hip crease with both hands.',
+      'Brace your core and tuck your chin slightly.',
+      'Drive through your heels to lift your hips into a straight line.',
+      'Squeeze the glutes at the top without arching the back.',
+      'Lower under control until your hips nearly touch down, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back instead of squeezing the glutes.',
+      'Letting the dumbbell slide off the hip crease.',
+      'Pushing through the toes and lifting the heels.',
+      'Cutting the top squeeze short.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b338',
+    name: 'Dumbbell Hip Thrust',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A bench-supported hip thrust loaded with a dumbbell across the hips for those without a barbell.',
+    benefits: [
+      'Builds the glutes through a full hip-thrust range using one dumbbell.',
+      'Bench support lets you focus on the glute drive.',
+      'A practical loaded option in a busy or minimal gym.'
+    ],
+    instructions: [
+      'Sit with your upper back on a bench and a dumbbell over your hips.',
+      'Hold the dumbbell steady with both hands, feet flat and shoulder-width.',
+      'Brace your core, ribs down, and tuck your chin.',
+      'Drive through your heels to lift your hips to parallel.',
+      'Squeeze the glutes hard at the top with a level pelvis.',
+      'Lower under control until the hips sink low, then repeat.'
+    ],
+    commonMistakes: [
+      'Hyperextending the lower back at the top.',
+      'Letting the dumbbell drift off the hip crease.',
+      'Pushing through the toes so hamstrings take over.',
+      'Using a bouncy, shortened range.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b339',
+    name: 'Dumbbell Step-Up',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'lower_legs'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A weighted step-up holding dumbbells, building single-leg glute and leg strength under load.',
+    benefits: [
+      'Adds load to the step-up for serious single-leg strength.',
+      'Corrects leg imbalances while training the glutes.',
+      'Carries over to real-world climbing and athletic power.'
+    ],
+    instructions: [
+      'Hold a dumbbell in each hand at your sides and face a sturdy box.',
+      'Place one full foot on the platform at about knee height.',
+      'Brace your core and keep your chest tall.',
+      'Drive through the top heel to stand fully upright on the box.',
+      'Squeeze the glute at the top, then lower under control.',
+      'Tap the floor softly and repeat, then switch legs.'
+    ],
+    commonMistakes: [
+      'Pushing off the bottom foot instead of driving with the top leg.',
+      'Letting the top knee cave inward.',
+      'Using a box so tall the form breaks down.',
+      'Dropping back down without control.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b340',
+    name: 'Dumbbell Single-Leg Romanian Deadlift',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'back'],
+    equipment: 'dumbbells',
+    recordType: 'weight_reps',
+    difficulty: 'advanced',
+    movement: 'Compound',
+    description: 'A single-leg hip hinge holding a dumbbell, loading one glute and hamstring while challenging balance.',
+    benefits: [
+      'Builds single-leg glute and hamstring strength through a deep hinge.',
+      'Improves balance and exposes side-to-side imbalances.',
+      'Strengthens the hinge pattern with a manageable load.'
+    ],
+    instructions: [
+      'Hold a dumbbell in one hand and stand on the opposite leg.',
+      'Keep a soft bend in the standing knee and brace your core.',
+      'Hinge at the hip, sending the free leg straight back.',
+      'Lower the dumbbell along your shin as your torso bows forward.',
+      'Feel the stretch in the standing-leg glute and hamstring.',
+      'Drive the hip forward to stand tall, then repeat and switch sides.'
+    ],
+    commonMistakes: [
+      'Rounding the lower back at the bottom of the hinge.',
+      'Bending the standing knee too much, turning it into a squat.',
+      'Letting the hips open and rotate toward the lifting side.',
+      'Rushing the rep and losing balance instead of controlling the hinge.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b341',
+    name: 'Kettlebell Single-Leg Deadlift',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'back'],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'advanced',
+    movement: 'Compound',
+    description: 'A single-leg hinge holding a kettlebell, training the glute and hamstring of the standing leg with a balance demand.',
+    benefits: [
+      'Builds unilateral glute and hamstring strength and stability.',
+      'Improves balance and ankle and hip control under load.',
+      'Corrects strength imbalances between legs.'
+    ],
+    instructions: [
+      'Hold a kettlebell in one hand and stand on the opposite leg.',
+      'Keep the standing knee softly bent and core braced.',
+      'Hinge at the hip, extending the free leg straight behind you.',
+      'Lower the kettlebell toward the floor as your torso lowers.',
+      'Keep your hips square and back flat at the bottom.',
+      'Drive the hip forward to stand tall, then repeat and switch sides.'
+    ],
+    commonMistakes: [
+      'Rounding the back to reach the kettlebell lower.',
+      'Letting the hips twist open toward the loaded side.',
+      'Squatting the knee instead of hinging at the hip.',
+      'Losing balance by moving too fast.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b342',
+    name: 'Kettlebell Glute Bridge',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'kettlebells',
+    recordType: 'weight_reps',
+    difficulty: 'beginner',
+    movement: 'Compound',
+    description: 'A floor glute bridge with a kettlebell resting on the hips, a simple loaded option from the ground.',
+    benefits: [
+      'Loads the glute bridge with a single kettlebell.',
+      'Builds glute strength through a short, safe range.',
+      'Quick to set up with minimal equipment.'
+    ],
+    instructions: [
+      'Lie on your back with knees bent and feet flat, hip-width apart.',
+      'Rest a kettlebell on your hip crease and hold it steady.',
+      'Brace your core and tuck your chin slightly.',
+      'Drive through your heels to lift your hips into a straight line.',
+      'Squeeze the glutes at the top without arching the back.',
+      'Lower under control until your hips nearly touch down, then repeat.'
+    ],
+    commonMistakes: [
+      'Arching the lower back instead of using the glutes.',
+      'Letting the kettlebell slide off the hips.',
+      'Pushing through the toes and raising the heels.',
+      'Skipping the squeeze at the top.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b343',
+    name: 'Stability Ball Glute Bridge',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'exercise_ball',
+    recordType: 'reps',
+    difficulty: 'intermediate',
+    movement: 'Compound',
+    description: 'A glute bridge with your feet on a stability ball, adding an instability challenge that recruits more glute and core.',
+    benefits: [
+      'Adds balance and core demand to the standard glute bridge.',
+      'Recruits the glutes and hamstrings harder to stay stable.',
+      'No weights needed for a tougher bridge variation.'
+    ],
+    instructions: [
+      'Lie on your back with your heels on top of a stability ball.',
+      'Set your arms at your sides for balance and brace your core.',
+      'Press your heels into the ball to create tension.',
+      'Drive your hips up into a straight line, keeping the ball still.',
+      'Squeeze the glutes at the top without letting the ball wobble.',
+      'Lower under control, keeping the ball steady, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the ball roll or wobble from poor control.',
+      'Arching the lower back to gain height.',
+      'Pushing through the toes instead of the heels.',
+      'Lifting so fast the hips shoot up unevenly.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b344',
+    name: 'Stability Ball Hip Thrust',
+    primaryMuscle: 'glutes',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'exercise_ball',
+    recordType: 'reps',
+    difficulty: 'advanced',
+    movement: 'Compound',
+    description: 'A hip thrust with your upper back on a stability ball, adding a major balance challenge to glute-driven hip extension.',
+    benefits: [
+      'Combines a full hip-thrust range with a strong stability demand.',
+      'Recruits the glutes and core hard to control the ball.',
+      'Builds glute strength and trunk stability at once.'
+    ],
+    instructions: [
+      'Sit on the floor and roll back so your upper back rests on a stability ball.',
+      'Walk your feet out so your knees are bent at about ninety degrees.',
+      'Brace your core and keep your arms out or crossed for balance.',
+      'Drive through your heels to lift your hips to parallel.',
+      'Squeeze the glutes at the top while keeping the ball steady.',
+      'Lower under control without letting the ball roll, then repeat.'
+    ],
+    commonMistakes: [
+      'Letting the ball roll out from under your shoulders.',
+      'Setting the feet too close so the knees pass the toes.',
+      'Arching the lower back at the top instead of squeezing glutes.',
+      'Moving too fast and losing control of the ball.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
