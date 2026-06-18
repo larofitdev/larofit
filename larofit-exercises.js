@@ -13495,6 +13495,567 @@ const LAROFIT_EXERCISES = [
     mediaUrl: '',
     exerciseUrl: '',
     custom: false
+  },
+  {
+    id: 'b409',
+    name: 'Treadmill Running',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs', 'lower_legs'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'intermediate',
+    movement: 'Cardio',
+    description: 'Steady or interval running on a treadmill, a staple cardio machine for building aerobic fitness and burning calories.',
+    benefits: [
+      'Builds cardiovascular endurance and burns calories efficiently.',
+      'Lets you control pace and incline for steady or interval work.',
+      'The cushioned belt is easier on the joints than road running.'
+    ],
+    instructions: [
+      'Step onto the side rails and start the belt at a slow walking speed.',
+      'Once it\'s moving, step on and find your stride in the center of the belt.',
+      'Gradually raise the speed to your target running pace.',
+      'Keep your posture tall with a relaxed arm swing and a midfoot strike.',
+      'Hold your pace or alternate hard and easy intervals for your set time.',
+      'Lower the speed to a walk to cool down before stepping off.'
+    ],
+    commonMistakes: [
+      'Holding the handrails, which wrecks your running posture.',
+      'Starting at a sprint before the belt is up to speed.',
+      'Hunching forward instead of running tall.',
+      'Stepping off while the belt is still moving fast.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b410',
+    name: 'Treadmill Incline Walk',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['glutes', 'lower_legs'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'beginner',
+    movement: 'Cardio',
+    description: 'Brisk walking on a steep treadmill incline, a low-impact way to raise the heart rate and target the glutes and calves.',
+    benefits: [
+      'Burns calories with far less joint impact than running.',
+      'The incline recruits the glutes, hamstrings, and calves.',
+      'Easy to sustain for long, steady fat-loss sessions.'
+    ],
+    instructions: [
+      'Start the belt at a slow speed and set a moderate incline.',
+      'Walk tall with a natural stride and a relaxed arm swing.',
+      'Raise the incline gradually until the effort feels challenging.',
+      'Keep your feet flat and push through the whole foot each step.',
+      'Maintain the pace and incline for your set time.',
+      'Lower the incline and speed to cool down before stepping off.'
+    ],
+    commonMistakes: [
+      'Gripping the handrails and leaning back, which removes the work.',
+      'Setting the incline so high your form breaks down.',
+      'Taking tiny shuffling steps instead of a full stride.',
+      'Holding on and letting your body hang off the front.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b411',
+    name: 'Stationary Bike',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'beginner',
+    movement: 'Cardio',
+    description: 'Steady or interval cycling on an upright stationary bike, a low-impact cardio staple for the legs and heart.',
+    benefits: [
+      'Builds leg endurance and cardiovascular fitness.',
+      'Very low impact and easy on the knees and ankles.',
+      'Resistance is easy to adjust for steady or interval work.'
+    ],
+    instructions: [
+      'Adjust the seat so your knee has a slight bend at the bottom of the stroke.',
+      'Set a light resistance and begin pedaling to warm up.',
+      'Sit tall with a relaxed grip on the handlebars.',
+      'Raise the resistance to your target effort and keep a steady cadence.',
+      'Hold your pace or alternate hard and easy intervals for your set time.',
+      'Lower the resistance and spin easy to cool down.'
+    ],
+    commonMistakes: [
+      'Setting the seat too low so the knees overbend.',
+      'Rocking the hips side to side to push the pedals.',
+      'Gripping the bars so hard the shoulders tense up.',
+      'Pedaling with no resistance so there\'s little training effect.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b412',
+    name: 'Recumbent Bike',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'beginner',
+    movement: 'Cardio',
+    description: 'Cycling on a reclined recumbent bike with back support, an easy-on-the-back cardio option for the legs and heart.',
+    benefits: [
+      'Supports the lower back while training the legs and heart.',
+      'Very low impact and comfortable for long sessions.',
+      'A great option for beginners or those with back issues.'
+    ],
+    instructions: [
+      'Adjust the seat so your legs nearly straighten at the end of the stroke.',
+      'Sit back against the support with your feet on the pedals.',
+      'Set a light resistance and begin pedaling to warm up.',
+      'Raise the resistance to your target effort and hold a steady cadence.',
+      'Keep your back against the seat throughout.',
+      'Lower the resistance and spin easy to cool down.'
+    ],
+    commonMistakes: [
+      'Setting the seat too close so the knees overbend.',
+      'Pushing only with the toes instead of the whole foot.',
+      'Letting the resistance be so light there\'s no effort.',
+      'Slouching away from the back support.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b413',
+    name: 'Elliptical',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs', 'glutes'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'beginner',
+    movement: 'Cardio',
+    description: 'A low-impact full-body cardio machine that combines a gliding leg motion with pushing and pulling handles.',
+    benefits: [
+      'Trains the whole body with almost no joint impact.',
+      'The moving handles add upper-body involvement.',
+      'Easy to sustain for steady calorie-burning sessions.'
+    ],
+    instructions: [
+      'Step onto the pedals and grip the moving handles.',
+      'Begin a smooth gliding motion, driving through your heels.',
+      'Stand tall and let your arms push and pull with the handles.',
+      'Set the resistance and incline to your target effort.',
+      'Keep a steady rhythm for your set time, or alternate intervals.',
+      'Slow the motion to cool down before stepping off.'
+    ],
+    commonMistakes: [
+      'Leaning on the handles and letting the legs coast.',
+      'Pushing only through the toes instead of the heels.',
+      'Hunching forward over the console.',
+      'Using so little resistance the stride flings around.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b414',
+    name: 'Rowing Machine',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['back', 'upper_legs'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'intermediate',
+    movement: 'Cardio',
+    description: 'A full-body cardio and conditioning machine that trains the legs, back, and arms through a powerful rowing stroke.',
+    benefits: [
+      'Trains cardio and full-body strength endurance at once.',
+      'Low impact while recruiting legs, back, and arms.',
+      'Builds powerful posterior-chain conditioning.'
+    ],
+    instructions: [
+      'Strap your feet in and grab the handle with arms straight.',
+      'Start the catch with shins vertical and torso leaning slightly forward.',
+      'Drive with your legs first, then swing the torso back.',
+      'Finish by pulling the handle to your lower ribs.',
+      'Reverse the sequence: arms out, torso forward, then bend the knees.',
+      'Keep a smooth rhythm for your set time or distance.'
+    ],
+    commonMistakes: [
+      'Pulling with the arms before driving with the legs.',
+      'Rounding the back at the catch or finish.',
+      'Yanking the handle too high toward the chest or neck.',
+      'Rushing the recovery instead of controlling it.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b415',
+    name: 'Stair Climber',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['glutes', 'upper_legs'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'intermediate',
+    movement: 'Cardio',
+    description: 'A revolving-staircase machine that delivers intense lower-body cardio, hitting the glutes, quads, and calves.',
+    benefits: [
+      'Burns calories fast with a tough lower-body cardio challenge.',
+      'Builds the glutes, quads, and calves while training the heart.',
+      'Mimics stair climbing with an adjustable speed.'
+    ],
+    instructions: [
+      'Step onto the pedals and grip the rails lightly for balance.',
+      'Set a moderate speed and begin a full, steady stepping motion.',
+      'Stand tall and step through your whole foot on each stair.',
+      'Avoid leaning on the rails so your legs carry the work.',
+      'Hold your pace for your set time, or alternate intervals.',
+      'Slow the machine to cool down before stepping off.'
+    ],
+    commonMistakes: [
+      'Leaning hard on the rails and hanging off the machine.',
+      'Taking tiny half-steps instead of full stair steps.',
+      'Letting the heels hang off the back of the pedals.',
+      'Hunching forward over the console.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b416',
+    name: 'Assault Bike',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs', 'shoulders'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'intermediate',
+    movement: 'Cardio',
+    description: 'A fan-resistance air bike with moving handles that scales intensity to your effort for brutal full-body intervals.',
+    benefits: [
+      'Delivers full-body cardio that scales with your effort.',
+      'The fan resistance makes hard intervals brutally effective.',
+      'Trains legs and arms together for total conditioning.'
+    ],
+    instructions: [
+      'Adjust the seat so your knee has a slight bend at the bottom.',
+      'Grab the moving handles and place your feet on the pedals.',
+      'Begin pedaling and pushing-pulling the handles together.',
+      'Drive harder to spin the fan faster and raise the intensity.',
+      'Alternate all-out bursts with easy recovery for your set.',
+      'Spin easy to cool down before stepping off.'
+    ],
+    commonMistakes: [
+      'Using only the legs or only the arms instead of both.',
+      'Setting the seat too low so the knees overbend.',
+      'Going all-out too long and burning out early.',
+      'Slumping over the handles as you fatigue.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b417',
+    name: 'Arc Trainer',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs', 'glutes'],
+    equipment: 'cardio_machine',
+    recordType: 'cardio',
+    difficulty: 'beginner',
+    movement: 'Cardio',
+    description: 'A low-impact cardio machine with an arc-shaped stride that trains the legs and glutes while sparing the joints.',
+    benefits: [
+      'A low-impact stride that\'s gentle on the knees and hips.',
+      'The arc motion recruits the glutes and quads.',
+      'Easy to adjust resistance and incline for any level.'
+    ],
+    instructions: [
+      'Step onto the pedals and hold the handles for balance.',
+      'Begin a smooth arcing stride, driving through your heels.',
+      'Stand tall with your core braced and chest up.',
+      'Set the resistance and incline to your target effort.',
+      'Keep a steady rhythm for your set time, or alternate intervals.',
+      'Slow the stride to cool down before stepping off.'
+    ],
+    commonMistakes: [
+      'Leaning on the handles and letting the legs coast.',
+      'Pushing through the toes instead of the heels.',
+      'Hunching forward over the console.',
+      'Using too little resistance for any real effort.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b418',
+    name: 'Jumping Jacks',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['shoulders', 'lower_legs'],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'beginner',
+    movement: 'Plyometric',
+    description: 'A classic full-body cardio move jumping the feet out while raising the arms overhead, great for warm-ups and conditioning.',
+    benefits: [
+      'Raises the heart rate quickly with no equipment.',
+      'A simple full-body warm-up or conditioning move.',
+      'Improves coordination and rhythm.'
+    ],
+    instructions: [
+      'Stand tall with your feet together and arms at your sides.',
+      'Brace your core and stay light on the balls of your feet.',
+      'Jump your feet out wide while sweeping your arms overhead.',
+      'Jump your feet back together as you lower your arms.',
+      'Keep a steady, springy rhythm without locking the knees.',
+      'Continue for your set time.'
+    ],
+    commonMistakes: [
+      'Landing flat and heavy instead of staying springy.',
+      'Locking the knees hard on each landing.',
+      'Only half-raising the arms overhead.',
+      'Holding the breath instead of breathing steadily.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b419',
+    name: 'Mountain Climbers',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['abs', 'shoulders'],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'intermediate',
+    movement: 'Cardio',
+    description: 'A fast plank-based cardio move driving the knees toward the chest, blending core work with a heart-rate spike.',
+    benefits: [
+      'Combines core strength with intense cardio.',
+      'Needs no equipment and little space.',
+      'Builds shoulder stability and conditioning at once.'
+    ],
+    instructions: [
+      'Start in a high plank with hands under your shoulders.',
+      'Brace your core and keep your body in a straight line.',
+      'Drive one knee toward your chest, then return it.',
+      'Quickly switch and drive the other knee in.',
+      'Keep alternating at a steady, controlled pace.',
+      'Continue for your set time without letting the hips bounce.'
+    ],
+    commonMistakes: [
+      'Letting the hips pike up high or sag down.',
+      'Bouncing the hips instead of driving the knees.',
+      'Placing the hands too far forward of the shoulders.',
+      'Going so fast the plank position collapses.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b420',
+    name: 'High Knees',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs', 'abs'],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'beginner',
+    movement: 'Plyometric',
+    description: 'A running-in-place cardio move driving the knees up to hip height for a quick heart-rate spike.',
+    benefits: [
+      'Raises the heart rate fast in a small space.',
+      'Builds hip-flexor and leg conditioning.',
+      'A great dynamic warm-up before training.'
+    ],
+    instructions: [
+      'Stand tall with your feet hip-width and core braced.',
+      'Stay on the balls of your feet with a slight forward lean.',
+      'Drive one knee up toward hip height.',
+      'Quickly switch, driving the other knee up as you land softly.',
+      'Pump your arms in rhythm with your legs.',
+      'Keep a quick, springy pace for your set time.'
+    ],
+    commonMistakes: [
+      'Letting the knees stay low instead of reaching hip height.',
+      'Landing flat and heavy instead of staying springy.',
+      'Leaning too far back and losing rhythm.',
+      'Letting the arms hang instead of pumping them.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b421',
+    name: 'Butt Kicks',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs'],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'beginner',
+    movement: 'Plyometric',
+    description: 'A running-in-place move kicking the heels toward the glutes, warming up the hamstrings and raising the heart rate.',
+    benefits: [
+      'Warms up the hamstrings and raises the heart rate.',
+      'Builds leg turnover and running rhythm.',
+      'Needs no equipment or space.'
+    ],
+    instructions: [
+      'Stand tall with your feet hip-width and core braced.',
+      'Stay on the balls of your feet with a slight forward lean.',
+      'Kick one heel up toward your glute.',
+      'Quickly switch, kicking the other heel up as you land softly.',
+      'Pump your arms in rhythm with your legs.',
+      'Keep a quick, light pace for your set time.'
+    ],
+    commonMistakes: [
+      'Kicking out behind instead of straight up to the glutes.',
+      'Landing flat and heavy instead of staying light.',
+      'Leaning too far forward and losing balance.',
+      'Letting the pace drift so slow it loses its cardio effect.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b422',
+    name: 'Jump Rope',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['lower_legs', 'shoulders'],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'intermediate',
+    movement: 'Plyometric',
+    description: 'A classic conditioning tool turning a rope underfoot in steady jumps, building footwork, calves, and cardio.',
+    benefits: [
+      'Builds excellent cardio, footwork, and coordination.',
+      'Strengthens the calves and improves rhythm.',
+      'Portable and burns calories fast.'
+    ],
+    instructions: [
+      'Hold a handle in each hand with the rope behind your heels.',
+      'Keep your elbows close and turn the rope with your wrists.',
+      'Jump just high enough to clear the rope, landing softly.',
+      'Stay on the balls of your feet with a quiet, springy bounce.',
+      'Keep a steady rhythm and a tall posture.',
+      'Continue for your set time, resetting if you trip.'
+    ],
+    commonMistakes: [
+      'Jumping too high and tiring out quickly.',
+      'Turning the rope with the whole arms instead of the wrists.',
+      'Landing flat on the heels instead of the balls of the feet.',
+      'Hunching forward and dropping the chin.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b423',
+    name: 'Skater Hops',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs', 'glutes'],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'intermediate',
+    movement: 'Plyometric',
+    description: 'A lateral bounding move leaping side to side from one leg to the other, building power, balance, and cardio.',
+    benefits: [
+      'Builds lateral power, balance, and single-leg control.',
+      'Raises the heart rate with an athletic bounding pattern.',
+      'Strengthens the glutes and legs through side-to-side motion.'
+    ],
+    instructions: [
+      'Stand on one leg with a soft knee and core braced.',
+      'Push off and leap laterally to land on the opposite leg.',
+      'Let the trailing leg sweep behind for balance.',
+      'Absorb the landing softly with a bent knee.',
+      'Immediately bound back to the other side.',
+      'Keep a steady, controlled rhythm for your set time.'
+    ],
+    commonMistakes: [
+      'Landing with a stiff, straight leg.',
+      'Letting the landing knee cave inward.',
+      'Bounding so far you lose control on landing.',
+      'Hunching the torso instead of staying athletic.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b424',
+    name: 'Bear Crawl',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['shoulders', 'abs'],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'intermediate',
+    movement: 'Cardio',
+    description: 'A quadruped crawl on hands and feet with the knees hovering, blending full-body strength with a cardio challenge.',
+    benefits: [
+      'Builds full-body strength and core stability.',
+      'Raises the heart rate through constant tension.',
+      'Improves shoulder and hip coordination.'
+    ],
+    instructions: [
+      'Start on all fours with hands under shoulders and knees under hips.',
+      'Lift your knees a couple of inches off the floor, back flat.',
+      'Brace your core and keep your hips low and level.',
+      'Step the opposite hand and foot forward together.',
+      'Continue crawling forward with controlled, even steps.',
+      'Keep the knees hovering for your set time or distance.'
+    ],
+    commonMistakes: [
+      'Letting the hips pike up high in the air.',
+      'Moving the same-side hand and foot together.',
+      'Rushing so the core sags and the back rounds.',
+      'Letting the knees touch the floor between steps.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
+  },
+  {
+    id: 'b425',
+    name: 'Sprints',
+    primaryMuscle: 'cardio',
+    secondaryMuscles: ['upper_legs', 'lower_legs'],
+    equipment: 'bodyweight',
+    recordType: 'duration',
+    difficulty: 'advanced',
+    movement: 'Cardio',
+    description: 'All-out short running efforts that build explosive speed, power, and intense cardiovascular conditioning.',
+    benefits: [
+      'Builds explosive speed, power, and conditioning fast.',
+      'Burns calories and boosts metabolism efficiently.',
+      'Trains the legs and heart at maximum intensity.'
+    ],
+    instructions: [
+      'Warm up thoroughly with easy jogging and dynamic drills.',
+      'Set a short distance or work interval to sprint.',
+      'Accelerate to near-maximum effort with a tall, driving stride.',
+      'Pump your arms hard and drive your knees forward.',
+      'Ease off and walk or jog to recover fully between efforts.',
+      'Repeat for your set number of intervals.'
+    ],
+    commonMistakes: [
+      'Skipping the warm-up and risking a pulled muscle.',
+      'Sprinting with a hunched, tight posture.',
+      'Not resting long enough between hard efforts.',
+      'Decelerating abruptly instead of easing off.'
+    ],
+    mediaUrl: '',
+    exerciseUrl: '',
+    custom: false
   }
 ];
 
