@@ -772,6 +772,11 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div id="workout-timer" style="display:none;font-size:11px;color:var(--text-3);font-family:var(--font-mono);font-weight:600;margin-top:1px;">0:00</div>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn btn-ghost btn-sm" id="btn-add-ex-top"
+                style="display:none;color:var(--text-2);font-size:18px;line-height:1;padding:6px 8px;"
+                onclick="openExPicker()" aria-label="Add exercise" title="Add exercise">
+          <i class="ti ti-plus"></i>
+        </button>
         <button class="btn btn-ghost btn-sm" id="btn-pause-top"
                 style="display:none;color:var(--text-2);font-size:13px;font-weight:700;gap:4px;"
                 onclick="togglePause()">
@@ -1646,6 +1651,7 @@ function startWorkout(workoutName) {
   document.getElementById('workout-timer').style.display  = 'block';
   document.getElementById('btn-finish-top').style.display = 'block';
   document.getElementById('btn-pause-top').style.display  = 'flex';
+  document.getElementById('btn-add-ex-top').style.display = 'flex';
   updatePauseBtn();
   if (!isPaused) {
     elapsedTimer = setInterval(updateElapsed, 1000);
@@ -1657,6 +1663,8 @@ function startWorkout(workoutName) {
     document.getElementById('finish-bar').classList.add('show');
     // Hide pause in free form (finish bar is always shown)
     document.getElementById('btn-pause-top').style.display = 'none';
+    // Free form uses the floating Add button below the card, so hide the topbar +
+    document.getElementById('btn-add-ex-top').style.display = 'none';
   }
 
   if (exercises.length > 0) {
@@ -2710,6 +2718,7 @@ function finishWorkout() {
   document.getElementById('finish-bar').classList.remove('show');
   document.getElementById('overall-prog-wrap').style.display = 'none';
   document.getElementById('btn-finish-top').style.display    = 'none';
+  document.getElementById('btn-add-ex-top').style.display    = 'none';
   document.getElementById('workout-timer').style.display     = 'none';
   setHeader('Workout complete');
   document.getElementById('c-duration').textContent = durationMin || '—';
