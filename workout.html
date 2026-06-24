@@ -963,6 +963,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       </button>
     </div>
     <div class="ex-picker-cats" id="ex-picker-cats"></div>
+    <div class="ex-picker-cats" id="ex-picker-equip"></div>
     <!-- Create custom — always visible -->
     <div class="ex-picker-create-row" onclick="goCreateCustomFromPicker()">
       <div class="ex-picker-create-icon">+</div>
@@ -2874,20 +2875,35 @@ function lookupMediaUrl(id) {
 
 // ── FREE FORM EXERCISE PICKER ─────────────────────────────────
 let pickerCat = 'all';
+let pickerEquip = 'all';
 
 function buildExPicker() {
   // Build category pills
   const cats = [
     { id:'all', name:'All' },
-    { id:'chest', name:'Chest' }, { id:'back', name:'Back' },
-    { id:'shoulders', name:'Shoulders' }, { id:'biceps', name:'Biceps' },
-    { id:'triceps', name:'Triceps' }, { id:'legs', name:'Legs' },
-    { id:'core', name:'Core' }, { id:'cardio', name:'Cardio' },
-    { id:'fullbody', name:'Full body' },
+    { id:'abs', name:'Abs' }, { id:'back', name:'Back' },
+    { id:'biceps', name:'Biceps' }, { id:'chest', name:'Chest' },
+    { id:'forearms', name:'Forearms' }, { id:'glutes', name:'Glutes' },
+    { id:'shoulders', name:'Shoulders' }, { id:'triceps', name:'Triceps' },
+    { id:'upper_legs', name:'Upper Legs' }, { id:'lower_legs', name:'Lower Legs' },
+    { id:'cardio', name:'Cardio' },
   ];
   const catsEl = document.getElementById('ex-picker-cats');
   catsEl.innerHTML = cats.map(c =>
     `<button class="ex-picker-cat${c.id===pickerCat?' active':''}" onclick="setPickerCat('${c.id}')">${c.name}</button>`
+  ).join('');
+
+  const equips = [
+    { id:'all', name:'All gear' },
+    { id:'bodyweight', name:'Bodyweight' }, { id:'dumbbells', name:'Dumbbells' },
+    { id:'barbell', name:'Barbell' }, { id:'machine_cable', name:'Machine / Cable' },
+    { id:'kettlebells', name:'Kettlebells' }, { id:'bands', name:'Bands' },
+    { id:'ez_bar', name:'EZ Bar' }, { id:'cardio_machine', name:'Cardio Machine' },
+    { id:'exercise_ball', name:'Exercise Ball' }, { id:'bench', name:'Bench' },
+  ];
+  const equipEl = document.getElementById('ex-picker-equip');
+  if (equipEl) equipEl.innerHTML = equips.map(e =>
+    `<button class="ex-picker-cat${e.id===pickerEquip?' active':''}" onclick="setPickerEquip('${e.id}')">${e.name}</button>`
   ).join('');
 }
 
@@ -2919,6 +2935,12 @@ function setPickerCat(cat) {
   filterPicker();
 }
 
+function setPickerEquip(eq) {
+  pickerEquip = eq;
+  buildExPicker();
+  filterPicker();
+}
+
 function filterPicker() {
   const q = (document.getElementById('ex-picker-search').value || '').toLowerCase().trim();
   if (typeof LAROFIT_EXERCISES === 'undefined') return;
@@ -2927,9 +2949,10 @@ function filterPicker() {
   const allEx    = [...customs, ...LAROFIT_EXERCISES];
 
   const results = allEx.filter(ex => {
-    const catMatch = pickerCat === 'all' || ex.category === pickerCat;
-    const qMatch   = !q || ex.name.toLowerCase().includes(q);
-    return catMatch && qMatch;
+    const catMatch   = pickerCat === 'all' || ex.primaryMuscle === pickerCat;
+    const equipMatch = pickerEquip === 'all' || ex.equipment === pickerEquip;
+    const qMatch     = !q || ex.name.toLowerCase().includes(q);
+    return catMatch && equipMatch && qMatch;
   }).slice(0, 80);
 
   const catIcons = { chest:'🏋️', back:'🔙', shoulders:'💪', biceps:'💪', triceps:'💪', legs:'🦵', core:'⭕', cardio:'🏃', fullbody:'⚡', yoga:'🧘', stretching:'🤸', recovery:'💆' };
