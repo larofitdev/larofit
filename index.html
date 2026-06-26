@@ -144,6 +144,44 @@
 .sess-set-num { width: 26px; color: var(--text-3); flex-shrink: 0; }
 .sess-set-val { color: var(--text); }
 .sess-empty { padding: 40px 24px; text-align: center; color: var(--text-3); font-size: 14px; }
+/* ===== Editable session sheet ===== */
+.sess-edit-btn {
+  flex-shrink: 0; padding: 6px 12px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  background: var(--bg-card2); color: var(--text-2); border: 0.5px solid var(--border);
+  -webkit-tap-highlight-color: transparent;
+}
+.sess-edit-btn.primary { background: var(--volt); color: var(--bg-dark); border-color: var(--volt); }
+.sess-edit-set { display: flex; align-items: center; gap: 8px; padding: 5px 0; }
+.sess-edit-set .sess-set-num { width: 22px; }
+.sess-edit-inp {
+  width: 100%; min-width: 0; padding: 8px; text-align: center;
+  background: var(--bg-card2); border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-size: 14px;
+  font-family: var(--font-mono); -webkit-appearance: none;
+}
+.sess-edit-inp:focus { outline: none; border-color: var(--volt); }
+.sess-edit-unit { font-size: 10px; color: var(--text-3); flex-shrink: 0; }
+.sess-edit-del {
+  width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-3); display: inline-flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.sess-edit-del:active { background: var(--danger-bg); color: var(--danger); }
+.sess-add-set {
+  width: 100%; margin: 6px 0 2px; padding: 8px;
+  background: transparent; border: 1px dashed var(--border);
+  border-radius: var(--radius-sm); color: var(--text-2);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+.sess-add-set:active { background: var(--bg-card2); }
+.sess-edit-note {
+  margin: 12px 16px 0; padding: 8px 10px; font-size: 11px; color: var(--text-3);
+  background: var(--bg-card2); border-radius: var(--radius-sm); line-height: 1.4;
+}
 </style>
 </head>
 
@@ -809,7 +847,14 @@ function sessSetLabel(set){
   if(w>0)return sessNum(w)+' lbs';
   return '—';
 }
+// ── Editable session state ──
+let sessEditDate = null, sessEditing = false, sessDraft = null;
 function openSessionSheet(dateStr){
+  sessEditDate = dateStr; sessEditing = false; sessDraft = null;
+  const editBtn = document.getElementById('sess-edit-btn');
+  const cancelBtn = document.getElementById('sess-cancel-btn');
+  if(editBtn){ editBtn.textContent='Edit'; editBtn.style.display=''; }
+  if(cancelBtn){ cancelBtn.style.display='none'; }
   let hist={};
   try{hist=JSON.parse(localStorage.getItem('lf_workout_history')||'{}');}catch(e){}
   const s=hist[dateStr];
@@ -817,6 +862,7 @@ function openSessionSheet(dateStr){
   const subEl=document.getElementById('sess-sub');
   const bodyEl=document.getElementById('sess-body');
   if(!titleEl||!bodyEl)return;
+  if(!s || !(Array.isArray(s.exercises)&&s.exercises.length)){ if(editBtn) editBtn.style.display='none'; }
   if(!s){
     titleEl.textContent='Workout';subEl.textContent='';
     bodyEl.innerHTML='<div class="sess-empty">This workout couldn\'t be found.</div>';
@@ -849,6 +895,124 @@ function openSessionSheet(dateStr){
 }
 function closeSess(){document.getElementById('sess-overlay').classList.remove('show');}
 function closeSessIfBackdrop(e){if(e.target===document.getElementById('sess-overlay'))closeSess();}
+
+// ── EDIT A LOGGED WORKOUT (from Recent workouts) ──────────────
+function calc1RM(weight, reps){
+  weight=parseFloat(weight)||0; reps=parseFloat(reps)||0;
+  if(!weight||!reps||reps<=0) return 0;
+  if(reps===1) return weight;
+  return Math.round(weight*(1+reps/30));
+}
+function toggleSessEdit(){
+  if(sessEditing){ saveSessEdit(); return; }
+  let hist={};
+  try{hist=JSON.parse(localStorage.getItem('lf_workout_history')||'{}');}catch(e){}
+  const s=hist[sessEditDate];
+  if(!s||!Array.isArray(s.exercises)){ return; }
+  sessDraft = JSON.parse(JSON.stringify(s.exercises));
+  sessEditing = true;
+  const editBtn=document.getElementById('sess-edit-btn');
+  const cancelBtn=document.getElementById('sess-cancel-btn');
+  if(editBtn) editBtn.textContent='Save';
+  if(cancelBtn) cancelBtn.style.display='';
+  renderSessEdit();
+}
+function cancelSessEdit(){
+  sessEditing=false; sessDraft=null;
+  const editBtn=document.getElementById('sess-edit-btn');
+  const cancelBtn=document.getElementById('sess-cancel-btn');
+  if(editBtn) editBtn.textContent='Edit';
+  if(cancelBtn) cancelBtn.style.display='none';
+  openSessionSheet(sessEditDate);
+}
+function sessEditInputs(ex, exIdx){
+  const type = ex.type;
+  return (ex.sets||[]).map(function(set,i){
+    let fields;
+    if(type==='cardio'){
+      fields = '<input class="sess-edit-inp" type="number" inputmode="decimal" placeholder="min" value="'+(set.duration||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'duration\',this.value)"><span class="sess-edit-unit">min</span>'
+             + '<input class="sess-edit-inp" type="number" inputmode="decimal" placeholder="mi" value="'+(set.distance||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'distance\',this.value)"><span class="sess-edit-unit">mi</span>';
+    } else if(type==='timed_bodyweight'){
+      fields = '<input class="sess-edit-inp" type="number" inputmode="numeric" placeholder="sec" value="'+(set.holdTime||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'holdTime\',this.value)"><span class="sess-edit-unit">sec</span>';
+    } else if(type==='bodyweight'){
+      fields = '<input class="sess-edit-inp" type="number" inputmode="numeric" placeholder="reps" value="'+(set.reps||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'reps\',this.value)"><span class="sess-edit-unit">reps</span>';
+    } else {
+      fields = '<input class="sess-edit-inp" type="number" inputmode="decimal" placeholder="wt" value="'+(set.weight||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'weight\',this.value)"><span class="sess-edit-unit">lbs</span>'
+             + '<input class="sess-edit-inp" type="number" inputmode="numeric" placeholder="reps" value="'+(set.reps||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'reps\',this.value)"><span class="sess-edit-unit">reps</span>';
+    }
+    const canDel = (ex.sets||[]).length>1;
+    const del = canDel
+      ? '<button class="sess-edit-del" onclick="sessDelSet('+exIdx+','+i+')" aria-label="Delete set '+(i+1)+'"><i class="ti ti-trash"></i></button>'
+      : '<span style="width:32px;flex-shrink:0;"></span>';
+    return '<div class="sess-edit-set"><span class="sess-set-num">'+(i+1)+'</span>'+fields+del+'</div>';
+  }).join('');
+}
+function renderSessEdit(){
+  const bodyEl=document.getElementById('sess-body');
+  if(!bodyEl||!sessDraft) return;
+  let html='<div class="sess-edit-note">Editing sets recalculates volume and est. 1RM on save. The PR count for this day is left unchanged.</div>';
+  html += sessDraft.map(function(ex,exIdx){
+    const noAdd = ex.type==='cardio';
+    const addBtn = noAdd ? '' : '<button class="sess-add-set" onclick="sessAddSet('+exIdx+')"><i class="ti ti-plus"></i>Add set</button>';
+    return '<div class="sess-ex"><div class="sess-ex-name">'+sessEsc(ex.name||'Exercise')+'</div>'
+      + sessEditInputs(ex, exIdx) + addBtn + '</div>';
+  }).join('');
+  bodyEl.innerHTML=html;
+}
+function sessEditSetVal(exIdx,setIdx,field,val){
+  if(!sessDraft||!sessDraft[exIdx]||!sessDraft[exIdx].sets[setIdx]) return;
+  sessDraft[exIdx].sets[setIdx][field]=val;
+}
+function sessAddSet(exIdx){
+  const ex=sessDraft&&sessDraft[exIdx];
+  if(!ex||ex.type==='cardio') return;
+  if(!Array.isArray(ex.sets)) ex.sets=[];
+  const prev=ex.sets[ex.sets.length-1]||{};
+  let ns;
+  if(ex.type==='timed_bodyweight') ns={holdTime:prev.holdTime||0};
+  else if(ex.type==='bodyweight')  ns={reps:prev.reps||0};
+  else                             ns={weight:prev.weight||0,reps:prev.reps||0};
+  ex.sets.push(ns);
+  renderSessEdit();
+}
+function sessDelSet(exIdx,setIdx){
+  const ex=sessDraft&&sessDraft[exIdx];
+  if(!ex||!Array.isArray(ex.sets)||ex.sets.length<=1) return;
+  ex.sets.splice(setIdx,1);
+  renderSessEdit();
+}
+async function saveSessEdit(){
+  if(!sessEditDate||!sessDraft){ cancelSessEdit(); return; }
+  let hist={};
+  try{hist=JSON.parse(localStorage.getItem('lf_workout_history')||'{}');}catch(e){}
+  const entry=hist[sessEditDate];
+  if(!entry){ cancelSessEdit(); return; }
+  let totalVolume=0;
+  const exercises=sessDraft.map(function(ex){
+    const sets=(ex.sets||[]).map(function(s){return {
+      weight:parseFloat(s.weight)||0, reps:parseFloat(s.reps)||0,
+      holdTime:parseFloat(s.holdTime)||0, duration:parseFloat(s.duration)||0,
+      distance:parseFloat(s.distance)||0
+    };});
+    if(ex.type==='strength'||ex.type==='bodyweight'){
+      sets.forEach(function(s){ totalVolume += (s.weight||0)*(s.reps||0); });
+    }
+    const best1RM=sets.reduce(function(b,s){ const o=calc1RM(s.weight,s.reps); return (o&&o>b)?o:b; },0);
+    return Object.assign({}, ex, { sets:sets, best1RM:best1RM||null });
+  });
+  entry.exercises=exercises;
+  entry.totalVolume=Math.round(totalVolume);
+  // entry.prs intentionally left unchanged (cross-session PR recompute is out of scope)
+  hist[sessEditDate]=entry;
+  localStorage.setItem('lf_workout_history', JSON.stringify(hist));
+  // Push to Supabase first so the home-page loaders re-read fresh remote data
+  try{ await LF.ready(); await LF.db.saveWorkout(sessEditDate, entry); }catch(e){}
+  sessEditing=false; sessDraft=null;
+  // Refresh history-driven home cards, then reopen read-only
+  try{ await Promise.all([loadTodayCard(), loadStreak(), loadStats(), loadHistory()]); }catch(e){}
+  openSessionSheet(sessEditDate);
+}
+
 
 // ── UTILITIES ────────────────────────────────────────────────
 function escHtml(str) {
@@ -1031,6 +1195,8 @@ document.addEventListener('DOMContentLoaded', init);
         <div class="sess-title" id="sess-title">Workout</div>
         <div class="sess-sub" id="sess-sub"></div>
       </div>
+      <button class="sess-edit-btn" id="sess-cancel-btn" onclick="cancelSessEdit()" style="display:none;">Cancel</button>
+      <button class="sess-edit-btn primary" id="sess-edit-btn" onclick="toggleSessEdit()">Edit</button>
       <button class="sess-close" onclick="closeSess()" aria-label="Close"><i class="ti ti-x"></i></button>
     </div>
     <div class="sess-body" id="sess-body"></div>
