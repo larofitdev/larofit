@@ -427,6 +427,27 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 .set-num.active-set { background: var(--bg-dark); color: var(--volt); }
 .sets-table td:not(:first-child) { text-align: center; }
 
+/* ── Add / delete set controls ── */
+.set-del-cell { width: 34px; padding: 0 !important; }
+.set-del {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--text-3); font-size: 15px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.set-del:active { background: var(--danger-bg); color: var(--danger); }
+.add-set-btn {
+  width: 100%; margin-top: 8px; padding: 9px;
+  background: transparent; border: 1px dashed var(--border);
+  border-radius: var(--radius-sm); color: var(--text-2);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+.add-set-btn:active { background: var(--bg-card2); }
+.add-set-btn i { font-size: 15px; }
+
 .last-val { font-size: 11px; color: var(--text-3); display: block; margin-top: 2px; font-family: var(--font-mono); }
 
 /* ── LOG BUTTON — pinned to bottom, above nav ── */
@@ -1982,6 +2003,15 @@ function renderSets(ex, lastSession) {
   });
 }
 
+// ── Add / delete set helpers ──────────────────────────────────
+function delCell(i, len) {
+  if (len <= 1) return '<td class="set-del-cell"></td>';
+  return '<td class="set-del-cell"><button class="set-del" onclick="deleteSet(' + currentExIdx + ',' + i + ')" aria-label="Delete set ' + (i + 1) + '"><i class="ti ti-trash"></i></button></td>';
+}
+function addSetBtn() {
+  return '<button class="add-set-btn" onclick="addSet(' + currentExIdx + ')"><i class="ti ti-plus"></i>Add set</button>';
+}
+
 function renderStrengthTable(ex, lastSession) {
   const warmupHTML = buildWarmupRow(ex);
 
@@ -2017,6 +2047,7 @@ function renderStrengthTable(ex, lastSession) {
         <td style="text-align:center;"><span style="font-size:15px;font-weight:700;">${set.weight||'—'}</span><span class="last-val">${weightUnit()}</span>${ormLabel}</td>
         <td style="text-align:center;"><span style="font-size:15px;font-weight:700;">${set.reps||'—'}</span><span class="last-val">reps</span></td>
         <td style="text-align:center;">${isPR ? '<span class="pr-badge">🏆 PR</span>' : '<span style="font-size:18px;color:var(--success);">✓</span>'}</td>
+        ${delCell(i, ex.loggedSets.length)}
       </tr>`;
     }
 
@@ -2037,20 +2068,21 @@ function renderStrengthTable(ex, lastSession) {
                onchange="updateSet(${currentExIdx},${i},'reps',this.value)"
                ${!isActive ? 'style="opacity:0.45;"' : ''}>
       </td>
-      <td></td>
+      <td></td>${delCell(i, ex.loggedSets.length)}
     </tr>`;
   }).join('');
 
   return `<table class="sets-table">
     <thead><tr>
       <th style="width:30px;">Set</th>
-      <th style="width:22%;">Last</th>
+      <th style="width:18%;">Last</th>
       <th style="width:28%;">Weight</th>
       <th style="width:24%;">Reps</th>
-      <th style="width:16%;"></th>
+      <th style="width:12%;"></th>
+      <th class="set-del-cell"></th>
     </tr></thead>
     <tbody>${warmupHTML}${rows}</tbody>
-  </table>`;
+  </table>${addSetBtn()}`;
 }
 
 function renderBWTable(ex, lastSession) {
@@ -2072,6 +2104,7 @@ function renderBWTable(ex, lastSession) {
         <td style="text-align:center;">${lastChip}</td>
         <td style="text-align:center;"><span style="font-size:14px;font-weight:600;">${set.reps||'—'}</span><span class="last-val">reps</span></td>
         <td style="text-align:center;"><span style="font-size:18px;color:var(--success);">✓</span></td>
+        ${delCell(i, ex.loggedSets.length)}
       </tr>`;
     }
     return `<tr>
@@ -2084,7 +2117,7 @@ function renderBWTable(ex, lastSession) {
                onchange="updateSet(${currentExIdx},${i},'reps',this.value)"
                ${!isActive ? 'style="opacity:0.45;"' : ''}>
       </td>
-      <td style="text-align:center;"></td>
+      <td></td>${delCell(i, ex.loggedSets.length)}
     </tr>`;
   }).join('');
 
@@ -2093,10 +2126,11 @@ function renderBWTable(ex, lastSession) {
       <th style="width:30px;">Set</th>
       <th style="width:30%;">Last</th>
       <th style="width:35%;">Reps</th>
-      <th style="width:20%;"></th>
+      <th style="width:15%;"></th>
+      <th class="set-del-cell"></th>
     </tr></thead>
     <tbody>${rows}</tbody>
-  </table>`;
+  </table>${addSetBtn()}`;
 }
 
 function renderTimedTable(ex) {
@@ -2112,6 +2146,7 @@ function renderTimedTable(ex) {
         <td><span class="set-num ${numCls}">${i+1}</span></td>
         <td style="text-align:center;"><span style="font-size:14px;font-weight:600;">${set.holdTime||'—'}</span><span class="last-val">sec</span></td>
         <td style="text-align:center;"><span style="font-size:18px;color:var(--success);">✓</span></td>
+        ${delCell(i, ex.loggedSets.length)}
       </tr>`;
     }
     return `<tr>
@@ -2123,8 +2158,7 @@ function renderTimedTable(ex) {
                onchange="updateSet(${currentExIdx},${i},'holdTime',this.value)"
                ${!isActive ? 'style="opacity:0.45;"' : ''}>
       </td>
-      <td style="text-align:center;">
-      </td>
+      <td></td>${delCell(i, ex.loggedSets.length)}
     </tr>`;
   }).join('');
 
@@ -2133,9 +2167,10 @@ function renderTimedTable(ex) {
       <th style="width:30px;">Set</th>
       <th style="width:55%;">Hold time (sec)</th>
       <th style="width:25%;"></th>
+      <th class="set-del-cell"></th>
     </tr></thead>
     <tbody>${rows}</tbody>
-  </table>`;
+  </table>${addSetBtn()}`;
 }
 
 function renderCardioTable(ex) {
@@ -2178,7 +2213,7 @@ function buildWarmupRow(ex) {
   const warmupW = Math.max(5, Math.round((sugW * 0.55) / 5) * 5);
   return `<tr class="warmup-row">
     <td><span class="set-num" style="font-size:9px;width:28px;border-radius:4px;background:var(--bg-card2);color:var(--text-3);">WU</span></td>
-    <td colspan="3" style="text-align:left;padding-left:12px;">
+    <td colspan="4" style="text-align:left;padding-left:12px;">
       <span style="font-size:13px;font-weight:600;color:var(--text-2);">${warmupW} ${weightUnit()}</span>
       <span class="warmup-label">Warm-up · ~55% · optional</span>
     </td>
@@ -2315,6 +2350,35 @@ function logCardioSet(exIdx) {
 function updateSet(exIdx, setIdx, field, value) {
   exercises[exIdx].loggedSets[setIdx][field] = value;
   saveSnapshot();
+}
+
+// ── ADD / DELETE SETS DURING A WORKOUT ────────────────────────
+function addSet(exIdx) {
+  const ex = exercises[exIdx];
+  if (!ex || isCardio(ex)) return; // cardio is a single duration entry
+  const prev = ex.loggedSets[ex.loggedSets.length - 1] || {};
+  let ns;
+  if (isTimed(ex))   ns = { holdTime: prev.holdTime || '', logged: false };
+  else if (isBW(ex)) ns = { reps: prev.reps || '', logged: false };
+  else               ns = { weight: prev.weight || '', reps: prev.reps || '', logged: false };
+  ex.loggedSets.push(ns);
+  ex.sets = ex.loggedSets.length;            // keep rest-timer "Set X of Y" labels correct
+  saveSnapshot();
+  renderSets(ex, getLastSession(ex.id || ex.name));
+  renderDots(); updateOverallProgress();
+}
+
+function deleteSet(exIdx, setIdx) {
+  const ex = exercises[exIdx];
+  if (!ex || ex.loggedSets.length <= 1) return;   // never delete the last remaining set
+  const set = ex.loggedSets[setIdx];
+  if (set && set.logged &&
+      !confirm('Delete this logged set? Its weight/reps will be removed from this workout.')) return;
+  ex.loggedSets.splice(setIdx, 1);
+  ex.sets = ex.loggedSets.length;
+  saveSnapshot();
+  renderSets(ex, getLastSession(ex.id || ex.name));
+  renderDots(); updateOverallProgress();
 }
 
 function fillSet(exIdx, setIdx, weight, reps) {
