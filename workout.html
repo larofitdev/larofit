@@ -2815,7 +2815,7 @@ async function fetchAIAnalysis(durationMin, totalVolume, prs, exList) {
   const prompt = `You are a supportive, expert fitness coach. Analyze this workout and give brief, personalized feedback in 3-4 sentences. Be specific, encouraging, and practical.\n\nWorkout:\n- Duration: ${durationMin} minutes\n- Total volume: ${Math.round(totalVolume)} lbs\n- PRs: ${prs}\n- Exercises:\n${summary}\n\nUnder 80 words. Be direct and coach-like.`;
 
   try {
-    const res  = await aiCoachFetch({ model:'claude-sonnet-4-20250514', max_tokens:200, messages:[{role:'user',content:prompt}] });
+    const res  = await aiCoachFetch({ model:'claude-haiku-4-5', max_tokens:200, messages:[{role:'user',content:prompt}] });
     const data = await res.json();
     const text = data.content && data.content[0] && data.content[0].text ? data.content[0].text : 'Great workout! Keep up the consistency.';
     document.getElementById('ai-loading').style.display       = 'none';
@@ -3316,7 +3316,7 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
   else                  repRule = 'Rep count HIGH (10+). Weight manageable. Recommend INCREASING to '+(wtNum+increment)+' lbs next set.';
   const prompt = 'You are an expert fitness coach giving real-time set feedback. Be concise (max 20 words), direct, and actionable.\n\nExercise: '+ex.name+'\nAthlete level: '+level+'\nSet '+setNum+': '+weight+' lbs x '+reps+' reps\n'+lastLine+'\n'+(setsLine||'')+'\n'+nextLine+'\n'+repRule+'\n\nGive one sentence of coaching advice for their next set (or rest if last set).';
   try {
-    const res  = await aiCoachFetch({model:'claude-sonnet-4-20250514',max_tokens:60,messages:[{role:'user',content:prompt}]});
+    const res  = await aiCoachFetch({model:'claude-haiku-4-5',max_tokens:60,messages:[{role:'user',content:prompt}]});
     const data = await res.json();
     const text = data.content&&data.content[0]&&data.content[0].text ? data.content[0].text.trim() : 'Good set — keep that form tight.';
     restAiSpinner.style.display = 'none';
@@ -3341,7 +3341,7 @@ async function fetchFMWReasoning(ex, fmw, currentWeight) {
   const profile    = store.get('profile', {});
   const prompt     = 'You are an expert fitness coach running a Find My Weight session. Rep rules: <=5 reps = reduce weight 20-40%, 6-9 reps = working weight found, 10+ reps = increase weight.\n\nExercise: '+ex.name+'\nAthlete level: '+(profile.level||'intermediate')+'\nSets so far: '+setHistory+'\nLast set reps: '+lastReps+'\n\n'+(isLastFMW?'This is the final FMW set. Declare the working weight.':'Suggest weight for next FMW set.')+'\n\nReply ONLY: number|brief reasoning (under 25 words). Example: 45|Good starting point.';
   try {
-    const res  = await aiCoachFetch({model:'claude-sonnet-4-20250514',max_tokens:80,messages:[{role:'user',content:prompt}]});
+    const res  = await aiCoachFetch({model:'claude-haiku-4-5',max_tokens:80,messages:[{role:'user',content:prompt}]});
     const data = await res.json();
     const raw  = data.content&&data.content[0]&&data.content[0].text ? data.content[0].text.trim() : '';
     const parts = raw.split('|');

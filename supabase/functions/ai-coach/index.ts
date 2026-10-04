@@ -5,7 +5,6 @@ const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 // Only these models may be requested, and replies are capped, so a signed-in
 // user can't run arbitrary workloads on our key.
 const ALLOWED_MODELS = [
-  "claude-sonnet-4-20250514",
   "claude-haiku-4-5",
   "claude-sonnet-5-5",
 ];
