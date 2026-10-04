@@ -8,7 +8,7 @@ const ALLOWED_MODELS = [
   "claude-haiku-4-5",
   "claude-sonnet-5-5",
 ];
-const MAX_TOKENS_CAP = 1500;
+const MAX_TOKENS_CAP = 4096;
 const MAX_BODY_BYTES = 60_000;
 
 const corsHeaders = {
@@ -75,7 +75,10 @@ serve(async (req) => {
       max_tokens: maxTokens,
       messages: body.messages,
     };
-    if (typeof body.system === "string") payload.system = body.system;
+    if (typeof body.system === "string") {
+      // Cached so multi-turn chats (onboarding) don't re-bill the long prompt each turn
+      payload.system = [{ type: "text", text: body.system, cache_control: { type: "ephemeral" } }];
+    }
 
     const response = await fetch(ANTHROPIC_URL, {
       method: "POST",

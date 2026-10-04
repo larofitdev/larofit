@@ -530,8 +530,8 @@ LF.ready().then(() => LF.guard());
    ============================================================ */
 
 // ── CONFIG ───────────────────────────────────────────────────
-// NOTE: Replace with a valid API key. This key is deactivated.
-const API_KEY = localStorage.getItem('lf_anthropic_key') || '';
+const SUPABASE_AI_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/ai-coach';
+// SUPABASE_ANON_KEY declared in supabase-client.js
 
 // ── STATE ─────────────────────────────────────────────────────
 let conversationHistory = [];
@@ -579,17 +579,19 @@ async function sendMessage(text) {
   showTyping();
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    // ai-coach only accepts a signed-in user's token (not the anon key)
+    const session = await LF.auth.session();
+    if (!session) throw new Error('Not signed in');
+    const response = await fetch(SUPABASE_AI_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + session.access_token,
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1200,
+        model: 'claude-haiku-4-5',
+        max_tokens: 2500,
         system: getSystemPrompt(),
         messages: conversationHistory
       })
@@ -599,12 +601,12 @@ async function sendMessage(text) {
     removeTyping();
 
     if (data.error) {
-      // No API key or invalid key — use demo mode
+      // AI unavailable — use demo mode
       handleDemoMode(msg);
       return;
     }
 
-    const aiText = data.content?.[0]?.text || '';
+    const aiText = (data.content || []).find(b => b.type === 'text')?.text || '';
 
     if (aiText.includes('GENERATING_PLAN')) {
       // Strip the signal and treat remainder as the raw plan JSON
@@ -627,7 +629,7 @@ async function sendMessage(text) {
   }
 }
 
-// ── DEMO MODE (no API key) ────────────────────────────────────
+// ── DEMO MODE (AI unavailable) ────────────────────────────────────
 // Walks through questions locally, then generates a canned program
 const demoFlow = [
   { q: "Great goal! What equipment do you have access to?",
@@ -672,8 +674,8 @@ function handleDemoMode(userMsg) {
 function getSystemPrompt() {
   // Build exercise name→id lookup string for the prompt
   const exList = (typeof LAROFIT_EXERCISES !== 'undefined' ? LAROFIT_EXERCISES : [])
-    .filter(e => ['strength','hiit','timed_bodyweight','plyo'].includes(e.type))
-    .map(e => `${e.name} [${e.id}]`)
+    .filter(e => ['weight_reps','reps'].includes(e.recordType) && !['Mobility','Stretch'].includes(e.movement))
+    .map(e => `${e.name} [${e.id}] (${e.equipment})`)
     .join(', ');
 
   return `You are LaroFit's AI Coach — a direct, knowledgeable personal trainer building a personalized weekly workout program for a new member.
@@ -683,7 +685,7 @@ USER PROFILE:
 - Sex: ${user.sex || 'not specified'}
 - DOB: ${user.dob || 'not specified'}
 
-EXERCISE LIBRARY — you MUST only use exercises from this list. Always include the [id] in brackets after each exercise name in your JSON output:
+EXERCISE LIBRARY — you MUST only use exercises from this list, and only ones whose equipment (in parentheses) the member has. Use the [id] in brackets as the exercise "id" in your JSON output:
 ${exList}
 
 YOUR JOB:
@@ -723,7 +725,7 @@ When you have all information, output EXACTLY "GENERATING_PLAN" on its own line,
       "name": "Day name (e.g. Push — Chest & Shoulders)",
       "rest": false,
       "exercises": [
-        { "id": "b7", "name": "Barbell bench press", "sets": 4, "reps": 8, "restSec": 90 }
+        { "id": "b19", "name": "Barbell Bench Press", "sets": 4, "reps": 8, "restSec": 90 }
       ]
     },
     { "name": "Rest", "rest": true }
