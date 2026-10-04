@@ -1,6 +1,8 @@
 
 [functions.ai-coach]
 enabled = true
+# Left off on purpose: the gateway check would accept the public anon key.
+# The function itself requires a signed-in user's token.
 verify_jwt = false
 import_map = "./functions/ai-coach/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
