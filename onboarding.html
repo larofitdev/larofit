@@ -997,15 +997,30 @@ function showPreview(program) {
 }
 
 // ── ACCEPT / REBUILD ──────────────────────────────────────────
-function acceptProgram() {
-  if (!generatedProgram) return;
+let acceptingProgram = false;
+async function acceptProgram() {
+  if (!generatedProgram || acceptingProgram) return;
+  acceptingProgram = true;
 
-  // Save program
-  const programs = [];
-  programs.push(generatedProgram);
+  // Supabase needs a UUID id so the saved row keeps the same id as the local copy
+  if (!/^[0-9a-f-]{36}$/.test(generatedProgram.id || '')) generatedProgram.id = crypto.randomUUID();
+  generatedProgram.isActive = true;
+
+  // Add alongside existing programs (don't replace them) and make it the active one
+  const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]')
+    .filter(p => p.id !== generatedProgram.id)
+    .map(p => ({ ...p, isActive: false }));
+  programs.unshift(generatedProgram);
   localStorage.setItem('lf_programs', JSON.stringify(programs));
   localStorage.setItem('lf_active_program', JSON.stringify(generatedProgram.id));
   localStorage.setItem('lf_seeded', JSON.stringify(true));
+
+  // Sync to Supabase before leaving — the home page reloads programs from there
+  try {
+    await LF.ready();
+    await LF.db.saveProgram(generatedProgram);
+    await LF.db.setActiveProgram(generatedProgram.id);
+  } catch {}
 
   // Save user properly
   const existing = (() => { try { return JSON.parse(localStorage.getItem('lf_user') || '{}'); } catch { return {}; } })();
