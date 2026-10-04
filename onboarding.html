@@ -617,7 +617,7 @@ async function sendMessage(text) {
       conversationHistory.push({ role: 'assistant', content: aiText });
       addMessage('ai', aiText);
       const qrs = extractQuickReplies(aiText);
-      if (qrs.length) setQuickReplies(qrs.options, qrs.mode);
+      if (qrs.options.length) setQuickReplies(qrs.options, qrs.mode);
       setInputEnabled(true);
     }
 
@@ -708,7 +708,7 @@ INJURY RULES:
 
 LANGUAGE RULES — NEVER USE: "hypertrophy" (say "muscle growth"), "macros" (say "protein, carbs, and fat"), "caloric deficit" (say "eating less than you burn"), "TDEE", "periodization", "progressive overload" (say "gradually adding weight or reps").
 
-QUICK REPLY HINTS — when asking a question with clear options, end your message with:
+QUICK REPLY HINTS — the member answers by tapping buttons, so end EVERY question (including injury follow-ups) with 3–6 short tappable options on the last line. They can still type if none fit:
 QUICK_REPLIES: option1 | option2 | option3 | option4
 For multi-select questions (like training days), add MULTI at the end:
 QUICK_REPLIES: Mon | Tue | Wed | Thu | Fri | Sat | Sun | MULTI
