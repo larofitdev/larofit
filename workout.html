@@ -3291,7 +3291,7 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
     const text = data.content&&data.content[0]&&data.content[0].text ? data.content[0].text.trim() : 'Good set — keep that form tight.';
     restAiSpinner.style.display = 'none';
     restAiText.textContent      = text;
-    if (workoutMode === 'voice') speakText(text);
+    if (workoutMode === 'voice' && voicePhase === 'resting') speakText(text);
   } catch {
     restAiSpinner.style.display = 'none';
     restAiText.textContent      = 'Good set — rest up for the next one.';
@@ -3342,6 +3342,7 @@ let voiceWakeLock = null, voiceWatchdog = null;
 let voiceReady = false;   // initVoice has run on a device that supports voice
 let voiceCtx = null, voiceMicStream = null, voiceMicPending = null, voiceSrc = null, voiceNode = null;
 let voiceSendChain = Promise.resolve(), voiceMutedChecks = 0;
+let voiceFmwSkipped = false;   // user has declined Find My Weight this workout
 // Phrase detection state
 const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], seg: [], segPeak: 0, blocks: 0 };
 
@@ -3364,6 +3365,7 @@ function initVoice() {
   }
   document.getElementById('voice-hud').classList.add('show');
   voiceKeepAwake();
+  voiceFmwSkipped = false;
   // Created inside the Start tap so the phone lets it run
   if (!voiceCtx || voiceCtx.state === 'closed') {
     voiceCtx = new AC();
@@ -3640,7 +3642,13 @@ function voiceAnnounceExercise(ex) {
   const isFMW = isFirstTime(ex);
   const fmw   = getFMW(currentExIdx);
   const sug   = target.sugWeight || getSuggestedWeight(ex);
-  if (isFMW && !fmw.locked && !fmw.declined && !fmw.active) {
+  if (isFMW && !fmw.locked && !fmw.declined && !fmw.active && voiceFmwSkipped) {
+    // They've already turned the offer down this workout — don't ask on every exercise
+    const exIdx = currentExIdx;
+    setTimeout(() => { if (currentExIdx === exIdx) dismissFMW(false); }, 0);
+    voicePhase = 'count_reps';
+    voicePrompt(ex.name + '. Say weight and reps when you finish.', true);
+  } else if (isFMW && !fmw.locked && !fmw.declined && !fmw.active) {
     // Ask the user if they want FMW help — don't auto-start
     voicePhase = 'fmw_offer';
     voicePrompt('First time doing ' + ex.name + '. Would you like help finding your starting weight? Say yes or skip.', true);
@@ -3715,6 +3723,7 @@ function handleVoiceResult(raw) {
     }
     if (/\b(no|nope|nah|skip|pass)\b/.test(t)) {
       dismissFMW(false);
+      voiceFmwSkipped = true;
       voicePhase = 'count_reps';
       voicePrompt('Got it. Say weight and reps when you finish, like 135 for 8.', true);
       return true;
@@ -3783,7 +3792,10 @@ function normalizeSpeech(raw) {
     const n = wordsToNumber(run);
     out.push(n !== null ? String(n) : run.map(w => VOICE_ONES[w] ?? VOICE_TENS[w] ?? '').join(' '));
   }
-  return out.join(' ').replace(/\s+/g, ' ').trim();
+  return out.join(' ').replace(/\s+/g, ' ')
+    .replace(/(\d+) and a? ?half/g, '$1.5')      // "twelve and a half" → 12.5
+    .replace(/(\d+) point (\d+)/g, '$1.$2')     // "twelve point five" → 12.5
+    .trim();
 }
 
 // ["one","thirty","five"] → 135, ["twenty","five"] → 25, ["two","hundred","ten"] → 210
@@ -3818,7 +3830,9 @@ function parseSetSpeech(t) {
     const bare = rest.match(/\d+(?:\.\d+)?/g) || [];
     if (bare.length === 1) { if (weight === null) weight = +bare[0]; else if (reps === null) reps = +bare[0]; }
   }
-  else if ((m = t.match(new RegExp(NUM + '\\s*(?:for|x|times|by)\\s*(\\d+)\\b')))) { weight = +m[1]; reps = +m[2]; }   // 135 for 8
+  else if ((m = t.match(new RegExp('(\\d+)\\s*at\\s*' + NUM)))) { reps = +m[1]; weight = +m[2]; }   // 10 at 27.5
+  // 135 for 8 — also "ten and ten", and "for" misheard as "or"
+  else if ((m = t.match(new RegExp(NUM + '\\s*(?:for|x|times|by|or|and)\\s*(\\d+)\\b')))) { weight = +m[1]; reps = +m[2]; }
   else if ((m = t.match(new RegExp(REPS + '\\s*(?:at|with)\\s*' + NUM)))) weight = +m[1];   // "reps at 135" — the count was clipped
   else if ((m = t.match(/^(\d+(?:\.\d+)?) 4 (\d+)$/))) { weight = +m[1]; reps = +m[2]; }     // "135 4 8" — "for" heard as 4
   else if ((m = t.match(/^(\d+(?:\.\d+)?) (\d+)$/))) { weight = +m[1]; reps = +m[2]; }       // 135 8
@@ -3851,7 +3865,7 @@ function speakText(text, interrupt) {
   if (interrupt) { voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0; window.speechSynthesis.cancel(); }
   pauseListening();
   const gen = voiceSpeakGen;
-  const utt = new SpeechSynthesisUtterance(text);
+  const utt = new SpeechSynthesisUtterance(String(text).replace(/[*_#`]/g, ''));
   utt.rate=1.05; utt.pitch=1.0; utt.volume=1.0;
   let finished = false;
   const done = how => {
