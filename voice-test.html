@@ -61,6 +61,21 @@
 </div>
 
 <div class="card">
+  <h2>4. Speak-then-listen experiments</h2>
+  <p>Earbuds in. Tap each button once, in order, and wait for it to finish before the next.
+     Each time, say “skip” as soon as the box below says LISTENING. Nothing to judge yourself — just copy the results at the end.</p>
+  <div class="result" id="exp-status" style="font-weight:700;margin:0 0 12px;">Not started</div>
+  <button class="exp" data-exp="A">A. Listen straight away</button>
+  <button class="exp" data-exp="B">B. Listen again straight away</button>
+  <button class="exp" data-exp="C">C. Wait 5 seconds, then listen</button>
+  <button class="exp" data-exp="D">D. Speak, then listen</button>
+  <button class="exp" data-exp="E">E. Speak, then listen (again)</button>
+  <button class="exp" data-exp="F">F. Speak, pause 2 seconds, then listen</button>
+  <button class="exp" data-exp="G">G. Hold mic open, speak, then listen</button>
+  <button class="exp" data-exp="H">H. Listen first, speak over it</button>
+</div>
+
+<div class="card">
   <h2>Results</h2>
   <pre id="log"></pre>
   <button class="ghost" id="btn-copy">Copy results</button>
@@ -176,6 +191,96 @@ document.getElementById('btn-tts').onclick = () => {
   window.speechSynthesis.cancel();
   window.speechSynthesis.speak(utt);
 };
+
+// ── 4. SPEAK-THEN-LISTEN EXPERIMENTS ──────────────────────────
+// Each one reproduces a sequence the workout page uses, to find which the phone supports.
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const expStatus = (text, ok) => show('exp-status', text, ok);
+
+// One listen with a fresh recogniser. Resolves with what was heard ('' if nothing).
+function listenOnce(tag, ms) {
+  return new Promise(resolve => {
+    const t0 = Date.now(), at = () => '+' + (Date.now() - t0) + 'ms';
+    let heard = '', ended = false, rec;
+    const finish = () => { if (ended) return; ended = true; log(tag + ' RESULT heard="' + heard + '"'); resolve(heard); };
+    try {
+      rec = new SR();
+      rec.lang = 'en-US'; rec.continuous = false; rec.interimResults = true;
+      rec.onstart       = () => log(tag + ' ' + at() + ' start');
+      rec.onaudiostart  = () => log(tag + ' ' + at() + ' audiostart');
+      rec.onspeechstart = () => log(tag + ' ' + at() + ' speechstart');
+      rec.onresult = e => {
+        heard = [...e.results].map(r => r[0].transcript).join(' ');
+        log(tag + ' ' + at() + ' result "' + heard + '" final=' + e.results[e.results.length - 1].isFinal);
+      };
+      rec.onerror = e => log(tag + ' ' + at() + ' error=' + e.error);
+      rec.onend   = () => { log(tag + ' ' + at() + ' end'); finish(); };
+      rec.start();
+      expStatus('LISTENING — say “skip”');
+      setTimeout(() => { try { rec.stop(); } catch {} setTimeout(finish, 1500); }, ms);
+    } catch (err) {
+      log(tag + ' start threw ' + err.name + ': ' + err.message);
+      finish();
+    }
+  });
+}
+
+function speakOnce(tag, text) {
+  return new Promise(resolve => {
+    const t0 = Date.now();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 1.05;
+    let done = false;
+    const finish = how => { if (done) return; done = true; log(tag + ' spoke (' + how + ') after ' + (Date.now() - t0) + 'ms'); resolve(); };
+    utt.onend = () => finish('onend'); utt.onerror = e => finish('error=' + e.error);
+    setTimeout(() => finish('timeout'), 9000);
+    window._lastUtt = utt;   // keep a reference so it isn't collected mid-speech
+    expStatus('Speaking…');
+    window.speechSynthesis.speak(utt);
+  });
+}
+
+const PROMPT = 'First time doing bench press. Say yes or skip.';
+const experiments = {
+  A: async t => listenOnce(t, 6000),
+  B: async t => listenOnce(t, 6000),
+  C: async t => { expStatus('Waiting 5 seconds…'); await wait(5000); return listenOnce(t, 6000); },
+  D: async t => { await speakOnce(t, PROMPT); await wait(250); return listenOnce(t, 6000); },
+  E: async t => { await speakOnce(t, PROMPT); await wait(250); return listenOnce(t, 6000); },
+  F: async t => { await speakOnce(t, PROMPT); expStatus('Pausing 2 seconds…'); await wait(2000); return listenOnce(t, 6000); },
+  G: async t => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    log(t + ' holding mic "' + stream.getAudioTracks()[0].label + '"');
+    try { await speakOnce(t, PROMPT); await wait(250); return await listenOnce(t, 6000); }
+    finally { stream.getTracks().forEach(tr => tr.stop()); }
+  },
+  H: async t => {
+    const listening = listenOnce(t, 12000);
+    await wait(1500);
+    await speakOnce(t, PROMPT);
+    expStatus('LISTENING — say “skip”');
+    return listening;
+  },
+};
+
+let expRunning = false;
+document.querySelectorAll('button.exp').forEach(btn => {
+  btn.style.marginBottom = '8px';
+  btn.onclick = async () => {
+    if (expRunning) return;
+    if (!SR) { expStatus('Speech recognition is not available on this device.', false); return; }
+    expRunning = true;
+    const id = btn.dataset.exp, tag = 'EXP ' + id;
+    log('--- ' + tag + ': ' + btn.textContent.trim());
+    let heard = '';
+    try { heard = await experiments[id](tag); }
+    catch (err) { log(tag + ' failed ' + err.name + ': ' + err.message); }
+    const ok = /skip/i.test(heard);
+    btn.textContent = btn.textContent.replace(/ [✓✗]$/, '') + (ok ? ' ✓' : ' ✗');
+    expStatus(id + ' done — ' + (heard ? 'heard “' + heard + '”' : 'heard nothing') + '. Tap the next one.', ok);
+    expRunning = false;
+  };
+});
 
 // ── COPY ──────────────────────────────────────────────────────
 document.getElementById('btn-copy').onclick = async () => {
