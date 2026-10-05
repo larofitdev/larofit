@@ -943,6 +943,8 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div class="voice-hud-text"  id="voice-hud-text">Listening...</div>
     <div class="voice-hud-heard" id="voice-hud-heard"></div>
   </div>
+  <button onclick="event.stopPropagation();voiceCopyLog()" aria-label="Copy voice log"
+          style="margin-left:auto;flex-shrink:0;min-width:44px;min-height:44px;background:none;border:none;color:rgba(255,255,255,0.45);font-size:11px;font-family:var(--font-mono);">LOG</button>
 </div>
 
 <!-- REST TIMER POPUP -->
@@ -3327,6 +3329,20 @@ let voicePending = { exIdx:0, setIdx:0, sugWeight:0 };
 let voiceAutoOk = true;   // false once the browser refuses to open the mic without a tap
 let voiceSpeakGen = 0, voiceSpeaking = 0, voiceSpeakUntil = 0, voiceUtts = [], voiceLastPrompt = '';
 let voiceWakeLock = null;
+let voiceListenSince = 0, voiceWatchdog = null;
+
+// Rolling record of what the mic and speech did, for diagnosing voice problems
+let voiceLog = [];
+function voiceDbg(msg) {
+  voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
+  if (voiceLog.length > 200) voiceLog.shift();
+}
+function voiceCopyLog() {
+  const text = navigator.userAgent + '
+' + voiceLog.join('
+');
+  navigator.clipboard.writeText(text).then(() => showToast('Voice log copied'), () => showToast('Could not copy voice log'));
+}
 
 function initVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -3340,29 +3356,52 @@ function initVoice() {
   recognition.onresult = e => {
     const alts = [...e.results[e.results.length - 1]].map(a => a.transcript.toLowerCase().trim());
     document.getElementById('voice-hud-heard').textContent = '"' + alts[0] + '"';
+    voiceListenSince = Date.now();
     // Try each guess until one is understood
-    for (const t of alts) { if (handleVoiceResult(t)) break; }
+    let understood = false;
+    for (const t of alts) { if (handleVoiceResult(t)) { understood = true; break; } }
+    voiceDbg('heard ' + JSON.stringify(alts) + (understood ? ' -> understood' : ' -> ignored'));
   };
   recognition.onend = () => {
     isListening = false;
+    voiceDbg('mic ended');
     document.getElementById('voice-pulse').classList.remove('listening');
     if (voicePhase !== 'idle' && workoutMode === 'voice' && voiceAutoOk && !voiceSpeaking) setTimeout(startListening, 400);
   };
   recognition.onerror = e => {
     isListening = false;
+    voiceDbg('mic error: ' + e.error);
     document.getElementById('voice-pulse').classList.remove('listening');
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       voiceAutoOk = false;
       document.getElementById('voice-hud-heard').textContent = 'Tap here to speak';
+    } else if (e.error !== 'aborted' && e.error !== 'no-speech') {
+      document.getElementById('voice-hud-heard').textContent = 'Mic problem: ' + e.error;
     }
   };
+  // The phone ends each listening session after a few seconds of silence, and a
+  // restart can fail or go deaf without telling us — keep the mic open while we wait
+  voiceWatchdog = setInterval(() => {
+    if (workoutMode !== 'voice' || voicePhase === 'idle' || voiceSpeaking || document.hidden) return;
+    if (!isListening) { if (voiceAutoOk) startListening(); }
+    else if (Date.now() - voiceListenSince > 20000) {
+      voiceDbg('mic silent 20s, restarting');
+      pauseListening();
+      isListening = false;
+    }
+  }, 2000);
   startListening();   // we're inside the Start tap, so the mic permission prompt appears now
 }
 
 function startListening() {
   if (!recognition || isListening || workoutMode !== 'voice') return;
   if (voiceSpeaking) return;   // resumes when the app finishes talking
-  try { recognition.start(); isListening = true; document.getElementById('voice-hud').classList.add('show'); document.getElementById('voice-pulse').classList.add('listening'); } catch(e) {}
+  try {
+    recognition.start();
+    isListening = true; voiceListenSince = Date.now();
+    voiceDbg('mic started');
+    document.getElementById('voice-hud').classList.add('show'); document.getElementById('voice-pulse').classList.add('listening');
+  } catch(e) { voiceDbg('mic start failed: ' + e.name + ' ' + e.message); }
 }
 
 // Close the mic without leaving the current phase
@@ -3636,6 +3675,7 @@ function updateVoiceHUD(msg) { const el=document.getElementById('voice-hud-text'
 // interrupt=true drops anything still queued; otherwise it waits its turn.
 function speakText(text, interrupt) {
   if (!window.speechSynthesis || workoutMode !== 'voice' || !text) return;
+  voiceDbg('say: ' + text.slice(0, 60));
   if (interrupt) { voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0; window.speechSynthesis.cancel(); }
   pauseListening();
   const gen = voiceSpeakGen;
@@ -3648,6 +3688,7 @@ function speakText(text, interrupt) {
     voiceUtts = voiceUtts.filter(u => u !== utt);
     if (gen !== voiceSpeakGen) return;
     voiceSpeaking = Math.max(0, voiceSpeaking - 1);
+    voiceDbg('finished speaking');
     if (!voiceSpeaking && voicePhase !== 'idle') setTimeout(startListening, 250);
   };
   utt.onend = done; utt.onerror = done;
