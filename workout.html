@@ -1599,8 +1599,10 @@ function closeStartModal() {
 function beginWorkout(mode) {
   closeStartModal();
   setMode(mode);   // inside the tap, so the mic and speech are allowed to start
-  // Voice needs the mic held open before the first spoken prompt (see voiceHoldMic)
-  if (workoutMode === 'voice') Promise.all([voicePrimeSpeech(), voiceHoldMic()]).then(() => buildExerciseList(_prestartExercises, _prestartName));
+  // Voice needs speech unlocked inside this tap, then the mic held open, then the
+  // first prompt — strictly in that order. Opening the mic while the phone is
+  // still speaking (e.g. behind the permission prompt) leaves it deaf.
+  if (workoutMode === 'voice') voicePrimeSpeech().then(voiceHoldMic).then(() => buildExerciseList(_prestartExercises, _prestartName));
   else buildExerciseList(_prestartExercises, _prestartName);
 }
 
