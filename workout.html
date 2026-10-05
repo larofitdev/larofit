@@ -3331,7 +3331,7 @@ let voicePending = { exIdx:0, setIdx:0, sugWeight:0 };
 let voiceAutoOk = true;   // false once the browser refuses to open the mic without a tap
 let voiceSpeakGen = 0, voiceSpeaking = 0, voiceSpeakUntil = 0, voiceUtts = [], voiceLastPrompt = '';
 let voiceWakeLock = null;
-let voiceListenSince = 0, voiceWatchdog = null;
+let voiceListenSince = 0, voiceWatchdog = null, voiceSilentRestarts = 0;
 let voiceSR = null, voiceSession = 0, voiceInterimTimer = null;
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
@@ -3356,10 +3356,19 @@ function initVoice() {
   voiceWatchdog = setInterval(() => {
     if (workoutMode !== 'voice' || voicePhase === 'idle' || voiceSpeaking || document.hidden) return;
     if (!voiceMicStream) voiceHoldMic();
+    if (voiceMicPending) return;   // wait for the held mic before listening
     if (!isListening) { if (voiceAutoOk) startListening(); }
     else if (Date.now() - voiceListenSince > 30000) {
-      voiceDbg('mic silent 30s, restarting');
+      voiceSilentRestarts++;
+      const tr = voiceMicStream && voiceMicStream.getAudioTracks()[0];
+      voiceDbg('mic silent 30s, restarting (held mic: ' + (tr ? tr.readyState + (tr.muted ? ', muted' : '') : 'none') + ')');
       pauseListening();
+      // Silence through a set or a rest is normal; two in a row while waiting for a result may be a dead mic
+      if (voiceSilentRestarts % 2 === 0 && voicePhase !== 'resting') {
+        voiceDbg('re-opening held mic');
+        voiceReleaseMic();
+        voiceHoldMic();
+      }
     }
   }, 2000);
 }
@@ -3389,7 +3398,7 @@ function startListening() {
   rec.onspeechstart = () => { if (session === voiceSession) voiceDbg('speech detected'); };
   rec.onresult = e => {
     if (session !== voiceSession) return;
-    voiceListenSince = Date.now();
+    voiceListenSince = Date.now(); voiceSilentRestarts = 0;
     const last = e.results[e.results.length - 1];
     const full = [...e.results].map(r => r[0].transcript).join(' ').toLowerCase().trim();
     pending = [full, ...[...last].slice(1).map(a => a.transcript.toLowerCase().trim())];
@@ -3462,6 +3471,8 @@ function voiceHoldMic() {
     const track = stream.getAudioTracks()[0];
     voiceDbg('holding mic "' + track.label + '"');
     track.addEventListener('ended', () => { voiceDbg('held mic ended'); if (voiceMicStream === stream) voiceMicStream = null; });
+    track.addEventListener('mute',   () => voiceDbg('held mic muted by the phone'));
+    track.addEventListener('unmute', () => voiceDbg('held mic unmuted'));
   }).catch(e => {
     voiceDbg('could not hold mic: ' + e.name);
   }).then(() => { voiceMicPending = null; });
@@ -3512,7 +3523,11 @@ function voiceHudTap() {
     updateVoiceHUD(target.bw ? 'Say your reps.' : 'Say weight and reps, like 135 for 8.');
   }
   voiceAutoOk = true;
-  startListening();
+  voiceDbg('bar tapped: resetting mic');
+  document.getElementById('voice-hud-heard').textContent = 'Listening again…';
+  pauseListening();
+  voiceReleaseMic();
+  voiceHoldMic().then(startListening);
 }
 
 // First un-logged set of an exercise as a voice target; null if done or not voice-loggable
@@ -3671,6 +3686,7 @@ const VOICE_SOUNDALIKES = { ate:8, to:2, too:2, for:4, fore:4, won:1, tree:3, se
 function normalizeSpeech(raw) {
   let t = String(raw || '').toLowerCase()
     .replace(/(\d+):(\d\d)/g, '$1$2')
+    .replace(/£/g, ' pounds ').replace(/#/g, ' pounds ')
     .replace(/(\d),(\d)/g, '$1$2')
     .replace(/hundred and /g, 'hundred ')
     .replace(/\.(?!\d)/g, ' ')
@@ -3710,10 +3726,21 @@ function wordsToNumber(run) {
 function parseSetSpeech(t) {
   const NUM = '(\\d+(?:\\.\\d+)?)', UNIT = '(?:pounds?|lbs?|kilos?|kgs?|kilograms?)', REPS = '(?:reps?|wraps?|raps?)';
   let weight = null, reps = null, m;
-  if ((m = t.match(new RegExp(NUM + '\\s*' + UNIT + '?\\s*(?:for|x|times|by)\\s*(\\d+)\\b')))) { weight = +m[1]; reps = +m[2]; }   // 135 for 8
-  else if ((m = t.match(new RegExp('(\\d+)\\s*' + REPS + '\\b(?:\\s*(?:at|with|of|on)?\\s*' + NUM + ')?')))) { reps = +m[1]; if (m[2]) weight = +m[2]; }   // 8 reps at 135
+  const wTag = t.match(new RegExp(NUM + '\\s*' + UNIT + '\\b'));
+  const rTag = t.match(new RegExp('(\\d+)\\s*' + REPS + '\\b'));
+  if (wTag || rTag) {
+    // "10 pounds 15 reps", "15 reps 10 pounds" — each number says what it is
+    if (wTag) weight = +wTag[1];
+    if (rTag) reps = +rTag[1];
+    // Only one is labelled ("10 15 reps", "8 reps at 135", "135 pounds for 8"): a single bare number is the other
+    let rest = t;
+    if (wTag) rest = rest.replace(wTag[0], ' ');
+    if (rTag) rest = rest.replace(rTag[0], ' ');
+    const bare = rest.match(/\d+(?:\.\d+)?/g) || [];
+    if (bare.length === 1) { if (weight === null) weight = +bare[0]; else if (reps === null) reps = +bare[0]; }
+  }
+  else if ((m = t.match(new RegExp(NUM + '\\s*(?:for|x|times|by)\\s*(\\d+)\\b')))) { weight = +m[1]; reps = +m[2]; }   // 135 for 8
   else if ((m = t.match(new RegExp(REPS + '\\s*(?:at|with)\\s*' + NUM)))) weight = +m[1];   // "reps at 135" — the count was clipped
-  else if ((m = t.match(new RegExp(NUM + '\\s*' + UNIT)))) weight = +m[1];                  // 135 pounds
   else if ((m = t.match(/^(\d+(?:\.\d+)?) 4 (\d+)$/))) { weight = +m[1]; reps = +m[2]; }     // "135 4 8" — "for" heard as 4
   else if ((m = t.match(/^(\d+(?:\.\d+)?) (\d+)$/))) { weight = +m[1]; reps = +m[2]; }       // 135 8
   else if ((m = t.match(/^\D*(\d+(?:\.\d+)?)\D*$/))) { const n = +m[1]; if (n <= 50 && Number.isInteger(n)) reps = n; else weight = n; }
