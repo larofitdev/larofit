@@ -1600,7 +1600,7 @@ function beginWorkout(mode) {
   closeStartModal();
   setMode(mode);   // inside the tap, so the mic and speech are allowed to start
   // Voice needs the mic held open before the first spoken prompt (see voiceHoldMic)
-  if (workoutMode === 'voice') voiceHoldMic().then(() => buildExerciseList(_prestartExercises, _prestartName));
+  if (workoutMode === 'voice') Promise.all([voicePrimeSpeech(), voiceHoldMic()]).then(() => buildExerciseList(_prestartExercises, _prestartName));
   else buildExerciseList(_prestartExercises, _prestartName);
 }
 
@@ -3467,6 +3467,21 @@ function voiceHoldMic() {
   }).then(() => { voiceMicPending = null; });
   return voiceMicPending;
 }
+// iPhone only lets a page speak if its first utterance starts inside a tap.
+// Call this synchronously from the Start tap; resolves when it has been said.
+function voicePrimeSpeech() {
+  return new Promise(resolve => {
+    if (!window.speechSynthesis) return resolve();
+    const utt = new SpeechSynthesisUtterance('Voice mode on.');
+    utt.rate = 1.05;
+    let done = false;
+    const finish = how => { if (done) return; done = true; voiceDbg('speech primer: ' + how); resolve(); };
+    utt.onend = () => finish('spoken'); utt.onerror = e => finish('error ' + e.error);
+    setTimeout(() => finish('timed out'), 4000);
+    voiceUtts.push(utt);
+    window.speechSynthesis.speak(utt);
+  });
+}
 function voiceReleaseMic() {
   if (voiceMicStream) { voiceMicStream.getTracks().forEach(t => t.stop()); voiceMicStream = null; }
 }
@@ -3733,19 +3748,19 @@ function speakText(text, interrupt) {
   const utt = new SpeechSynthesisUtterance(text);
   utt.rate=1.05; utt.pitch=1.0; utt.volume=1.0;
   let finished = false;
-  const done = () => {
+  const done = how => {
     if (finished) return;
     finished = true;
     voiceUtts = voiceUtts.filter(u => u !== utt);
     if (gen !== voiceSpeakGen) return;
     voiceSpeaking = Math.max(0, voiceSpeaking - 1);
-    voiceDbg('finished speaking');
+    voiceDbg(how === 'end' ? 'finished speaking' : 'speech did not finish (' + how + ')');
     if (!voiceSpeaking && voicePhase !== 'idle') setTimeout(startListening, 250);
   };
-  utt.onend = done; utt.onerror = done;
+  utt.onend = () => done('end'); utt.onerror = e => done('error ' + e.error);
   // iOS sometimes never fires onend — don't leave the mic closed forever
   voiceSpeakUntil = Math.max(Date.now(), voiceSpeakUntil) + 2500 + text.length * 110;
-  setTimeout(done, voiceSpeakUntil - Date.now());
+  setTimeout(() => done('timed out'), voiceSpeakUntil - Date.now());
   voiceSpeaking++;
   voiceUtts.push(utt);   // hold a reference so it isn't collected mid-speech
   document.getElementById('voice-hud').classList.add('show');
