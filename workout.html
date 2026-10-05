@@ -530,13 +530,11 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 }
 .prev-best i { font-size: 13px; }
 /* How-to: instructions and link from a custom exercise */
-.ex-howto { padding: 10px 16px 6px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
-.ex-howto-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
-.ex-howto-text {
-  font-size: 14px; line-height: 1.45; color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere;
-  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
-}
-.ex-howto-text.open { display: block; }
+.ex-howto { border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+.ex-howto-toggle { min-height: 44px; }
+.ex-howto-body { display: none; padding: 0 16px 6px; }
+.ex-howto-body.open { display: block; }
+.ex-howto-text { font-size: 14px; line-height: 1.45; color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere; }
 .ex-howto-video { margin: 8px 0 2px; }
 .ex-howto-poster {
   position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; max-height: 190px; padding: 0;
@@ -897,11 +895,16 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
       <!-- How-to from a custom exercise: the instructions and link added when it was created -->
       <div class="ex-howto" id="ex-howto" style="display:none;">
-        <div class="ex-howto-label">How to do it</div>
-        <div class="ex-howto-text" id="ex-howto-text"></div>
-        <div class="ex-howto-video" id="ex-howto-video" style="display:none;"></div>
-        <button class="ex-howto-more" id="ex-howto-more" onclick="toggleHowTo()">Show more</button>
-        <a class="ex-howto-link" id="ex-howto-link" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i><span>Open exercise link</span></a>
+        <button class="ex-notes-toggle ex-howto-toggle" id="ex-howto-toggle" onclick="toggleHowTo()" aria-expanded="false" aria-controls="ex-howto-body">
+          <i class="ti ti-info-circle" aria-hidden="true"></i>
+          <span>How to do it</span>
+          <i class="ti ti-chevron-down notes-chevron" aria-hidden="true"></i>
+        </button>
+        <div class="ex-howto-body" id="ex-howto-body">
+          <div class="ex-howto-text" id="ex-howto-text"></div>
+          <div class="ex-howto-video" id="ex-howto-video" style="display:none;"></div>
+          <a class="ex-howto-link" id="ex-howto-link" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i><span>Open exercise link</span></a>
+        </div>
       </div>
 
       <!-- Sets table -->
@@ -1936,20 +1939,16 @@ function onGifEnded() {
 function renderHowTo(ex) {
   const wrap   = document.getElementById('ex-howto');
   const textEl = document.getElementById('ex-howto-text');
-  const moreEl = document.getElementById('ex-howto-more');
   const linkEl = document.getElementById('ex-howto-link');
   const custom = getCustomExercises().find(e => e.id === ex.id) || getCustomExercises().find(e => e.name === ex.name) || {};
   const notes  = typeof custom.instructions === 'string' ? custom.instructions.trim() : '';
   const url    = safeExerciseUrl(custom.exerciseUrl);
+  setHowToOpen(false);   // closed until the user asks for it, so the sets stay on screen
   if (!notes && !url) { wrap.style.display = 'none'; _howToVideo = null; showHowToPoster(); return; }
 
   wrap.style.display = '';
   textEl.textContent   = notes;
   textEl.style.display = notes ? '' : 'none';
-  textEl.classList.remove('open');
-  moreEl.textContent   = 'Show more';
-  // Only offer "Show more" when the text is actually cut off
-  moreEl.style.display = notes && textEl.scrollHeight > textEl.clientHeight + 2 ? '' : 'none';
   if (url) { linkEl.href = url; linkEl.style.display = ''; }
   else     { linkEl.removeAttribute('href'); linkEl.style.display = 'none'; }
 
@@ -2008,8 +2007,15 @@ function playHowToVideo() {
 function closeHowToVideo() { showHowToPoster(); }
 
 function toggleHowTo() {
-  const open = document.getElementById('ex-howto-text').classList.toggle('open');
-  document.getElementById('ex-howto-more').textContent = open ? 'Show less' : 'Show more';
+  setHowToOpen(!document.getElementById('ex-howto-body').classList.contains('open'));
+}
+
+function setHowToOpen(open) {
+  const toggle = document.getElementById('ex-howto-toggle');
+  document.getElementById('ex-howto-body').classList.toggle('open', open);
+  toggle.classList.toggle('open', open);
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (!open && howToVideoPlaying) showHowToPoster();   // closing the section stops the video
 }
 
 // Only ever link out to a normal web address
