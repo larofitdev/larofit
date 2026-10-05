@@ -1637,6 +1637,7 @@ function buildExerciseList(exArr, workoutName) {
       restSec:    exN.restSec || 90,
       type:       exTypeOf(exN),
       mediaUrl:   exN.mediaUrl || lookupMediaUrl(exN.id),
+      planWeight: parseFloat(exN.weight) || 0,   // weight set in the program builder
       loggedSets: buildLoggedSets(exN)
     };
   });
@@ -1657,15 +1658,16 @@ function buildLoggedSets(ex) {
   } else if (t === 'bodyweight') {
     return Array.from({ length: count }, () => ({ reps: '', logged: false }));
   } else {
-    // strength — pre-fill from last session
+    // strength — pre-fill from last session, else from what the program planned
     const last = getLastSession(ex.id || ex.name);
+    const planWeight = parseFloat(ex.weight) || 0, planReps = parseInt(ex.reps) || 0;
     return Array.from({ length: count }, (_, i) => {
       const lastSet = last && last.sets ? last.sets[i] : null;
       const fallback = last ? { weight: last.bestWeight, reps: last.bestReps } : null;
       const src = lastSet || fallback;
       return {
-        weight: (src && src.weight) ? String(src.weight) : '',
-        reps:   (src && src.reps)   ? String(src.reps)   : '',
+        weight: (src && src.weight) ? String(src.weight) : (planWeight ? String(planWeight) : ''),
+        reps:   (src && src.reps)   ? String(src.reps)   : (planReps   ? String(planReps)   : ''),
         logged: false
       };
     });
@@ -3163,9 +3165,17 @@ function setMode(mode) {
   else { stopListening(); document.getElementById('voice-hud').classList.remove('show'); }
 }
 
+const EQ_FROM_LIBRARY = { barbell:'bb', ez_bar:'bb', dumbbells:'db', machine_cable:'mc', kettlebells:'kb', bands:'band',
+  bodyweight:'bw', bench:'bw', exercise_ball:'bw', cardio_machine:'bw' };
+const CATEGORY_FROM_MUSCLE = { shoulders:'shoulders', biceps:'arms', triceps:'arms', forearms:'arms', abs:'core',
+  upper_legs:'legs', lower_legs:'legs', glutes:'glutes', back:'back', chest:'chest' };
+
 function lookupExData(id) {
   if (!id || typeof LAROFIT_EXERCISES === 'undefined') return null;
-  return LAROFIT_EXERCISES.find(e => e.id === id) || null;
+  const e = LAROFIT_EXERCISES.find(e => e.id === id);
+  if (!e) return null;
+  // The library stores `equipment` / `primaryMuscle`; the weight logic uses these short codes
+  return { ...e, eq: e.eq || EQ_FROM_LIBRARY[e.equipment] || 'db', category: e.category || CATEGORY_FROM_MUSCLE[e.primaryMuscle] || '' };
 }
 
 const EQ_MULTIPLIER = { bb:0.35, db:0.12, mc:0.20, cd:0.12, band:0.05, rc:0.12, kb:0.12, bw:0, yoga:0 };
@@ -3193,7 +3203,10 @@ function getSuggestedWeight(ex) {
   return last.bestReps >= (ex.reps||10) ? last.bestWeight + increment : last.bestWeight;
 }
 
-function isFirstTime(ex) { const l = getLastSession(ex.id||ex.name); return !l||!l.bestWeight; }
+function isFirstTime(ex) {
+  if (ex.planWeight > 0) return false;   // the program already says what weight to use
+  const l = getLastSession(ex.id||ex.name); return !l||!l.bestWeight;
+}
 
 const fmwState = {};
 function getFMW(exIdx) {
