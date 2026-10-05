@@ -937,7 +937,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </div>
 
 <!-- VOICE HUD -->
-<div class="voice-hud" id="voice-hud">
+<div class="voice-hud" id="voice-hud" onclick="voiceHudTap()">
   <div class="voice-pulse" id="voice-pulse">🎤</div>
   <div>
     <div class="voice-hud-text"  id="voice-hud-text">Listening...</div>
@@ -1074,18 +1074,16 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Tap to log each set</div>
       </div>
     </button>
-    <div style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-card2);border:none;border-radius:var(--radius);padding:18px 16px;opacity:0.5;">
-      <div style="width:44px;height:44px;border-radius:50%;background:var(--bg-dark);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <i class="ti ti-microphone" style="font-size:20px;color:var(--text-3);"></i>
+    <button onclick="beginWorkout('voice')"
+            style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-dark);border:none;border-radius:var(--radius);padding:18px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--volt-bg);border:1px solid var(--volt-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="ti ti-microphone" style="font-size:20px;color:var(--volt-dark);"></i>
       </div>
-      <div style="flex:1;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="font-size:16px;font-weight:700;color:var(--text);">Voice</div>
-          <div style="font-size:9px;font-weight:700;font-family:var(--font-mono);letter-spacing:0.08em;background:var(--bg-dark);color:var(--text-3);padding:2px 6px;border-radius:4px;border:0.5px solid var(--border-md);">COMING SOON</div>
-        </div>
-        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Log hands-free with your voice</div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);">Voice</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Log hands-free with your earbuds</div>
       </div>
-    </div>
+    </button>
   </div>
 </div>
 
@@ -1598,7 +1596,7 @@ function closeStartModal() {
 
 function beginWorkout(mode) {
   closeStartModal();
-  workoutMode = mode;
+  setMode(mode);   // inside the tap, so the mic and speech are allowed to start
   buildExerciseList(_prestartExercises, _prestartName);
 }
 
@@ -1854,37 +1852,7 @@ function renderExercise() {
   }
 
   // Voice mode
-  if (workoutMode === 'voice' && isStrength(ex)) {
-    const isFMW = isFirstTime(ex);
-    const fmw   = getFMW(currentExIdx);
-    const sug   = getSuggestedWeight(ex);
-    const fmwW  = getFMWStartWeight(ex);
-    let announcement;
-    if (isFMW && !fmw.locked && !fmw.declined) {
-      // Ask the user if they want FMW help — don't auto-start
-      announcement = 'First time doing ' + ex.name + '. Would you like help finding your starting weight? Say yes or skip.';
-      voicePhase = 'fmw_offer';
-      updateVoiceHUD(announcement);
-    } else if (isFMW && fmw.active) {
-      const fmwW2 = getFMWStartWeight(ex);
-      announcement = 'Starting Find My Weight for ' + ex.name + '. We will begin with ' + fmwW2 + ' pounds. Say yes to start or lighter to reduce.';
-      voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: fmwW2 };
-      prefillWeight(currentExIdx, 0, fmwW2);
-      voicePhase = 'confirm_weight';
-      updateVoiceHUD(announcement);
-    } else if (sug) {
-      announcement = ex.name + '. Suggested weight: ' + sug + ' pounds. Say yes to start, or lighter or heavier to adjust.';
-      voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: sug };
-      prefillWeight(currentExIdx, 0, sug);
-      voicePhase = 'confirm_weight';
-      updateVoiceHUD(announcement);
-    } else {
-      announcement = 'Starting ' + ex.name + '. ' + ex.sets + ' sets of ' + ex.reps + ' reps.';
-      updateVoiceHUD(announcement);
-    }
-    setTimeout(() => speakText(announcement), 300);
-    startListening();
-  }
+  if (workoutMode === 'voice') voiceAnnounceExercise(ex);
 
   renderSets(ex, lastSession);
   updateLogBtn();
@@ -2279,20 +2247,15 @@ function logSet(exIdx, setIdx) {
         if (workoutMode === 'voice') {
           voicePending.sugWeight = nextW;
           voicePhase = 'confirm_weight';
-          updateVoiceHUD('Try ' + nextW + ' pounds for this set. Say yes to start.');
-          startListening();
+          voicePrompt('Try ' + nextW + ' ' + voiceUnit() + ' for this set. Say yes to start.');
         }
       });
     } else {
       fetchSetCoaching(ex, setIdx, weight, reps);
     }
     startRest(ex.restSec, async () => {
-      if (workoutMode === 'voice' && !fmw.active) {
-        voicePhase = 'confirm_weight';
-        updateVoiceHUD('Ready for Set ' + nextSetNum + '. Say yes to start, or lighter or heavier.');
-        startListening();
-      }
       renderSets(ex, getLastSession(ex.id || ex.name));
+      voiceNextSet(exIdx);
     }, 'Set ' + nextSetNum + ' of ' + ex.sets + ' up next');
   }
 }
@@ -2311,7 +2274,7 @@ function logBWSet(exIdx, setIdx) {
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
   if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
-  else { startRest(ex.restSec, () => renderSets(ex, null), 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
+  else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
 }
 
 function fillBWSet(exIdx, setIdx, reps) {
@@ -2727,6 +2690,7 @@ function updateLogBtn() {
 // ── FINISH WORKOUT ────────────────────────────────────────────
 function finishWorkout() {
   stopRest(); clearInterval(elapsedTimer);
+  stopListening();
   const totalElapsed = elapsedSec + (startTime ? Math.floor((Date.now() - startTime) / 1000) : 0);
   const durationMin  = Math.round(totalElapsed / 60);
 
@@ -3357,82 +3321,300 @@ async function fetchFMWReasoning(ex, fmw, currentWeight) {
 }
 
 // ── VOICE ─────────────────────────────────────────────────────
+// Phases: idle | fmw_offer | confirm_weight | count_reps | resting
 let recognition = null, isListening = false, voicePhase = 'idle';
 let voicePending = { exIdx:0, setIdx:0, sugWeight:0 };
+let voiceAutoOk = true;   // false once the browser refuses to open the mic without a tap
+let voiceSpeakGen = 0, voiceSpeaking = 0, voiceSpeakUntil = 0, voiceUtts = [], voiceLastPrompt = '';
+let voiceWakeLock = null;
 
 function initVoice() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { showToast('Voice not supported on this browser'); setMode('manual'); return; }
+  document.getElementById('voice-hud').classList.add('show');
+  voiceKeepAwake();
   if (recognition) return;
   recognition = new SR();
   recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'en-US';
+  recognition.maxAlternatives = 3;
   recognition.onresult = e => {
-    const t = e.results[0][0].transcript.toLowerCase().trim();
-    document.getElementById('voice-hud-heard').textContent = '"' + t + '"';
-    handleVoiceResult(t);
+    const alts = [...e.results[e.results.length - 1]].map(a => a.transcript.toLowerCase().trim());
+    document.getElementById('voice-hud-heard').textContent = '"' + alts[0] + '"';
+    // Try each guess until one is understood
+    for (const t of alts) { if (handleVoiceResult(t)) break; }
   };
   recognition.onend = () => {
     isListening = false;
     document.getElementById('voice-pulse').classList.remove('listening');
-    if (voicePhase !== 'idle' && workoutMode === 'voice') setTimeout(startListening, 400);
+    if (voicePhase !== 'idle' && workoutMode === 'voice' && voiceAutoOk && !voiceSpeaking) setTimeout(startListening, 400);
   };
-  recognition.onerror = () => { isListening = false; document.getElementById('voice-pulse').classList.remove('listening'); };
+  recognition.onerror = e => {
+    isListening = false;
+    document.getElementById('voice-pulse').classList.remove('listening');
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      voiceAutoOk = false;
+      document.getElementById('voice-hud-heard').textContent = 'Tap here to speak';
+    }
+  };
+  startListening();   // we're inside the Start tap, so the mic permission prompt appears now
 }
 
 function startListening() {
-  if (!recognition || isListening) return;
+  if (!recognition || isListening || workoutMode !== 'voice') return;
+  if (voiceSpeaking) return;   // resumes when the app finishes talking
   try { recognition.start(); isListening = true; document.getElementById('voice-hud').classList.add('show'); document.getElementById('voice-pulse').classList.add('listening'); } catch(e) {}
+}
+
+// Close the mic without leaving the current phase
+function pauseListening() {
+  if (recognition && isListening) { try { recognition.abort(); } catch(e) {} }
 }
 
 function stopListening() {
   voicePhase = 'idle';
-  if (!recognition || !isListening) return;
-  try { recognition.stop(); } catch(e) {}
+  voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0;
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  pauseListening();
   isListening = false;
   document.getElementById('voice-hud').classList.remove('show');
   document.getElementById('voice-pulse').classList.remove('listening');
+  if (voiceWakeLock) { voiceWakeLock.release().catch(() => {}); voiceWakeLock = null; }
 }
 
-function handleVoiceResult(transcript) {
+// Voice only works while the page is on screen, so keep the phone from locking
+function voiceKeepAwake() {
+  if (!navigator.wakeLock || voiceWakeLock) return;
+  navigator.wakeLock.request('screen').then(lock => {
+    voiceWakeLock = lock;
+    lock.addEventListener('release', () => { voiceWakeLock = null; });
+  }).catch(() => {});
+}
+document.addEventListener('visibilitychange', () => {
+  if (workoutMode !== 'voice') return;
+  if (document.hidden) pauseListening();
+  else { voiceKeepAwake(); if (voicePhase !== 'idle') startListening(); }
+});
+
+// Tapping the HUD cuts off speech and opens the mic (also the fallback when
+// the browser won't open it without a tap)
+function voiceHudTap() {
+  if (workoutMode !== 'voice' || !recognition) return;
+  if (voiceSpeaking) { voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0; window.speechSynthesis.cancel(); }
+  if (voicePhase === 'idle') {
+    const target = voiceTargetFor(currentExIdx);
+    if (!target) { showToast('Nothing left to log on this exercise'); return; }
+    voicePending = target; voicePhase = 'count_reps';
+    updateVoiceHUD(target.bw ? 'Say your reps.' : 'Say weight and reps, like 135 for 8.');
+  }
+  voiceAutoOk = true;
+  startListening();
+}
+
+// First un-logged set of an exercise as a voice target; null if done or not voice-loggable
+function voiceTargetFor(exIdx) {
+  const ex = exercises[exIdx];
+  if (!ex || !(isStrength(ex) || isBW(ex))) return null;
+  const setIdx = ex.loggedSets.findIndex(s => !s.logged);
+  if (setIdx === -1) return null;
+  return { exIdx, setIdx, sugWeight: parseFloat(ex.loggedSets[setIdx].weight) || 0, bw: isBW(ex) };
+}
+
+function voiceUnit() { return weightUnit() === 'kg' ? 'kilos' : 'pounds'; }
+
+// Show a prompt on the HUD and say it; the mic reopens when it finishes
+function voicePrompt(msg, interrupt) {
+  voiceLastPrompt = msg;
+  updateVoiceHUD(msg);
+  speakText(msg, interrupt);
+}
+
+// Called when an exercise comes on screen
+function voiceAnnounceExercise(ex) {
+  const target = voiceTargetFor(currentExIdx);
+  if (!target) { voicePhase = 'idle'; pauseListening(); return; }
+  voicePending = target;
+  if (target.bw) {
+    voicePhase = 'count_reps';
+    voicePrompt(ex.name + '. Say your reps when you finish each set.', true);
+    return;
+  }
+  const isFMW = isFirstTime(ex);
+  const fmw   = getFMW(currentExIdx);
+  const sug   = target.sugWeight || getSuggestedWeight(ex);
+  if (isFMW && !fmw.locked && !fmw.declined && !fmw.active) {
+    // Ask the user if they want FMW help — don't auto-start
+    voicePhase = 'fmw_offer';
+    voicePrompt('First time doing ' + ex.name + '. Would you like help finding your starting weight? Say yes or skip.', true);
+  } else if (isFMW && fmw.active) {
+    const fmwW = target.sugWeight || getFMWStartWeight(ex);
+    voicePending.sugWeight = fmwW;
+    prefillWeight(target.exIdx, target.setIdx, fmwW);
+    voicePhase = 'confirm_weight';
+    voicePrompt('Find My Weight for ' + ex.name + '. ' + fmwW + ' ' + voiceUnit() + '. Say yes to start, or lighter.', true);
+  } else if (sug) {
+    voicePending.sugWeight = sug;
+    prefillWeight(target.exIdx, target.setIdx, sug);
+    voicePhase = 'confirm_weight';
+    voicePrompt(ex.name + '. Set ' + (target.setIdx + 1) + ', ' + sug + ' ' + voiceUnit() + '. Say lighter or heavier to change it, or your reps when you finish.', true);
+  } else {
+    voicePhase = 'count_reps';
+    voicePrompt(ex.name + '. ' + ex.sets + ' sets of ' + ex.reps + '. Say weight and reps when you finish, like 135 for 8.', true);
+  }
+}
+
+// Rest is over — prompt for the next set of this exercise
+function voiceNextSet(exIdx) {
+  if (workoutMode !== 'voice' || exIdx !== currentExIdx) return;
+  if (getFMW(exIdx).active) return;   // Find My Weight drives its own prompts
+  const target = voiceTargetFor(exIdx);
+  if (!target) { voicePhase = 'idle'; pauseListening(); return; }
+  voicePending = target;
+  const setLabel = 'Set ' + (target.setIdx + 1);
+  if (target.bw) {
+    voicePhase = 'count_reps';
+    voicePrompt(setLabel + '. Say your reps when you finish.', true);
+  } else if (target.sugWeight) {
+    voicePhase = 'confirm_weight';
+    voicePrompt(setLabel + ', ' + target.sugWeight + ' ' + voiceUnit() + '. Say your reps when you finish.', true);
+  } else {
+    voicePhase = 'count_reps';
+    voicePrompt(setLabel + '. Say weight and reps when you finish.', true);
+  }
+}
+
+// Log the pending set with the spoken reps, read it back, then rest
+function voiceLogSet(reps) {
+  const p = voicePending;
+  prefillReps(p.exIdx, p.setIdx, reps);
+  voicePhase = 'resting';
+  voicePrompt(reps + ' reps' + (!p.bw && p.sugWeight ? ' at ' + p.sugWeight + ' ' + voiceUnit() : '') + ', logged.', true);
+  if (p.bw) logBWSet(p.exIdx, p.setIdx); else logSet(p.exIdx, p.setIdx);
+  const allDone = exercises.every(ex => ex.loggedSets.every(s => s.logged));
+  if (allDone) { voicePhase = 'idle'; pauseListening(); }
+}
+
+// Returns true if the phrase was understood in the current phase
+function handleVoiceResult(raw) {
+  const t = normalizeSpeech(raw);
+  if (!t) return false;
+  if (/\b(repeat|say that again|say again)\b/.test(t)) { speakText(voiceLastPrompt, true); return true; }
+
+  if (voicePhase === 'resting') {
+    if (/\b(ready|skip|next|go|start)\b/.test(t)) { skipRest(); return true; }
+    return false;
+  }
+
   if (voicePhase === 'fmw_offer') {
     const ex = exercises[currentExIdx];
-    if (/yes|yeah|yep|ok|okay|sure|help|find|weight/.test(transcript)) {
+    if (/\b(yes|yeah|yep|ok|okay|sure|help|find)\b/.test(t)) {
       dismissFMW(true);
       const fmwW = getFMWStartWeight(ex);
-      voicePending = { exIdx: currentExIdx, setIdx: 0, sugWeight: fmwW };
+      voicePending.sugWeight = fmwW;
       voicePhase = 'confirm_weight';
-      const msg = 'Great! Starting at ' + fmwW + ' pounds. Say yes to start.';
-      updateVoiceHUD(msg); speakText(msg);
-    } else {
+      voicePrompt('Great. Starting at ' + fmwW + ' ' + voiceUnit() + '. Say yes to start.', true);
+      return true;
+    }
+    if (/\b(no|nope|nah|skip|pass)\b/.test(t)) {
       dismissFMW(false);
-      voicePhase = 'idle';
-      const msg = 'Got it. Enter your weight and reps manually.';
-      updateVoiceHUD(msg); speakText(msg);
+      voicePhase = 'count_reps';
+      voicePrompt('Got it. Say weight and reps when you finish, like 135 for 8.', true);
+      return true;
     }
-    return;
+    return false;
   }
-  if (voicePhase === 'confirm_weight') {
-    if (/yes|yeah|yep|ok|okay|sure|go|start|correct|good/.test(transcript)) { voicePhase='count_reps'; const msg='Start your set. Count reps aloud or say the number when done.'; updateVoiceHUD(msg); speakText(msg); }
-    else if (/lighter|less|too heavy|lower|reduce|down/.test(transcript)) { voicePending.sugWeight=Math.max(5,voicePending.sugWeight-10); const msg='Reduced to '+voicePending.sugWeight+' lbs. Say yes to start.'; updateVoiceHUD(msg); speakText(msg); prefillWeight(voicePending.exIdx,voicePending.setIdx,voicePending.sugWeight); }
-    else if (/heavier|more|too light|higher|increase|up/.test(transcript)) { voicePending.sugWeight+=10; const msg='Increased to '+voicePending.sugWeight+' lbs. Say yes to start.'; updateVoiceHUD(msg); speakText(msg); prefillWeight(voicePending.exIdx,voicePending.setIdx,voicePending.sugWeight); }
-    return;
-  }
-  if (voicePhase === 'count_reps') {
-    const num = extractNumber(transcript);
-    if (num !== null) {
-      voicePhase = 'idle';
-      prefillReps(voicePending.exIdx, voicePending.setIdx, num);
-      updateVoiceHUD('Logging '+num+' reps at '+voicePending.sugWeight+' lbs...');
-      stopListening();
-      setTimeout(() => logSet(voicePending.exIdx, voicePending.setIdx), 300);
+
+  if (voicePhase === 'confirm_weight' || voicePhase === 'count_reps') {
+    const p = voicePending, said = parseSetSpeech(t);
+    if (said.weight !== null && !p.bw) { p.sugWeight = said.weight; prefillWeight(p.exIdx, p.setIdx, p.sugWeight); }
+    if (said.reps !== null) { voiceLogSet(said.reps); return true; }
+    if (said.weight !== null && !p.bw) {
+      voicePhase = 'count_reps';
+      voicePrompt(p.sugWeight + ' ' + voiceUnit() + '. Say your reps when you finish.', true);
+      return true;
+    }
+    if (voicePhase === 'confirm_weight') {
+      if (/\b(yes|yeah|yep|ok|okay|sure|go|start|correct|good)\b/.test(t)) {
+        voicePhase = 'count_reps';
+        voicePrompt('Go. Say your reps when you finish.', true);
+        return true;
+      }
+      if (/\b(lighter|less|too heavy|lower|reduce|down)\b/.test(t)) {
+        p.sugWeight = Math.max(5, p.sugWeight - 10);
+        prefillWeight(p.exIdx, p.setIdx, p.sugWeight);
+        voicePrompt('Reduced to ' + p.sugWeight + ' ' + voiceUnit() + '.', true);
+        return true;
+      }
+      if (/\b(heavier|more|too light|higher|increase|up)\b/.test(t)) {
+        p.sugWeight += 10;
+        prefillWeight(p.exIdx, p.setIdx, p.sugWeight);
+        voicePrompt('Increased to ' + p.sugWeight + ' ' + voiceUnit() + '.', true);
+        return true;
+      }
     }
   }
+  return false;
 }
 
-function extractNumber(text) {
-  const words={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20};
-  for (const [w,n] of Object.entries(words)) { if (text.includes(w)) return n; }
-  const m = text.match(/\d+/); return m ? parseInt(m[0]) : null;
+// ── SPEECH PARSING ────────────────────────────────────────────
+const VOICE_ONES = { zero:0, oh:0, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9, ten:10,
+  eleven:11, twelve:12, thirteen:13, fourteen:14, fifteen:15, sixteen:16, seventeen:17, eighteen:18, nineteen:19 };
+const VOICE_TENS = { twenty:20, thirty:30, forty:40, fifty:50, sixty:60, seventy:70, eighty:80, ninety:90 };
+// Only trusted when they are the whole phrase ("for" inside "135 for 8" is not a 4)
+const VOICE_SOUNDALIKES = { ate:8, to:2, too:2, for:4, fore:4, won:1, tree:3, sex:6, tin:10 };
+
+// Lowercase, fix what the recogniser does to numbers ("1:35" → "135"), and turn number words into digits
+function normalizeSpeech(raw) {
+  let t = String(raw || '').toLowerCase()
+    .replace(/(\d+):(\d\d)/g, '$1$2')
+    .replace(/(\d),(\d)/g, '$1$2')
+    .replace(/hundred and /g, 'hundred ')
+    .replace(/\.(?!\d)/g, ' ')
+    .replace(/[^a-z0-9.\s]/g, ' ')
+    .replace(/\s+/g, ' ').trim();
+  if (t in VOICE_SOUNDALIKES) return String(VOICE_SOUNDALIKES[t]);
+
+  const isNum = w => w in VOICE_ONES || w in VOICE_TENS || w === 'hundred';
+  const out = [], words = t.split(' ');
+  for (let i = 0; i < words.length; i++) {
+    if (!isNum(words[i]) || words[i] === 'oh') { out.push(words[i]); continue; }
+    const run = [];
+    while (i < words.length && isNum(words[i])) run.push(words[i++]);
+    i--;
+    const n = wordsToNumber(run);
+    out.push(n !== null ? String(n) : run.map(w => VOICE_ONES[w] ?? VOICE_TENS[w] ?? '').join(' '));
+  }
+  return out.join(' ').replace(/\s+/g, ' ').trim();
+}
+
+// ["one","thirty","five"] → 135, ["twenty","five"] → 25, ["two","hundred","ten"] → 210
+function wordsToNumber(run) {
+  const val  = w => VOICE_ONES[w] ?? VOICE_TENS[w];
+  const sum  = ws => ws.reduce((a, w) => a + val(w), 0);
+  const h = run.indexOf('hundred');
+  if (h !== -1) return (h ? sum(run.slice(0, h)) : 1) * 100 + sum(run.slice(h + 1).filter(w => w !== 'hundred'));
+  const v = run.map(val), digit = n => n >= 1 && n <= 9, tens = n => n >= 20;
+  if (v.length === 1) return v[0];
+  if (v.length === 2 && tens(v[0]) && digit(v[1])) return v[0] + v[1];                    // twenty five
+  if (v.length === 2 && digit(v[0]) && v[1] >= 10) return v[0] * 100 + v[1];              // one thirty, one fifteen
+  if (v.length === 3 && digit(v[0]) && tens(v[1]) && digit(v[2])) return v[0] * 100 + v[1] + v[2];   // one thirty five
+  if (v.length === 3 && digit(v[0]) && run[1] === 'oh' && digit(v[2])) return v[0] * 100 + v[2];     // one oh five
+  return null;
+}
+
+// Pull weight and/or reps out of a normalised phrase. Either may be null.
+function parseSetSpeech(t) {
+  const NUM = '(\\d+(?:\\.\\d+)?)', UNIT = '(?:pounds?|lbs?|kilos?|kgs?|kilograms?)', REPS = '(?:reps?|wraps?|raps?)';
+  let weight = null, reps = null, m;
+  if ((m = t.match(new RegExp(NUM + '\\s*' + UNIT + '?\\s*(?:for|x|times|by)\\s*(\\d+)\\b')))) { weight = +m[1]; reps = +m[2]; }   // 135 for 8
+  else if ((m = t.match(new RegExp('(\\d+)\\s*' + REPS + '\\b(?:\\s*(?:at|with|of|on)?\\s*' + NUM + ')?')))) { reps = +m[1]; if (m[2]) weight = +m[2]; }   // 8 reps at 135
+  else if ((m = t.match(new RegExp(REPS + '\\s*(?:at|with)\\s*' + NUM)))) weight = +m[1];   // "reps at 135" — the count was clipped
+  else if ((m = t.match(new RegExp(NUM + '\\s*' + UNIT)))) weight = +m[1];                  // 135 pounds
+  else if ((m = t.match(/^(\d+(?:\.\d+)?) 4 (\d+)$/))) { weight = +m[1]; reps = +m[2]; }     // "135 4 8" — "for" heard as 4
+  else if ((m = t.match(/^(\d+(?:\.\d+)?) (\d+)$/))) { weight = +m[1]; reps = +m[2]; }       // 135 8
+  else if ((m = t.match(/^\D*(\d+(?:\.\d+)?)\D*$/))) { const n = +m[1]; if (n <= 50 && Number.isInteger(n)) reps = n; else weight = n; }
+  if (reps !== null && (!Number.isInteger(reps) || reps < 1 || reps > 100)) reps = null;
+  if (weight !== null && (weight < 0 || weight > 1500)) weight = null;
+  return { weight, reps };
 }
 
 function prefillWeight(exIdx, setIdx, weight) {
@@ -3449,11 +3631,32 @@ function prefillReps(exIdx, setIdx, reps) {
 
 function updateVoiceHUD(msg) { const el=document.getElementById('voice-hud-text'); if(el) el.textContent=msg; }
 
-function speakText(text) {
-  if (!window.speechSynthesis || workoutMode !== 'voice') return;
-  window.speechSynthesis.cancel();
+// Speaks through the earbuds. The mic is closed while the app talks (it would
+// hear itself) and reopens when everything queued has been said.
+// interrupt=true drops anything still queued; otherwise it waits its turn.
+function speakText(text, interrupt) {
+  if (!window.speechSynthesis || workoutMode !== 'voice' || !text) return;
+  if (interrupt) { voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0; window.speechSynthesis.cancel(); }
+  pauseListening();
+  const gen = voiceSpeakGen;
   const utt = new SpeechSynthesisUtterance(text);
   utt.rate=1.05; utt.pitch=1.0; utt.volume=1.0;
+  let finished = false;
+  const done = () => {
+    if (finished) return;
+    finished = true;
+    voiceUtts = voiceUtts.filter(u => u !== utt);
+    if (gen !== voiceSpeakGen) return;
+    voiceSpeaking = Math.max(0, voiceSpeaking - 1);
+    if (!voiceSpeaking && voicePhase !== 'idle') setTimeout(startListening, 250);
+  };
+  utt.onend = done; utt.onerror = done;
+  // iOS sometimes never fires onend — don't leave the mic closed forever
+  voiceSpeakUntil = Math.max(Date.now(), voiceSpeakUntil) + 2500 + text.length * 110;
+  setTimeout(done, voiceSpeakUntil - Date.now());
+  voiceSpeaking++;
+  voiceUtts.push(utt);   // hold a reference so it isn't collected mid-speech
+  document.getElementById('voice-hud').classList.add('show');
   window.speechSynthesis.speak(utt);
 }
 
