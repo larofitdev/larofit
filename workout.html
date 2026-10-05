@@ -1599,7 +1599,9 @@ function closeStartModal() {
 function beginWorkout(mode) {
   closeStartModal();
   setMode(mode);   // inside the tap, so the mic and speech are allowed to start
-  buildExerciseList(_prestartExercises, _prestartName);
+  // Voice needs the mic held open before the first spoken prompt (see voiceHoldMic)
+  if (workoutMode === 'voice') voiceHoldMic().then(() => buildExerciseList(_prestartExercises, _prestartName));
+  else buildExerciseList(_prestartExercises, _prestartName);
 }
 
 // Weight unit label from profile setting (display only — no conversion)
@@ -3353,6 +3355,7 @@ function initVoice() {
   // The mic can close or go deaf without telling us — keep it open while we wait for the user
   voiceWatchdog = setInterval(() => {
     if (workoutMode !== 'voice' || voicePhase === 'idle' || voiceSpeaking || document.hidden) return;
+    if (!voiceMicStream) voiceHoldMic();
     if (!isListening) { if (voiceAutoOk) startListening(); }
     else if (Date.now() - voiceListenSince > 30000) {
       voiceDbg('mic silent 30s, restarting');
@@ -3442,6 +3445,30 @@ function stopListening() {
   document.getElementById('voice-hud').classList.remove('show');
   document.getElementById('voice-pulse').classList.remove('listening');
   if (voiceWakeLock) { voiceWakeLock.release().catch(() => {}); voiceWakeLock = null; }
+  voiceReleaseMic();
+}
+
+// On iPhone with Bluetooth earbuds the recogniser gets silence unless the page
+// is already holding the microphone open, so hold it for the whole voice workout.
+// Always resolves, even if the mic can't be held.
+let voiceMicStream = null, voiceMicPending = null;
+function voiceHoldMic() {
+  if (voiceMicStream) return Promise.resolve();
+  if (voiceMicPending) return voiceMicPending;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return Promise.resolve();
+  voiceMicPending = navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    if (workoutMode !== 'voice') { stream.getTracks().forEach(t => t.stop()); return; }
+    voiceMicStream = stream;
+    const track = stream.getAudioTracks()[0];
+    voiceDbg('holding mic "' + track.label + '"');
+    track.addEventListener('ended', () => { voiceDbg('held mic ended'); if (voiceMicStream === stream) voiceMicStream = null; });
+  }).catch(e => {
+    voiceDbg('could not hold mic: ' + e.name);
+  }).then(() => { voiceMicPending = null; });
+  return voiceMicPending;
+}
+function voiceReleaseMic() {
+  if (voiceMicStream) { voiceMicStream.getTracks().forEach(t => t.stop()); voiceMicStream = null; }
 }
 
 // Voice only works while the page is on screen, so keep the phone from locking
