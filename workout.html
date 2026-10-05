@@ -554,7 +554,8 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 }
 .ex-howto-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: hidden; background: #000; }
 /* YouTube Shorts are upright */
-.ex-howto-frame.vertical { width: auto; height: 62vh; max-height: 520px; aspect-ratio: 9 / 16; margin: 0 auto; }
+.ex-howto-frame.vertical { width: auto; height: 44vh; max-height: 420px; aspect-ratio: 9 / 16; margin: 0 auto; }
+.ex-howto-close { display: flex; margin: 0 0 2px auto; }
 .ex-howto-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .ex-howto-more, .ex-howto-link {
   display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; margin-right: 18px;
@@ -900,7 +901,6 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div class="ex-howto-text" id="ex-howto-text"></div>
         <div class="ex-howto-video" id="ex-howto-video" style="display:none;"></div>
         <button class="ex-howto-more" id="ex-howto-more" onclick="toggleHowTo()">Show more</button>
-        <button class="ex-howto-more" id="ex-howto-close" onclick="closeHowToVideo()" style="display:none;">Close video</button>
         <a class="ex-howto-link" id="ex-howto-link" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i><span>Open exercise link</span></a>
       </div>
 
@@ -1979,7 +1979,6 @@ function youTubeInfo(url) {
 // The still image with a play button (nothing loads from YouTube's player until it's tapped)
 function showHowToPoster() {
   const box = document.getElementById('ex-howto-video');
-  document.getElementById('ex-howto-close').style.display = 'none';
   const wasPlaying = howToVideoPlaying;
   howToVideoPlaying = false;
   if (!_howToVideo) { box.style.display = 'none'; box.innerHTML = ''; }
@@ -1997,11 +1996,13 @@ function playHowToVideo() {
   // The video's sound would be picked up as speech, so voice logging waits until it's closed
   howToVideoPlaying = true;
   if (workoutMode === 'voice') pauseListening();
-  document.getElementById('ex-howto-video').innerHTML =
+  const box = document.getElementById('ex-howto-video');
+  box.innerHTML =
+    '<button class="ex-howto-more ex-howto-close" onclick="closeHowToVideo()"><i class="ti ti-x" aria-hidden="true"></i>Close video</button>' +
     '<div class="ex-howto-frame' + (_howToVideo.vertical ? ' vertical' : '') + '">' +
     '<iframe src="https://www.youtube-nocookie.com/embed/' + _howToVideo.id + '?autoplay=1&playsinline=1&rel=0" title="Exercise video"' +
     ' allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
-  document.getElementById('ex-howto-close').style.display = '';
+  box.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 
 function closeHowToVideo() { showHowToPoster(); }
