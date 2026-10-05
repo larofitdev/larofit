@@ -529,6 +529,19 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   flex-shrink: 0;
 }
 .prev-best i { font-size: 13px; }
+/* How-to: instructions and link from a custom exercise */
+.ex-howto { padding: 10px 16px 6px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+.ex-howto-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
+.ex-howto-text {
+  font-size: 14px; line-height: 1.45; color: var(--text-2); white-space: pre-wrap; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden;
+}
+.ex-howto-text.open { display: block; }
+.ex-howto-more, .ex-howto-link {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; margin-right: 18px;
+  background: none; border: none; font-family: inherit; font-size: 13px; font-weight: 700;
+  color: var(--volt-dark); text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
 .prev-best strong { color: var(--text-2); }
 
 /* Progress dots */
@@ -860,6 +873,14 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       <div class="prev-best" id="prev-best" style="display:none;">
         <i class="ti ti-history" aria-hidden="true"></i>
         <span id="prev-best-text">Last session: —</span>
+      </div>
+
+      <!-- How-to from a custom exercise: the instructions and link added when it was created -->
+      <div class="ex-howto" id="ex-howto" style="display:none;">
+        <div class="ex-howto-label">How to do it</div>
+        <div class="ex-howto-text" id="ex-howto-text"></div>
+        <button class="ex-howto-more" id="ex-howto-more" onclick="toggleHowTo()">Show more</button>
+        <a class="ex-howto-link" id="ex-howto-link" target="_blank" rel="noopener noreferrer"><i class="ti ti-external-link" aria-hidden="true"></i><span>Open exercise link</span></a>
       </div>
 
       <!-- Sets table -->
@@ -1847,6 +1868,8 @@ function renderExercise() {
     prevEl.style.display = 'none';
   }
 
+  renderHowTo(ex);
+
   // GIF slot
   renderGifSlot(ex);
 
@@ -1886,6 +1909,44 @@ function onGifEnded() {
     const v = document.getElementById('gif-video');
     if (v) { try { v.currentTime = 0; v.play().catch(() => {}); } catch (e) {} }
   }
+}
+
+// Instructions and link the user attached when they created a custom exercise
+function renderHowTo(ex) {
+  const wrap   = document.getElementById('ex-howto');
+  const textEl = document.getElementById('ex-howto-text');
+  const moreEl = document.getElementById('ex-howto-more');
+  const linkEl = document.getElementById('ex-howto-link');
+  const custom = getCustomExercises().find(e => e.id === ex.id) || getCustomExercises().find(e => e.name === ex.name) || {};
+  const notes  = typeof custom.instructions === 'string' ? custom.instructions.trim() : '';
+  const url    = safeExerciseUrl(custom.exerciseUrl);
+  if (!notes && !url) { wrap.style.display = 'none'; return; }
+
+  wrap.style.display = '';
+  textEl.textContent   = notes;
+  textEl.style.display = notes ? '' : 'none';
+  textEl.classList.remove('open');
+  moreEl.textContent   = 'Show more';
+  // Only offer "Show more" when the text is actually cut off
+  moreEl.style.display = notes && textEl.scrollHeight > textEl.clientHeight + 2 ? '' : 'none';
+  if (url) { linkEl.href = url; linkEl.style.display = ''; }
+  else     { linkEl.removeAttribute('href'); linkEl.style.display = 'none'; }
+}
+
+function toggleHowTo() {
+  const open = document.getElementById('ex-howto-text').classList.toggle('open');
+  document.getElementById('ex-howto-more').textContent = open ? 'Show less' : 'Show more';
+}
+
+// Only ever link out to a normal web address
+function safeExerciseUrl(u) {
+  u = String(u || '').trim();
+  if (!u) return null;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = 'https://' + u;
+  try {
+    const parsed = new URL(u);
+    return (parsed.protocol === 'https:' || parsed.protocol === 'http:') ? parsed.href : null;
+  } catch (e) { return null; }
 }
 
 function renderGifSlot(ex) {
@@ -3085,7 +3146,7 @@ function openExDetail(exId, addFn) {
   document.getElementById('ex-detail-desc').textContent = ex.description || '';
 
   // Instructions
-  const instr = ex.instructions || [];
+  const instr = Array.isArray(ex.instructions) ? ex.instructions : (ex.instructions ? [ex.instructions] : []);
   document.getElementById('ex-detail-instructions').innerHTML =
     instr.map(s => `<li>${escHtml(s)}</li>`).join('');
 
@@ -4057,7 +4118,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-skip').onclick  = () => skipRest();
   init();
   // Prime custom exercises cache in background
-  LF.db.getCustomExercises().catch(() => {});
+  LF.db.getCustomExercises().then(() => {
+    if (exercises[currentExIdx]) renderHowTo(exercises[currentExIdx]);
+  }).catch(() => {});
 });
 </script>
 
