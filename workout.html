@@ -3330,6 +3330,7 @@ let voiceAutoOk = true;   // false once the browser refuses to open the mic with
 let voiceSpeakGen = 0, voiceSpeaking = 0, voiceSpeakUntil = 0, voiceUtts = [], voiceLastPrompt = '';
 let voiceWakeLock = null;
 let voiceListenSince = 0, voiceWatchdog = null;
+let voiceSR = null, voiceSession = 0, voiceInterimTimer = null;
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
@@ -3347,29 +3348,65 @@ function initVoice() {
   if (!SR) { showToast('Voice not supported on this browser'); setMode('manual'); return; }
   document.getElementById('voice-hud').classList.add('show');
   voiceKeepAwake();
-  if (recognition) return;
-  recognition = new SR();
-  recognition.continuous = false; recognition.interimResults = false; recognition.lang = 'en-US';
-  recognition.maxAlternatives = 3;
-  recognition.onresult = e => {
-    const alts = [...e.results[e.results.length - 1]].map(a => a.transcript.toLowerCase().trim());
-    document.getElementById('voice-hud-heard').textContent = '"' + alts[0] + '"';
-    voiceListenSince = Date.now();
+  if (voiceSR) return;
+  voiceSR = SR;
+  // The mic can close or go deaf without telling us — keep it open while we wait for the user
+  voiceWatchdog = setInterval(() => {
+    if (workoutMode !== 'voice' || voicePhase === 'idle' || voiceSpeaking || document.hidden) return;
+    if (!isListening) { if (voiceAutoOk) startListening(); }
+    else if (Date.now() - voiceListenSince > 30000) {
+      voiceDbg('mic silent 30s, restarting');
+      pauseListening();
+    }
+  }, 2000);
+}
+
+function startListening() {
+  if (!voiceSR || isListening || workoutMode !== 'voice') return;
+  if (voiceSpeaking) return;   // resumes when the app finishes talking
+
+  // A fresh recogniser for every listen: on iPhone a reused one starts but hears nothing
+  const rec = new voiceSR(), session = ++voiceSession;
+  rec.continuous = false; rec.interimResults = true; rec.lang = 'en-US'; rec.maxAlternatives = 3;
+  let pending = null, handled = false;
+
+  const deliver = why => {
+    if (handled || !pending || session !== voiceSession) return;
+    handled = true;
+    const alts = pending;
+    pauseListening();   // this listen is used up
     // Try each guess until one is understood
     let understood = false;
     for (const t of alts) { if (handleVoiceResult(t)) { understood = true; break; } }
-    voiceDbg('heard ' + JSON.stringify(alts) + (understood ? ' -> understood' : ' -> ignored'));
+    voiceDbg('heard (' + why + ') ' + JSON.stringify(alts) + (understood ? ' -> understood' : ' -> ignored'));
+    if (!voiceSpeaking && voicePhase !== 'idle') setTimeout(startListening, 300);
   };
-  recognition.onend = () => {
-    isListening = false;
+
+  rec.onaudiostart  = () => { if (session === voiceSession) voiceDbg('mic audio on'); };
+  rec.onspeechstart = () => { if (session === voiceSession) voiceDbg('speech detected'); };
+  rec.onresult = e => {
+    if (session !== voiceSession) return;
+    voiceListenSince = Date.now();
+    const last = e.results[e.results.length - 1];
+    const full = [...e.results].map(r => r[0].transcript).join(' ').toLowerCase().trim();
+    pending = [full, ...[...last].slice(1).map(a => a.transcript.toLowerCase().trim())];
+    document.getElementById('voice-hud-heard').textContent = '"' + full + '"';
+    clearTimeout(voiceInterimTimer);
+    // iPhone often never marks a phrase final, so a short pause counts as the end of it
+    if (last.isFinal) deliver('final');
+    else voiceInterimTimer = setTimeout(() => deliver('pause'), 1200);
+  };
+  rec.onend = () => {
+    if (session !== voiceSession) return;
     voiceDbg('mic ended');
+    if (pending && !handled) { deliver('end'); return; }
+    isListening = false; recognition = null;
     document.getElementById('voice-pulse').classList.remove('listening');
     if (voicePhase !== 'idle' && workoutMode === 'voice' && voiceAutoOk && !voiceSpeaking) setTimeout(startListening, 400);
   };
-  recognition.onerror = e => {
-    isListening = false;
+  rec.onerror = e => {
+    if (session !== voiceSession) return;
     voiceDbg('mic error: ' + e.error);
-    document.getElementById('voice-pulse').classList.remove('listening');
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       voiceAutoOk = false;
       document.getElementById('voice-hud-heard').textContent = 'Tap here to speak';
@@ -3377,25 +3414,10 @@ function initVoice() {
       document.getElementById('voice-hud-heard').textContent = 'Mic problem: ' + e.error;
     }
   };
-  // The phone ends each listening session after a few seconds of silence, and a
-  // restart can fail or go deaf without telling us — keep the mic open while we wait
-  voiceWatchdog = setInterval(() => {
-    if (workoutMode !== 'voice' || voicePhase === 'idle' || voiceSpeaking || document.hidden) return;
-    if (!isListening) { if (voiceAutoOk) startListening(); }
-    else if (Date.now() - voiceListenSince > 20000) {
-      voiceDbg('mic silent 20s, restarting');
-      pauseListening();
-      isListening = false;
-    }
-  }, 2000);
-  startListening();   // we're inside the Start tap, so the mic permission prompt appears now
-}
 
-function startListening() {
-  if (!recognition || isListening || workoutMode !== 'voice') return;
-  if (voiceSpeaking) return;   // resumes when the app finishes talking
   try {
-    recognition.start();
+    rec.start();
+    recognition = rec;
     isListening = true; voiceListenSince = Date.now();
     voiceDbg('mic started');
     document.getElementById('voice-hud').classList.add('show'); document.getElementById('voice-pulse').classList.add('listening');
@@ -3404,7 +3426,11 @@ function startListening() {
 
 // Close the mic without leaving the current phase
 function pauseListening() {
-  if (recognition && isListening) { try { recognition.abort(); } catch(e) {} }
+  clearTimeout(voiceInterimTimer);
+  voiceSession++;   // anything the old listen still reports is ignored
+  if (recognition) { try { recognition.abort(); } catch(e) {} recognition = null; }
+  isListening = false;
+  document.getElementById('voice-pulse').classList.remove('listening');
 }
 
 function stopListening() {
@@ -3435,7 +3461,7 @@ document.addEventListener('visibilitychange', () => {
 // Tapping the HUD cuts off speech and opens the mic (also the fallback when
 // the browser won't open it without a tap)
 function voiceHudTap() {
-  if (workoutMode !== 'voice' || !recognition) return;
+  if (workoutMode !== 'voice' || !voiceSR) return;
   if (voiceSpeaking) { voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0; window.speechSynthesis.cancel(); }
   if (voicePhase === 'idle') {
     const target = voiceTargetFor(currentExIdx);
