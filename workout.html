@@ -3349,7 +3349,8 @@ function getFMWStartWeight(ex) {
   const data = lookupExData(ex.id);
   const eq   = data ? data.eq : 'db';
   const cat  = data ? data.category : '';
-  const bw   = parseFloat((store.get('profile',{})).weight) || 160;
+  const prof = store.get('profile', {}) || {};
+  const bw   = parseFloat(prof.weight_lbs || prof.weight) || 160;
   let mult   = EQ_MULTIPLIER[eq] !== undefined ? EQ_MULTIPLIER[eq] : 0.12;
   if (mult > 0 && ISOLATION_CATEGORIES.includes(cat)) mult = Math.min(mult, 0.05);
   if (mult === 0) return 0;

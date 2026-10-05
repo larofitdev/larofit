@@ -749,9 +749,10 @@ async function init() {
     document.getElementById('p-height-in').value = ins;
   }
 
-  // Extended profile fields — stored in lf_profile localStorage
-  // (will move to Supabase JSONB column in a future pass)
-  const pr = (() => { try { return JSON.parse(localStorage.getItem('lf_profile') || '{}'); } catch { return {}; } })();
+  // Goals, training style and nutrition — saved with the profile in its `details` column.
+  // Falls back to this device's own copy (e.g. offline, or not yet synced).
+  const localDetails = (() => { try { return JSON.parse(localStorage.getItem('lf_profile_details') || '{}'); } catch { return {}; } })();
+  const pr = profile.details && Object.keys(profile.details).length ? profile.details : localDetails;
 
   if (pr.gym)     document.getElementById('p-gym').value      = pr.gym;
 
@@ -1016,8 +1017,25 @@ async function saveProfile() {
   const weightLbs = parseFloat(document.getElementById('p-weight').value) || null;
   const level     = document.getElementById('p-level').value || null;
 
-  // Save core fields to Supabase
+  // Goals, training style and nutrition selections
+  const pr = {
+    gym:              document.getElementById('p-gym').value.trim(),
+    goals:            selectedGoals,
+    goalNotes:        document.getElementById('p-goal-notes').value.trim(),
+    trainingStyle:    selectedTS,
+    diet:             document.getElementById('p-diet').value,
+    nutgoal:          document.getElementById('p-nutgoal').value,
+    meals:            document.getElementById('p-meals').value,
+    activity:         document.getElementById('p-activity').value,
+    dietRestrictions: selectedDiets,
+    savedAt:          new Date().toISOString(),
+  };
+  // This device's own copy. Not 'lf_profile' — that key holds the database row and is overwritten on every load.
+  localStorage.setItem('lf_profile_details', JSON.stringify(pr));
+
+  // Save everything to Supabase
   const { error } = await LF.db.saveProfile({
+    details:    pr,
     name:       first,
     full_name:  fullName,
     initials:   [first[0], last ? last[0] : ''].filter(Boolean).join('').toUpperCase(),
@@ -1040,21 +1058,6 @@ async function saveProfile() {
     dob:       dobStr,
     sex,
   }));
-
-  // Extended profile fields still go to localStorage for now
-  const pr = {
-    gym:              document.getElementById('p-gym').value.trim(),
-    goals:            selectedGoals,
-    goalNotes:        document.getElementById('p-goal-notes').value.trim(),
-    trainingStyle:    selectedTS,
-    diet:             document.getElementById('p-diet').value,
-    nutgoal:          document.getElementById('p-nutgoal').value,
-    meals:            document.getElementById('p-meals').value,
-    activity:         document.getElementById('p-activity').value,
-    dietRestrictions: selectedDiets,
-    savedAt:          new Date().toISOString(),
-  };
-  localStorage.setItem('lf_profile', JSON.stringify(pr));
 
   if (error) {
     const msg = typeof error === 'string' ? error : (error.message || error.details || 'unknown error');
