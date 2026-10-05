@@ -76,6 +76,26 @@
 </div>
 
 <div class="card">
+  <h2>5. Recording engine test</h2>
+  <p>Earbuds in. This is the new approach: the page keeps the mic open and cuts out each phrase you say.</p>
+  <button id="eng-start">Start mic engine</button>
+  <div style="height:14px;background:#000;border:1px solid var(--line);border-radius:7px;margin:12px 0 6px;overflow:hidden;">
+    <div id="eng-level" style="height:100%;width:0;background:var(--volt);"></div>
+  </div>
+  <div class="result" id="eng-status" style="font-weight:700;">Not running</div>
+  <div class="result" id="eng-clips">Phrases captured: 0</div>
+  <audio id="eng-audio" controls hidden></audio>
+  <p style="margin-top:14px;">
+    1. Tap Start. The bar should jump when you talk.<br>
+    2. Say “skip”. The phrase count should go up by one.<br>
+    3. Tap the button below. When it stops talking, say “ten pounds fifteen reps”. Do this three times.<br>
+    4. Wait about a minute, saying “eight” two or three times along the way.<br>
+    5. Press play on the last clip to check you can understand it, then Copy results.
+  </p>
+  <button class="ghost" id="eng-speak">Speak a prompt</button>
+</div>
+
+<div class="card">
   <h2>Results</h2>
   <pre id="log"></pre>
   <button class="ghost" id="btn-copy">Copy results</button>
@@ -281,6 +301,133 @@ document.querySelectorAll('button.exp').forEach(btn => {
     expRunning = false;
   };
 });
+
+// ── 5. RECORDING ENGINE ───────────────────────────────────────
+// Holds the mic open, measures loudness continuously, and cuts out each spoken
+// phrase as its own clip — what cloud transcription would be sent.
+const eng = { ctx: null, stream: null, node: null, running: false, speaking: false,
+              floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], seg: [], segPeak: 0,
+              clips: 0, winPeak: 0, blocks: 0, timer: null, t0: 0 };
+const engAt = () => '+' + Math.round((Date.now() - eng.t0) / 1000) + 's';
+
+function engWav(chunks, inRate) {
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const pcm = new Float32Array(total);
+  let o = 0; for (const c of chunks) { pcm.set(c, o); o += c.length; }
+  // Resample to 16 kHz mono, which is all speech needs
+  const outRate = 16000, outLen = Math.floor(total * outRate / inRate);
+  const buf = new ArrayBuffer(44 + outLen * 2), v = new DataView(buf);
+  const str = (p, s) => { for (let i = 0; i < s.length; i++) v.setUint8(p + i, s.charCodeAt(i)); };
+  str(0, 'RIFF'); v.setUint32(4, 36 + outLen * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, outRate, true); v.setUint32(28, outRate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, 'data'); v.setUint32(40, outLen * 2, true);
+  for (let i = 0; i < outLen; i++) {
+    const x = i * inRate / outRate, i0 = Math.floor(x), f = x - i0;
+    const s = (pcm[i0] || 0) * (1 - f) + (pcm[i0 + 1] || 0) * f;
+    v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, s)) * 0x7fff, true);
+  }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+
+function engBlock(input) {
+  const rate = eng.ctx.sampleRate, blockMs = input.length / rate * 1000;
+  let sum = 0, peak = 0;
+  for (let i = 0; i < input.length; i++) { const a = Math.abs(input[i]); sum += input[i] * input[i]; if (a > peak) peak = a; }
+  const rms = Math.sqrt(sum / input.length);
+  eng.blocks++;
+  if (peak > eng.winPeak) eng.winPeak = peak;
+  document.getElementById('eng-level').style.width = Math.min(100, rms * 600) + '%';
+
+  // Background noise level: follows quiet quickly, loud slowly
+  if (!eng.inSpeech) eng.floor = rms < eng.floor ? eng.floor * 0.9 + rms * 0.1 : eng.floor * 0.995 + rms * 0.005;
+  const loud = rms > Math.max(0.012, eng.floor * 3);
+  const copy = new Float32Array(input);
+
+  if (!eng.inSpeech) {
+    eng.pre.push(copy); if (eng.pre.length > 4) eng.pre.shift();   // keep a little before speech starts
+    eng.hot = loud ? eng.hot + 1 : 0;
+    if (eng.hot >= 2) { eng.inSpeech = true; eng.seg = eng.pre.slice(); eng.pre = []; eng.segPeak = peak; eng.quietMs = 0; }
+    return;
+  }
+  eng.seg.push(copy);
+  if (peak > eng.segPeak) eng.segPeak = peak;
+  eng.quietMs = loud ? 0 : eng.quietMs + blockMs;
+  const segMs = eng.seg.reduce((n, c) => n + c.length, 0) / rate * 1000;
+  if (eng.quietMs < 700 && segMs < 8000) return;
+
+  // Phrase finished
+  eng.inSpeech = false; eng.hot = 0;
+  const spokenMs = Math.round(segMs - eng.quietMs);
+  if (spokenMs < 200) { eng.seg = []; return; }   // a click or a cough
+  const blob = engWav(eng.seg, rate);
+  eng.seg = [];
+  eng.clips++;
+  log('ENG ' + engAt() + ' phrase #' + eng.clips + ' ' + spokenMs + 'ms peak=' + eng.segPeak.toFixed(2) +
+      ' wav=' + blob.size + 'b' + (eng.speaking ? ' (while the page was speaking)' : ''));
+  document.getElementById('eng-clips').textContent = 'Phrases captured: ' + eng.clips;
+  const audio = document.getElementById('eng-audio');
+  audio.src = URL.createObjectURL(blob); audio.hidden = false;
+}
+
+document.getElementById('eng-start').onclick = async () => {
+  const btn = document.getElementById('eng-start');
+  if (eng.running) return;
+  try {
+    // Created inside the tap so the phone lets it run
+    eng.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    eng.ctx.onstatechange = () => log('ENG ' + engAt() + ' audio engine state=' + eng.ctx.state);
+    eng.t0 = Date.now();
+    eng.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+    await eng.ctx.resume();
+    const track = eng.stream.getAudioTracks()[0];
+    log('ENG start mic="' + track.label + '" rate=' + eng.ctx.sampleRate + ' state=' + eng.ctx.state);
+    track.onended  = () => log('ENG ' + engAt() + ' mic track ended');
+    track.onmute   = () => log('ENG ' + engAt() + ' mic muted by the phone');
+    track.onunmute = () => log('ENG ' + engAt() + ' mic unmuted');
+
+    const src = eng.ctx.createMediaStreamSource(eng.stream);
+    eng.node = eng.ctx.createScriptProcessor(2048, 1, 1);
+    eng.node.onaudioprocess = e => engBlock(e.inputBuffer.getChannelData(0));
+    const silent = eng.ctx.createGain(); silent.gain.value = 0;   // keeps it processing without playing the mic back
+    src.connect(eng.node); eng.node.connect(silent); silent.connect(eng.ctx.destination);
+
+    eng.running = true;
+    btn.textContent = 'Engine running'; btn.disabled = true;
+    show('eng-status', 'Running — say “skip”', true);
+    // Heartbeat: is audio still arriving?
+    eng.timer = setInterval(() => {
+      log('ENG ' + engAt() + ' heartbeat blocks=' + eng.blocks + ' loudest=' + eng.winPeak.toFixed(3) +
+          ' noise=' + eng.floor.toFixed(4) + ' state=' + eng.ctx.state + ' mic=' + track.readyState + (track.muted ? ',muted' : ''));
+      if (!eng.blocks) show('eng-status', 'No audio arriving from the mic', false);
+      eng.blocks = 0; eng.winPeak = 0;
+    }, 10000);
+  } catch (err) {
+    log('ENG failed ' + err.name + ': ' + err.message);
+    show('eng-status', 'Failed: ' + err.name + ' — ' + err.message, false);
+  }
+};
+
+document.getElementById('eng-speak').onclick = () => {
+  if (!window.speechSynthesis) return;
+  const utt = new SpeechSynthesisUtterance('Set two, ten pounds. Say your weight and reps when you finish.');
+  utt.rate = 1.05;
+  const t = Date.now();
+  let done = false;
+  const finish = how => {
+    if (done) return; done = true; eng.speaking = false;
+    log('ENG ' + engAt() + ' prompt ' + how + ' after ' + (Date.now() - t) + 'ms');
+    if (eng.running) show('eng-status', 'Running — say “ten pounds fifteen reps”', true);
+  };
+  utt.onend = () => finish('finished'); utt.onerror = e => finish('error=' + e.error);
+  setTimeout(() => finish('timed out'), 9000);
+  window._engUtt = utt;
+  eng.speaking = true;
+  if (eng.running) show('eng-status', 'Speaking…');
+  window.speechSynthesis.speak(utt);
+};
 
 // ── COPY ──────────────────────────────────────────────────────
 document.getElementById('btn-copy').onclick = async () => {
