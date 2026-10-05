@@ -3338,9 +3338,7 @@ function voiceDbg(msg) {
   if (voiceLog.length > 200) voiceLog.shift();
 }
 function voiceCopyLog() {
-  const text = navigator.userAgent + '
-' + voiceLog.join('
-');
+  const text = navigator.userAgent + '\n' + voiceLog.join('\n');
   navigator.clipboard.writeText(text).then(() => showToast('Voice log copied'), () => showToast('Could not copy voice log'));
 }
 
