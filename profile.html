@@ -1006,6 +1006,12 @@ async function saveProfile() {
   const dobStr    = dobM && dobD && dobY
     ? `${dobY}-${dobM.padStart(2,'0')}-${dobD.padStart(2,'0')}`
     : null;
+  if (dobM || dobD || dobY) {
+    const d = dobStr ? new Date(dobStr + 'T00:00:00Z') : null;
+    const real = d && !isNaN(d) && d.toISOString().slice(0, 10) === dobStr &&
+                 +dobY >= 1900 && d <= new Date();
+    if (!real) { showToast('Check your date of birth — use MM / DD / YYYY'); return; }
+  }
   const heightIn  = ft ? (ft * 12) + ins : null;
   const weightLbs = parseFloat(document.getElementById('p-weight').value) || null;
   const level     = document.getElementById('p-level').value || null;
@@ -1051,7 +1057,12 @@ async function saveProfile() {
   localStorage.setItem('lf_profile', JSON.stringify(pr));
 
   if (error) {
-    showToast('Save failed — check connection');
+    const msg = typeof error === 'string' ? error : (error.message || error.details || 'unknown error');
+    console.error('[LaroFit] profile save failed:', error);
+    if (!navigator.onLine)                                            showToast('Saved on this device — will not sync while offline');
+    else if (/not authenticated|jwt|row-level security/i.test(msg))   showToast('Save failed — please sign out and sign in again');
+    else if (/failed to fetch|network|load failed/i.test(msg))        showToast('Save failed — check connection');
+    else                                                              showToast('Save failed — ' + msg.slice(0, 90));
     return;
   }
 
