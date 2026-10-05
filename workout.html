@@ -529,6 +529,10 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
   flex-shrink: 0;
 }
 .prev-best i { font-size: 13px; }
+.coach-tip {
+  padding: 7px 16px; background: var(--bg-card2); border-bottom: 0.5px solid var(--border);
+  font-size: 12px; line-height: 1.4; color: var(--text-2); font-style: italic; flex-shrink: 0;
+}
 /* How-to: instructions and link from a custom exercise */
 .ex-howto { border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
 .ex-howto-toggle { min-height: 44px; }
@@ -892,6 +896,8 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <i class="ti ti-history" aria-hidden="true"></i>
         <span id="prev-best-text">Last session: —</span>
       </div>
+      <!-- The coach's closing advice from the last session, word for word -->
+      <div class="coach-tip" id="coach-tip" style="display:none;"></div>
 
       <!-- How-to from a custom exercise: the instructions and link added when it was created -->
       <div class="ex-howto" id="ex-howto" style="display:none;">
@@ -1713,12 +1719,14 @@ function buildLoggedSets(ex) {
     // strength — pre-fill from last session, else from what the program planned
     const last = getLastSession(ex.id || ex.name);
     const planWeight = parseFloat(ex.weight) || 0, planReps = parseInt(ex.reps) || 0;
+    const coachPlan  = coachPlanFor(ex);   // what the coach recommended at the end of the last session
     return Array.from({ length: count }, (_, i) => {
       const lastSet = last && last.sets ? last.sets[i] : null;
       const fallback = last ? { weight: last.bestWeight, reps: last.bestReps } : null;
       const src = lastSet || fallback;
       return {
-        weight: (src && src.weight) ? String(src.weight) : (planWeight ? String(planWeight) : ''),
+        weight: coachPlan ? String(coachPlan.weight)
+              : (src && src.weight) ? String(src.weight) : (planWeight ? String(planWeight) : ''),
         reps:   (src && src.reps)   ? String(src.reps)   : (planReps   ? String(planReps)   : ''),
         logged: false
       };
@@ -1887,9 +1895,17 @@ function renderExercise() {
   const prevEl = document.getElementById('prev-best');
   if (lastSession && isStrength(ex)) {
     prevEl.style.display = 'flex';
-    document.getElementById('prev-best-text').textContent = 'Last: ' + lastSession.bestWeight + ' ' + weightUnit() + ' × ' + lastSession.bestReps + ' reps';
+    const coachPlan = coachPlanFor(ex);
+    const today = coachPlan
+      ? ' · Coach: ' + (coachPlan.change === 'up' ? 'go up to ' : coachPlan.change === 'down' ? 'drop to ' : 'stay at ') + coachPlan.weight + ' ' + weightUnit() + ' today'
+      : '';
+    document.getElementById('prev-best-text').textContent = 'Last: ' + lastSession.bestWeight + ' ' + weightUnit() + ' × ' + lastSession.bestReps + ' reps' + today;
+    const tipEl = document.getElementById('coach-tip');
+    tipEl.textContent   = coachPlan && coachPlan.tip ? 'Last time: “' + coachPlan.tip.replace(/[*_#`]/g, '') + '”' : '';
+    tipEl.style.display = tipEl.textContent ? '' : 'none';
   } else {
     prevEl.style.display = 'none';
+    document.getElementById('coach-tip').style.display = 'none';
   }
 
   renderHowTo(ex);
@@ -2707,7 +2723,7 @@ function getLastSession(exIdOrName) {
       found.sets.forEach(s => {
         if ((parseFloat(s.weight)||0) >= bestWeight) { bestWeight = parseFloat(s.weight)||0; bestReps = parseFloat(s.reps)||0; }
       });
-      return { bestWeight, bestReps, date, sets: found.sets };
+      return { bestWeight, bestReps, date, sets: found.sets, coach: found.coach || null };
     }
   }
   return null;
@@ -2890,7 +2906,7 @@ function finishWorkout() {
         const orm = calc1RM(s.weight, s.reps);
         return (orm && orm > best) ? orm : best;
       }, 0);
-      return { id: ex.id, name: ex.name, type: exTypeOf(ex), sets: loggedSets, best1RM: best1RM||null, note: exNotes[exercises.indexOf(ex)] || '' };
+      return { id: ex.id, name: ex.name, type: exTypeOf(ex), sets: loggedSets, best1RM: best1RM||null, note: exNotes[exercises.indexOf(ex)] || '', coach: ex.coachNext || null };
     })
   };
   store.set('workout_history', history);
@@ -3340,15 +3356,38 @@ function getFMWStartWeight(ex) {
   return Math.max(5, Math.round((bw * mult) / 5) * 5);
 }
 
-function getSuggestedWeight(ex) {
+// The one progression rule, shared by the coaching tips and by what the next
+// workout starts at: 5 or fewer reps → lighter, 6–9 → same weight, 10+ → heavier.
+function coachNextWeight(ex, weight, reps) {
+  const w = parseFloat(weight) || 0, r = parseInt(reps) || 0;
+  const data = lookupExData(ex.id), eq = data ? data.eq : 'db';
+  const increment = (eq === 'bb' || eq === 'mc') ? 5 : (w < 30 ? 2.5 : 5);
+  const reduceAmt = eq === 'bb' ? 10 : (w < 30 ? 5 : 10);
+  if (r <= 5) return { weight: Math.max(Math.min(w, 2.5), w - reduceAmt), change: 'down' };
+  if (r <= 9) return { weight: w, change: 'same' };
+  return { weight: w + increment, change: 'up' };
+}
+
+// What the coach said to do next time, from the final set of the last session.
+// Uses the recommendation saved with that workout, or works it out for older ones.
+function coachPlanFor(ex) {
   const last = getLastSession(ex.id || ex.name);
-  if (!last || !last.bestWeight) return null;
-  const data      = lookupExData(ex.id);
-  const eq        = data ? data.eq : 'db';
-  const cat       = data ? data.category : '';
-  const isLower   = ['legs','glutes'].includes(cat) && eq === 'bb';
-  const increment = isLower ? 10 : 5;
-  return last.bestReps >= (ex.reps||10) ? last.bestWeight + increment : last.bestWeight;
+  if (!last || !last.sets || !last.sets.length) return null;
+  const finalSet   = last.sets[last.sets.length - 1];
+  const lastWeight = parseFloat(finalSet.weight) || 0, lastReps = parseFloat(finalSet.reps) || 0;
+  if (!lastWeight) return null;
+  const saved  = last.coach && last.coach.nextWeight > 0 ? last.coach : null;
+  const weight = saved ? saved.nextWeight : coachNextWeight(ex, lastWeight, lastReps).weight;
+  return {
+    weight, lastWeight, lastReps,
+    change: weight > lastWeight ? 'up' : weight < lastWeight ? 'down' : 'same',
+    tip: saved ? (saved.tip || '') : ''
+  };
+}
+
+function getSuggestedWeight(ex) {
+  const plan = coachPlanFor(ex);
+  return plan ? plan.weight : null;
 }
 
 function isFirstTime(ex) {
@@ -3437,21 +3476,22 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
   const level     = profile.level || 'intermediate';
   const repCount  = parseInt(reps)||0;
   const wtNum     = parseFloat(weight)||0;
-  const exData    = lookupExData(ex.id);
-  const exEq      = exData ? exData.eq : 'db';
-  const increment = (exEq==='bb'||exEq==='mc') ? 5 : (wtNum<30 ? 2.5 : 5);
-  const reduceAmt = exEq==='bb' ? 10 : (wtNum<30 ? 5 : 10);
+  const next      = coachNextWeight(ex, wtNum, repCount);
+  const when      = isLastSet ? 'next session' : 'next set';
   let repRule;
-  if (repCount<=5)      repRule = 'Rep count LOW (<=5). Weight too heavy. Recommend REDUCING to '+(wtNum-reduceAmt)+' lbs next set.';
-  else if (repCount<=9) repRule = 'Rep count MODERATE (6-9). Good weight. Recommend HOLDING at '+wtNum+' lbs next set.';
-  else                  repRule = 'Rep count HIGH (10+). Weight manageable. Recommend INCREASING to '+(wtNum+increment)+' lbs next set.';
-  const prompt = 'You are an expert fitness coach giving real-time set feedback. Be concise (max 20 words), direct, and actionable.\n\nExercise: '+ex.name+'\nAthlete level: '+level+'\nSet '+setNum+': '+weight+' lbs x '+reps+' reps\n'+lastLine+'\n'+(setsLine||'')+'\n'+nextLine+'\n'+repRule+'\n\nGive one sentence of coaching advice for their next set (or rest if last set).';
+  if (next.change === 'down')      repRule = 'Rep count LOW (<=5). Weight too heavy. Recommend REDUCING to '+next.weight+' lbs '+when+'.';
+  else if (next.change === 'same') repRule = 'Rep count MODERATE (6-9). Good weight. Recommend HOLDING at '+next.weight+' lbs '+when+'.';
+  else                             repRule = 'Rep count HIGH (10+). Weight manageable. Recommend INCREASING to '+next.weight+' lbs '+when+'.';
+  // The final set's recommendation is what the next workout starts from (saved in finishWorkout)
+  if (isLastSet && wtNum > 0) { ex.coachNext = { nextWeight: next.weight, tip: '' }; saveSnapshot(); }
+  const prompt = 'You are an expert fitness coach giving real-time set feedback. Be concise (max 20 words), direct, and actionable.\n\nExercise: '+ex.name+'\nAthlete level: '+level+'\nSet '+setNum+': '+weight+' lbs x '+reps+' reps\n'+lastLine+'\n'+(setsLine||'')+'\n'+nextLine+'\n'+repRule+'\n\n'+(isLastSet ? 'Give one sentence of coaching advice that states the weight to use next session.' : 'Give one sentence of coaching advice for their next set.');
   try {
     const res  = await aiCoachFetch({model:'claude-haiku-4-5',max_tokens:60,messages:[{role:'user',content:prompt}]});
     const data = await res.json();
     const text = data.content&&data.content[0]&&data.content[0].text ? data.content[0].text.trim() : 'Good set — keep that form tight.';
     restAiSpinner.style.display = 'none';
     restAiText.textContent      = text;
+    if (isLastSet && ex.coachNext) { ex.coachNext.tip = text; saveSnapshot(); }
     if (workoutMode === 'voice' && voicePhase === 'resting') speakText(text);
   } catch {
     restAiSpinner.style.display = 'none';
@@ -3831,7 +3871,15 @@ function voiceAnnounceExercise(ex) {
     voicePending.sugWeight = sug;
     prefillWeight(target.exIdx, target.setIdx, sug);
     voicePhase = 'confirm_weight';
-    voicePrompt(ex.name + '. Set ' + (target.setIdx + 1) + ', ' + sug + ' ' + voiceUnit() + '. Say lighter or heavier to change it, or your reps when you finish.', true);
+    const coachPlan = target.setIdx === 0 ? coachPlanFor(ex) : null;
+    if (coachPlan && coachPlan.weight === sug) {
+      // Open with what the coach recommended at the end of the last session
+      const move = coachPlan.change === 'up' ? 'go up to ' : coachPlan.change === 'down' ? 'drop to ' : 'stay at ';
+      voicePrompt(ex.name + '. Last time, ' + coachPlan.lastReps + ' reps at ' + coachPlan.lastWeight + ' ' + voiceUnit() +
+        '. Today, ' + move + sug + ' ' + voiceUnit() + '. Say lighter or heavier to change it, or your reps when you finish.', true);
+    } else {
+      voicePrompt(ex.name + '. Set ' + (target.setIdx + 1) + ', ' + sug + ' ' + voiceUnit() + '. Say lighter or heavier to change it, or your reps when you finish.', true);
+    }
   } else {
     voicePhase = 'count_reps';
     voicePrompt(ex.name + '. ' + ex.sets + ' sets of ' + ex.reps + '. Say weight and reps when you finish, like 135 for 8.', true);
