@@ -17,3 +17,9 @@ enabled = true
 # Left off on purpose, as for ai-coach: the function itself requires a signed-in user's token.
 verify_jwt = false
 entrypoint = "./functions/transcribe/index.ts"
+
+[functions.speak]
+enabled = true
+# Left off on purpose, as for ai-coach: the function itself requires a signed-in user's token.
+verify_jwt = false
+entrypoint = "./functions/speak/index.ts"

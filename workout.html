@@ -1086,6 +1086,11 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Log hands-free with your earbuds</div>
       </div>
     </button>
+    <div style="margin-top:16px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;">Coach voice — tap to hear</div>
+      <div id="voice-choices" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:8px;">Marin, Cedar, Coral and Ash are AI-generated voices, not real people.</div>
+    </div>
   </div>
 </div>
 
@@ -1588,6 +1593,7 @@ function showPrestart(exArr, name) {
 }
 
 function showStartModal() {
+  renderVoiceChoices();
   const el = document.getElementById('start-modal-overlay');
   el.style.display = 'flex';
 }
@@ -1598,6 +1604,7 @@ function closeStartModal() {
 
 function beginWorkout(mode) {
   closeStartModal();
+  voiceStopSpeech();
   setMode(mode);   // inside the tap, so the mic and speech are allowed to start
   // Voice needs speech unlocked inside this tap, then the mic held open, then the
   // first prompt — strictly in that order. Opening the mic while the phone is
@@ -3350,7 +3357,7 @@ const VOICE_MIN_PEAK = 0.05;
 
 let isListening = false, voicePhase = 'idle';
 let voicePending = { exIdx:0, setIdx:0, sugWeight:0 };
-let voiceSpeakGen = 0, voiceSpeaking = 0, voiceSpeakUntil = 0, voiceUtts = [], voiceLastPrompt = '';
+let voiceSpeakGen = 0, voiceSpeaking = 0, voiceUtts = [], voiceLastPrompt = '';
 let voiceWakeLock = null, voiceWatchdog = null;
 let voiceReady = false;   // initVoice has run on a device that supports voice
 let voiceCtx = null, voiceMicStream = null, voiceMicPending = null, voiceSrc = null, voiceNode = null;
@@ -3371,6 +3378,16 @@ function voiceCopyLog() {
 }
 function voiceHudNote(msg) { document.getElementById('voice-hud-heard').textContent = msg; }
 
+// Created inside a tap so the phone lets it run
+function voiceEnsureCtx() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (AC && (!voiceCtx || voiceCtx.state === 'closed')) {
+    voiceCtx = new AC();
+    voiceCtx.onstatechange = () => voiceDbg('audio engine ' + voiceCtx.state);
+  }
+  return voiceCtx;
+}
+
 function initVoice() {
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -3379,11 +3396,7 @@ function initVoice() {
   document.getElementById('voice-hud').classList.add('show');
   voiceKeepAwake();
   voiceFmwSkipped = false;
-  // Created inside the Start tap so the phone lets it run
-  if (!voiceCtx || voiceCtx.state === 'closed') {
-    voiceCtx = new AC();
-    voiceCtx.onstatechange = () => voiceDbg('audio engine ' + voiceCtx.state);
-  }
+  voiceEnsureCtx();
   if (voiceReady) return;
   voiceReady = true;
   voiceWatchdog = setInterval(voiceHealthCheck, 5000);
@@ -3408,8 +3421,7 @@ function pauseListening() {
 
 function stopListening() {
   voicePhase = 'idle';
-  voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0;
-  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  voiceStopSpeech();
   pauseListening();
   document.getElementById('voice-hud').classList.remove('show');
   if (voiceWakeLock) { voiceWakeLock.release().catch(() => {}); voiceWakeLock = null; }
@@ -3459,6 +3471,8 @@ function voicePrimeSpeech() {
     if (!window.speechSynthesis) return resolve();
     const utt = new SpeechSynthesisUtterance('Voice mode on.');
     utt.rate = 1.05;
+    // With a natural voice selected this is silent: it only unlocks the phone voice as a fallback
+    if (getVoiceName() !== 'phone') utt.volume = 0;
     let done = false;
     const finish = how => { if (done) return; done = true; voiceDbg('speech primer: ' + how); resolve(); };
     utt.onend = () => finish('spoken'); utt.onerror = e => finish('error ' + e.error);
@@ -3516,7 +3530,7 @@ document.addEventListener('visibilitychange', () => {
 // tap the phone allows everything, so this is the manual recovery
 function voiceHudTap() {
   if (workoutMode !== 'voice' || !voiceReady) return;
-  if (voiceSpeaking) { voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0; window.speechSynthesis.cancel(); }
+  if (voiceSpeaking) voiceStopSpeech();
   if (voicePhase === 'idle') {
     const target = voiceTargetFor(currentExIdx);
     if (!target) { showToast('Nothing left to log on this exercise'); return; }
@@ -3689,17 +3703,17 @@ function voiceNextSet(exIdx) {
   const target = voiceTargetFor(exIdx);
   if (!target) { voicePhase = 'idle'; pauseListening(); return; }
   voicePending = target;
+  const next = voiceNextSetPrompt(target);
+  voicePhase = next.phase;
+  voicePrompt(next.msg, true);
+}
+
+// What to say (and which phase to enter) when a set comes up
+function voiceNextSetPrompt(target) {
   const setLabel = 'Set ' + (target.setIdx + 1);
-  if (target.bw) {
-    voicePhase = 'count_reps';
-    voicePrompt(setLabel + '. Say your reps when you finish.', true);
-  } else if (target.sugWeight) {
-    voicePhase = 'confirm_weight';
-    voicePrompt(setLabel + ', ' + target.sugWeight + ' ' + voiceUnit() + '. Say your reps when you finish.', true);
-  } else {
-    voicePhase = 'count_reps';
-    voicePrompt(setLabel + '. Say weight and reps when you finish.', true);
-  }
+  if (target.bw)        return { phase: 'count_reps',     msg: setLabel + '. Say your reps when you finish.' };
+  if (target.sugWeight) return { phase: 'confirm_weight', msg: setLabel + ', ' + target.sugWeight + ' ' + voiceUnit() + '. Say your reps when you finish.' };
+  return { phase: 'count_reps', msg: setLabel + '. Say weight and reps when you finish.' };
 }
 
 // Log the pending set with the spoken reps, read it back, then rest
@@ -3710,7 +3724,9 @@ function voiceLogSet(reps) {
   voicePrompt(reps + ' reps' + (!p.bw && p.sugWeight ? ' at ' + p.sugWeight + ' ' + voiceUnit() : '') + ', logged.', true);
   if (p.bw) logBWSet(p.exIdx, p.setIdx); else logSet(p.exIdx, p.setIdx);
   const allDone = exercises.every(ex => ex.loggedSets.every(s => s.logged));
-  if (allDone) { voicePhase = 'idle'; pauseListening(); }
+  if (allDone) { voicePhase = 'idle'; pauseListening(); return; }
+  const next = voiceTargetFor(p.exIdx);
+  if (next) voicePrefetch(voiceNextSetPrompt(next).msg);
 }
 
 // Returns true if the phrase was understood in the current phase
@@ -3867,37 +3883,171 @@ function prefillReps(exIdx, setIdx, reps) {
   if (el) el.value = reps;
 }
 
+// ── SPEECH OUTPUT ─────────────────────────────────────────────
+const SUPABASE_SPEAK_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/speak';
+// 'phone' is the device's built-in voice; the others are natural AI voices from the `speak` function
+const VOICE_CHOICES = [
+  { id: 'marin', label: 'Marin' }, { id: 'cedar', label: 'Cedar' },
+  { id: 'coral', label: 'Coral' }, { id: 'ash',   label: 'Ash' },
+  { id: 'phone', label: 'Phone voice' },
+];
+let voiceSpeakChain = Promise.resolve(), voiceStopCurrent = null;
+const voiceAudioCache = new Map();
+
+function getVoiceName() {
+  const v = store.get('settings', {}).voiceName;
+  return VOICE_CHOICES.some(c => c.id === v) ? v : 'marin';
+}
+
+// Voice picker on the start screen. Tapping a voice selects it and plays a sample.
+function renderVoiceChoices() {
+  const box = document.getElementById('voice-choices');
+  if (!box) return;
+  const current = getVoiceName();
+  box.innerHTML = VOICE_CHOICES.map(c => {
+    const on = c.id === current;
+    return `<button onclick="pickVoice('${c.id}')" aria-pressed="${on}"
+      style="min-height:44px;padding:0 14px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;
+             border:1px solid ${on ? 'var(--volt)' : 'var(--border-md)'};background:${on ? 'var(--volt)' : 'transparent'};color:${on ? '#1a1a1a' : 'var(--text-2)'};">${c.label}</button>`;
+  }).join('');
+}
+
+function pickVoice(id) {
+  const s = store.get('settings', {}); s.voiceName = id; store.set('settings', s);
+  renderVoiceChoices();
+  // Play a sample (we're inside a tap, so audio is allowed to start)
+  voiceEnsureCtx();
+  if (voiceCtx && voiceCtx.state !== 'running') voiceCtx.resume().catch(() => {});
+  voiceStopSpeech();
+  const gen = voiceSpeakGen;
+  voiceSayOne('Set two, twenty pounds. Say your reps when you finish.', () => gen === voiceSpeakGen);
+}
+
 function updateVoiceHUD(msg) { const el=document.getElementById('voice-hud-text'); if(el) el.textContent=msg; }
 
-// Speaks through the earbuds. The mic is closed while the app talks (it would
-// hear itself) and reopens when everything queued has been said.
+// Fetch (or reuse) natural speech for a line of text, decoded and ready to play
+async function voiceFetchSpeech(text, name) {
+  const key = name + '|' + text;
+  if (voiceAudioCache.has(key)) return voiceAudioCache.get(key);
+  const session = await LF.auth.session();
+  if (!session) throw new Error('not signed in');
+  // A slow connection shouldn't hold the workout up — give up and let the phone voice say it
+  const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 6000);
+  let res;
+  try {
+    res = await fetch(SUPABASE_SPEAK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ text, voice: name }),
+      signal: abort.signal
+    });
+  } finally { clearTimeout(timer); }
+  if (!res.ok) {
+    let msg = 'HTTP ' + res.status;
+    try { msg = (await res.json()).error || msg; } catch(e) {}
+    throw new Error(msg);
+  }
+  const buf = await voiceCtx.decodeAudioData(await res.arrayBuffer());
+  if (voiceAudioCache.size >= 40) voiceAudioCache.delete(voiceAudioCache.keys().next().value);
+  voiceAudioCache.set(key, buf);
+  return buf;
+}
+
+// Say one line and resolve with how it ended. isCurrent() goes false once it has been interrupted.
+// Natural voice first; the phone's own voice is the fallback if that fails.
+async function voiceSayOne(text, isCurrent) {
+  const name = getVoiceName();
+  if (name !== 'phone' && voiceCtx) {
+    try {
+      const buf = await voiceFetchSpeech(text, name);
+      if (!isCurrent()) return 'interrupted';
+      if (voiceCtx.state !== 'running') {
+        // resume() can hang if the phone has taken the audio away — don't wait on it forever
+        await Promise.race([voiceCtx.resume(), new Promise(r => setTimeout(r, 800))]);
+        if (voiceCtx.state !== 'running') throw new Error('audio engine ' + voiceCtx.state);
+      }
+      return await new Promise(resolve => {
+        const src = voiceCtx.createBufferSource();
+        src.buffer = buf; src.connect(voiceCtx.destination);
+        let done = false;
+        const finish = how => { if (done) return; done = true; if (voiceStopCurrent === stop) voiceStopCurrent = null; resolve(how); };
+        const stop = () => { try { src.stop(); } catch(e) {} finish('interrupted'); };
+        src.onended = () => finish('end');
+        voiceStopCurrent = stop;
+        setTimeout(() => finish('timed out'), buf.duration * 1000 + 1500);
+        src.start();
+      });
+    } catch (e) {
+      voiceDbg('natural voice failed (' + e.message + '), using phone voice');
+      if (!isCurrent()) return 'interrupted';
+    }
+  }
+  return voiceSayWithPhone(text);
+}
+
+function voiceSayWithPhone(text) {
+  return new Promise(resolve => {
+    if (!window.speechSynthesis) return resolve('no speech on this device');
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate=1.05; utt.pitch=1.0; utt.volume=1.0;
+    let done = false;
+    const finish = how => {
+      if (done) return; done = true;
+      voiceUtts = voiceUtts.filter(u => u !== utt);
+      if (voiceStopCurrent === stop) voiceStopCurrent = null;
+      resolve(how);
+    };
+    const stop = () => { window.speechSynthesis.cancel(); finish('interrupted'); };
+    utt.onend = () => finish('end'); utt.onerror = e => finish('error ' + e.error);
+    voiceStopCurrent = stop;
+    // iOS sometimes never fires onend — don't leave the mic closed forever
+    setTimeout(() => finish('timed out'), 2500 + text.length * 110);
+    voiceUtts.push(utt);   // hold a reference so it isn't collected mid-speech
+    window.speechSynthesis.speak(utt);
+  });
+}
+
+// No markdown symbols, and "lbs" read as a word
+function voiceCleanText(text) {
+  return String(text).replace(/[*_#`]/g, '').replace(/\blbs?\b/gi, 'pounds').trim();
+}
+
+// Natural speech takes a couple of seconds to arrive — fetch a line we know is coming
+function voicePrefetch(text) {
+  const name = getVoiceName();
+  if (name === 'phone' || !voiceCtx) return;
+  voiceFetchSpeech(voiceCleanText(text), name).catch(() => {});
+}
+
+// Cut off whatever is being said and drop anything queued
+function voiceStopSpeech() {
+  voiceSpeakGen++; voiceSpeaking = 0;
+  voiceSpeakChain = Promise.resolve();
+  if (voiceStopCurrent) voiceStopCurrent();
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+}
+
+// Speaks through the earbuds. The mic gate is closed while the app talks and
+// reopens when everything queued has been said.
 // interrupt=true drops anything still queued; otherwise it waits its turn.
 function speakText(text, interrupt) {
-  if (!window.speechSynthesis || workoutMode !== 'voice' || !text) return;
+  if (workoutMode !== 'voice' || !text) return;
+  text = voiceCleanText(text);
+  if (!text) return;
   voiceDbg('say: ' + text.slice(0, 60));
-  if (interrupt) { voiceSpeakGen++; voiceSpeaking = 0; voiceSpeakUntil = 0; window.speechSynthesis.cancel(); }
+  if (interrupt) voiceStopSpeech();
   pauseListening();
   const gen = voiceSpeakGen;
-  const utt = new SpeechSynthesisUtterance(String(text).replace(/[*_#`]/g, ''));
-  utt.rate=1.05; utt.pitch=1.0; utt.volume=1.0;
-  let finished = false;
-  const done = how => {
-    if (finished) return;
-    finished = true;
-    voiceUtts = voiceUtts.filter(u => u !== utt);
-    if (gen !== voiceSpeakGen) return;
-    voiceSpeaking = Math.max(0, voiceSpeaking - 1);
-    voiceDbg(how === 'end' ? 'finished speaking' : 'speech did not finish (' + how + ')');
-    if (!voiceSpeaking && voicePhase !== 'idle') setTimeout(startListening, 250);
-  };
-  utt.onend = () => done('end'); utt.onerror = e => done('error ' + e.error);
-  // iOS sometimes never fires onend — don't leave the mic closed forever
-  voiceSpeakUntil = Math.max(Date.now(), voiceSpeakUntil) + 2500 + text.length * 110;
-  setTimeout(() => done('timed out'), voiceSpeakUntil - Date.now());
   voiceSpeaking++;
-  voiceUtts.push(utt);   // hold a reference so it isn't collected mid-speech
   document.getElementById('voice-hud').classList.add('show');
-  window.speechSynthesis.speak(utt);
+  voiceSpeakChain = voiceSpeakChain
+    .then(() => gen === voiceSpeakGen ? voiceSayOne(text, () => gen === voiceSpeakGen) : 'interrupted')
+    .then(how => {
+      if (gen !== voiceSpeakGen) return;
+      voiceSpeaking = Math.max(0, voiceSpeaking - 1);
+      voiceDbg(how === 'end' ? 'finished speaking' : 'speech did not finish (' + how + ')');
+      if (!voiceSpeaking && voicePhase !== 'idle') setTimeout(startListening, 250);
+    });
 }
 
 // ── INIT ──────────────────────────────────────────────────────
