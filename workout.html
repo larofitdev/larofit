@@ -1116,7 +1116,17 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
   <div style="background:var(--bg-card);border-radius:var(--radius-lg) var(--radius-lg) 0 0;width:100%;padding:24px var(--page-pad) calc(18px + env(safe-area-inset-bottom));max-width:520px;margin:0 auto;">
     <div style="width:36px;height:4px;background:var(--border-md);border-radius:2px;margin:0 auto 20px;"></div>
     <div style="font-family:var(--font-display);font-size:26px;letter-spacing:0.5px;color:var(--text);margin-bottom:4px;">How do you want to train?</div>
-    <div style="font-size:13px;color:var(--text-3);margin-bottom:22px;">Choose your logging style</div>
+    <div style="font-size:13px;color:var(--text-3);margin-bottom:16px;">Choose your logging style</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 14px;background:var(--bg-card2);border-radius:var(--radius);">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);" id="ai-prog-label">AI progression</div>
+        <div id="ai-prog-desc" style="font-size:12px;color:var(--text-3);margin-top:2px;"></div>
+      </div>
+      <button id="ai-prog-toggle" role="switch" aria-checked="true" aria-labelledby="ai-prog-label" onclick="toggleAiProgression()"
+              style="flex-shrink:0;width:52px;height:32px;padding:0;border:none;border-radius:16px;position:relative;cursor:pointer;transition:background 0.15s;-webkit-tap-highlight-color:transparent;">
+        <span id="ai-prog-knob" style="position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.15s;"></span>
+      </button>
+    </div>
     <button onclick="beginWorkout('manual')"
             style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-dark);border:none;border-radius:var(--radius);padding:18px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;">
       <div style="width:44px;height:44px;border-radius:50%;background:var(--volt-bg);border:1px solid var(--volt-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -1645,6 +1655,7 @@ function showPrestart(exArr, name) {
 
 function showStartModal() {
   renderVoiceChoices();
+  renderAiProgression();
   const el = document.getElementById('start-modal-overlay');
   el.style.display = 'flex';
 }
@@ -3372,6 +3383,7 @@ function coachNextWeight(ex, weight, reps) {
 // What the coach said to do next time, from the final set of the last session.
 // Uses the recommendation saved with that workout, or works it out for older ones.
 function coachPlanFor(ex) {
+  if (!aiProgressionOn()) return null;
   const last = getLastSession(ex.id || ex.name);
   if (!last || !last.sets || !last.sets.length) return null;
   const finalSet   = last.sets[last.sets.length - 1];
@@ -3386,12 +3398,36 @@ function coachPlanFor(ex) {
   };
 }
 
+// "AI progression" from the start screen. Off = logging only: sets start from the
+// user's own numbers, with no recommended weights, Find My Weight or coaching tips.
+function aiProgressionOn() { return store.get('settings', {}).aiProgression !== false; }
+
+function toggleAiProgression() {
+  const st = store.get('settings', {});
+  st.aiProgression = !aiProgressionOn();
+  store.set('settings', st);
+  renderAiProgression();
+}
+
+function renderAiProgression() {
+  const btn = document.getElementById('ai-prog-toggle'), knob = document.getElementById('ai-prog-knob');
+  if (!btn) return;
+  const on = aiProgressionOn();
+  btn.setAttribute('aria-checked', on ? 'true' : 'false');
+  btn.style.background = on ? 'var(--volt)' : 'var(--border-md)';
+  knob.style.transform = on ? 'translateX(20px)' : 'translateX(0)';
+  document.getElementById('ai-prog-desc').textContent = on
+    ? 'The coach suggests weights and gives tips between sets.'
+    : 'Logging only. Your own weights, no suggestions or tips.';
+}
+
 function getSuggestedWeight(ex) {
   const plan = coachPlanFor(ex);
   return plan ? plan.weight : null;
 }
 
 function isFirstTime(ex) {
+  if (!aiProgressionOn()) return false;  // logging only: no Find My Weight
   if (ex.planWeight > 0) return false;   // the program already says what weight to use
   const l = getLastSession(ex.id||ex.name); return !l||!l.bestWeight;
 }
@@ -3462,6 +3498,7 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
   const restAiSpinner = document.getElementById('rest-ai-spinner');
   const restAiText    = document.getElementById('rest-ai-text');
   if (!restAiSection) return;
+  if (!aiProgressionOn()) { restAiSection.style.display = 'none'; return; }   // logging only: no tips
   restAiSection.style.display = 'flex';
   restAiSpinner.style.display = 'block';
   restAiText.textContent      = 'Analyzing your set...';
@@ -3545,6 +3582,7 @@ let voiceReady = false;   // initVoice has run on a device that supports voice
 let voiceCtx = null, voiceMicStream = null, voiceMicPending = null, voiceSrc = null, voiceNode = null;
 let voiceSendChain = Promise.resolve(), voiceMutedChecks = 0;
 let voiceFmwSkipped = false;   // user has declined Find My Weight this workout
+let voiceLastLog = null;       // the set most recently logged by voice, for "no, that's wrong"
 // Phrase detection state
 const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], seg: [], segPeak: 0, blocks: 0 };
 
@@ -3813,7 +3851,8 @@ function voiceSendPhrase(blob, spokenMs, peak) {
       // The workout moved on while this was being transcribed — don't apply it to the wrong step
       if (voicePhase !== phaseAtCapture) { voiceDbg('heard ' + JSON.stringify(text) + detail + ' -> too late, ignored'); return; }
       const understood = handleVoiceResult(text);
-      voiceDbg('heard ' + JSON.stringify(text) + detail + (understood ? ' -> understood' : ' -> ignored'));
+      voiceDbg('heard ' + JSON.stringify(text) + detail + (understood ? ' -> understood' : ' -> asking coach'));
+      if (!understood) await voiceInterpret(text);
     } catch (e) {
       voiceDbg('transcribe failed: ' + e.message);
       voiceHudNote('Voice service problem');
@@ -3867,7 +3906,7 @@ function voiceAnnounceExercise(ex) {
     voicePending.sugWeight = fmwW;
     prefillWeight(target.exIdx, target.setIdx, fmwW);
     voicePhase = 'confirm_weight';
-    voicePrompt('Find My Weight for ' + ex.name + '. ' + fmwW + ' ' + voiceUnit() + '. Say yes to start, or lighter.', true);
+    voicePrompt('Find My Weight for ' + ex.name + '. ' + fmwW + ' ' + voiceUnit() + '. Say yes to start, or say a different weight.', true);
   } else if (sug) {
     voicePending.sugWeight = sug;
     prefillWeight(target.exIdx, target.setIdx, sug);
@@ -3877,9 +3916,9 @@ function voiceAnnounceExercise(ex) {
       // Open with what the coach recommended at the end of the last session
       const move = coachPlan.change === 'up' ? 'go up to ' : coachPlan.change === 'down' ? 'drop to ' : 'stay at ';
       voicePrompt(ex.name + '. Last time, ' + coachPlan.lastReps + ' reps at ' + coachPlan.lastWeight + ' ' + voiceUnit() +
-        '. Today, ' + move + sug + ' ' + voiceUnit() + '. Say lighter or heavier to change it, or your reps when you finish.', true);
+        '. Today, ' + move + sug + ' ' + voiceUnit() + '. Say your reps when you finish.', true);
     } else {
-      voicePrompt(ex.name + '. Set ' + (target.setIdx + 1) + ', ' + sug + ' ' + voiceUnit() + '. Say lighter or heavier to change it, or your reps when you finish.', true);
+      voicePrompt(ex.name + '. Set ' + (target.setIdx + 1) + ', ' + sug + ' ' + voiceUnit() + '. Say your reps when you finish.', true);
     }
   } else {
     voicePhase = 'count_reps';
@@ -3911,11 +3950,14 @@ function voiceNextSetPrompt(target) {
 function voiceLogSet(reps) {
   const p = voicePending;
   prefillReps(p.exIdx, p.setIdx, reps);
+  const prKey = exercises[p.exIdx].id || exercises[p.exIdx].name;
+  voiceLastLog = { exIdx: p.exIdx, setIdx: p.setIdx, weight: p.bw ? 0 : p.sugWeight, reps, bw: !!p.bw, at: Date.now(),
+                   prKey, hadPR: _prCredited.has(prKey), prTotal: totalPRs };
   voicePhase = 'resting';
   voicePrompt(reps + ' reps' + (!p.bw && p.sugWeight ? ' at ' + p.sugWeight + ' ' + voiceUnit() : '') + ', logged.', true);
   if (p.bw) logBWSet(p.exIdx, p.setIdx); else logSet(p.exIdx, p.setIdx);
   const allDone = exercises.every(ex => ex.loggedSets.every(s => s.logged));
-  if (allDone) { voicePhase = 'idle'; pauseListening(); return; }
+  if (allDone) return;   // still listening, so the last set can be corrected before tapping Finish
   const next = voiceTargetFor(p.exIdx);
   if (next) voicePrefetch(voiceNextSetPrompt(next).msg);
 }
@@ -3925,6 +3967,14 @@ function handleVoiceResult(raw) {
   const t = normalizeSpeech(raw);
   if (!t) return false;
   if (/\b(repeat|say that again|say again)\b/.test(t)) { speakText(voiceLastPrompt, true); return true; }
+
+  if (voicePhase !== 'fmw_offer') {
+    const justLogged = voiceLastLog && Date.now() - voiceLastLog.at < 180000;
+    if (VOICE_CORRECTION.test(t) || (justLogged && /^(no|nope|nah)\b/.test(t))) {
+      voiceCorrectLast(parseSetSpeech(t.replace(/^(no|nope|nah)\b/, '').replace(/\b(last|the) set\b/g, ' ').trim()));
+      return true;
+    }
+  }
 
   if (voicePhase === 'resting') {
     if (/\b(ready|skip|next|go|start)\b/.test(t)) { skipRest(); return true; }
@@ -3960,27 +4010,99 @@ function handleVoiceResult(raw) {
       voicePrompt(p.sugWeight + ' ' + voiceUnit() + '. Say your reps when you finish.', true);
       return true;
     }
-    if (voicePhase === 'confirm_weight') {
-      if (/\b(yes|yeah|yep|ok|okay|sure|go|start|correct|good)\b/.test(t)) {
-        voicePhase = 'count_reps';
-        voicePrompt('Go. Say your reps when you finish.', true);
-        return true;
-      }
-      if (/\b(lighter|less|too heavy|lower|reduce|down)\b/.test(t)) {
-        p.sugWeight = Math.max(5, p.sugWeight - 10);
-        prefillWeight(p.exIdx, p.setIdx, p.sugWeight);
-        voicePrompt('Reduced to ' + p.sugWeight + ' ' + voiceUnit() + '.', true);
-        return true;
-      }
-      if (/\b(heavier|more|too light|higher|increase|up)\b/.test(t)) {
-        p.sugWeight += 10;
-        prefillWeight(p.exIdx, p.setIdx, p.sugWeight);
-        voicePrompt('Increased to ' + p.sugWeight + ' ' + voiceUnit() + '.', true);
-        return true;
-      }
+    // To change the weight, say it ("12.5 for 10"). There is no "lighter / heavier":
+    // those words turned up in ordinary speech and changed the weight unasked.
+    if (voicePhase === 'confirm_weight' && /^(yes|yeah|yep|ok|okay|go|start)$/.test(t)) {
+      voicePhase = 'count_reps';
+      voicePrompt('Go. Say your reps when you finish.', true);
+      return true;
     }
   }
   return false;
+}
+
+// ── CORRECTIONS ───────────────────────────────────────────────
+// Words that mean "the last set was logged wrong". A bare "no" only counts just after a set was logged.
+const VOICE_CORRECTION = /\b(wrong|incorrect|undo|scratch that|edit|correction|correct that|change (that|it|the last|last)|fix (that|it)|redo|mistake|not right|not what i said|delete (that|the last|last)|remove (that|the last|last))\b/;
+
+// Take back the last voice-logged set so it can be said again. Returns it, or null.
+function voiceUnlogLast() {
+  const l = voiceLastLog;
+  if (!l) return null;
+  const ex = exercises[l.exIdx], set = ex && ex.loggedSets[l.setIdx];
+  if (!set || !set.logged) { voiceLastLog = null; return null; }
+  voiceLastLog = null;
+
+  stopRest(); restCallback = null;   // the rest timer must not move things on
+  set.logged = false;
+  const fmw = getFMW(l.exIdx);
+  if (fmw.active && fmw.sets.length) fmw.sets.pop();
+  delete ex.coachNext;
+  // A record credited for the wrong numbers is taken back too
+  if (!l.hadPR && _prCredited.has(l.prKey)) { _prCredited.delete(l.prKey); totalPRs = l.prTotal; }
+
+  voicePending = { exIdx: l.exIdx, setIdx: l.setIdx, sugWeight: l.bw ? 0 : (parseFloat(set.weight) || 0), bw: l.bw };
+  if (currentExIdx !== l.exIdx) goToEx(l.exIdx);   // the app had already moved to the next exercise
+  else renderSets(ex, getLastSession(ex.id || ex.name));
+  renderDots(); updateOverallProgress(); checkAllDone(); saveSnapshot();
+  return l;
+}
+
+// "No, that's wrong" / "edit last set" — optionally with the right numbers in the same breath
+function voiceCorrectLast(said) {
+  const l = voiceUnlogLast();
+  if (!l) { voicePrompt('There is no set to correct.', true); return; }
+  const p = voicePending;
+  voiceDbg('correcting set ' + (l.setIdx + 1) + ' (was ' + l.reps + ' reps' + (l.weight ? ' at ' + l.weight : '') + ')');
+  if (said && said.weight !== null && !p.bw) { p.sugWeight = said.weight; prefillWeight(p.exIdx, p.setIdx, p.sugWeight); }
+  if (said && said.reps !== null) { voiceLogSet(said.reps); return; }
+  if (said && said.weight !== null && !p.bw) { voiceLogSet(l.reps); return; }   // only the weight was wrong
+  voicePhase = 'count_reps';
+  voicePrompt('Okay, set ' + (l.setIdx + 1) + ' removed. ' + (p.bw ? 'Say the reps again.' : 'Say the weight and reps again.'), true);
+}
+
+// A phrase the quick rules didn't understand: ask the coach model what was meant,
+// so the user can talk normally ("actually that last one was twelve and a half").
+async function voiceInterpret(text) {
+  if (text.trim().split(/\s+/).length < 2) return;   // a single stray word isn't worth a call
+  const phase = voicePhase, p = voicePending, ex = exercises[p.exIdx], last = voiceLastLog;
+  if (!ex || phase === 'idle' || phase === 'fmw_offer') return;
+  const prompt = 'You interpret one spoken phrase from someone logging a gym workout by voice. Reply with JSON only.\n' +
+    'Current exercise: ' + ex.name + '. The app is waiting for: ' +
+    (phase === 'resting' ? 'the rest period to end' : 'the result of set ' + (p.setIdx + 1) + (p.sugWeight ? ', planned at ' + p.sugWeight + ' lbs' : '')) + '.\n' +
+    (last ? 'Last set logged: ' + last.reps + ' reps' + (last.weight ? ' at ' + last.weight + ' lbs' : '') + '.\n' : 'No set has been logged yet.\n') +
+    'Phrase: "' + text.replace(/"/g, "'") + '"\n\n' +
+    'Choose one action:\n' +
+    '"log" - they are reporting the set they just finished\n' +
+    '"correct" - the last logged set is wrong, or they want to change, edit or undo it\n' +
+    '"ready" - they want to skip the rest and start the next set\n' +
+    '"repeat" - they want the last prompt said again\n' +
+    '"none" - anything else, including talk that is not meant for the app\n' +
+    'Reply exactly: {"action":"...","weight":number or null,"reps":number or null}. Only give numbers the phrase itself states.';
+  let out;
+  try {
+    const res  = await aiCoachFetch({ model:'claude-haiku-4-5', max_tokens:60, messages:[{ role:'user', content: prompt }] });
+    const data = await res.json();
+    const raw  = data.content && data.content[0] && data.content[0].text || '';
+    out = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
+  } catch (e) { voiceDbg('could not interpret ' + JSON.stringify(text) + ': ' + e.message); return; }
+  if (voicePhase !== phase) return;   // the workout moved on while we were asking
+
+  // Only trust numbers that are really in what was said
+  const norm = normalizeSpeech(text);
+  const stated = n => typeof n === 'number' && new RegExp('(^|[^\\d.])' + String(n).replace('.', '\\.') + '([^\\d.]|$)').test(norm);
+  const said = { weight: stated(out.weight) ? out.weight : null,
+                 reps: stated(out.reps) && Number.isInteger(out.reps) && out.reps >= 1 && out.reps <= 100 ? out.reps : null };
+  voiceDbg('coach read ' + JSON.stringify(text) + ' as ' + out.action + ' ' + JSON.stringify(said));
+
+  if (out.action === 'correct') { if (voiceLastLog) voiceCorrectLast(said); }
+  else if (out.action === 'ready')  { if (phase === 'resting') skipRest(); }
+  else if (out.action === 'repeat') speakText(voiceLastPrompt, true);
+  else if (out.action === 'log' && (phase === 'confirm_weight' || phase === 'count_reps')) {
+    if (said.weight !== null && !p.bw) { p.sugWeight = said.weight; prefillWeight(p.exIdx, p.setIdx, p.sugWeight); }
+    if (said.reps !== null) voiceLogSet(said.reps);
+    else if (said.weight !== null && !p.bw) { voicePhase = 'count_reps'; voicePrompt(p.sugWeight + ' ' + voiceUnit() + '. Say your reps when you finish.', true); }
+  }
 }
 
 // ── SPEECH PARSING ────────────────────────────────────────────
