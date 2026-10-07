@@ -1,4 +1,4 @@
-const CACHE_NAME = 'larofit-v63';
+const CACHE_NAME = 'larofit-v64';
 
 const STATIC_ASSETS = [
   '/index.html',
