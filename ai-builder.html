@@ -161,6 +161,7 @@ body { display: flex; flex-direction: column; background: var(--bg); padding-bot
       <input class="aib-field" id="save-name" type="text" maxlength="60" autocomplete="off">
     </div>
     <div id="save-workouts"></div>
+    <div id="save-count" style="font-size:13px;color:var(--text-2);margin-top:12px;min-height:18px;"></div>
     <div id="save-new-fields-2">
       <label class="aib-label" for="save-weeks">How many weeks</label>
       <select class="aib-field" id="save-weeks">
@@ -534,9 +535,31 @@ function renderSaveMode() {
     ? 'Pick the days. On each one, these exercises are added after what is already planned, from today to the end of the program.'
     : 'Pick the days for each workout. It is added to your programs, where you can edit it any time.';
   document.getElementById('save-go').textContent = adding ? 'Add to program' : 'Save program';
+  updateSaveCount();
 }
 
 function saveGo() { return saveMode === 'add' ? addToActiveProgram() : saveProgram(); }
+
+function updateSaveCount() {
+  const el = document.getElementById('save-count');
+  if (!el) return;
+  if (saveMode !== 'add' || !activeProgram) { el.textContent = ''; return; }
+  const picked = saveDays.reduce((n, list) => n + list.length, 0);
+  if (Array.isArray(activeProgram.days)) {
+    el.textContent = picked ? 'Adds it to ' + picked + ' day' + (picked === 1 ? '' : 's') + ' of the weekly plan.' : '';
+    return;
+  }
+  const before = activeProgram.days || {};
+  const lastKey = Object.keys(before).sort().pop();
+  const today = localDateStr();
+  const through = lastKey && lastKey >= today
+    ? (activeProgram.name || 'This program') + ' is planned through ' + new Date(lastKey + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + '.'
+    : (activeProgram.name || 'This program') + ' has nothing planned ahead, so it is added for the next 8 weeks.';
+  if (!picked) { el.textContent = through; return; }
+  const after = programWithRoutine(activeProgram, routine, saveDays, new Date()).days;
+  const count = Object.keys(after).filter(k => JSON.stringify(after[k]) !== JSON.stringify(before[k])).length;
+  el.textContent = 'Adds it to ' + count + ' day' + (count === 1 ? '' : 's') + '. ' + through;
+}
 
 // One day's plan with a workout's exercises added after whatever is already there
 function dayWithWorkout(day, w) {
@@ -619,6 +642,7 @@ function renderSaveDays() {
     });
     box.appendChild(label); box.appendChild(row);
   });
+  updateSaveCount();
 }
 
 async function saveProgram() {
