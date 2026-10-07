@@ -532,7 +532,7 @@ function renderSaveMode() {
   document.getElementById('save-new-fields').style.display   = adding ? 'none' : '';
   document.getElementById('save-new-fields-2').style.display = adding ? 'none' : '';
   document.getElementById('save-intro').textContent = adding
-    ? 'Pick the days. On each one, these exercises are added after what is already planned, from today to the end of the program.'
+    ? 'Pick the days. It goes on those days every week, from today to the end of the program, after anything already planned.'
     : 'Pick the days for each workout. It is added to your programs, where you can edit it any time.';
   document.getElementById('save-go').textContent = adding ? 'Add to program' : 'Save program';
   updateSaveCount();
@@ -550,15 +550,15 @@ function updateSaveCount() {
     return;
   }
   const before = activeProgram.days || {};
-  const lastKey = Object.keys(before).sort().pop();
-  const today = localDateStr();
-  const through = lastKey && lastKey >= today
-    ? (activeProgram.name || 'This program') + ' is planned through ' + new Date(lastKey + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + '.'
-    : (activeProgram.name || 'This program') + ' has nothing planned ahead, so it is added for the next 8 weeks.';
+  const name = activeProgram.name || 'This program';
+  const end = programEndDate(activeProgram, new Date());
+  const through = name + ' runs through ' + end.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + '.';
   if (!picked) { el.textContent = through; return; }
   const after = programWithRoutine(activeProgram, routine, saveDays, new Date()).days;
-  const count = Object.keys(after).filter(k => JSON.stringify(after[k]) !== JSON.stringify(before[k])).length;
-  el.textContent = 'Adds it to ' + count + ' day' + (count === 1 ? '' : 's') + '. ' + through;
+  const changed = Object.keys(after).filter(k => JSON.stringify(after[k]) !== JSON.stringify(before[k]));
+  const alone = changed.filter(k => !(before[k] && (before[k].exercises || []).length)).length;
+  el.textContent = 'Adds it to ' + changed.length + ' day' + (changed.length === 1 ? '' : 's') + ', every week to the end of the program. ' + through +
+    (alone ? ' On ' + alone + ' of them nothing else is planned yet, so it will be the only workout that day.' : '');
 }
 
 // One day's plan with a workout's exercises added after whatever is already there
@@ -578,6 +578,19 @@ function dayWithWorkout(day, w) {
   return { ...day, rest: false, name, exercises: [...existing, ...fresh] };
 }
 
+// The last day of a calendar program's schedule: its start date plus its number of weeks.
+// Falls back to its last planned day, and to 8 weeks from today if that has already passed.
+function programEndDate(program, today) {
+  const start = new Date(today); start.setHours(0, 0, 0, 0);
+  let end = null;
+  const weeks = parseInt(program.weeks) || 0;
+  if (program.startDate && weeks) { end = new Date(program.startDate + 'T00:00:00'); end.setDate(end.getDate() + weeks * 7 - 1); }
+  const lastKey = Object.keys(program.days || {}).sort().pop();
+  if (lastKey) { const lastPlanned = new Date(lastKey + 'T00:00:00'); if (!end || lastPlanned > end) end = lastPlanned; }
+  if (!end || end < start) { end = new Date(start); end.setDate(start.getDate() + 8 * 7 - 1); }
+  return end;
+}
+
 // The active program with the routine's workouts added on the chosen weekdays
 function programWithRoutine(program, r, daysByWorkout, today) {
   const p = JSON.parse(JSON.stringify(program));
@@ -586,12 +599,10 @@ function programWithRoutine(program, r, daysByWorkout, today) {
     // Older programs are a repeating week: one entry per weekday
     DAYS.forEach((dayName, idx) => { const w = workoutFor(dayName); if (w) p.days[idx] = dayWithWorkout(p.days[idx], w); });
   } else {
-    // Calendar programs: every chosen weekday from today to the program's last planned day
+    // Calendar programs: every chosen weekday from today to the end of the program's schedule
     p.days = p.days || {};
     const start = new Date(today); start.setHours(0, 0, 0, 0);
-    const lastKey = Object.keys(p.days).sort().pop();
-    let end = lastKey ? new Date(lastKey + 'T00:00:00') : null;
-    if (!end || end < start) { end = new Date(start); end.setDate(start.getDate() + 8 * 7 - 1); }   // nothing planned ahead: 8 weeks
+    const end = programEndDate(p, today);
     for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const w = workoutFor(DAYS[(d.getDay() + 6) % 7]);
       if (w) { const key = localDateStr(d); p.days[key] = dayWithWorkout(p.days[key], w); }
