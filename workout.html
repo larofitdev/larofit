@@ -1914,7 +1914,8 @@ function renderExercise() {
     prevEl.style.display = 'flex';
     const coachPlan = coachPlanFor(ex);
     const today = coachPlan
-      ? ' · Coach: ' + (coachPlan.change === 'up' ? 'go up to ' : coachPlan.change === 'down' ? 'drop to ' : 'stay at ') + coachPlan.weight + ' ' + weightUnit() + ' today'
+      ? ' · Coach: ' + (coachPlan.change === 'up' ? 'go up to ' : 'stay at ') + coachPlan.weight + ' ' + weightUnit() + ' today' +
+        (coachPlan.oneMore ? ' (one more ' + coachPlan.needSets + '×' + coachPlan.needReps + ' to move up)' : '')
       : '';
     document.getElementById('prev-best-text').textContent = 'Last: ' + lastSession.bestWeight + ' ' + weightUnit() + ' × ' + lastSession.bestReps + ' reps' + today;
     const tipEl = document.getElementById('coach-tip');
@@ -2421,7 +2422,7 @@ function logSet(exIdx, setIdx) {
 
   if (allDone) {
     const nextIdx = nextIncompleteIdx(exIdx);
-    if (nextIdx !== -1) startRest(ex.restSec, () => goToEx(nextIdx), 'Next: ' + exercises[nextIdx].name);
+    if (nextIdx !== -1) startRest(ex.restSec, () => goToEx(nextIdx), nextExerciseLabel(nextIdx));
     else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
     fetchSetCoaching(ex, setIdx, weight, reps);
   } else {
@@ -2724,6 +2725,13 @@ function checkAllDone() {
   const allDone = exercises.length > 0 && exercises.every(ex => ex.loggedSets.every(s => s.logged));
   document.getElementById('finish-bar').classList.toggle('show', allDone);
   if (allDone) document.getElementById('log-btn-fixed').classList.remove('show');
+}
+
+// "Next: Dumbbell Chest Fly · 45 lbs" for the rest screen
+function nextExerciseLabel(exIdx) {
+  const ex = exercises[exIdx], open = ex.loggedSets.find(st => !st.logged);
+  const w = open && parseFloat(open.weight);
+  return 'Next: ' + ex.name + (w ? ' · ' + w + ' ' + weightUnit() : '');
 }
 
 // ── LAST SESSION LOOKUP ───────────────────────────────────────
@@ -3374,33 +3382,68 @@ function getFMWStartWeight(ex) {
   return Math.max(5, Math.round((bw * mult) / 5) * 5);
 }
 
-// The one progression rule, shared by the coaching tips and by what the next
-// workout starts at: 5 or fewer reps → lighter, 6–9 → same weight, 10+ → heavier.
-function coachNextWeight(ex, weight, reps) {
-  const w = parseFloat(weight) || 0, r = parseInt(reps) || 0;
-  const data = lookupExData(ex.id), eq = data ? data.eq : 'db';
-  const increment = (eq === 'bb' || eq === 'mc') ? 5 : (w < 30 ? 2.5 : 5);
-  const reduceAmt = eq === 'bb' ? 10 : (w < 30 ? 5 : 10);
-  if (r <= 5) return { weight: Math.max(Math.min(w, 2.5), w - reduceAmt), change: 'down' };
-  if (r <= 9) return { weight: w, change: 'same' };
-  return { weight: w + increment, change: 'up' };
+// ── PROGRESSION RULE ──────────────────────────────────────────
+// Weight only goes up when every planned set hit its target reps at the same
+// weight (3 sets of 10 unless the program says otherwise):
+//   under 25 lbs  → +2.5 after one such workout
+//   25 lbs and up → +5 after two such workouts in a row at that weight
+// Otherwise the weight stays where it is. It never drops automatically.
+const PROG_HEAVY_FROM = 25, PROG_LIGHT_STEP = 2.5, PROG_HEAVY_STEP = 5;
+
+// The last n sessions (not counting today) that included this exercise, newest first
+function getExerciseHistory(exIdOrName, n) {
+  const history = store.get('workout_history', {});
+  const out = [];
+  for (const date of Object.keys(history).sort().reverse()) {
+    if (date === todayKey) continue;
+    const session = history[date];
+    if (!session || !session.exercises) continue;
+    const found = session.exercises.find(e => e.id === exIdOrName || e.name === exIdOrName);
+    if (found && found.sets && found.sets.length) { out.push({ date, sets: found.sets, coach: found.coach || null }); if (out.length >= n) break; }
+  }
+  return out;
 }
 
-// What the coach said to do next time, from the final set of the last session.
-// Uses the recommendation saved with that workout, or works it out for older ones.
+function progTopWeight(sets) {
+  return Math.max(0, ...(sets || []).map(s => parseFloat(s.weight) || 0));
+}
+
+// Did these sets include every planned set at the target reps, all at the top weight?
+function progCleared(sets, needSets, needReps) {
+  const top = progTopWeight(sets);
+  if (!top) return false;
+  return sets.filter(s => (parseFloat(s.weight) || 0) === top && (parseFloat(s.reps) || 0) >= needReps).length >= needSets;
+}
+
+// What to use next time, given the latest session's sets and the one before it.
+// Returns { weight, change: 'up' | 'same', top, cleared, needSets, needReps, oneMore } or null.
+function progressionFor(ex, latestSets, earlierSets) {
+  const top = progTopWeight(latestSets);
+  if (!top) return null;
+  const needSets = parseInt(ex.sets) || 3, needReps = parseInt(ex.reps) || 10;
+  const base = { top, needSets, needReps, oneMore: false };
+  const cleared = progCleared(latestSets, needSets, needReps);
+  if (!cleared) return { ...base, weight: top, change: 'same', cleared: false };
+  if (top < PROG_HEAVY_FROM) return { ...base, weight: top + PROG_LIGHT_STEP, change: 'up', cleared: true };
+  const twice = progTopWeight(earlierSets) === top && progCleared(earlierSets, needSets, needReps);
+  if (twice) return { ...base, weight: top + PROG_HEAVY_STEP, change: 'up', cleared: true };
+  return { ...base, weight: top, change: 'same', cleared: true, oneMore: true };   // needs a second workout like this
+}
+
+// The plan for today, from the last one or two sessions of this exercise
 function coachPlanFor(ex) {
   if (!aiProgressionOn()) return null;
-  const last = getLastSession(ex.id || ex.name);
-  if (!last || !last.sets || !last.sets.length) return null;
-  const finalSet   = last.sets[last.sets.length - 1];
-  const lastWeight = parseFloat(finalSet.weight) || 0, lastReps = parseFloat(finalSet.reps) || 0;
-  if (!lastWeight) return null;
-  const saved  = last.coach && last.coach.nextWeight > 0 ? last.coach : null;
-  const weight = saved ? saved.nextWeight : coachNextWeight(ex, lastWeight, lastReps).weight;
+  const hist = getExerciseHistory(ex.id || ex.name, 2);
+  if (!hist.length) return null;
+  const p = progressionFor(ex, hist[0].sets, hist[1] ? hist[1].sets : null);
+  if (!p) return null;
+  const atTop = hist[0].sets.filter(st => (parseFloat(st.weight) || 0) === p.top);
+  const saved = hist[0].coach;
   return {
-    weight, lastWeight, lastReps,
-    change: weight > lastWeight ? 'up' : weight < lastWeight ? 'down' : 'same',
-    tip: saved ? (saved.tip || '') : ''
+    weight: p.weight, change: p.change, oneMore: p.oneMore, needSets: p.needSets, needReps: p.needReps,
+    lastWeight: p.top, lastReps: parseFloat(atTop[atTop.length - 1].reps) || 0,
+    // Only repeat the coach's words if they were written under this rule and match it
+    tip: saved && saved.v === 2 && saved.nextWeight === p.weight ? (saved.tip || '') : ''
   };
 }
 
@@ -3520,19 +3563,26 @@ async function fetchSetCoaching(ex, setIdx, weight, reps) {
   const level     = profile.level || 'intermediate';
   const repCount  = parseInt(reps)||0;
   const wtNum     = parseFloat(weight)||0;
-  const next      = coachNextWeight(ex, wtNum, repCount);
-  const when      = isLastSet ? 'next session' : 'next set';
-  let repRule;
-  if (next.change === 'down')      repRule = 'Rep count LOW (<=5). Weight too heavy. Recommend REDUCING to '+next.weight+' lbs '+when+'.';
-  else if (next.change === 'same') repRule = 'Rep count MODERATE (6-9). Good weight. Recommend HOLDING at '+next.weight+' lbs '+when+'.';
-  else                             repRule = 'Rep count HIGH (10+). Weight manageable. Recommend INCREASING to '+next.weight+' lbs '+when+'.';
-  // The final set's recommendation is what the next workout starts from (saved in finishWorkout)
-  if (isLastSet && wtNum > 0) { ex.coachNext = { nextWeight: next.weight, tip: '' }; saveSnapshot(); }
+  // After the final set, work out next session's weight by the progression rule
+  // (using today's sets and the session before) and keep it for next time
+  let nextRule = '';
+  if (isLastSet && wtNum > 0) {
+    const before = getExerciseHistory(ex.id || ex.name, 1)[0];
+    const p = progressionFor(ex, ex.loggedSets.filter(st => st.logged), before ? before.sets : null);
+    if (p) {
+      ex.coachNext = { nextWeight: p.weight, tip: '', v: 2 };
+      saveSnapshot();
+      const target = p.needSets + ' sets of ' + p.needReps;
+      nextRule = p.change === 'up' ? 'They completed all ' + target + ' at ' + p.top + ' lbs. Recommendation: INCREASE to ' + p.weight + ' lbs next session.'
+               : p.oneMore         ? 'They completed all ' + target + ' at ' + p.top + ' lbs. Recommendation: STAY at ' + p.top + ' lbs next session; doing it once more earns an increase.'
+               :                     'They did not complete ' + target + ' at ' + p.top + ' lbs. Recommendation: STAY at ' + p.top + ' lbs next session until they do.';
+    }
+  }
   // Between sets: one short cue, and never a change of weight (the app keeps the
   // weight steady through an exercise). After the final set: the weight for next session.
   const prompt = 'You are an expert fitness coach talking to a client between sets. Plain words, no markdown.\n\nExercise: '+ex.name+'\nAthlete level: '+level+'\nSet '+setNum+': '+weight+' lbs x '+reps+' reps\n'+lastLine+'\n'+(setsLine||'')+'\n'+nextLine+'\n\n'+
     (isLastSet
-      ? repRule+'\nIn one sentence of at most 14 words, tell them the weight to use next session, exactly as recommended above.'
+      ? nextRule+'\nIn one sentence of at most 14 words, tell them the weight to use next session, exactly as recommended above.'
       : 'In at most 10 words, give one cue about form, tempo or effort for the next set. Do not tell them to change the weight or the number of reps.');
   try {
     const res  = await aiCoachFetch({model:'claude-haiku-4-5',max_tokens:60,messages:[{role:'user',content:prompt}]});
@@ -3584,8 +3634,8 @@ async function fetchFMWReasoning(ex, fmw, currentWeight) {
 const SUPABASE_TRANSCRIBE_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/transcribe';
 // Phrases quieter than this are dropped — other people nearby barely register on earbud mics
 const VOICE_MIN_PEAK = 0.05;
-// A sound needs at least this much voiced audio to be sent ("ten" has roughly 200ms)
-const VOICE_MIN_VOICED_MS = 80;
+// A sound needs a steady voiced stretch at least this long to be sent (the vowel in "skip" is about 100ms)
+const VOICE_MIN_VOICED_MS = 60;
 
 let isListening = false, voicePhase = 'idle';
 let voicePending = { exIdx:0, setIdx:0, sugWeight:0 };
@@ -3596,6 +3646,7 @@ let voiceCtx = null, voiceMicStream = null, voiceMicPending = null, voiceSrc = n
 let voiceSendChain = Promise.resolve(), voiceMutedChecks = 0;
 let voiceFmwSkipped = false;   // user has declined Find My Weight this workout
 let voiceLastLog = null;       // the set most recently logged by voice, for "no, that's wrong"
+let voicePreAnnounced = -1;    // exercise already introduced during the rest before it
 // Phrase detection state
 const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], seg: [], segPeak: 0, blocks: 0,
                    winPeak: 0, silentTicks: 0, reopenTries: 0, reportTicks: 0, reportPeak: 0 };
@@ -3607,7 +3658,7 @@ function voiceDbg(msg) {
   if (voiceLog.length > 500) voiceLog.shift();
 }
 function voiceCopyLog() {
-  const text = 'LaroFit voice build 55\n' + navigator.userAgent + '\n' + voiceLog.join('\n');
+  const text = 'LaroFit voice build 56\n' + navigator.userAgent + '\n' + voiceLog.join('\n');
   navigator.clipboard.writeText(text).then(() => showToast('Voice log copied'), () => showToast('Could not copy voice log'));
 }
 function voiceHudNote(msg) { document.getElementById('voice-hud-heard').textContent = msg; }
@@ -3881,26 +3932,34 @@ function voiceVoicedMs(chunks, rate) {
     lp1 += k * (x - lp1); lp2 += k * (lp1 - lp2);
     full[i] = x; low[i] = lp2;
   }
-  const frame = Math.round(fs * 0.030), hop = Math.round(fs * 0.010);
+  const frame = Math.round(fs * 0.040), hop = Math.round(fs * 0.010);
   const lagMin = Math.floor(fs / 350), lagMax = Math.ceil(fs / 75), m = frame - lagMax;
   if (m < 20) return 0;
-  let voicedFrames = 0;
+  // A voice holds one pitch for a stretch; a thud or rumble can look pitched for a
+  // moment but the pitch jumps about. So count the longest run of frames whose
+  // pitch stays put, not the total.
+  let run = 0, longest = 0, prevLag = 0;
   for (let start = 0; start + frame <= n; start += hop) {
     let eFull = 0, eLow = 0;
     for (let i = 0; i < frame; i++) { eFull += full[start + i] * full[start + i]; eLow += low[start + i] * low[start + i]; }
-    if (Math.sqrt(eLow / frame) < 0.003 || eLow < eFull * 0.08) continue;   // too quiet, or mostly above the voice range
-    let e0 = 0;
-    for (let i = 0; i < m; i++) e0 += low[start + i] * low[start + i];
-    let best = 0;
-    for (let lag = lagMin; lag <= lagMax; lag++) {
-      let num = 0, e1 = 0;
-      for (let i = 0; i < m; i++) { const a = low[start + i], b = low[start + i + lag]; num += a * b; e1 += b * b; }
-      const r = num / Math.sqrt(e0 * e1 + 1e-12);
-      if (r > best) best = r;
+    let best = 0, bestLag = 0;
+    if (Math.sqrt(eLow / frame) >= 0.003 && eLow >= eFull * 0.08) {   // loud enough, and not mostly above the voice range
+      let e0 = 0;
+      for (let i = 0; i < m; i++) e0 += low[start + i] * low[start + i];
+      for (let lag = lagMin; lag <= lagMax; lag++) {
+        let num = 0, e1 = 0;
+        for (let i = 0; i < m; i++) { const x = low[start + i], y = low[start + i + lag]; num += x * y; e1 += y * y; }
+        const r = num / Math.sqrt(e0 * e1 + 1e-12);
+        if (r > best) { best = r; bestLag = lag; }
+      }
     }
-    if (best > 0.6) voicedFrames++;
+    if (best > 0.7) {
+      run = prevLag && Math.abs(bestLag - prevLag) <= Math.max(2, prevLag * 0.12) ? run + 1 : 1;
+      prevLag = bestLag;
+      if (run > longest) longest = run;
+    } else { run = 0; prevLag = 0; }
   }
-  return voicedFrames * 10;
+  return longest * 10;
 }
 
 // 16 kHz mono WAV — all speech needs, and small to upload
@@ -4013,9 +4072,13 @@ function voiceAnnounceExercise(ex) {
     prefillWeight(target.exIdx, target.setIdx, sug);
     voicePhase = 'confirm_weight';
     const coachPlan = target.setIdx === 0 ? coachPlanFor(ex) : null;
-    if (coachPlan && coachPlan.weight === sug) {
+    const introduced = voicePreAnnounced === currentExIdx;
+    voicePreAnnounced = -1;
+    if (introduced) {
+      voicePrompt(ex.name + ', ' + sug + ' ' + voiceUnit() + '. Say your reps when you finish.', true);
+    } else if (coachPlan && coachPlan.weight === sug) {
       // Open with what the coach recommended at the end of the last session
-      const move = coachPlan.change === 'up' ? 'go up to ' : coachPlan.change === 'down' ? 'drop to ' : 'stay at ';
+      const move = coachPlan.change === 'up' ? 'go up to ' : 'stay at ';
       voicePrompt(ex.name + '. Last time, ' + coachPlan.lastReps + ' reps at ' + coachPlan.lastWeight + ' ' + voiceUnit() +
         '. Today, ' + move + sug + ' ' + voiceUnit() + '. Say your reps when you finish.', true);
     } else {
@@ -4059,8 +4122,24 @@ function voiceLogSet(reps) {
   if (p.bw) logBWSet(p.exIdx, p.setIdx); else logSet(p.exIdx, p.setIdx);
   const allDone = exercises.every(ex => ex.loggedSets.every(s => s.logged));
   if (allDone) return;   // still listening, so the last set can be corrected before tapping Finish
+  // Exercise finished: say what's next and at what weight straight away, ahead of the coaching tip
+  if (exercises[p.exIdx].loggedSets.every(st => st.logged)) {
+    const ni = nextIncompleteIdx(p.exIdx);
+    if (ni !== -1) { speakText(voiceNextExerciseLine(ni)); voicePreAnnounced = ni; }
+    return;
+  }
   const next = voiceTargetFor(p.exIdx);
   if (next) voicePrefetch(voiceNextSetPrompt(next).msg);
+}
+
+// "Next, Dumbbell Chest Fly. Go up to 45 pounds." — the weight is what its sets are pre-filled with
+function voiceNextExerciseLine(exIdx) {
+  const ex = exercises[exIdx], target = voiceTargetFor(exIdx);
+  const weight = target && !target.bw ? target.sugWeight : 0;
+  if (!weight) return 'Next, ' + ex.name + '.';
+  const plan = target.setIdx === 0 ? coachPlanFor(ex) : null;
+  const move = plan && plan.weight === weight ? (plan.change === 'up' ? 'Go up to ' : 'Stay at ') : '';
+  return 'Next, ' + ex.name + '. ' + move + weight + ' ' + voiceUnit() + '.';
 }
 
 // Returns true if the phrase was understood in the current phase
