@@ -2739,11 +2739,13 @@ function getLastSession(exIdOrName) {
   const history = store.get('workout_history', {});
   const dates   = Object.keys(history).sort().reverse();
   for (const date of dates) {
-    if (date === todayKey) continue;
+    // Today is included: a workout finished this morning is the last session for this evening's.
+    // (The workout in progress isn't in history until it is finished.)
     const session = history[date];
     if (!session || !session.exercises) continue;
-    const found = session.exercises.find(e => e.id === exIdOrName || e.name === exIdOrName);
-    if (found && found.sets && found.sets.length) {
+    const matches = session.exercises.filter(e => (e.id === exIdOrName || e.name === exIdOrName) && e.sets && e.sets.length);
+    const found = matches[matches.length - 1];
+    if (found) {
       let bestWeight = 0, bestReps = 0;
       found.sets.forEach(s => {
         if ((parseFloat(s.weight)||0) >= bestWeight) { bestWeight = parseFloat(s.weight)||0; bestReps = parseFloat(s.reps)||0; }
@@ -2766,19 +2768,18 @@ function exPRMetric(ex) {
   return 'strength';
 }
 
-// Best numbers for this exercise across all PRIOR sessions (excludes today).
+// Best numbers for this exercise across all finished sessions, including one earlier today.
 function getPrevBest(ex) {
   const history = store.get('workout_history', {});
   const dates   = Object.keys(history).sort().reverse();
   let exists = false, oneRM = 0, reps = 0, hold = 0, dist = 0, dur = 0;
   for (const date of dates) {
-    if (date === todayKey) continue;
     const session = history[date];
     if (!session || !session.exercises) continue;
-    const found = session.exercises.find(e => e.id === ex.id || e.name === ex.name);
-    if (!found || !found.sets || !found.sets.length) continue;
+    const sets = session.exercises.filter(e => e.id === ex.id || e.name === ex.name).flatMap(e => e.sets || []);
+    if (!sets.length) continue;
     exists = true;
-    found.sets.forEach(s => {
+    sets.forEach(s => {
       const w = parseFloat(s.weight)||0, r = parseFloat(s.reps)||0;
       const orm = calc1RM(w, r) || 0;
       if (orm > oneRM) oneRM = orm;
@@ -2912,13 +2913,16 @@ function finishWorkout() {
         ? (_dayPlanFW.name || document.getElementById('header-title').textContent || 'Workout')
         : (document.getElementById('header-title').textContent || 'Workout'));
 
-  history[todayKey] = {
+  const earlier   = history[todayKey] && Array.isArray(history[todayKey].exercises) && history[todayKey].exercises.length ? history[todayKey] : null;
+  const sessionNo = earlier ? (earlier.sessions || 1) + 1 : 1;
+  const thisWorkout = {
     name:        wName,
     durationMin,
     totalVolume: Math.round(totalVolume),
     prs:         totalPRs,
     freeForm:    isFreeForm,
     notes:       Object.values(exNotes).filter(Boolean),
+    sessions:    sessionNo,
     exercises:   exercises.map(ex => {
       const loggedSets = ex.loggedSets.filter(s => s.logged).map(s => ({
         weight:   parseFloat(s.weight)   || 0,
@@ -2931,8 +2935,22 @@ function finishWorkout() {
         const orm = calc1RM(s.weight, s.reps);
         return (orm && orm > best) ? orm : best;
       }, 0);
-      return { id: ex.id, name: ex.name, type: exTypeOf(ex), sets: loggedSets, best1RM: best1RM||null, note: exNotes[exercises.indexOf(ex)] || '', coach: ex.coachNext || null };
+      return { id: ex.id, name: ex.name, type: exTypeOf(ex), sets: loggedSets, best1RM: best1RM||null, note: exNotes[exercises.indexOf(ex)] || '', coach: ex.coachNext || null, session: sessionNo };
     })
+  };
+  // History holds one record per day. A second workout today (say morning and
+  // evening) is appended to it; writing over it would lose the first one.
+  const loggedAny = thisWorkout.exercises.some(e => e.sets.length);
+  history[todayKey] = !earlier ? thisWorkout : !loggedAny ? earlier : {
+    ...earlier,
+    name:        earlier.name === wName ? wName : earlier.name + ' + ' + wName,
+    durationMin: (earlier.durationMin || 0) + durationMin,
+    totalVolume: (earlier.totalVolume || 0) + thisWorkout.totalVolume,
+    prs:         (earlier.prs || 0) + totalPRs,
+    freeForm:    !!earlier.freeForm && isFreeForm,
+    notes:       [...(earlier.notes || []), ...thisWorkout.notes],
+    sessions:    sessionNo,
+    exercises:   [...earlier.exercises, ...thisWorkout.exercises]
   };
   store.set('workout_history', history);
 
@@ -3390,16 +3408,19 @@ function getFMWStartWeight(ex) {
 // Otherwise the weight stays where it is. It never drops automatically.
 const PROG_HEAVY_FROM = 25, PROG_LIGHT_STEP = 2.5, PROG_HEAVY_STEP = 5;
 
-// The last n sessions (not counting today) that included this exercise, newest first
+// The last n finished sessions that included this exercise, newest first. A workout
+// finished earlier today counts, and two workouts on one day count as two sessions.
 function getExerciseHistory(exIdOrName, n) {
   const history = store.get('workout_history', {});
   const out = [];
   for (const date of Object.keys(history).sort().reverse()) {
-    if (date === todayKey) continue;
     const session = history[date];
     if (!session || !session.exercises) continue;
-    const found = session.exercises.find(e => e.id === exIdOrName || e.name === exIdOrName);
-    if (found && found.sets && found.sets.length) { out.push({ date, sets: found.sets, coach: found.coach || null }); if (out.length >= n) break; }
+    const matches = session.exercises.filter(e => (e.id === exIdOrName || e.name === exIdOrName) && e.sets && e.sets.length);
+    for (let i = matches.length - 1; i >= 0; i--) {
+      out.push({ date, sets: matches[i].sets, coach: matches[i].coach || null });
+      if (out.length >= n) return out;
+    }
   }
   return out;
 }
@@ -3658,7 +3679,7 @@ function voiceDbg(msg) {
   if (voiceLog.length > 500) voiceLog.shift();
 }
 function voiceCopyLog() {
-  const text = 'LaroFit voice build 56\n' + navigator.userAgent + '\n' + voiceLog.join('\n');
+  const text = 'LaroFit voice build 57\n' + navigator.userAgent + '\n' + voiceLog.join('\n');
   navigator.clipboard.writeText(text).then(() => showToast('Voice log copied'), () => showToast('Could not copy voice log'));
 }
 function voiceHudNote(msg) { document.getElementById('voice-hud-heard').textContent = msg; }
