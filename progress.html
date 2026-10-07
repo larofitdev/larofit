@@ -726,7 +726,7 @@ function fmtVol(lbs) {
 // ── STAT CARDS ────────────────────────────────────────────────
 function renderStats() {
   const entries    = periodEntries();
-  const workouts   = entries.length;
+  const workouts   = entries.reduce((n, [, d]) => n + sessSplit(d).length, 0);   // workouts, not days
   const totalVol   = entries.reduce((s, [, d]) => s + (d.totalVolume || 0), 0);
   const totalPRs   = entries.reduce((s, [, d]) => s + (d.prs || 0), 0);
   const avgDur     = workouts
@@ -1131,9 +1131,12 @@ function openExHistIdx(i) {
 
 // ── SESSION HISTORY ───────────────────────────────────────────
 function renderSessions() {
-  const entries = allEntries()
+  // One row per workout, newest first (two workouts on one day are two rows)
+  const entries = [];
+  allEntries()
     .sort(([a], [b]) => b.localeCompare(a))
-    .slice(0, 15);
+    .forEach(([dateStr, day]) => sessSplit(day).slice().reverse().forEach(part => entries.push([dateStr, part])));
+  entries.splice(15);
 
   const listEl = document.getElementById('session-list');
 
@@ -1149,7 +1152,7 @@ function renderSessions() {
   listEl.innerHTML = entries.map(([dateStr, s]) => {
     const exCount = (s.exercises || []).length;
     const prs     = s.prs ? `· 🏆 ${s.prs} PR${s.prs > 1 ? 's' : ''}` : '';
-    return `<div class="session-row" style="cursor:pointer;" onclick="openSessionSheet('${dateStr}')" role="button" tabindex="0" aria-label="View ${esc(s.name || 'Workout')}">
+    return `<div class="session-row" style="cursor:pointer;" onclick="openSessionSheet('${dateStr}', ${s.n})" role="button" tabindex="0" aria-label="View ${esc(s.name || 'Workout')}">
       <div class="session-dot"></div>
       <div class="session-body">
         <div class="session-name">${esc(s.name || 'Workout')}</div>
@@ -1157,7 +1160,7 @@ function renderSessions() {
       </div>
       <div class="session-right">
         <div class="session-vol">${fmtVol(s.totalVolume || 0)} lbs</div>
-        <div class="session-date">${fmtDate(dateStr)}</div>
+        <div class="session-date">${fmtDate(dateStr)}${sessTag(s) ? ' · ' + sessTag(s) : ''}</div>
       </div>
     </div>`;
   }).join('');
@@ -1208,8 +1211,31 @@ function sessSetLabel(set){
   return '—';
 }
 // ── Editable session state ──
-let sessEditDate = null, sessEditing = false, sessDraft = null;
-function openSessionSheet(dateStr){
+let sessEditDate = null, sessEditing = false, sessDraft = null, sessEditNo = 1;
+// One day's record can hold more than one workout (say morning and evening).
+// These split it into its sessions, oldest first, so each is listed, shown and edited on its own.
+function sessVolumeOf(exs){
+  let v=0;
+  exs.forEach(function(ex){ if(ex.type==='strength'||ex.type==='bodyweight') (ex.sets||[]).forEach(function(s){ v+=(Number(s.weight)||0)*(Number(s.reps)||0); }); });
+  return Math.round(v);
+}
+function sessSplit(day){
+  const exs=Array.isArray(day&&day.exercises)?day.exercises:[];
+  const nums=Array.from(new Set(exs.map(function(e){return e.session||1;}))).sort(function(a,b){return a-b;});
+  if(nums.length<=1) return [{n:nums[0]||1,name:day.name,durationMin:day.durationMin,totalVolume:day.totalVolume,prs:day.prs,finishedAt:null,exercises:exs,alone:true}];
+  return nums.map(function(n){
+    const meta=(day.sessionList||[]).find(function(m){return m.n===n;})||{};
+    const list=exs.filter(function(e){return (e.session||1)===n;});
+    return {n:n,name:meta.name||day.name,durationMin:meta.durationMin,totalVolume:sessVolumeOf(list),prs:meta.prs,finishedAt:meta.finishedAt||null,exercises:list,alone:false};
+  });
+}
+// What tells two workouts on one day apart: the time it was finished, else "Workout 2"
+function sessTag(part){
+  if(part.alone) return '';
+  if(part.finishedAt){ try{ return new Date(part.finishedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); }catch(e){} }
+  return 'Workout '+part.n;
+}
+function openSessionSheet(dateStr, sessNo){
   sessEditDate = dateStr; sessEditing = false; sessDraft = null;
   const editBtn = document.getElementById('sess-edit-btn');
   const cancelBtn = document.getElementById('sess-cancel-btn');
@@ -1228,14 +1254,18 @@ function openSessionSheet(dateStr){
     bodyEl.innerHTML='<div class="sess-empty">This workout couldn\'t be found.</div>';
     document.getElementById('sess-overlay').classList.add('show');return;
   }
-  const exs=Array.isArray(s.exercises)?s.exercises:[];
-  titleEl.textContent=s.name||'Workout';
-  subEl.textContent=sessFmtDate(dateStr);
+  // Show one workout; the day may hold more than one
+  const parts=sessSplit(s);
+  const part=parts.find(function(x){return x.n===sessNo;})||parts[parts.length-1];
+  sessEditNo=part.n;
+  const exs=part.exercises;
+  titleEl.textContent=part.name||'Workout';
+  subEl.textContent=sessFmtDate(dateStr)+(sessTag(part)?' · '+sessTag(part):'');
   let html='<div class="sess-stats">'
-    +'<div class="sess-stat"><div class="sess-stat-val">'+(s.durationMin||'—')+'</div><div class="sess-stat-label">min</div></div>'
-    +'<div class="sess-stat"><div class="sess-stat-val">'+sessVol(s.totalVolume||0)+'</div><div class="sess-stat-label">lbs vol</div></div>'
+    +'<div class="sess-stat"><div class="sess-stat-val">'+(part.durationMin||'—')+'</div><div class="sess-stat-label">min</div></div>'
+    +'<div class="sess-stat"><div class="sess-stat-val">'+sessVol(part.totalVolume||0)+'</div><div class="sess-stat-label">lbs vol</div></div>'
     +'<div class="sess-stat"><div class="sess-stat-val">'+exs.length+'</div><div class="sess-stat-label">exercise'+(exs.length!==1?'s':'')+'</div></div>'
-    +(s.prs?'<div class="sess-stat"><div class="sess-stat-val">'+s.prs+'</div><div class="sess-stat-label">PR'+(s.prs!==1?'s':'')+'</div></div>':'')
+    +(part.prs?'<div class="sess-stat"><div class="sess-stat-val">'+part.prs+'</div><div class="sess-stat-label">PR'+(part.prs!==1?'s':'')+'</div></div>':'')
     +'</div>';
   if(!exs.length){
     html+='<div class="sess-empty">No exercises were logged in this session.</div>';
@@ -1264,7 +1294,7 @@ function toggleSessEdit(){
   const s=hist[sessEditDate];
   if(!s||!Array.isArray(s.exercises)){ return; }
   // Deep clone the exercises so Cancel can discard cleanly
-  sessDraft = JSON.parse(JSON.stringify(s.exercises));
+  sessDraft = JSON.parse(JSON.stringify(s.exercises.filter(function(e){return (e.session||1)===sessEditNo;})));
   sessEditing = true;
   const editBtn=document.getElementById('sess-edit-btn');
   const cancelBtn=document.getElementById('sess-cancel-btn');
@@ -1278,7 +1308,7 @@ function cancelSessEdit(){
   const cancelBtn=document.getElementById('sess-cancel-btn');
   if(editBtn) editBtn.textContent='Edit';
   if(cancelBtn) cancelBtn.style.display='none';
-  openSessionSheet(sessEditDate); // re-render read-only
+  openSessionSheet(sessEditDate, sessEditNo); // re-render read-only
 }
 function sessEditInputs(ex, exIdx){
   const type = ex.type;
@@ -1355,8 +1385,11 @@ function saveSessEdit(){
     const best1RM=sets.reduce(function(b,s){ const o=calc1RM(s.weight,s.reps); return (o&&o>b)?o:b; },0);
     return Object.assign({}, ex, { sets:sets, best1RM:best1RM||null });
   });
-  entry.exercises=exercises;
-  entry.totalVolume=Math.round(totalVolume);
+  // Put this workout's edited exercises back in place; any other workout that day is left as it was
+  let di=0;
+  entry.exercises=(entry.exercises||[]).map(function(ex){ return (ex.session||1)===sessEditNo && di<exercises.length ? exercises[di++] : ex; });
+  entry.totalVolume=sessVolumeOf(entry.exercises);
+  (entry.sessionList||[]).forEach(function(m){ if(m.n===sessEditNo) m.totalVolume=Math.round(totalVolume); });
   // entry.prs intentionally left unchanged (cross-session PR recompute is out of scope)
   hist[sessEditDate]=entry;
   localStorage.setItem('lf_workout_history', JSON.stringify(hist));
@@ -1364,7 +1397,7 @@ function saveSessEdit(){
   LF.ready().then(function(){ LF.db.saveWorkout(sessEditDate, entry).catch(function(){}); });
   sessEditing=false; sessDraft=null;
   renderAll();                                     // refresh stats, charts, PRs, session list
-  openSessionSheet(sessEditDate);                  // re-open read-only with new values
+  openSessionSheet(sessEditDate, sessEditNo);                  // re-open read-only with new values
 }
 
 
@@ -1391,7 +1424,8 @@ function renderExHist(exName) {
   allEntries()
     .sort(([a], [b]) => a.localeCompare(b))
     .forEach(([dateStr, session]) => {
-      const ex = (session.exercises || []).find(e => e.name === exName);
+      const same = (session.exercises || []).filter(e => e.name === exName);
+      const ex = same.length ? Object.assign({}, same[0], { sets: same.flatMap(e => e.sets || []) }) : null;
       if (!ex || !ex.sets || !ex.sets.length) return;
       let bestWeight = 0, bestReps = 0, best1RM = 0;
       ex.sets.forEach(s => {
