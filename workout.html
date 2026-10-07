@@ -3587,7 +3587,8 @@ let voiceSendChain = Promise.resolve(), voiceMutedChecks = 0;
 let voiceFmwSkipped = false;   // user has declined Find My Weight this workout
 let voiceLastLog = null;       // the set most recently logged by voice, for "no, that's wrong"
 // Phrase detection state
-const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], seg: [], segPeak: 0, blocks: 0 };
+const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], seg: [], segPeak: 0, blocks: 0,
+                   winPeak: 0, silentTicks: 0, reopenTries: 0, reportTicks: 0, reportPeak: 0 };
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
@@ -3666,7 +3667,7 @@ function voiceHoldMic() {
     voiceDbg('mic open "' + track.label + '" ' + voiceCtx.sampleRate + 'Hz');
     track.addEventListener('ended', () => { voiceDbg('mic closed by the phone'); if (voiceMicStream === stream) voiceReleaseMic(); });
     track.addEventListener('mute',   () => voiceDbg('mic muted by the phone'));
-    track.addEventListener('unmute', () => voiceDbg('mic unmuted'));
+    track.addEventListener('unmute', () => { voiceDbg('mic unmuted'); if (voiceMicStream === stream) voiceAfterInterruption('audio returned'); });
 
     voiceSrc  = voiceCtx.createMediaStreamSource(stream);
     voiceNode = voiceCtx.createScriptProcessor(2048, 1, 1);
@@ -3729,7 +3730,34 @@ function voiceHealthCheck() {
     voiceHoldMic().then(startListening);
     return;
   }
+  if (isListening) {
+    const v = voiceVad, peak = v.winPeak; v.winPeak = 0;
+    v.silentTicks = peak < 0.00001 ? v.silentTicks + 1 : 0;
+    if (v.silentTicks >= 2) {   // ~10s of exact silence: the phone is feeding us nothing
+      v.silentTicks = 0; v.reopenTries++;
+      voiceDbg('mic is open but completely silent, re-opening (try ' + v.reopenTries + ')');
+      voiceHudNote(v.reopenTries > 2 ? 'Mic is silent — close other audio apps, then tap here' : 'Mic problem — tap here');
+      voiceReleaseMic();
+      voiceHoldMic().then(startListening);
+      return;
+    }
+    if (peak >= 0.00001) v.reopenTries = 0;
+    v.reportPeak = Math.max(v.reportPeak, peak);
+    if (++v.reportTicks >= 6) {   // 30s of listening with no phrase
+      voiceDbg('listening 30s, nothing picked up: loudest ' + v.reportPeak.toFixed(3) + ', noise ' + v.floor.toFixed(4) + ', need ' + Math.max(0.012, v.floor * 3).toFixed(3));
+      v.reportTicks = 0; v.reportPeak = 0;
+    }
+  }
   if (!voiceSpeaking && !isListening) startListening();
+}
+
+// The phone took the audio away (a call, another app's sound) and gave it back:
+// the old mic stream is often dead afterwards, so open a fresh one
+function voiceAfterInterruption(why) {
+  if (workoutMode !== 'voice' || !voiceReady || voicePhase === 'idle' || voiceMicPending) return;
+  voiceDbg(why + ', re-opening mic');
+  voiceReleaseMic();
+  voiceHoldMic().then(startListening);
 }
 
 // Voice only works while the page is on screen, so keep the phone from locking
@@ -3773,6 +3801,7 @@ function voiceHudTap() {
 function voiceVadReset() {
   const v = voiceVad;
   v.inSpeech = false; v.hot = 0; v.quietMs = 0; v.pre = []; v.seg = []; v.segPeak = 0;
+  v.reportTicks = 0; v.reportPeak = 0;
 }
 
 // Runs on every ~40ms of mic audio
@@ -3785,9 +3814,11 @@ function voiceAudioBlock(input) {
   let sum = 0, peak = 0;
   for (let i = 0; i < input.length; i++) { const a = Math.abs(input[i]); sum += input[i] * input[i]; if (a > peak) peak = a; }
   const rms = Math.sqrt(sum / input.length);
+  if (peak > v.winPeak) v.winPeak = peak;
 
-  // Background noise level: follows quiet quickly, loud slowly
-  if (!v.inSpeech) v.floor = rms < v.floor ? v.floor * 0.9 + rms * 0.1 : v.floor * 0.995 + rms * 0.005;
+  // Background noise level: follows quiet quickly, loud slowly. Capped so a loud
+  // room can't raise the bar so far that speech no longer clears it.
+  if (!v.inSpeech) v.floor = Math.min(0.01, rms < v.floor ? v.floor * 0.9 + rms * 0.1 : v.floor * 0.995 + rms * 0.005);
   const loud = rms > Math.max(0.012, v.floor * 3);
   const copy = new Float32Array(input);
 
