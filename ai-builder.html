@@ -188,6 +188,7 @@ const SUGGESTIONS = ['Dumbbell-only chest workout', '30-minute full body, no equ
 let conversation = [];     // what is sent to the model: [{ role, content }]
 let routine = null;        // the latest routine the coach proposed: { title, workouts: [{ name, days, exercises }] }
 let busy = false;
+let wantDays = 0;          // training days per week the user asked for ("4 day program"), 0 if they didn't say
 let customs = [];          // the user's own exercises
 
 const user = (() => { try { return JSON.parse(localStorage.getItem('lf_user') || '{}'); } catch { return {}; } })();
@@ -391,6 +392,18 @@ function parseReply(text) {
   return { say, routine: { title: String(raw.title || workouts[0].name).slice(0, 60), workouts } };
 }
 
+// The coach doesn't always count: if it suggests more weekdays than the user asked
+// for, take the extras away, starting with the workout that has the most days.
+function trimToDays(r, n) {
+  if (!n) return r;
+  const total = () => r.workouts.reduce((sum, w) => sum + w.days.length, 0);
+  while (total() > n) {
+    const most = r.workouts.reduce((a, b) => (b.days.length >= a.days.length ? b : a));
+    most.days.pop();
+  }
+  return r;
+}
+
 // What gets stored in a program day / handed to the workout page (the builder's own exercise shape)
 function toProgramExercise(x) {
   const base = { id: x.id, name: x.name, primaryMuscle: x.primaryMuscle, secondaryMuscles: x.secondaryMuscles, recordType: x.recordType };
@@ -408,6 +421,8 @@ async function send(preset) {
   input.value = ''; autoGrow();
   addMessage('user', text);
   conversation.push({ role: 'user', content: text });
+  const asked = text.match(/([2-7])[s-]*(?:day|days)/i) || text.match(/([2-7])s*(?:x|times)s*(?:a|per)s*week/i);
+  if (asked) wantDays = +asked[1];
   setBusy(true); showTyping();
 
   try {
@@ -427,7 +442,7 @@ async function send(preset) {
 
     const parsed = parseReply(reply);
     if (parsed.say) addMessage('ai', parsed.say);
-    if (parsed.routine) { routine = parsed.routine; renderRoutine(routine); }
+    if (parsed.routine) { routine = trimToDays(parsed.routine, wantDays); renderRoutine(routine); }
     else if (parsed.broken) addMessage('note', 'The coach\'s plan didn\'t come through properly. Ask again, or word it differently.');
     renderSuggestions();
   } catch (err) {
