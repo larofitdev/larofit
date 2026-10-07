@@ -379,7 +379,14 @@ function parseReply(text) {
       days: (Array.isArray(w.days) ? w.days : []).filter(d => DAYS.includes(d)),
       exercises,
     };
-  }).filter(w => w.exercises.length);
+  }).filter(w => w.exercises.length).reduce((list, w) => {
+    // The coach sometimes lists the first workout again to show the week repeating.
+    // The same workout twice is one workout; its days are combined.
+    const same = list.find(o => o.name.toLowerCase() === w.name.toLowerCase() && o.exercises.map(x => x.id).join() === w.exercises.map(x => x.id).join());
+    if (same) w.days.forEach(d => { if (!same.days.includes(d)) same.days.push(d); });
+    else list.push(w);
+    return list;
+  }, []);
   if (!workouts.length) return { say, routine: null, broken: true };
   return { say, routine: { title: String(raw.title || workouts[0].name).slice(0, 60), workouts } };
 }
