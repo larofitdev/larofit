@@ -1736,7 +1736,10 @@ function buildLoggedSets(ex) {
       const fallback = last ? { weight: last.bestWeight, reps: last.bestReps } : null;
       const src = lastSet || fallback;
       return {
+        // With AI progression: the coach's recommendation. Without it: the heaviest
+        // weight from last session on every set (not last session's set-by-set ramp).
         weight: coachPlan ? String(coachPlan.weight)
+              : (last && last.bestWeight) ? String(last.bestWeight)
               : (src && src.weight) ? String(src.weight) : (planWeight ? String(planWeight) : ''),
         reps:   (src && src.reps)   ? String(src.reps)   : (planReps   ? String(planReps)   : ''),
         logged: false
