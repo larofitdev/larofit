@@ -653,6 +653,17 @@ button, input, select, a, textarea { touch-action: manipulation; }
   border-bottom: 0.5px solid var(--border);
 }
 .day-action-btn:last-child { border-bottom: none; }
+/* Repeat sheet: weekday picker */
+.repeat-days { display: flex; gap: 6px; }
+.repeat-day {
+  flex: 1; min-height: 46px; padding: 0; border-radius: 10px; border: 1px solid var(--border-md);
+  background: transparent; color: var(--text-2); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.repeat-day[aria-pressed="true"] { background: var(--volt); border-color: var(--volt); color: #1a1a1a; }
+.repeat-count { font-size: 13px; color: var(--text-2); text-align: center; margin-top: 12px; min-height: 36px; line-height: 1.4; }
+.repeat-actions { display: flex; gap: 8px; margin-top: 14px; }
+.repeat-actions .btn { min-height: 50px; }
 .day-action-btn:active { opacity: 0.6; }
 .day-action-icon {
   width: 38px; height: 38px; border-radius: var(--radius-sm);
@@ -932,6 +943,20 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div class="day-action-title" id="day-action-title">Edit day</div>
   <!-- Buttons injected dynamically based on what sessions exist -->
   <div id="day-action-btns"></div>
+</div>
+
+<!-- REPEAT SHEET — which weekdays a workout goes on, across the whole program -->
+<div class="day-action-overlay" id="repeat-overlay" onclick="closeRepeat()"></div>
+<div class="day-action-sheet" id="repeat-sheet" role="dialog" aria-labelledby="repeat-title">
+  <div class="day-action-handle"></div>
+  <div class="day-action-date" id="repeat-name"></div>
+  <div class="day-action-title" id="repeat-title">Which days is this workout on?</div>
+  <div class="repeat-days" id="repeat-days" role="group" aria-label="Days of the week"></div>
+  <div class="repeat-count" id="repeat-count"></div>
+  <div class="repeat-actions">
+    <button class="btn btn-outline" onclick="closeRepeat()">Just this day</button>
+    <button class="btn btn-volt btn-full" id="repeat-go" onclick="applyRepeat()">Fill the program</button>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -1558,6 +1583,15 @@ function openDayAction(dateStr) {
         <div class="day-action-sub">${exCount} exercise${exCount !== 1 ? 's' : ''} · tap to edit</div>
       </div>
     </button>
+    <button class="day-action-btn" onclick="dayActionRepeat()">
+      <div class="day-action-icon" style="background:var(--volt-bg);">
+        <i class="ti ti-repeat" style="color:var(--volt-dark);font-size:18px;"></i>
+      </div>
+      <div>
+        <div class="day-action-label">Repeat every week</div>
+        <div class="day-action-sub">Choose weekdays and fill the whole program</div>
+      </div>
+    </button>
     <button class="day-action-btn" onclick="dayActionCopy()">
       <div class="day-action-icon" style="background:var(--blue-bg);">
         <i class="ti ti-copy" style="color:var(--blue);font-size:18px;"></i>
@@ -1594,6 +1628,12 @@ function dayActionEdit() {
   openDayEditor(date);
 }
 
+function dayActionRepeat() {
+  const date = actionDate;
+  closeDayAction();
+  openRepeat(date);
+}
+
 function dayActionCopy() {
   copiedDate = actionDate;
   const day  = program.days[copiedDate];
@@ -1625,6 +1665,76 @@ function dayActionClear() {
       }, 3000);
     }
   }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// REPEAT — put one day's workout on chosen weekdays for every week of the program
+// ══════════════════════════════════════════════════════════════════════
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+let repeatDate = null, repeatPicked = [];
+
+// Every date in the program, start date to the end of its last week
+function programDates() {
+  const out = [];
+  const start = new Date(program.startDate + 'T00:00:00');
+  for (let i = 0; i < (parseInt(program.weeks) || 8) * 7; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    out.push(localDateStr(d));
+  }
+  return out;
+}
+function weekdayOf(dateStr) { return WEEKDAYS[(new Date(dateStr + 'T00:00:00').getDay() + 6) % 7]; }
+function repeatTargets() { return programDates().filter(k => repeatPicked.includes(weekdayOf(k))); }
+
+function openRepeat(dateStr) {
+  const day = program.days[dateStr];
+  if (!day || !(day.exercises || []).length) return;
+  flushSetupToProgram();   // use the weeks and start date as they are set now
+  repeatDate = dateStr;
+  // Start with this day's weekday, plus any weekday that already has a workout of the same name
+  const sameName = programDates().filter(k => k !== dateStr && program.days[k] && program.days[k].name === day.name).map(weekdayOf);
+  repeatPicked = [...new Set([weekdayOf(dateStr), ...sameName])];
+  document.getElementById('repeat-name').textContent = day.name || 'Workout';
+  renderRepeat();
+  document.getElementById('repeat-overlay').classList.add('open');
+  document.getElementById('repeat-sheet').classList.add('open');
+}
+
+function renderRepeat() {
+  const box = document.getElementById('repeat-days');
+  box.innerHTML = '';
+  WEEKDAYS.forEach(d => {
+    const b = document.createElement('button');
+    b.className = 'repeat-day'; b.textContent = d;
+    b.setAttribute('aria-pressed', repeatPicked.includes(d) ? 'true' : 'false');
+    b.onclick = () => { repeatPicked = repeatPicked.includes(d) ? repeatPicked.filter(x => x !== d) : [...repeatPicked, d]; renderRepeat(); };
+    box.appendChild(b);
+  });
+  const src = JSON.stringify(program.days[repeatDate]);
+  const targets = repeatTargets();
+  const replaced = targets.filter(k => k !== repeatDate && program.days[k] && JSON.stringify(program.days[k]) !== src).length;
+  const weeks = parseInt(program.weeks) || 8;
+  document.getElementById('repeat-count').textContent = !targets.length ? 'Pick at least one day.'
+    : 'Puts it on ' + targets.length + ' day' + (targets.length === 1 ? '' : 's') + ' across all ' + weeks + ' weeks.' +
+      (replaced ? ' Replaces ' + replaced + ' other workout' + (replaced === 1 ? '' : 's') + ' already on those days.' : '');
+  document.getElementById('repeat-go').disabled = !targets.length;
+}
+
+function closeRepeat() {
+  document.getElementById('repeat-overlay').classList.remove('open');
+  document.getElementById('repeat-sheet').classList.remove('open');
+  repeatDate = null;
+}
+
+function applyRepeat() {
+  const src = program.days[repeatDate];
+  if (!src) { closeRepeat(); return; }
+  const targets = repeatTargets();
+  targets.forEach(k => { if (k !== repeatDate) program.days[k] = JSON.parse(JSON.stringify(src)); });
+  const name = src.name || 'Workout';
+  closeRepeat();
+  renderCalendar();
+  showToast(name + ' is on ' + targets.length + ' day' + (targets.length === 1 ? '' : 's'));
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -1685,9 +1795,12 @@ function saveDayAndBack() {
     }
   }
 
+  const finished = editingDate;
   editingDate = null;
   showScreen('main');
   renderCalendar();
+  // A workout was built or changed: ask which weekdays it goes on, and fill every week of the program
+  if (finished && program.days[finished] && (program.days[finished].exercises || []).length) openRepeat(finished);
 }
 
 function backToCalendar() {
