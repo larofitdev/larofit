@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f5f0">
+<title>LaroFit — AI Workout Builder</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="larofit.css?v=2">
+<style>
+/* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
+button, a { touch-action: manipulation; }
+
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; background: var(--bg); }
+
+/* ── HEADER ── */
+.aib-header {
+  flex-shrink: 0; display: flex; align-items: center; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top)) var(--page-pad) 10px;
+  background: var(--bg-card); border-bottom: 0.5px solid var(--border);
+}
+.aib-back {
+  width: 44px; height: 44px; margin-left: -10px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+.aib-title { font-size: 17px; font-weight: 700; color: var(--text); }
+.aib-sub   { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+/* ── CHAT ── */
+.aib-chat { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px var(--page-pad) 8px; display: flex; flex-direction: column; gap: 10px; }
+.aib-msg { max-width: 86%; padding: 10px 14px; border-radius: 16px; font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.aib-msg.ai   { align-self: flex-start; background: var(--bg-card); color: var(--text); border: 0.5px solid var(--border); border-bottom-left-radius: 5px; }
+.aib-msg.user { align-self: flex-end; background: var(--bg-dark); color: var(--text-inv); border-bottom-right-radius: 5px; }
+.aib-msg.note { align-self: center; max-width: 100%; background: none; color: var(--text-3); font-size: 13px; text-align: center; padding: 2px 8px; }
+.aib-typing { align-self: flex-start; padding: 12px 16px; background: var(--bg-card); border: 0.5px solid var(--border); border-radius: 16px; border-bottom-left-radius: 5px; display: flex; gap: 5px; }
+.aib-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); animation: aibDot 1.1s infinite ease-in-out; }
+.aib-typing span:nth-child(2) { animation-delay: 0.15s; }
+.aib-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes aibDot { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .aib-typing span { animation: none; opacity: 0.6; } }
+
+/* ── ROUTINE CARD ── */
+.aib-routine { align-self: stretch; display: flex; flex-direction: column; gap: 10px; }
+.aib-workout { background: var(--bg-card); border: 0.5px solid var(--border-md); border-radius: var(--radius); overflow: hidden; }
+.aib-workout-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg-dark); }
+.aib-workout-name { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; color: var(--text-inv); }
+.aib-workout-days { font-size: 11px; font-family: var(--font-mono); color: var(--volt); margin-top: 2px; }
+.aib-start-one {
+  flex-shrink: 0; min-height: 36px; padding: 0 12px; border-radius: 18px; border: 1px solid var(--volt-border);
+  background: var(--volt-bg); color: var(--volt); font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.aib-ex { display: flex; align-items: baseline; gap: 10px; padding: 10px 14px; border-top: 0.5px solid var(--border); }
+.aib-ex-dose { flex-shrink: 0; min-width: 62px; font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--text-2); }
+.aib-ex-name { flex: 1; min-width: 0; font-size: 14px; color: var(--text); }
+.aib-ex-equip { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.aib-actions { display: flex; gap: 8px; }
+.aib-actions .btn { flex: 1; min-height: 48px; }
+.aib-routine.old .aib-actions, .aib-routine.old .aib-start-one { display: none; }
+.aib-routine.old { opacity: 0.6; }
+
+/* ── SUGGESTIONS + INPUT ── */
+.aib-suggest { flex-shrink: 0; display: flex; gap: 8px; overflow-x: auto; padding: 4px var(--page-pad) 10px; scrollbar-width: none; }
+.aib-suggest::-webkit-scrollbar { display: none; }
+.aib-chip {
+  flex-shrink: 0; min-height: 40px; padding: 0 14px; border-radius: 20px; border: 1px solid var(--border-md);
+  background: var(--bg-card); color: var(--text-2); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.aib-inputbar {
+  flex-shrink: 0; display: flex; align-items: flex-end; gap: 8px;
+  padding: 8px var(--page-pad) calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg-card); border-top: 0.5px solid var(--border);
+}
+.aib-input {
+  flex: 1; min-height: 44px; max-height: 120px; resize: none; padding: 11px 14px; border-radius: 22px;
+  border: 1px solid var(--border-md); background: var(--bg); color: var(--text);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.35; outline: none;
+}
+.aib-input:focus { border-color: var(--volt-dark); }
+.aib-send {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--volt); color: #1a1a1a;
+  font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.aib-send:disabled { opacity: 0.4; }
+
+/* ── SAVE SHEET ── */
+.aib-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: flex-end; justify-content: center; }
+.aib-overlay.show { display: flex; }
+.aib-sheet {
+  width: 100%; max-width: 520px; max-height: 88vh; overflow-y: auto; background: var(--bg-card);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 20px var(--page-pad) calc(18px + env(safe-area-inset-bottom));
+}
+.aib-sheet h2 { font-family: var(--font-display); font-size: 26px; letter-spacing: 0.5px; font-weight: 400; margin: 0 0 4px; color: var(--text); }
+.aib-sheet p  { font-size: 13px; color: var(--text-3); margin: 0 0 16px; }
+.aib-label { font-size: 12px; font-weight: 700; color: var(--text-2); margin: 14px 0 6px; }
+.aib-field { width: 100%; min-height: 46px; padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-md); background: var(--bg); color: var(--text); font-family: inherit; font-size: 16px; }
+.aib-days { display: flex; gap: 6px; }
+.aib-day {
+  flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid var(--border-md); background: transparent; color: var(--text-2);
+  font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; padding: 0;
+}
+.aib-day[aria-pressed="true"] { background: var(--volt); border-color: var(--volt); color: #1a1a1a; }
+.aib-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.aib-row > div { flex: 1; font-size: 14px; color: var(--text); }
+.aib-switch { flex-shrink: 0; width: 52px; height: 32px; padding: 0; border: none; border-radius: 16px; position: relative; cursor: pointer; background: var(--border-md); transition: background 0.15s; }
+.aib-switch span { position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.15s; }
+.aib-switch[aria-checked="true"] { background: var(--volt); }
+.aib-switch[aria-checked="true"] span { transform: translateX(20px); }
+.aib-sheet-actions { display: flex; gap: 8px; margin-top: 20px; }
+.aib-sheet-actions .btn { min-height: 50px; }
+.aib-error { color: var(--danger); font-size: 13px; margin-top: 10px; min-height: 18px; }
+
+.aib-toast { position: fixed; left: 50%; bottom: calc(90px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--bg-dark); color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; z-index: 600; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.aib-toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header class="aib-header">
+  <button class="aib-back" onclick="location.href='programs.html'" aria-label="Back to programs"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+  <div>
+    <div class="aib-title">AI Workout Builder</div>
+    <div class="aib-sub">Tell the coach what you want</div>
+  </div>
+</header>
+
+<main class="aib-chat" id="chat" aria-live="polite"></main>
+
+<div class="aib-suggest" id="suggest"></div>
+
+<div class="aib-inputbar">
+  <textarea class="aib-input" id="input" rows="1" placeholder="e.g. a dumbbell-only chest workout" aria-label="Message the coach"></textarea>
+  <button class="aib-send" id="send" onclick="send()" aria-label="Send"><i class="ti ti-arrow-up" aria-hidden="true"></i></button>
+</div>
+
+<!-- SAVE AS PROGRAM -->
+<div class="aib-overlay" id="save-overlay" onclick="if(event.target===this)closeSave()">
+  <div class="aib-sheet" role="dialog" aria-labelledby="save-title">
+    <h2 id="save-title">Save as a program</h2>
+    <p>Pick the days for each workout. It's added to your programs, where you can edit it any time.</p>
+    <label class="aib-label" for="save-name">Program name</label>
+    <input class="aib-field" id="save-name" type="text" maxlength="60" autocomplete="off">
+    <div id="save-workouts"></div>
+    <label class="aib-label" for="save-weeks">How many weeks</label>
+    <select class="aib-field" id="save-weeks">
+      <option value="4">4 weeks</option><option value="6">6 weeks</option><option value="8" selected>8 weeks</option><option value="12">12 weeks</option>
+    </select>
+    <div class="aib-row">
+      <div id="save-active-label">Make this my active program</div>
+      <button class="aib-switch" id="save-active" role="switch" aria-checked="true" aria-labelledby="save-active-label" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') === 'true' ? 'false' : 'true')"><span></span></button>
+    </div>
+    <div class="aib-error" id="save-error" role="alert"></div>
+    <div class="aib-sheet-actions">
+      <button class="btn btn-outline" onclick="closeSave()">Cancel</button>
+      <button class="btn btn-volt btn-full" id="save-go" onclick="saveProgram()">Save program</button>
+    </div>
+  </div>
+</div>
+
+<div class="aib-toast" id="toast" role="status"></div>
+
+<script src="supabase-client.js?v=2"></script>
+<script src="larofit-exercises.js?v=220"></script>
+<script>
+LF.ready().then(() => LF.guard());
+
+/* ============================================================
+   AI Workout Builder — describe a workout or program in plain
+   words; the coach builds it from the exercise library.
+   ============================================================ */
+
+const SUPABASE_AI_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/ai-coach';
+// SUPABASE_ANON_KEY declared in supabase-client.js
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const EQ_LABEL = { bodyweight:'Bodyweight', bands:'Bands', barbell:'Barbell', bench:'Bench', cardio_machine:'Cardio machine',
+  dumbbells:'Dumbbells', exercise_ball:'Exercise ball', ez_bar:'EZ bar', kettlebells:'Kettlebells', machine_cable:'Machine / cable' };
+const SUGGESTIONS = ['Dumbbell-only chest workout', '30-minute full body, no equipment', '4-day push / pull / legs program', 'Shoulder and back day with cables'];
+
+// ── STATE ─────────────────────────────────────────────────────
+let conversation = [];     // what is sent to the model: [{ role, content }]
+let routine = null;        // the latest routine the coach proposed: { title, workouts: [{ name, days, exercises }] }
+let busy = false;
+let customs = [];          // the user's own exercises
+
+const user = (() => { try { return JSON.parse(localStorage.getItem('lf_user') || '{}'); } catch { return {}; } })();
+
+function localDateStr(d) {
+  d = d || new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ── EXERCISE LIBRARY ──────────────────────────────────────────
+function allExercises() {
+  return [...customs, ...(typeof LAROFIT_EXERCISES !== 'undefined' ? LAROFIT_EXERCISES : [])];
+}
+function findExercise(id) { return allExercises().find(e => e.id === id) || null; }
+
+// "weights" | "reps" | "timed" | "cardio" — how a set of this exercise is counted
+function kindOf(ex) {
+  const rt = ex.recordType || 'weight_reps';
+  return rt === 'cardio' ? 'cardio' : rt === 'duration' ? 'timed' : (rt === 'reps' || rt === 'reps_only') ? 'reps' : 'weights';
+}
+
+function getSystemPrompt() {
+  const line = e => `${e.name} [${e.id}] (${e.custom ? 'their own exercise, ' : ''}${e.equipment || 'any'}, ${e.primaryMuscle || 'general'}, ${kindOf(e)})`;
+  const profile = (() => { try { return JSON.parse(localStorage.getItem('lf_profile') || '{}'); } catch { return {}; } })();
+  const details = profile.details || {};
+  return `You are LaroFit's AI coach. You build workout routines for a gym member through conversation.
+
+MEMBER
+- Name: ${user.name || 'not given'}
+- Level: ${profile.level || 'not given'}
+- Goals: ${(details.goals || []).join(', ') || profile.goal || 'not given'}
+- Training style: ${(details.trainingStyle || []).join(', ') || 'not given'}
+
+EXERCISE LIBRARY — the only exercises you may use. Format: Name [id] (equipment, main muscle, how it is counted)
+${allExercises().map(line).join('\n')}
+
+HOW TO WORK
+- If the request is clear enough to build something sensible, build it straight away. Do not interview them. Ask one short question only when you truly cannot proceed, for example "a workout" with no hint of focus or equipment.
+- Respect equipment limits exactly. "Dumbbell only" means every exercise has equipment "dumbbells". Use bodyweight moves only if they allow it.
+- A single workout has 4 to 7 exercises unless they ask otherwise. For a program, build one workout per training day they ask for.
+- Strength work defaults to 3 sets of 10 with 60 seconds rest; heavy compound lifts 90 seconds. Follow any sets, reps or time limit they give.
+- When they ask for a change, return the whole updated routine.
+- Chat text: one to three plain sentences saying what you built and one useful note. No markdown. Do not list the exercises in the text; the app shows them.
+- If they ask something that is not about building a routine, answer briefly and offer to build one.
+
+OUTPUT
+Whenever you build or update a routine, end your reply with a line that is exactly ROUTINE_JSON, then one JSON object and nothing after it:
+{"title":"Dumbbell Chest","workouts":[{"name":"Dumbbell Chest","days":["Mon","Thu"],"exercises":[{"id":"b88","sets":3,"reps":10,"restSec":60}]}]}
+- "days" is optional: the weekdays (Mon Tue Wed Thu Fri Sat Sun) you suggest for a program. Leave it out for a one-off workout.
+- Exercises counted as "timed" take "durationSec" instead of "reps". Exercises counted as "cardio" take "durationMin" and no sets.
+- Use only ids from the library, exactly as written. Never invent an id.`;
+}
+
+// ── CHAT UI ───────────────────────────────────────────────────
+const chatEl = document.getElementById('chat');
+function scrollDown() { chatEl.scrollTop = chatEl.scrollHeight; }
+
+function addMessage(role, text) {
+  const el = document.createElement('div');
+  el.className = 'aib-msg ' + role;
+  el.textContent = text;
+  chatEl.appendChild(el);
+  scrollDown();
+  return el;
+}
+
+function showTyping() {
+  const el = document.createElement('div');
+  el.className = 'aib-typing'; el.id = 'typing';
+  el.setAttribute('aria-label', 'The coach is thinking');
+  el.innerHTML = '<span></span><span></span><span></span>';
+  chatEl.appendChild(el); scrollDown();
+}
+function hideTyping() { const el = document.getElementById('typing'); if (el) el.remove(); }
+
+function setBusy(on) {
+  busy = on;
+  document.getElementById('send').disabled = on;
+}
+
+function renderSuggestions() {
+  const box = document.getElementById('suggest');
+  box.innerHTML = '';
+  const list = routine ? ['Make it shorter', 'Make it harder', 'Swap an exercise', 'Add a core finisher'] : SUGGESTIONS;
+  list.forEach(text => {
+    const b = document.createElement('button');
+    b.className = 'aib-chip'; b.textContent = text;
+    b.onclick = () => { if (text === 'Swap an exercise') { const i = document.getElementById('input'); i.value = 'Swap '; i.focus(); } else send(text); };
+    box.appendChild(b);
+  });
+}
+
+function doseOf(x) {
+  if (x.kind === 'cardio') return (x.durationMin || 20) + ' min';
+  if (x.kind === 'timed')  return x.sets + ' × ' + (x.durationSec || 30) + 's';
+  return x.sets + ' × ' + x.reps;
+}
+
+function renderRoutine(r) {
+  // Earlier proposals stay in the chat for reference but lose their buttons
+  chatEl.querySelectorAll('.aib-routine').forEach(el => el.classList.add('old'));
+  const wrap = document.createElement('div');
+  wrap.className = 'aib-routine';
+  r.workouts.forEach((w, wi) => {
+    const card = document.createElement('div');
+    card.className = 'aib-workout';
+    const head = document.createElement('div');
+    head.className = 'aib-workout-head';
+    const titles = document.createElement('div');
+    titles.style.cssText = 'flex:1;min-width:0;';
+    const name = document.createElement('div'); name.className = 'aib-workout-name'; name.textContent = w.name;
+    titles.appendChild(name);
+    if (w.days.length) { const d = document.createElement('div'); d.className = 'aib-workout-days'; d.textContent = w.days.join(' · '); titles.appendChild(d); }
+    head.appendChild(titles);
+    if (r.workouts.length > 1) {
+      const b = document.createElement('button');
+      b.className = 'aib-start-one'; b.textContent = 'Start'; b.setAttribute('aria-label', 'Start ' + w.name + ' now');
+      b.onclick = () => startNow(wi);
+      head.appendChild(b);
+    }
+    card.appendChild(head);
+    w.exercises.forEach(x => {
+      const row = document.createElement('div'); row.className = 'aib-ex';
+      const dose = document.createElement('div'); dose.className = 'aib-ex-dose'; dose.textContent = doseOf(x);
+      const body = document.createElement('div'); body.style.cssText = 'flex:1;min-width:0;';
+      const n = document.createElement('div'); n.className = 'aib-ex-name'; n.textContent = x.name;
+      const e = document.createElement('div'); e.className = 'aib-ex-equip'; e.textContent = EQ_LABEL[x.equipment] || x.equipment || '';
+      body.appendChild(n); if (e.textContent) body.appendChild(e);
+      row.appendChild(dose); row.appendChild(body);
+      card.appendChild(row);
+    });
+    wrap.appendChild(card);
+  });
+  const actions = document.createElement('div');
+  actions.className = 'aib-actions';
+  if (r.workouts.length === 1) {
+    const start = document.createElement('button');
+    start.className = 'btn btn-volt'; start.textContent = 'Start now';
+    start.onclick = () => startNow(0);
+    actions.appendChild(start);
+  }
+  const save = document.createElement('button');
+  save.className = 'btn ' + (r.workouts.length === 1 ? 'btn-dark' : 'btn-volt'); save.textContent = 'Save as program';
+  save.onclick = openSave;
+  actions.appendChild(save);
+  wrap.appendChild(actions);
+  chatEl.appendChild(wrap);
+  scrollDown();
+}
+
+// ── THE COACH'S REPLY ─────────────────────────────────────────
+// Splits "chat text … ROUTINE_JSON {…}" and checks the routine against the library.
+function parseReply(text) {
+  const mark = text.indexOf('ROUTINE_JSON');
+  if (mark === -1) return { say: text.trim(), routine: null };
+  const say = text.slice(0, mark).trim();
+  const rest = text.slice(mark + 'ROUTINE_JSON'.length);
+  const a = rest.indexOf('{'), b = rest.lastIndexOf('}');
+  let raw;
+  try { raw = JSON.parse(rest.slice(a, b + 1)); } catch { return { say, routine: null, broken: true }; }
+
+  const workouts = (Array.isArray(raw.workouts) ? raw.workouts : []).map((w, i) => {
+    const exercises = (Array.isArray(w.exercises) ? w.exercises : []).map(x => {
+      const lib = findExercise(x.id);
+      if (!lib) return null;   // not in the library — dropped, never invented
+      const kind = kindOf(lib), int = (v, d, lo, hi) => Math.min(hi, Math.max(lo, parseInt(v) || d));
+      return {
+        id: lib.id, name: lib.name, equipment: lib.equipment || '', kind,
+        primaryMuscle: lib.primaryMuscle || '', secondaryMuscles: lib.secondaryMuscles || [], recordType: lib.recordType || 'weight_reps',
+        sets: kind === 'cardio' ? 1 : int(x.sets, 3, 1, 10),
+        reps: int(x.reps, 10, 1, 100),
+        restSec: int(x.restSec, 60, 0, 600),
+        durationSec: int(x.durationSec, 30, 5, 3600),
+        durationMin: int(x.durationMin, 20, 1, 240),
+      };
+    }).filter(Boolean);
+    return {
+      name: String(w.name || raw.title || 'Workout ' + (i + 1)).slice(0, 60),
+      days: (Array.isArray(w.days) ? w.days : []).filter(d => DAYS.includes(d)),
+      exercises,
+    };
+  }).filter(w => w.exercises.length);
+  if (!workouts.length) return { say, routine: null, broken: true };
+  return { say, routine: { title: String(raw.title || workouts[0].name).slice(0, 60), workouts } };
+}
+
+// What gets stored in a program day / handed to the workout page (the builder's own exercise shape)
+function toProgramExercise(x) {
+  const base = { id: x.id, name: x.name, primaryMuscle: x.primaryMuscle, secondaryMuscles: x.secondaryMuscles, recordType: x.recordType };
+  if (x.kind === 'cardio') return { ...base, durationMin: x.durationMin, distance: '' };
+  if (x.kind === 'timed')  return { ...base, sets: x.sets, durationSec: x.durationSec, restSec: x.restSec };
+  if (x.kind === 'reps')   return { ...base, sets: x.sets, reps: x.reps, restSec: x.restSec };
+  return { ...base, sets: x.sets, weight: 0, reps: x.reps, restSec: x.restSec };
+}
+
+// ── SEND ──────────────────────────────────────────────────────
+async function send(preset) {
+  const input = document.getElementById('input');
+  const text = (preset || input.value).trim();
+  if (!text || busy) return;
+  input.value = ''; autoGrow();
+  addMessage('user', text);
+  conversation.push({ role: 'user', content: text });
+  setBusy(true); showTyping();
+
+  try {
+    // ai-coach only accepts a signed-in user's token (not the anon key)
+    const session = await LF.auth.session();
+    if (!session) throw new Error('Please sign in again.');
+    const res = await fetch(SUPABASE_AI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 3000, system: getSystemPrompt(), messages: conversation.slice(-10) })
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) throw new Error(typeof data.error === 'string' ? data.error : (data.error && data.error.message) || 'The coach is unavailable right now.');
+    const reply = (data.content || []).find(b => b.type === 'text')?.text || '';
+    conversation.push({ role: 'assistant', content: reply });
+    hideTyping();
+
+    const parsed = parseReply(reply);
+    if (parsed.say) addMessage('ai', parsed.say);
+    if (parsed.routine) { routine = parsed.routine; renderRoutine(routine); }
+    else if (parsed.broken) addMessage('note', 'The coach\'s plan didn\'t come through properly. Ask again, or word it differently.');
+    renderSuggestions();
+  } catch (err) {
+    hideTyping();
+    conversation.pop();   // let them retry the same message
+    addMessage('note', (err && err.message) || 'Something went wrong. Check your connection and try again.');
+    input.value = text; autoGrow();
+  } finally {
+    setBusy(false);
+  }
+}
+
+// ── START NOW ─────────────────────────────────────────────────
+// Hands the workout to the workout page, which shows its usual start screen
+function startNow(workoutIdx) {
+  const w = routine && routine.workouts[workoutIdx];
+  if (!w) return;
+  sessionStorage.setItem('lf_start_workout', JSON.stringify({ name: w.name, exercises: w.exercises.map(toProgramExercise) }));
+  location.href = 'workout.html';
+}
+
+// ── SAVE AS PROGRAM ───────────────────────────────────────────
+let saveDays = [];   // saveDays[workoutIdx] = ['Mon', 'Thu']
+
+function openSave() {
+  if (!routine) return;
+  document.getElementById('save-name').value = routine.title;
+  document.getElementById('save-error').textContent = '';
+  // Start from the coach's suggested days; each weekday belongs to one workout only
+  const taken = new Set();
+  saveDays = routine.workouts.map(w => w.days.filter(d => !taken.has(d) && taken.add(d)));
+  const hasActive = !!JSON.parse(localStorage.getItem('lf_active_program') || 'null');
+  document.getElementById('save-active').setAttribute('aria-checked', hasActive ? 'false' : 'true');
+  renderSaveDays();
+  document.getElementById('save-overlay').classList.add('show');
+}
+function closeSave() { document.getElementById('save-overlay').classList.remove('show'); }
+
+function renderSaveDays() {
+  const box = document.getElementById('save-workouts');
+  box.innerHTML = '';
+  routine.workouts.forEach((w, wi) => {
+    const label = document.createElement('div');
+    label.className = 'aib-label'; label.textContent = w.name + ' — which days?';
+    const row = document.createElement('div');
+    row.className = 'aib-days'; row.setAttribute('role', 'group'); row.setAttribute('aria-label', 'Days for ' + w.name);
+    DAYS.forEach(d => {
+      const b = document.createElement('button');
+      b.className = 'aib-day'; b.textContent = d;
+      b.setAttribute('aria-pressed', saveDays[wi].includes(d) ? 'true' : 'false');
+      b.onclick = () => {
+        const on = saveDays[wi].includes(d);
+        saveDays = saveDays.map((list, i) => i === wi ? (on ? list.filter(x => x !== d) : [...list, d]) : list.filter(x => x !== d));
+        renderSaveDays();
+      };
+      row.appendChild(b);
+    });
+    box.appendChild(label); box.appendChild(row);
+  });
+}
+
+async function saveProgram() {
+  const errEl = document.getElementById('save-error');
+  const name = document.getElementById('save-name').value.trim();
+  const weeks = parseInt(document.getElementById('save-weeks').value) || 8;
+  const makeActive = document.getElementById('save-active').getAttribute('aria-checked') === 'true';
+  errEl.textContent = '';
+  if (!name) { errEl.textContent = 'Give the program a name.'; return; }
+  const unplaced = routine.workouts.filter((w, i) => !saveDays[i].length);
+  if (unplaced.length) { errEl.textContent = 'Pick at least one day for ' + unplaced.map(w => w.name).join(', ') + '.'; return; }
+
+  // Programs are a calendar: a workout on each chosen weekday, from today, for the weeks asked
+  const days = {};
+  const start = new Date(); start.setHours(0, 0, 0, 0);
+  for (let i = 0; i < weeks * 7; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    const dayName = DAYS[(d.getDay() + 6) % 7];
+    const wi = saveDays.findIndex(list => list.includes(dayName));
+    if (wi !== -1) days[localDateStr(d)] = { name: routine.workouts[wi].name, exercises: routine.workouts[wi].exercises.map(toProgramExercise) };
+  }
+  const program = {
+    id: crypto.randomUUID(), name, goal: 'hypertrophy', weeks, startDate: localDateStr(),
+    aiGenerated: true, isActive: makeActive, savedAt: new Date().toISOString(), days,
+  };
+
+  const btn = document.getElementById('save-go');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await LF.ready();
+    const res = await LF.db.saveProgram(program);
+    if (res && res.error && !res.offline) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
+    if (makeActive) {
+      // Only one program is active at a time
+      const local = JSON.parse(localStorage.getItem('lf_programs') || '[]').map(p => ({ ...p, isActive: p.id === program.id }));
+      localStorage.setItem('lf_programs', JSON.stringify(local));
+      await LF.db.setActiveProgram(program.id);
+    }
+    location.href = 'programs.html';
+  } catch (err) {
+    errEl.textContent = 'Could not save: ' + ((err && err.message) || 'unknown error');
+    btn.disabled = false; btn.textContent = 'Save program';
+  }
+}
+
+// ── INPUT ─────────────────────────────────────────────────────
+function autoGrow() {
+  const el = document.getElementById('input');
+  el.style.height = 'auto';
+  el.style.height = Math.min(120, el.scrollHeight) + 'px';
+}
+document.getElementById('input').addEventListener('input', autoGrow);
+document.getElementById('input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+// ── INIT ──────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  try { customs = LF.db._customsLocalCache().map(e => ({ ...e, custom: true })); } catch { customs = []; }
+  LF.ready().then(() => LF.db.getCustomExercises()).then(list => { customs = (list || []).map(e => ({ ...e, custom: true })); }).catch(() => {});
+  addMessage('ai', `Hi ${user.name || 'there'}. Tell me what you want to train and what you have to work with, and I'll put a workout together. For example: "a dumbbell-only chest workout", or "a 4-day program for building muscle".`);
+  renderSuggestions();
+});
+</script>
+</body>
+</html>

@@ -1,10 +1,11 @@
-const CACHE_NAME = 'larofit-v58';
+const CACHE_NAME = 'larofit-v59';
 
 const STATIC_ASSETS = [
   '/index.html',
   '/workout.html',
   '/programs.html',
   '/builder.html',
+  '/ai-builder.html',
   '/progress.html',
   '/measurements.html',
   '/profile.html',
