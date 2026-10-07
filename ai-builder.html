@@ -218,13 +218,16 @@ function getSystemPrompt() {
   const line = e => `${e.name} [${e.id}] (${e.custom ? 'their own exercise, ' : ''}${e.equipment || 'any'}, ${e.primaryMuscle || 'general'}, ${kindOf(e)})`;
   const profile = (() => { try { return JSON.parse(localStorage.getItem('lf_profile') || '{}'); } catch { return {}; } })();
   const details = profile.details || {};
+  // Profile fields may be a list or plain text depending on the field
+  const say = v => (Array.isArray(v) ? v.join(', ') : String(v || '')).trim();
   return `You are LaroFit's AI coach. You build workout routines for a gym member through conversation.
 
 MEMBER
 - Name: ${user.name || 'not given'}
 - Level: ${profile.level || 'not given'}
-- Goals: ${(details.goals || []).join(', ') || profile.goal || 'not given'}
-- Training style: ${(details.trainingStyle || []).join(', ') || 'not given'}
+- Goals: ${say(details.goals) || say(profile.goal) || 'not given'}${say(details.goalNotes) ? ' (' + say(details.goalNotes) + ')' : ''}
+- Training style: ${say(details.trainingStyle) || 'not given'}
+- Trains at: ${say(details.gym) || 'not given'}
 
 EXERCISE LIBRARY — the only exercises you may use. Format: Name [id] (equipment, main muscle, how it is counted)
 ${allExercises().map(line).join('\n')}
