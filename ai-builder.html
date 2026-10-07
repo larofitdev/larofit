@@ -99,6 +99,16 @@ body { display: flex; flex-direction: column; background: var(--bg); padding-bot
 }
 .aib-sheet h2 { font-family: var(--font-display); font-size: 26px; letter-spacing: 0.5px; font-weight: 400; margin: 0 0 4px; color: var(--text); }
 .aib-sheet p  { font-size: 13px; color: var(--text-3); margin: 0 0 16px; }
+.aib-mode { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.aib-mode button {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px; text-align: left; cursor: pointer;
+  border-radius: var(--radius-sm); border: 1px solid var(--border-md); background: transparent; color: var(--text); font-family: inherit;
+}
+.aib-mode button[aria-pressed="true"] { border-color: var(--volt-dark); background: var(--volt-bg); }
+.aib-mode-dot { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border-md); }
+.aib-mode button[aria-pressed="true"] .aib-mode-dot { border-color: var(--volt-dark); background: radial-gradient(var(--volt-dark) 45%, transparent 50%); }
+.aib-mode-title { font-size: 14px; font-weight: 700; }
+.aib-mode-sub { font-size: 12px; color: var(--text-3); margin-top: 1px; }
 .aib-label { font-size: 12px; font-weight: 700; color: var(--text-2); margin: 14px 0 6px; }
 .aib-field { width: 100%; min-height: 46px; padding: 0 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-md); background: var(--bg); color: var(--text); font-family: inherit; font-size: 16px; }
 .aib-days { display: flex; gap: 6px; }
@@ -143,23 +153,28 @@ body { display: flex; flex-direction: column; background: var(--bg); padding-bot
 <!-- SAVE AS PROGRAM -->
 <div class="aib-overlay" id="save-overlay" onclick="if(event.target===this)closeSave()">
   <div class="aib-sheet" role="dialog" aria-labelledby="save-title">
-    <h2 id="save-title">Save as a program</h2>
-    <p>Pick the days for each workout. It's added to your programs, where you can edit it any time.</p>
-    <label class="aib-label" for="save-name">Program name</label>
-    <input class="aib-field" id="save-name" type="text" maxlength="60" autocomplete="off">
+    <h2 id="save-title">Save this workout</h2>
+    <p id="save-intro">Pick the days for each workout.</p>
+    <div class="aib-mode" id="save-mode" role="group" aria-label="Where to save it"></div>
+    <div id="save-new-fields">
+      <label class="aib-label" for="save-name">Program name</label>
+      <input class="aib-field" id="save-name" type="text" maxlength="60" autocomplete="off">
+    </div>
     <div id="save-workouts"></div>
-    <label class="aib-label" for="save-weeks">How many weeks</label>
-    <select class="aib-field" id="save-weeks">
-      <option value="4">4 weeks</option><option value="6">6 weeks</option><option value="8" selected>8 weeks</option><option value="12">12 weeks</option>
-    </select>
-    <div class="aib-row">
-      <div id="save-active-label">Make this my active program</div>
-      <button class="aib-switch" id="save-active" role="switch" aria-checked="true" aria-labelledby="save-active-label" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') === 'true' ? 'false' : 'true')"><span></span></button>
+    <div id="save-new-fields-2">
+      <label class="aib-label" for="save-weeks">How many weeks</label>
+      <select class="aib-field" id="save-weeks">
+        <option value="4">4 weeks</option><option value="6">6 weeks</option><option value="8" selected>8 weeks</option><option value="12">12 weeks</option>
+      </select>
+      <div class="aib-row">
+        <div id="save-active-label">Make this my active program</div>
+        <button class="aib-switch" id="save-active" role="switch" aria-checked="true" aria-labelledby="save-active-label" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') === 'true' ? 'false' : 'true')"><span></span></button>
+      </div>
     </div>
     <div class="aib-error" id="save-error" role="alert"></div>
     <div class="aib-sheet-actions">
       <button class="btn btn-outline" onclick="closeSave()">Cancel</button>
-      <button class="btn btn-volt btn-full" id="save-go" onclick="saveProgram()">Save program</button>
+      <button class="btn btn-volt btn-full" id="save-go" onclick="saveGo()">Save program</button>
     </div>
   </div>
 </div>
@@ -341,7 +356,7 @@ function renderRoutine(r) {
     actions.appendChild(start);
   }
   const save = document.createElement('button');
-  save.className = 'btn ' + (r.workouts.length === 1 ? 'btn-dark' : 'btn-volt'); save.textContent = 'Save as program';
+  save.className = 'btn ' + (r.workouts.length === 1 ? 'btn-dark' : 'btn-volt'); save.textContent = 'Add to a program';
   save.onclick = openSave;
   actions.appendChild(save);
   wrap.appendChild(actions);
@@ -467,17 +482,119 @@ function startNow(workoutIdx) {
 // ── SAVE AS PROGRAM ───────────────────────────────────────────
 let saveDays = [];   // saveDays[workoutIdx] = ['Mon', 'Thu']
 
-function openSave() {
+let saveMode = 'new';        // 'add' = into the active program, 'new' = its own program
+let activeProgram = null;
+
+async function openSave() {
   if (!routine) return;
   document.getElementById('save-name').value = routine.title;
   document.getElementById('save-error').textContent = '';
   // Start from the coach's suggested days; each weekday belongs to one workout only
   const taken = new Set();
   saveDays = routine.workouts.map(w => w.days.filter(d => !taken.has(d) && taken.add(d)));
-  const hasActive = !!JSON.parse(localStorage.getItem('lf_active_program') || 'null');
-  document.getElementById('save-active').setAttribute('aria-checked', hasActive ? 'false' : 'true');
+
+  // The program they're already following, if any — adding to it is the default
+  activeProgram = null;
+  try {
+    await LF.ready();
+    const list = await LF.db.getPrograms();
+    const id = JSON.parse(localStorage.getItem('lf_active_program') || 'null');
+    activeProgram = (list || []).find(p => p.id === id) || (list || []).find(p => p.isActive) || null;
+  } catch (e) {}
+  saveMode = activeProgram ? 'add' : 'new';
+  document.getElementById('save-active').setAttribute('aria-checked', activeProgram ? 'false' : 'true');
+  renderSaveMode();
   renderSaveDays();
   document.getElementById('save-overlay').classList.add('show');
+}
+
+function renderSaveMode() {
+  const box = document.getElementById('save-mode');
+  box.innerHTML = '';
+  const option = (mode, title, sub) => {
+    const b = document.createElement('button');
+    b.setAttribute('aria-pressed', saveMode === mode ? 'true' : 'false');
+    const dot = document.createElement('span'); dot.className = 'aib-mode-dot';
+    const text = document.createElement('span');
+    const t = document.createElement('div'); t.className = 'aib-mode-title'; t.textContent = title;
+    const u = document.createElement('div'); u.className = 'aib-mode-sub'; u.textContent = sub;
+    text.appendChild(t); text.appendChild(u);
+    b.appendChild(dot); b.appendChild(text);
+    b.onclick = () => { saveMode = mode; renderSaveMode(); };
+    box.appendChild(b);
+  };
+  if (activeProgram) option('add', 'Add to ' + (activeProgram.name || 'my active program'), 'Goes after what is already planned on the days you pick');
+  option('new', 'Save as a new program', activeProgram ? 'Kept separately; your active program is not changed' : 'A program of its own');
+  box.style.display = activeProgram ? '' : 'none';
+
+  const adding = saveMode === 'add';
+  document.getElementById('save-new-fields').style.display   = adding ? 'none' : '';
+  document.getElementById('save-new-fields-2').style.display = adding ? 'none' : '';
+  document.getElementById('save-intro').textContent = adding
+    ? 'Pick the days. On each one, these exercises are added after what is already planned, from today to the end of the program.'
+    : 'Pick the days for each workout. It is added to your programs, where you can edit it any time.';
+  document.getElementById('save-go').textContent = adding ? 'Add to program' : 'Save program';
+}
+
+function saveGo() { return saveMode === 'add' ? addToActiveProgram() : saveProgram(); }
+
+// One day's plan with a workout's exercises added after whatever is already there
+function dayWithWorkout(day, w) {
+  const extra = w.exercises.map(toProgramExercise);
+  if (day && ('am' in day || 'pm' in day)) {   // older two-session days: goes on the end of the later session
+    const pm = day.pm || { name: w.name, exercises: [] };
+    const have = new Set([...((day.am && day.am.exercises) || []), ...(pm.exercises || [])].map(e => e.id));
+    return { ...day, pm: { ...pm, exercises: [...(pm.exercises || []), ...extra.filter(e => !have.has(e.id))] } };
+  }
+  const existing = day && Array.isArray(day.exercises) ? day.exercises : [];
+  if (!existing.length) return { ...(day || {}), rest: false, name: w.name, exercises: extra };
+  const have = new Set(existing.map(e => e.id));
+  const fresh = extra.filter(e => !have.has(e.id));   // adding the same workout twice doesn't double it up
+  if (!fresh.length) return day;
+  const name = day.name && !day.name.includes(w.name) ? day.name + ' + ' + w.name : (day.name || w.name);
+  return { ...day, rest: false, name, exercises: [...existing, ...fresh] };
+}
+
+// The active program with the routine's workouts added on the chosen weekdays
+function programWithRoutine(program, r, daysByWorkout, today) {
+  const p = JSON.parse(JSON.stringify(program));
+  const workoutFor = dayName => { const wi = daysByWorkout.findIndex(list => list.includes(dayName)); return wi === -1 ? null : r.workouts[wi]; };
+  if (Array.isArray(p.days)) {
+    // Older programs are a repeating week: one entry per weekday
+    DAYS.forEach((dayName, idx) => { const w = workoutFor(dayName); if (w) p.days[idx] = dayWithWorkout(p.days[idx], w); });
+  } else {
+    // Calendar programs: every chosen weekday from today to the program's last planned day
+    p.days = p.days || {};
+    const start = new Date(today); start.setHours(0, 0, 0, 0);
+    const lastKey = Object.keys(p.days).sort().pop();
+    let end = lastKey ? new Date(lastKey + 'T00:00:00') : null;
+    if (!end || end < start) { end = new Date(start); end.setDate(start.getDate() + 8 * 7 - 1); }   // nothing planned ahead: 8 weeks
+    for (const d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const w = workoutFor(DAYS[(d.getDay() + 6) % 7]);
+      if (w) { const key = localDateStr(d); p.days[key] = dayWithWorkout(p.days[key], w); }
+    }
+  }
+  p.savedAt = new Date().toISOString();
+  return p;
+}
+
+async function addToActiveProgram() {
+  const errEl = document.getElementById('save-error');
+  errEl.textContent = '';
+  if (!activeProgram) { saveMode = 'new'; renderSaveMode(); return; }
+  if (!saveDays.some(list => list.length)) { errEl.textContent = 'Pick at least one day.'; return; }
+
+  const p = programWithRoutine(activeProgram, routine, saveDays, new Date());
+  const btn = document.getElementById('save-go');
+  btn.disabled = true; btn.textContent = 'Adding…';
+  try {
+    const res = await LF.db.saveProgram(p);
+    if (res && res.error && !res.offline) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
+    location.href = 'programs.html';
+  } catch (err) {
+    errEl.textContent = 'Could not add it: ' + ((err && err.message) || 'unknown error');
+    btn.disabled = false; btn.textContent = 'Add to program';
+  }
 }
 function closeSave() { document.getElementById('save-overlay').classList.remove('show'); }
 
