@@ -3680,7 +3680,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 65;
+const VOICE_BUILD = 66;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4174,6 +4174,7 @@ function voiceAnnounceExercise(ex) {
   const target = voiceTargetFor(currentExIdx);
   if (!target) { voicePhase = 'idle'; pauseListening(); return; }
   voicePending = target;
+  setTimeout(() => voicePrefetchForExercise(target.exIdx), 1500);   // after this exercise's own line is on its way
   if (target.bw) {
     voicePhase = 'count_reps';
     voicePreAnnounced = -1;
@@ -4211,6 +4212,23 @@ function voiceAnnounceExercise(ex) {
     voicePhase = 'count_reps';
     voicePreAnnounced = -1;
     voicePrompt(voiceExerciseLine(ex, target) + '. Say weight and reps when finished.', true);
+  }
+}
+
+// At the start of an exercise, fetch ahead the lines the coach is going to need for it:
+// the usual confirmation, the set numbers, and the introduction of the next exercise
+// (the longest line, and the one most likely to arrive late over a gym connection).
+function voicePrefetchForExercise(exIdx) {
+  if (getVoiceName() === 'phone') return;
+  const ex = exercises[exIdx];
+  if (!ex) return;
+  const reps = parseInt(ex.reps) || 0;
+  if (reps) voicePrefetch(reps + ' reps logged.');
+  for (let n = 2; n <= Math.min(parseInt(ex.sets) || 1, 6); n++) voicePrefetch('Set ' + n + '.');
+  const ni = nextIncompleteIdx(exIdx);
+  if (ni !== -1) {
+    voicePrefetch(voiceNextExerciseLine(ni));
+    voicePrefetch(exercises[ni].name + '. Say your reps when finished.');
   }
 }
 
@@ -4566,31 +4584,35 @@ function pickVoice(id) {
 function updateVoiceHUD(msg) { const el=document.getElementById('voice-hud-text'); if(el) el.textContent=msg; }
 
 // Fetch (or reuse) natural speech for a line of text, decoded and ready to play
-async function voiceFetchSpeech(text, name) {
+function voiceFetchSpeech(text, name) {
   const key = name + '|' + text;
   if (voiceAudioCache.has(key)) return voiceAudioCache.get(key);
-  const session = await LF.auth.session();
-  if (!session) throw new Error('not signed in');
-  // A slow connection shouldn't hold the workout up — give up and let the phone voice say it
-  const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 6000);
-  let res;
-  try {
-    res = await fetch(SUPABASE_SPEAK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
-      body: JSON.stringify({ text, voice: name }),
-      signal: abort.signal
-    });
-  } finally { clearTimeout(timer); }
-  if (!res.ok) {
-    let msg = 'HTTP ' + res.status;
-    try { msg = (await res.json()).error || msg; } catch(e) {}
-    throw new Error(msg);
-  }
-  const buf = await voiceCtx.decodeAudioData(await res.arrayBuffer());
-  if (voiceAudioCache.size >= 40) voiceAudioCache.delete(voiceAudioCache.keys().next().value);
-  voiceAudioCache.set(key, buf);
-  return buf;
+  // The request itself is cached, so a line being fetched ahead of time and the
+  // moment it is needed share one request instead of racing two.
+  const request = (async () => {
+    const session = await LF.auth.session();
+    if (!session) throw new Error('not signed in');
+    const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 15000);
+    let res;
+    try {
+      res = await fetch(SUPABASE_SPEAK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+        body: JSON.stringify({ text, voice: name }),
+        signal: abort.signal
+      });
+    } finally { clearTimeout(timer); }
+    if (!res.ok) {
+      let msg = 'HTTP ' + res.status;
+      try { msg = (await res.json()).error || msg; } catch(e) {}
+      throw new Error(msg);
+    }
+    return voiceCtx.decodeAudioData(await res.arrayBuffer());
+  })();
+  if (voiceAudioCache.size >= 80) voiceAudioCache.delete(voiceAudioCache.keys().next().value);
+  voiceAudioCache.set(key, request);
+  request.catch(() => { if (voiceAudioCache.get(key) === request) voiceAudioCache.delete(key); });   // a failure isn't kept
+  return request;
 }
 
 // Say one line and resolve with how it ended. isCurrent() goes false once it has been interrupted.
@@ -4599,7 +4621,13 @@ async function voiceSayOne(text, isCurrent) {
   const name = getVoiceName();
   if (name !== 'phone' && voiceCtx) {
     try {
-      const buf = await voiceFetchSpeech(text, name);
+      const t0 = Date.now();
+      const buf = await Promise.race([
+        voiceFetchSpeech(text, name),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('took over 7s')), 7000))
+      ]);
+      const waited = Date.now() - t0;
+      if (waited > 1500) voiceDbg('waited ' + waited + 'ms for the natural voice');
       if (!isCurrent()) return 'interrupted';
       if (voiceCtx.state !== 'running') {
         // resume() can hang if the phone has taken the audio away — don't wait on it forever
