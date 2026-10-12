@@ -2449,7 +2449,7 @@ function logTimedSet(exIdx, setIdx) {
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
   if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
-  else { startRest(ex.restSec, () => renderSets(ex, null), 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
+  else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
 }
 
 function logCardioSet(exIdx) {
@@ -2623,13 +2623,15 @@ function finishHold(actualSecs) {
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
+  const exIdx = holdExIdx;
   if (allDone) {
-    const ni = holdExIdx + 1;
-    if (ni < exercises.length) startRest(ex.restSec, () => goToEx(ni), 'Next: ' + exercises[ni].name);
+    const ni = nextIncompleteIdx(exIdx);
+    if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: ' + exercises[ni].name);
     else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
   } else {
-    startRest(ex.restSec, () => renderSets(ex, null), 'Set ' + (holdSetIdx + 2) + ' of ' + ex.sets + ' up next');
+    startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set ' + (holdSetIdx + 2) + ' of ' + ex.sets + ' up next');
   }
+  voiceTimedLogged(exIdx, holdSetIdx, actualSecs);   // in a Voice workout: read it back
 }
 
 // ── REST TIMER ────────────────────────────────────────────────
@@ -3475,7 +3477,7 @@ function fetchSetCoaching(ex, setIdx, weight, reps) {
 // The page holds the earbud mic open, cuts out each spoken phrase, and sends it
 // to the `transcribe` function for text. (The phone's built-in speech recogniser
 // was tried first and is unreliable with Bluetooth earbuds.)
-// Phases: idle | pick_exercise | confirm_weight | count_reps | resting
+// Phases: idle | pick_exercise | confirm_weight | count_reps | log_time | log_cardio | resting
 const SUPABASE_TRANSCRIBE_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/transcribe';
 // Phrases quieter than this are dropped — other people nearby barely register on earbud mics
 const VOICE_MIN_PEAK = 0.05;
@@ -3497,7 +3499,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 76;
+const VOICE_BUILD = 77;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3979,13 +3981,15 @@ function voiceSendPhrase(blob, spokenMs, peak) {
   });
 }
 
-// First un-logged set of an exercise as a voice target; null if done or not voice-loggable
+// First un-logged set of an exercise as a voice target; null if it is all done
 function voiceTargetFor(exIdx) {
   const ex = exercises[exIdx];
-  if (!ex || !(isStrength(ex) || isBW(ex))) return null;
+  if (!ex) return null;
   const setIdx = ex.loggedSets.findIndex(s => !s.logged);
   if (setIdx === -1) return null;
-  return { exIdx, setIdx, sugWeight: parseFloat(ex.loggedSets[setIdx].weight) || 0, bw: isBW(ex) };
+  // kind: 'timed' (a hold, logged in seconds) or 'cardio' (minutes and distance); null for weight and reps
+  const kind = isTimed(ex) ? 'timed' : isCardio(ex) ? 'cardio' : null;
+  return { exIdx, setIdx, kind, sugWeight: kind ? 0 : parseFloat(ex.loggedSets[setIdx].weight) || 0, bw: kind ? true : isBW(ex) };
 }
 
 function voiceUnit() { return weightUnit() === 'kg' ? 'kilos' : 'pounds'; }
@@ -4002,7 +4006,7 @@ function voicePrompt(msg, interrupt) {
 function voiceAnnounceExercise(ex) {
   const target = voiceTargetFor(currentExIdx);
   if (!target) {
-    // Nothing here to log by voice (cardio or timed, or already done): stay listening for the next exercise
+    // Nothing left to log here: stay listening for the next exercise
     voicePhase = 'pick_exercise';
     if (ex.loggedSets.some(st => !st.logged)) voicePrompt(ex.name + '. Log this one on the screen, then say your next exercise.', true);
     else startListening();
@@ -4010,6 +4014,14 @@ function voiceAnnounceExercise(ex) {
   }
   voicePending = target;
   setTimeout(() => voicePrefetchForExercise(target.exIdx), 1500);   // after this exercise's own line is on its way
+  if (target.kind) {
+    voicePhase = target.kind === 'timed' ? 'log_time' : 'log_cardio';
+    voicePreAnnounced = -1;
+    voicePrompt(target.kind === 'timed'
+      ? voiceExerciseLine(ex, target) + '. Say start and I will time you, or say your time when finished.'
+      : ex.name + '. Say your time when finished, like 20 minutes, 2 miles.', true);
+    return;
+  }
   if (target.bw) {
     voicePhase = 'count_reps';
     voicePreAnnounced = -1;
@@ -4061,7 +4073,7 @@ function voicePrefetchForExercise(exIdx) {
   const ex = exercises[exIdx];
   if (!ex) return;
   const reps = parseInt(ex.targetReps) || parseInt(ex.reps) || 0;
-  if (reps) voicePrefetch(reps + ' reps logged.');
+  if (reps && (isStrength(ex) || isBW(ex))) voicePrefetch(reps + ' reps logged.');
   // What the coach may say about next time after the last set
   const w = parseFloat((ex.loggedSets.find(st => !st.logged) || {}).weight) || 0;
   if (w && isStrength(ex) && aiProgressionOn()) {
@@ -4095,6 +4107,7 @@ function voiceNextSet(exIdx) {
 // What to say (and which phase to enter) when a set comes up
 function voiceNextSetPrompt(target) {
   const setLabel = 'Set ' + (target.setIdx + 1);
+  if (target.kind === 'timed') return { phase: 'log_time', msg: setLabel + '. Say start, or say your time when finished.' };
   if (target.bw)        return { phase: 'count_reps',     msg: setLabel + '. Say your reps when you finish.' };
   if (target.sugWeight) return { phase: 'confirm_weight', msg: setLabel + ', ' + target.sugWeight + ' ' + voiceUnit() + '. Say your reps when you finish.' };
   return { phase: 'count_reps', msg: setLabel + '. Say weight and reps when you finish.' };
@@ -4130,6 +4143,8 @@ function voiceNextExerciseLine(exIdx) {
 
 // "Dumbbell Chest Fly, 40 pounds, 10 reps" — an exercise with the weight its sets are filled with
 function voiceExerciseLine(ex, target) {
+  if (isTimed(ex))  return ex.name + ', ' + voiceSayTime(voiceHoldTarget(ex));
+  if (isCardio(ex)) return ex.name;
   const weight = target && !target.bw ? target.sugWeight : 0;
   const reps = parseInt(ex.targetReps) || parseInt(ex.reps) || 0;
   return ex.name + (weight ? ', ' + weight + ' ' + voiceUnit() : '') + (reps ? ', ' + reps + ' reps' : '');
@@ -4140,6 +4155,8 @@ function handleVoiceResult(raw) {
   let t = normalizeSpeech(raw);
   if (!t) return false;
   if (/\b(repeat|say that again|say again)\b/.test(t)) { speakText(voiceLastPrompt, true); return true; }
+  // While a hold is being timed, the only thing listened for is "stop"
+  if (voicePhase === 'log_time' && voiceHoldRunning()) return voiceHearTimed(t, raw);
 
   // Part way through "edit the first set": this should be the right numbers
   if (voiceEdit && Date.now() - voiceEdit.at < 30000) { if (voiceEditAnswer(t)) return true; }
@@ -4165,7 +4182,8 @@ function handleVoiceResult(raw) {
     if (ref && voicePending && ref.which === voicePending.setIdx + 1) t = ref.rest.replace(/\s+/g, ' ').trim();
     const justLogged = voiceLastLog && Date.now() - voiceLastLog.at < 180000;
     if (VOICE_CORRECTION.test(t) || (justLogged && /^(no|nope|nah)\b/.test(t))) {
-      voiceCorrectLast(parseSetSpeech(t.replace(/^(no|nope|nah)\b/, '').replace(/\b(last|the) set\b/g, ' ').trim()));
+      if (voiceLastLog && voiceLastLog.kind) voiceCorrectTimed(t, raw);   // a hold or cardio entry
+      else voiceCorrectLast(parseSetSpeech(t.replace(/^(no|nope|nah)\b/, '').replace(/\b(last|the) set\b/g, ' ').trim()));
       return true;
     }
   }
@@ -4197,6 +4215,7 @@ function handleVoiceResult(raw) {
     // To change the weight, say it ("12.5 for 10"). There is no "lighter / heavier":
     // those words turned up in ordinary speech and changed the weight unasked.
   }
+  if ((voicePhase === 'log_time' || voicePhase === 'log_cardio') && voiceHearTimed(t, raw)) return true;
   return voiceTryExercise(t);   // not a set or a command: perhaps the name of an exercise
 }
 
@@ -4218,7 +4237,7 @@ function voiceUnlogLast() {
   // A record credited for the wrong numbers is taken back too
   if (!l.hadPR && _prCredited.has(l.prKey)) { _prCredited.delete(l.prKey); totalPRs = l.prTotal; }
 
-  voicePending = { exIdx: l.exIdx, setIdx: l.setIdx, sugWeight: l.bw ? 0 : (parseFloat(set.weight) || 0), bw: l.bw };
+  voicePending = { exIdx: l.exIdx, setIdx: l.setIdx, kind: l.kind || null, sugWeight: l.bw ? 0 : (parseFloat(set.weight) || 0), bw: l.bw };
   if (currentExIdx !== l.exIdx) goToEx(l.exIdx);   // the app had already moved to the next exercise
   else renderSets(ex, getLastSession(ex.id || ex.name));
   renderDots(); updateOverallProgress(); checkAllDone(); saveSnapshot();
@@ -4638,6 +4657,149 @@ async function voiceSwapAskAI(query, ex, all) {
   } catch (e) { voiceDbg('replace: could not ask the coach (' + e.message + ')'); return []; }
 }
 
+// ── TIMED HOLDS AND CARDIO BY VOICE ───────────────────────────
+// A hold: say "start" and the coach times it (say "stop" to end early), or just say
+// the time afterwards ("45 seconds", "a minute thirty"). Cardio: say the time and,
+// if you like, the distance ("30 minutes, 2 miles").
+
+// A spoken length of time, in seconds. A number on its own is in `bareUnit` ('sec' or 'min').
+// `raw` is the phrase as transcribed, for times written like 1:30. Returns null if there is none.
+function parseTimeSpeech(t, bareUnit, raw) {
+  let m = String(raw || '').match(/\b(\d{1,3}):(\d\d)\b/);
+  if (m) return +m[1] * 60 + +m[2];
+  let s = ' ' + t + ' ', total = 0, found = false;
+  const take = (re, fn) => { s = s.replace(re, (...a) => { total += fn(...a); found = true; return ' '; }); };
+  take(/\b(?:a|1) (?:minute|min) and a half\b/, () => 90);
+  take(/\bhalf an? (?:minute|min)\b/, () => 30);
+  take(/\bhalf an? hour\b/, () => 1800);
+  take(/\ban? hour and a half\b/, () => 5400);
+  take(/(\d+(?:\.\d+)?) ?(?:hours?|hrs?)\b/, (_, n) => +n * 3600);
+  take(/\ban? hour\b/, () => 3600);
+  take(/(\d+(?:\.\d+)?) ?(?:minutes?|mins?)\b/, (_, n) => +n * 60);
+  take(/\b(?:a|an) (?:minute|min)\b/, () => 60);
+  take(/(\d+(?:\.\d+)?) ?(?:seconds?|secs?)\b/, (_, n) => +n);
+  const bare = s.replace(VOICE_FILLER, ' ').replace(/\b(for|held|hold|time|long|went|ran|rode|rowed|walked|about|around)\b/g, ' ').replace(/\s+/g, ' ').trim();
+  if ((m = bare.match(/^(\d+(?:\.\d+)?)$/))) {
+    // "a minute thirty": what follows minutes is seconds, what follows hours is minutes
+    total += +m[1] * (found ? (/\b(hours?|hrs?)\b/.test(t) && !/\b(minutes?|mins?)\b/.test(t) ? 60 : 1) : (bareUnit === 'min' ? 60 : 1));
+    found = true;
+  } else if (bare && !found) return null;
+  return found && total > 0 ? Math.round(total) : null;
+}
+
+// "30 minutes, 2 miles" → { minutes, distance }. Either may be null.
+function parseCardioSpeech(t, raw) {
+  let distance = null, m, s = ' ' + t + ' ';
+  const KM = '(?:kilometers?|kilometres?|km|k)', MI = '(?:miles?|mi)';
+  if ((m = s.match(/\b(?:a|1) mile and a half\b/))) distance = 1.5;
+  else if ((m = s.match(/\bhalf an? mile\b/))) distance = 0.5;
+  else if ((m = s.match(new RegExp('(\\d+(?:\\.\\d+)?) ?' + MI + '\\b')))) distance = +m[1];
+  else if ((m = s.match(new RegExp('(\\d+(?:\\.\\d+)?) ?' + KM + '\\b')))) distance = Math.round(+m[1] * 0.621 * 100) / 100;
+  else if ((m = s.match(/\ba mile\b/))) distance = 1;
+  if (m) s = s.replace(m[0], ' ');
+  const secs = parseTimeSpeech(s.replace(/\b(in|at|over)\b/g, ' ').replace(/\s+/g, ' ').trim(), 'min', raw);
+  const minutes = secs ? Math.round(secs / 6) / 10 : null;   // to a tenth of a minute
+  return { minutes: minutes && minutes <= 600 ? minutes : null, distance: distance !== null && distance > 0 && distance <= 200 ? distance : null };
+}
+
+// 45 → "45 seconds", 90 → "1 minute 30 seconds"
+function voiceSayTime(secs) {
+  secs = Math.round(secs);
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return [m ? m + (m === 1 ? ' minute' : ' minutes') : '', s || !m ? s + (s === 1 ? ' second' : ' seconds') : ''].filter(Boolean).join(' ');
+}
+
+function voiceHoldRunning() {
+  const el = document.getElementById('hold-overlay');
+  return !!el && el.classList.contains('show');
+}
+
+// Planned length of a hold, in seconds
+function voiceHoldTarget(ex) { return parseInt(ex.durationSec) || parseInt(ex.reps) || 30; }
+
+// What is said while a hold or cardio exercise is waiting to be logged
+function voiceHearTimed(t, raw) {
+  const p = voicePending;
+  if (voicePhase === 'log_time') {
+    if (voiceHoldRunning()) {
+      if (/\b(stop|done|that s it|enough|time)\b/.test(t)) { holdDoneEarly(); return true; }
+      return false;
+    }
+    const secs = parseTimeSpeech(t, 'sec', raw);
+    if (secs && secs <= 3600) { voiceLogTime(secs); return true; }
+    if (/\b(start|go|begin|ready|timer|time me|clock)\b/.test(t)) {
+      speakText('Go.', true);
+      startHold(p.exIdx, p.setIdx);
+      updateVoiceHUD('Timing. Say stop to end early.');
+      return true;
+    }
+  }
+  if (voicePhase === 'log_cardio') {
+    const c = parseCardioSpeech(t, raw);
+    if (c.minutes) { voiceLogCardio(c); return true; }
+    if (c.distance !== null) { voicePrompt('How long? Say the time, like 20 minutes.', true); return true; }
+  }
+  return false;
+}
+
+// Log the pending hold with a spoken time
+function voiceLogTime(secs) {
+  const p = voicePending;
+  exercises[p.exIdx].loggedSets[p.setIdx].holdTime = String(secs);
+  const el = document.getElementById('inp-t-' + p.exIdx + '-' + p.setIdx);
+  if (el) el.value = secs;
+  logTimedSet(p.exIdx, p.setIdx);
+  voiceTimedLogged(p.exIdx, p.setIdx, secs);
+}
+
+// A hold has been logged (by saying the time, or by the timer finishing): read it back, then rest
+function voiceTimedLogged(exIdx, setIdx, secs) {
+  if (workoutMode !== 'voice') return;
+  const prKey = exercises[exIdx].id || exercises[exIdx].name;
+  voiceLastLog = { exIdx, setIdx, kind: 'timed', weight: 0, reps: secs, bw: true, at: Date.now(), prKey, hadPR: true, prTotal: totalPRs };
+  voiceAfterLog(exIdx, voiceSayTime(secs) + ' logged.');
+}
+
+function voiceLogCardio(c) {
+  const p = voicePending, set = exercises[p.exIdx].loggedSets[0];
+  set.duration = String(c.minutes); set.distance = c.distance !== null ? String(c.distance) : '';
+  const dEl = document.getElementById('inp-cd-dur-' + p.exIdx), distEl = document.getElementById('inp-cd-dist-' + p.exIdx);
+  if (dEl) dEl.value = set.duration;
+  if (distEl) distEl.value = set.distance;
+  logCardioSet(p.exIdx);
+  const prKey = exercises[p.exIdx].id || exercises[p.exIdx].name;
+  voiceLastLog = { exIdx: p.exIdx, setIdx: 0, kind: 'cardio', weight: 0, reps: c.minutes, bw: true, at: Date.now(), prKey, hadPR: true, prTotal: totalPRs };
+  voiceAfterLog(p.exIdx, voiceSayTime(c.minutes * 60) + (c.distance !== null ? ', ' + c.distance + (c.distance === 1 ? ' mile' : ' miles') : '') + ' logged.');
+}
+
+// After any hold or cardio log: say it, and if the exercise is finished, say what is next
+function voiceAfterLog(exIdx, msg) {
+  voicePhase = 'resting';
+  voicePrompt(msg, true);
+  if (!exercises[exIdx].loggedSets.every(st => st.logged)) return;
+  if (exercises.every(ex => ex.loggedSets.every(st => st.logged))) return;
+  const ni = nextIncompleteIdx(exIdx);
+  if (ni !== -1) { speakText(voiceNextExerciseLine(ni)); voicePreAnnounced = ni; }
+}
+
+// "No, that was wrong" after a hold or cardio log: take it back and hear it again
+function voiceCorrectTimed(t, raw) {
+  const l = voiceUnlogLast();
+  if (!l) { voicePrompt('There is no set to correct.', true); return; }
+  const text = t.replace(/^(no|nope|nah)\b/, ' ').replace(VOICE_CORRECTION, ' ').replace(/\b(last|the|that|set|it|was|is|to)\b/g, ' ').replace(/\s+/g, ' ').trim();
+  if (l.kind === 'cardio') {
+    voicePhase = 'log_cardio';
+    const c = parseCardioSpeech(text, raw);
+    if (c.minutes) { voiceLogCardio(c); return; }
+    voicePrompt('Okay, removed. Say the time again.', true);
+  } else {
+    voicePhase = 'log_time';
+    const secs = parseTimeSpeech(text, 'sec', raw);
+    if (secs && secs <= 3600) { voiceLogTime(secs); return; }
+    voicePrompt('Okay, set ' + (l.setIdx + 1) + ' removed. Say the time again.', true);
+  }
+}
+
 // ── SAYING WHAT YOU ARE DOING ─────────────────────────────────
 // Name an exercise and it becomes the one on screen: "leg press", "I'm doing leg
 // press", "switch to curls". With nothing planned the coach asks what you are doing.
@@ -4726,8 +4888,9 @@ function voiceStartExercise(data) {
     const last = getExerciseHistory(data.id, 1)[0];
     const sets = last ? Math.min(Math.max(last.sets.length, 1), 8) : 3;
     const plan = { id: data.id, name: data.name, recordType: data.recordType, sets, reps: 10, restSec: 60 };
+    const hold = isTimed(plan) ? (last && Math.max(...last.sets.map(st => parseFloat(st.holdTime) || 0)) || 30) : null;
     exercises.push({
-      id: data.id, name: data.name, sets, reps: 10, durationSec: null, restSec: 60,
+      id: data.id, name: data.name, sets, reps: hold || 10, durationSec: hold, restSec: 60,
       type: exTypeOf(plan), mediaUrl: data.mediaUrl || lookupMediaUrl(data.id), planWeight: 0,
       targetReps: (exTypeOf(plan) === 'strength' && coachPlanFor(plan) || {}).reps || null,
       loggedSets: buildLoggedSets(plan)
@@ -4822,7 +4985,7 @@ async function voiceInterpret(text) {
   if (out.action === 'replace') { voiceSwapStart(typeof out.exercise === 'string' ? voiceSwapTarget('with ' + normalizeSpeech(out.exercise)) : ''); return; }
   const named = out.set === 'all' ? 'all' : (Number.isInteger(out.set) && out.set >= 1 && out.set <= 12 ? out.set : null);
   if (out.action === 'correct' && named && voiceEditSets(named, { ...said, unsure: null }, true)) return;
-  if (out.action === 'correct') { if (voiceLastLog) voiceCorrectLast(said); }
+  if (out.action === 'correct') { if (voiceLastLog) { if (voiceLastLog.kind) voiceCorrectTimed(norm, text); else voiceCorrectLast(said); } }
   else if (out.action === 'ready')  { if (phase === 'resting') skipRest(); }
   else if (out.action === 'repeat') speakText(voiceLastPrompt, true);
   else if (out.action === 'log' && (phase === 'confirm_weight' || phase === 'count_reps')) {
