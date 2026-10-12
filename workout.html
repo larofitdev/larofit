@@ -3709,7 +3709,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 73;
+const VOICE_BUILD = 74;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4744,7 +4744,7 @@ async function voiceSwapStart(target) {
   if (!ex) return;
   const all = exAllExercises(), inWorkout = exercises.map(e => e.id);
   const similar = () => exFindSimilar(ex, all, inWorkout);
-  let cands;
+  let cands, closest = false;
   const asNew = target.match(/\b(?:new|custom)(?: exercise)?(?: called| named)? (.+)$/);
   if (asNew && asNew[1].trim()) { voiceSwap = { exIdx, cands: [exDraftFromName(asNew[1], ex, all)], pick: 0, at: Date.now() }; voiceSwapOffer(); return; }
   if (!target) cands = similar();
@@ -4754,7 +4754,7 @@ async function voiceSwapStart(target) {
     if (!cands.length) {
       updateVoiceHUD('Looking for “' + target + '”…');
       cands = await voiceSwapAskAI(target, ex, all);
-      if (!cands.length) cands = found.maybe;
+      if (!cands.length) { cands = found.maybe; closest = cands.length > 0; }
       if (currentExIdx !== exIdx) return;   // the workout moved on while we were looking
     }
   }
@@ -4766,6 +4766,7 @@ async function voiceSwapStart(target) {
     return;
   }
   voiceSwap = { exIdx, cands, pick: 0, at: Date.now() };
+  if (closest) { voiceSwap.newName = target; voiceSwap.closest = true; }   // not what was said, only near it
   voiceSwapOffer();
 }
 
@@ -4780,6 +4781,11 @@ function voiceSwapOffer() {
   else if (s.count > 1) how = 'Say yes to change all ' + s.count + ' workouts in your program, today for just today' + more + '.';
   else how = 'Say yes' + more + '.';
   if (s.started && !s.count) { voiceSwap = null; voiceSwapSay(how); return; }
+  if (s.closest) {
+    s.closest = false;
+    voiceSwapSay('I could not find ' + s.newName + '. The closest is ' + cand.name + '. ' + how + ' Or say add it to make ' + s.newName + ' a new exercise.');
+    return;
+  }
   voiceSwapSay((cand.draft ? 'New exercise, ' : '') + cand.name + ' instead of ' + ex.name + '. ' + how);
 }
 
@@ -4792,13 +4798,13 @@ function voiceTomorrow() {
 function voiceSwapAnswer(t) {
   const s = voiceSwap;
   if (/\b(cancel|never ?mind|forget it|leave it|keep it|stop)\b/.test(t) || /^(no|nope|nah)$/.test(t)) { voiceSwap = null; voiceSwapSay('Okay, keeping ' + exercises[s.exIdx].name + '.'); return true; }
-  if (s.newName && s.pick < 0 && /\b(add|create|make|save|new|yes|yeah|yep|ok|okay|sure)\b/.test(t)) {
+  if (s.newName && (/\b(add|create|make|save|new)\b/.test(t) || (s.pick < 0 && /\b(yes|yeah|yep|ok|okay|sure)\b/.test(t)))) {
     voiceSwap = { exIdx: s.exIdx, cands: [exDraftFromName(s.newName, exercises[s.exIdx], exAllExercises())], pick: 0, at: Date.now() };
     voiceSwapOffer(); return true;
   }
   if (/\b(another|different|next|other|something else|not that|else)\b/.test(t)) {
     if (s.pick + 1 >= s.cands.length) { voiceSwap = null; voiceSwapSay('That is all I have. Keeping ' + exercises[s.exIdx].name + '.'); return true; }
-    s.pick++; voiceSwapOffer(); return true;
+    s.pick++; voiceSwapOffer(); return true;   // (s.newName stays, so "add it" still works)
   }
   if (s.pick >= 0 && /\b(today|this time|just this once|once|this workout)\b/.test(t)) { voiceSwapApply(false); return true; }
   if (s.pick >= 0 && /\b(yes|yeah|yep|yup|ok|okay|sure|do it|go ahead|whole program|all of them|all|every|confirm|correct|right|please)\b/.test(t)) { voiceSwapApply(true); return true; }
