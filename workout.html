@@ -757,7 +757,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">Choose or build a program to get your daily workouts here.</div>
     <button class="btn btn-dark lf-mt-sm btn-lg" onclick="location.href='programs.html'">Go to programs <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
     <button class="btn btn-volt lf-mt-sm" onclick="location.href='ai-builder.html'"><i class="ti ti-sparkles" aria-hidden="true"></i> Build a workout with AI</button>
-    <button class="btn btn-outline lf-mt-sm" onclick="startFreeForm()">Log a free workout</button>
+    <button class="btn btn-volt lf-mt-sm btn-lg" onclick="showStartModal(true)" style="letter-spacing:0.08em;">START WORKOUT</button>
   </div>
 
   <!-- REST DAY STATE -->
@@ -766,7 +766,7 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div style="font-size:20px;font-weight:700;color:var(--text);">Rest day</div>
     <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">Recovery is part of the plan. Sleep well, eat well, come back stronger.</div>
     <button class="btn btn-volt lf-mt-sm" onclick="location.href='ai-builder.html'"><i class="ti ti-sparkles" aria-hidden="true"></i> Build a workout with AI</button>
-    <button class="btn btn-outline lf-mt-sm" onclick="startFreeForm()">Log a workout anyway</button>
+    <button class="btn btn-volt lf-mt-sm btn-lg" onclick="showStartModal(true)" style="letter-spacing:0.08em;">START WORKOUT</button>
   </div>
 
   <!-- PRE-START STATE — shown before the user taps Start -->
@@ -779,8 +779,8 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         START WORKOUT
       </button>
       <button class="btn btn-outline btn-full" id="prestart-all-btn" onclick="showPrestart(_prestartAll, _prestartName, true)" style="display:none;margin-top:10px;"></button>
-      <button class="btn btn-ghost btn-full" onclick="startFreeForm()" style="margin-top:10px;color:var(--text-3);">
-        Log a different workout
+      <button class="btn btn-ghost btn-full" onclick="showStartModal(true)" style="margin-top:10px;color:var(--text-3);">
+        Do a different workout
       </button>
     </div>
   </div>
@@ -1078,28 +1078,8 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div style="width:36px;height:4px;background:var(--border-md);border-radius:2px;margin:0 auto 20px;"></div>
     <div style="font-family:var(--font-display);font-size:26px;letter-spacing:0.5px;color:var(--text);margin-bottom:4px;">How do you want to train?</div>
     <div style="font-size:13px;color:var(--text-3);margin-bottom:16px;">Choose your logging style</div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;padding:12px 14px;background:var(--bg-card2);border-radius:var(--radius);">
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:14px;font-weight:700;color:var(--text);" id="ai-prog-label">AI progression</div>
-        <div id="ai-prog-desc" style="font-size:12px;color:var(--text-3);margin-top:2px;"></div>
-      </div>
-      <button id="ai-prog-toggle" role="switch" aria-checked="true" aria-labelledby="ai-prog-label" onclick="toggleAiProgression()"
-              style="flex-shrink:0;width:52px;height:32px;padding:0;border:none;border-radius:16px;position:relative;cursor:pointer;transition:background 0.15s;-webkit-tap-highlight-color:transparent;">
-        <span id="ai-prog-knob" style="position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.3);transition:transform 0.15s;"></span>
-      </button>
-    </div>
-    <button onclick="beginWorkout('manual')"
-            style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-dark);border:none;border-radius:var(--radius);padding:18px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;">
-      <div style="width:44px;height:44px;border-radius:50%;background:var(--volt-bg);border:1px solid var(--volt-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        <i class="ti ti-pencil" style="font-size:20px;color:var(--volt-dark);"></i>
-      </div>
-      <div>
-        <div style="font-size:16px;font-weight:700;color:#fff;">Manual</div>
-        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Tap to log each set</div>
-      </div>
-    </button>
     <button onclick="beginWorkout('voice')"
-            style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-dark);border:none;border-radius:var(--radius);padding:18px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;">
+            style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-dark);border:none;border-radius:var(--radius);padding:18px 16px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;">
       <div style="width:44px;height:44px;border-radius:50%;background:var(--volt-bg);border:1px solid var(--volt-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <i class="ti ti-microphone" style="font-size:20px;color:var(--volt-dark);"></i>
       </div>
@@ -1108,11 +1088,17 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Log hands-free with your earbuds</div>
       </div>
     </button>
-    <div style="margin-top:16px;">
-      <div style="font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;">Coach voice — tap to hear</div>
-      <div id="voice-choices" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-      <div style="font-size:11px;color:var(--text-3);margin-top:8px;">Marin, Cedar, Coral and Ash are AI-generated voices, not real people.</div>
-    </div>
+    <button onclick="beginWorkout('manual')"
+            style="display:flex;align-items:center;gap:14px;width:100%;background:var(--bg-dark);border:none;border-radius:var(--radius);padding:18px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--volt-bg);border:1px solid var(--volt-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="ti ti-pencil" style="font-size:20px;color:var(--volt-dark);"></i>
+      </div>
+      <div>
+        <div style="font-size:16px;font-weight:700;color:#fff;">Manual</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:2px;">Tap to log each set</div>
+      </div>
+    </button>
+    <div style="font-size:11px;color:var(--text-3);margin-top:14px;text-align:center;">Change the coach's voice in Profile → Settings.</div>
   </div>
 </div>
 
@@ -1622,15 +1608,16 @@ function showPrestart(exArr, name, wholeThing) {
   // Part of it was logged earlier today: carry on with what is left. All of it: offer it again in full.
   const partial = done > 0 && left.length > 0;
   exArr = partial ? left : exArr;
-  _prestartExercises = exArr;
+  const allLogged = done > 0 && !left.length && !wholeThing;
+  _prestartExercises = allLogged ? [] : exArr;
 
   document.getElementById('prestart-title').textContent = name;
   document.getElementById('prestart-sub').textContent   =
     partial ? exArr.length + ' exercise' + (exArr.length !== 1 ? 's' : '') + ' left · ' + done + ' already logged today'
-    : done > 0 && !wholeThing ? exArr.length + ' exercise' + (exArr.length !== 1 ? 's' : '') + ' · already logged today, start again to repeat it'
+    : allLogged ? 'Logged today. Start to do something else, or repeat it below.'
     : exArr.length + ' exercise' + (exArr.length !== 1 ? 's' : '');
   const allBtn = document.getElementById('prestart-all-btn');
-  allBtn.style.display = partial ? '' : 'none';
+  allBtn.style.display = partial || allLogged ? '' : 'none';
   allBtn.textContent   = 'Do the whole workout again (' + _prestartAll.length + ' exercises)';
 
   // Quick exercise preview (up to 5)
@@ -1649,11 +1636,12 @@ function showPrestart(exArr, name, wholeThing) {
   setHeader(name);
 }
 
-function showStartModal() {
-  renderVoiceChoices();
-  renderAiProgression();
+let _startFree = false;   // start with an empty card instead of today's plan
+
+function showStartModal(free) {
+  _startFree = !!free || !_prestartExercises.length;
   voiceKeepWarm();
-  voicePrefetchFirstLine();
+  if (_startFree) voicePrefetch('What exercise are you doing?'); else voicePrefetchFirstLine();
   const el = document.getElementById('start-modal-overlay');
   el.style.display = 'flex';
 }
@@ -1669,11 +1657,12 @@ function beginWorkout(mode) {
   // Voice needs speech unlocked inside this tap, then the mic held open, then the
   // first prompt — strictly in that order. Opening the mic while the phone is
   // still speaking (e.g. behind the permission prompt) leaves it deaf.
+  const start = () => { if (_startFree) startFreeForm(); else buildExerciseList(_prestartExercises, _prestartName); };
   if (workoutMode === 'voice') voicePrimeSpeech().then(voiceHoldMic).then(() => {
-    buildExerciseList(_prestartExercises, _prestartName);
+    start();
     if (voiceOnPhoneMic) speakText('Heads up. I am listening through the phone microphone, not your earbuds, so I may pick up the room.');
   });
-  else buildExerciseList(_prestartExercises, _prestartName);
+  else start();
 }
 
 // Weight unit label from profile setting (display only — no conversion)
@@ -1797,6 +1786,7 @@ function startFreeForm() {
   totalPRs = 0; _prCredited = new Set();
   buildExPicker();
   startWorkout('Free Workout');
+  if (workoutMode === 'voice') voiceAskExercise();
 }
 
 // ── SHOW/HIDE ─────────────────────────────────────────────────
@@ -3441,29 +3431,8 @@ function coachPlanFor(ex) {
   };
 }
 
-// "AI progression" from the start screen. Off = logging only: sets start from the
-// user's own numbers, with no recommended weights.
-function aiProgressionOn() { return store.get('settings', {}).aiProgression !== false; }
-
-function toggleAiProgression() {
-  const st = store.get('settings', {});
-  st.aiProgression = !aiProgressionOn();
-  store.set('settings', st);
-  renderAiProgression();
-  voicePrefetchFirstLine();   // the opening weight may differ with progression on or off
-}
-
-function renderAiProgression() {
-  const btn = document.getElementById('ai-prog-toggle'), knob = document.getElementById('ai-prog-knob');
-  if (!btn) return;
-  const on = aiProgressionOn();
-  btn.setAttribute('aria-checked', on ? 'true' : 'false');
-  btn.style.background = on ? 'var(--volt)' : 'var(--border-md)';
-  knob.style.transform = on ? 'translateX(20px)' : 'translateX(0)';
-  document.getElementById('ai-prog-desc').textContent = on
-    ? 'The coach sets your weight and rep target from your last workout.'
-    : 'Logging only. Your own weights, no suggestions or tips.';
-}
+// Progression is part of every workout (there used to be a switch for it)
+function aiProgressionOn() { return true; }
 
 function getSuggestedWeight(ex) {
   const plan = coachPlanFor(ex);
@@ -3506,7 +3475,7 @@ function fetchSetCoaching(ex, setIdx, weight, reps) {
 // The page holds the earbud mic open, cuts out each spoken phrase, and sends it
 // to the `transcribe` function for text. (The phone's built-in speech recogniser
 // was tried first and is unreliable with Bluetooth earbuds.)
-// Phases: idle | confirm_weight | count_reps | resting
+// Phases: idle | pick_exercise | confirm_weight | count_reps | resting
 const SUPABASE_TRANSCRIBE_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/transcribe';
 // Phrases quieter than this are dropped — other people nearby barely register on earbud mics
 const VOICE_MIN_PEAK = 0.05;
@@ -3528,7 +3497,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 75;
+const VOICE_BUILD = 76;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4032,7 +4001,13 @@ function voicePrompt(msg, interrupt) {
 // Called when an exercise comes on screen
 function voiceAnnounceExercise(ex) {
   const target = voiceTargetFor(currentExIdx);
-  if (!target) { voicePhase = 'idle'; pauseListening(); return; }
+  if (!target) {
+    // Nothing here to log by voice (cardio or timed, or already done): stay listening for the next exercise
+    voicePhase = 'pick_exercise';
+    if (ex.loggedSets.some(st => !st.logged)) voicePrompt(ex.name + '. Log this one on the screen, then say your next exercise.', true);
+    else startListening();
+    return;
+  }
   voicePending = target;
   setTimeout(() => voicePrefetchForExercise(target.exIdx), 1500);   // after this exercise's own line is on its way
   if (target.bw) {
@@ -4173,6 +4148,12 @@ function handleVoiceResult(raw) {
   // A replacement exercise is on offer: this should be yes, today, another, or a name
   if (voiceSwap && Date.now() - voiceSwap.at < 40000) { if (voiceSwapAnswer(t)) return true; }
   else voiceSwap = null;
+  // "Did you say leg press?" and "Finish the workout?" are waiting for an answer
+  if (voiceAskName && Date.now() - voiceAskName.at < 30000) { if (voiceAskNameAnswer(t)) return true; }
+  else voiceAskName = null;
+  if (voiceFinishAt && Date.now() - voiceFinishAt < 25000 && voiceFinishAnswer(t)) return true;
+  voiceFinishAt = 0;
+  if (VOICE_FINISH.test(t) && !/\d/.test(t) && !/\b(sets?|reps?|exercise)\b/.test(t)) { voiceFinishAsk(); return true; }
   // "Replace this exercise with machine flys" (not "replace the first set...")
   if (VOICE_SWAP.test(t) && !/\bsets?\b/.test(t) && voicePhase !== 'idle') { voiceSwapStart(voiceSwapTarget(t)); return true; }
 
@@ -4190,6 +4171,7 @@ function handleVoiceResult(raw) {
   }
 
   if (voicePhase === 'resting') {
+    if (voiceTryExercise(t)) return true;   // "start with leg press" names an exercise; "start" alone ends the rest
     if (/\b(ready|skip|next|go|start)\b/.test(t)) { skipRest(); return true; }
     return false;
   }
@@ -4215,7 +4197,7 @@ function handleVoiceResult(raw) {
     // To change the weight, say it ("12.5 for 10"). There is no "lighter / heavier":
     // those words turned up in ordinary speech and changed the weight unasked.
   }
-  return false;
+  return voiceTryExercise(t);   // not a set or a command: perhaps the name of an exercise
 }
 
 // ── CORRECTIONS ───────────────────────────────────────────────
@@ -4372,7 +4354,8 @@ let voiceSwap = null;      // { exIdx, cands, pick, count, at } while a replacem
 let voiceSayFirst = '';    // said ahead of the next prompt (e.g. "Done." before the new exercise is announced)
 
 const VOICE_SWAP = new RegExp([
-  '\\b(replace|swap|switch|substitute|sub out|trade|exchange)\\b',
+  '\\b(replace|swap|substitute|sub out|trade|exchange)\\b',
+  '\\bswitch (this|that|it|the|my|out)\\b',   // "switch to X" is today's exercise, not a change to the program
   '\\b(different|another|other|alternative|new|similar|like) (exercise|movement)\\b',
   '\\bsomething (else|different|similar)\\b',
   '\\bchange (this|the|that|my)? ?(exercise|movement)\\b',
@@ -4420,7 +4403,7 @@ function exAllExercises() {
 
 // Exercises matching what was said, best first. `sure` used every word that was said;
 // `maybe` only some of them. Ties go to the same muscle and equipment as `current`.
-function exFindByName(query, current, all) {
+function exFindByName(query, current, all, prefer) {
   const q = [...new Set(exWords(query))];
   if (!q.length) return { sure: [], maybe: [] };
   const cur = current ? (all.find(e => e.id === current.id) || current) : {};
@@ -4433,7 +4416,8 @@ function exFindByName(query, current, all) {
     if (!inName) continue;
     const score = inName * 2 + inEquip - (name.length - inName) * 0.25
       + (cur.primaryMuscle && e.primaryMuscle === cur.primaryMuscle ? 1.5 : 0)
-      + (cur.equipment && e.equipment === cur.equipment ? 0.5 : 0);
+      + (cur.equipment && e.equipment === cur.equipment ? 0.5 : 0)
+      + (prefer && prefer.has(e.id) ? 1 : 0);   // ones the user already does
     (inName + inEquip === q.length ? sure : maybe).push({ e, score: score + (inName + inEquip) / q.length });
   }
   const best = list => list.sort((a, b) => b.score - a.score).slice(0, 5).map(x => x.e);
@@ -4502,13 +4486,29 @@ function activeProgram() {
 // its muscle group and way of logging from the exercise it replaces, and its equipment
 // from the name where the name says ("cable y raise"). Not saved until it is confirmed.
 function exDraftFromName(said, replacing, all) {
-  const cur = all.find(e => e.id === replacing.id) || replacing;
+  const cur = replacing ? (all.find(e => e.id === replacing.id) || replacing) : {};
   const name = String(said).replace(/\s+/g, ' ').trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   const words = exWords(name);
   const equipment = ['machine_cable', 'dumbbells', 'barbell', 'bands', 'kettlebells', 'ez_bar', 'bodyweight']
     .find(eq => EX_EQUIP_WORDS[eq].some(w => words.includes(w))) || cur.equipment || 'bodyweight';
-  return { id: 'cx-' + Date.now(), name, primaryMuscle: cur.primaryMuscle || 'chest', secondaryMuscles: cur.secondaryMuscles || [],
+  return { id: 'cx-' + Date.now(), name, primaryMuscle: exGuessMuscle(words) || cur.primaryMuscle || 'chest', secondaryMuscles: cur.secondaryMuscles || [],
            equipment, recordType: cur.recordType || 'weight_reps', instructions: null, exerciseUrl: null, custom: true, draft: true };
+}
+
+// The muscle group a made-up exercise most likely works, from the words in its name
+function exGuessMuscle(words) {
+  const has = (...ws) => ws.some(w => words.includes(w));
+  if (has('curl') && !has('leg', 'hamstring', 'wrist')) return 'biceps';
+  if (has('tricep', 'pushdown', 'skull', 'kickback', 'dip')) return 'triceps';
+  if (has('shoulder', 'overhead', 'lateral', 'delt', 'raise', 'scaption', 'shrug', 'rotation')) return has('calf', 'leg') ? null : 'shoulders';
+  if (has('calf')) return 'lower_legs';
+  if (has('glute', 'hip', 'bridge', 'thrust')) return 'glutes';
+  if (has('squat', 'leg', 'lunge', 'quad', 'hamstring', 'step')) return 'upper_legs';
+  if (has('row', 'pulldown', 'pull', 'lat', 'deadlift', 'chin', 'back')) return 'back';
+  if (has('crunch', 'plank', 'ab', 'sit', 'core', 'twist')) return 'abs';
+  if (has('wrist', 'forearm', 'grip')) return 'forearms';
+  if (has('bench', 'chest', 'fly', 'pec', 'push', 'press')) return 'chest';
+  return null;
 }
 
 // ── The conversation ──
@@ -4624,7 +4624,7 @@ function voiceSwapApply(wholeProgram) {
 
 // The quick match found nothing: ask the coach model which exercises were meant
 async function voiceSwapAskAI(query, ex, all) {
-  const prompt = 'Someone in a gym wants to swap the exercise "' + ex.name + '" for what they called "' + query.replace(/"/g, "'") + '" ' +
+  const prompt = (ex ? 'Someone in a gym wants to swap the exercise "' + ex.name + '" for what they called "' : 'Someone in a gym said which exercise they are about to do. They called it "') + query.replace(/"/g, "'") + '" ' +
     '(heard through speech recognition, so it may be misspelled or a nickname). From the list below, pick the exercises they most likely mean, best first, at most 3. ' +
     'Reply with JSON only: {"ids":["..."]}. If nothing fits, reply {"ids":[]}.\n\n' + all.map(e => e.id + '|' + e.name).join('\n');
   try {
@@ -4632,10 +4632,151 @@ async function voiceSwapAskAI(query, ex, all) {
     const data = await res.json();
     const raw  = data.content && data.content[0] && data.content[0].text || '';
     const ids  = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)).ids || [];
-    const out  = ids.map(id => all.find(e => e.id === id)).filter(e => e && e.id !== ex.id);
-    voiceDbg('replace: coach read ' + JSON.stringify(query) + ' as ' + (out.map(e => e.name).join(', ') || 'nothing'));
+    const out  = ids.map(id => all.find(e => e.id === id)).filter(e => e && (!ex || e.id !== ex.id));
+    voiceDbg('coach read ' + JSON.stringify(query) + ' as ' + (out.map(e => e.name).join(', ') || 'nothing'));
     return out;
   } catch (e) { voiceDbg('replace: could not ask the coach (' + e.message + ')'); return []; }
+}
+
+// ── SAYING WHAT YOU ARE DOING ─────────────────────────────────
+// Name an exercise and it becomes the one on screen: "leg press", "I'm doing leg
+// press", "switch to curls". With nothing planned the coach asks what you are doing.
+// This is for today only and never changes the program ("replace this exercise" does).
+let voiceAskName = null;   // { cand, said, at } while "Did you say leg press?" waits for an answer
+let voiceFinishAt = 0;     // when "Finish the workout?" was asked
+
+const VOICE_EX_LEADIN = new RegExp('^(?:(?:okay|ok|and|now|next|then|um|uh|so|actually|coach|hey|alright|all right)\\s+)*' +
+  '(?:(?:i m|i am|we re|we are|i ll|i will|let s|let us|i want to|i wanna|i d like to|i m going to|i am going to|going to|gonna|time for|time to)\\s+)?' +
+  '(?:(?:do some|doing some|do|doing|start with|starting with|start|starting|try|trying|switch to|switching to|move on to|moving on to|move to|moving to|go to|on to|onto|' +
+  'add|adding|next exercise is|the next exercise is|next up is|next is|exercise is|it s|its)\\s+)?' +
+  '(?:(?:some|a|an|the|my)\\s+)?');
+const VOICE_EX_LED = /\b(do|doing|start|starting|try|trying|switch|switching|move|moving|go to|on to|onto|add|adding|next exercise|next is|next up|exercise is)\b/;
+
+// The exercise named in a phrase, and whether it was led into ("I'm doing…", "switch to…")
+function voiceExerciseSaid(t) {
+  const lead = (t.match(VOICE_EX_LEADIN) || [''])[0];
+  const name = t.slice(lead.length).replace(/\b(now|next|today|please|instead)\b/g, ' ').replace(/\s+/g, ' ').trim();
+  return { name, led: VOICE_EX_LED.test(lead) };
+}
+
+// Exercises done before or planned for today win a tie ("curls" means the curl you do)
+function voiceKnownIds() {
+  const ids = new Set(exercises.map(e => e.id));
+  const history = store.get('workout_history', {}) || {};
+  for (const day of Object.values(history)) for (const e of (day && day.exercises) || []) if (e.id) ids.add(e.id);
+  return ids;
+}
+
+// Was that the name of an exercise? If so, go to it. Returns true if the phrase was dealt with.
+function voiceTryExercise(t) {
+  if (workoutMode !== 'voice' || voicePhase === 'idle') return false;
+  if (/\d/.test(t.replace(/\b1 (arm|leg)\b/g, ''))) return false;   // numbers mean a set, not a name
+  const picking = voicePhase === 'pick_exercise' || !!voiceAskName;
+  const said = voiceExerciseSaid(t), words = exWords(said.name);
+  if (!words.length || words.length > 6) return false;
+  const all = exAllExercises(), found = exFindByName(said.name, null, all, voiceKnownIds()), top = found.sure[0];
+  // Without a lead-in, only a clear name counts: two or more words, or the whole of a one-word name
+  if (top && (picking || said.led || words.length >= 2 || exWords(top.name).length === words.length)) { voiceStartExercise(top); return true; }
+  if (picking || said.led) { voiceLookUpExercise(said.name, found.maybe, all); return true; }
+  return false;
+}
+
+// Not a clear match: ask the coach model, then check with the user before switching
+async function voiceLookUpExercise(name, maybe, all) {
+  const phase = voicePhase;
+  updateVoiceHUD('Looking for “' + name + '”…');
+  const ai = await voiceSwapAskAI(name, null, all);
+  if (voicePhase !== phase) return;   // the workout moved on while we were looking
+  const cand = ai[0] || maybe[0] || null;
+  voiceAskName = { cand, said: name, at: Date.now() };
+  voiceSwapSay(cand ? 'Did you say ' + cand.name + '? Say yes or no.'
+                    : 'I could not find ' + name + '. Say add it to make it a new exercise, or say the name again.');
+}
+
+// The answer to "Did you say leg press?" Anything else is tried as a name again.
+function voiceAskNameAnswer(t) {
+  const a = voiceAskName;
+  if (a.cand && /^(yes|yeah|yep|yup|ok|okay|sure|correct|right|that s it|that s right|that one)\b/.test(t)) { voiceStartExercise(a.cand); return true; }
+  if (/\b(add it|add that|create it|make it|new exercise|add)\b/.test(t) && !exFindByName(voiceExerciseSaid(t).name, null, exAllExercises()).sure.length) {
+    const nw = exDraftFromName(a.said, exercises[currentExIdx] || null, exAllExercises());
+    delete nw.draft; nw.createdAt = new Date().toISOString();
+    LF.db.saveCustomExercise(nw).then(r => { if (r && r.error) voiceDbg('new exercise not saved to the account (' + (r.error.message || r.error) + ')'); });
+    voiceDbg('added new exercise ' + nw.name + ' (' + nw.primaryMuscle + ', ' + nw.equipment + ')');
+    voiceStartExercise(nw);
+    return true;
+  }
+  if (/^(no|nope|nah|cancel|never ?mind|wrong)\b/.test(t)) {
+    const rest = t.replace(/^(no|nope|nah|cancel|never ?mind|wrong)\b/, '').trim();
+    if (rest && voiceTryExercise(rest)) return true;   // "no, leg curl"
+    a.cand = null; a.at = Date.now();
+    voiceSwapSay(voicePhase === 'pick_exercise' ? 'Okay. What exercise are you doing?' : 'Okay.');
+    if (voicePhase !== 'pick_exercise') voiceAskName = null;
+    return true;
+  }
+  return false;
+}
+
+// Put an exercise on screen: the one already in today's list, or a new one added to it
+function voiceStartExercise(data) {
+  voiceAskName = null;
+  stopRest(); restCallback = null;
+  let idx = exercises.findIndex(e => e.id === data.id && !e.loggedSets.every(st => st.logged));
+  if (idx === -1) {
+    // As many sets as last time, or 3; 10 reps and a minute's rest
+    const last = getExerciseHistory(data.id, 1)[0];
+    const sets = last ? Math.min(Math.max(last.sets.length, 1), 8) : 3;
+    const plan = { id: data.id, name: data.name, recordType: data.recordType, sets, reps: 10, restSec: 60 };
+    exercises.push({
+      id: data.id, name: data.name, sets, reps: 10, durationSec: null, restSec: 60,
+      type: exTypeOf(plan), mediaUrl: data.mediaUrl || lookupMediaUrl(data.id), planWeight: 0,
+      targetReps: (exTypeOf(plan) === 'strength' && coachPlanFor(plan) || {}).reps || null,
+      loggedSets: buildLoggedSets(plan)
+    });
+    idx = exercises.length - 1;
+    document.getElementById('ex-card').style.display = 'block';
+    document.getElementById('ex-dots').style.display = 'block';
+    voiceDbg('exercise added by voice: ' + data.name);
+  }
+  voicePreAnnounced = -1;
+  goToEx(idx);   // shows it and announces it
+  saveSnapshot();
+}
+
+// Nothing on the card to do: ask
+function voiceAskExercise() {
+  voicePhase = 'pick_exercise';
+  voicePrompt('What exercise are you doing?', true);
+}
+
+// ── FINISHING BY VOICE ────────────────────────────────────────
+// Many ways of saying it, and always checked first, because "done" is also what
+// people say at the end of a set.
+const VOICE_FINISH = new RegExp([
+  '\\b(finish|finished|end|ending|stop|stopping|complete|completed|wrap up|close out|save|done with|through with|quit)\\b.*\\b(workout|session|training|work out|for today|for the day|for now)\\b',
+  '\\b(workout|session|training) (is |s )?(done|finished|over|complete|completed)\\b',
+  '\\b(i m|i am|we re|we are|im) (all |totally |completely )?(done|finished|through|out|spent|cooked)\\b',
+  '\\b(that s|that is|thats) (it|all|a wrap|everything|enough)\\b',
+  '\\b(all done|all finished|call it|calling it|wrap it up|that will do|that ll do|done for (today|the day|now)|finished for (today|the day|now)|end it|finish up|finish it)\\b',
+  '^finish$'
+].join('|'));
+
+function voiceFinishAsk() {
+  const left = exercises.filter(ex => ex.loggedSets.some(st => st.logged) && !ex.loggedSets.every(st => st.logged)).length;
+  voiceFinishAt = Date.now();
+  voiceSwapSay((left ? left + (left === 1 ? ' exercise is' : ' exercises are') + ' part done. ' : '') + 'Finish the workout? Say yes or no.');
+}
+
+function voiceFinishAnswer(t) {
+  if (/^(yes|yeah|yep|yup|ok|okay|sure|correct|right|do it|go ahead|finish|finish it|please)\b/.test(t)) {
+    voiceFinishAt = 0;
+    voiceDbg('finishing the workout by voice');
+    speakText('Workout finished. Nice work.', true);
+    voicePhase = 'idle';   // nothing more to listen for
+    voiceSpeakChain.then(() => finishWorkout());   // once that has been said
+    return true;
+  }
+  if (/^(no|nope|nah|cancel|not yet|never ?mind|keep going|carry on)\b/.test(t)) { voiceFinishAt = 0; voiceSwapSay('Okay, carrying on.'); return true; }
+  return false;
 }
 
 // A phrase the quick rules didn't understand: ask the coach model what was meant,
@@ -4643,7 +4784,7 @@ async function voiceSwapAskAI(query, ex, all) {
 async function voiceInterpret(text) {
   if (text.trim().split(/\s+/).length < 2) return;   // a single stray word isn't worth a call
   const phase = voicePhase, p = voicePending, ex = exercises[p.exIdx], last = voiceLastLog;
-  if (!ex || phase === 'idle') return;
+  if (!ex || phase === 'idle' || phase === 'pick_exercise') return;   // (when picking, names are looked up directly)
   const prompt = 'You interpret one spoken phrase from someone logging a gym workout by voice. Reply with JSON only.\n' +
     'Current exercise: ' + ex.name + '. The app is waiting for: ' +
     (phase === 'resting' ? 'the rest period to end' : 'the result of set ' + (p.setIdx + 1) + (p.sugWeight ? ', planned at ' + p.sugWeight + ' lbs' : '')) + '.\n' +
@@ -4654,7 +4795,9 @@ async function voiceInterpret(text) {
     '"correct" - a logged set is wrong, or they want to change, edit or undo it\n' +
     '"ready" - they want to skip the rest and start the next set\n' +
     '"repeat" - they want the last prompt said again\n' +
-    '"replace" - they want a different exercise in place of the current one (set "exercise" to the one they named, or null for something similar)\n' +
+    '"replace" - they want a different exercise in place of the current one, for good (set "exercise" to the one they named, or null for something similar)\n' +
+    '"exercise" - they are saying which exercise they are doing now or next, without asking to replace anything (set "exercise" to its name)\n' +
+    '"finish" - they are done with the whole workout and want to end it\n' +
     '"none" - anything else, including talk that is not meant for the app\n' +
     'Reply exactly: {"action":"...","weight":number or null,"reps":number or null,"set":number or "all" or null,"exercise":string or null}. Only give numbers the phrase itself states. ' +
     '"set" is which set they named for a correction (first set = 1, "all the sets" = "all"), or null if they did not name one.';
@@ -4674,6 +4817,8 @@ async function voiceInterpret(text) {
                  reps: stated(out.reps) && Number.isInteger(out.reps) && out.reps >= 1 && out.reps <= 100 ? out.reps : null };
   voiceDbg('coach read ' + JSON.stringify(text) + ' as ' + out.action + ' ' + JSON.stringify(said));
 
+  if (out.action === 'finish') { voiceFinishAsk(); return; }
+  if (out.action === 'exercise') { if (typeof out.exercise === 'string') voiceTryExercise('doing ' + normalizeSpeech(out.exercise)); return; }
   if (out.action === 'replace') { voiceSwapStart(typeof out.exercise === 'string' ? voiceSwapTarget('with ' + normalizeSpeech(out.exercise)) : ''); return; }
   const named = out.set === 'all' ? 'all' : (Number.isInteger(out.set) && out.set >= 1 && out.set <= 12 ? out.set : null);
   if (out.action === 'correct' && named && voiceEditSets(named, { ...said, unsure: null }, true)) return;
@@ -4811,31 +4956,6 @@ const voiceAudioCache = new Map();
 function getVoiceName() {
   const v = store.get('settings', {}).voiceName;
   return VOICE_CHOICES.some(c => c.id === v) ? v : 'marin';
-}
-
-// Voice picker on the start screen. Tapping a voice selects it and plays a sample.
-function renderVoiceChoices() {
-  const box = document.getElementById('voice-choices');
-  if (!box) return;
-  const current = getVoiceName();
-  box.innerHTML = VOICE_CHOICES.map(c => {
-    const on = c.id === current;
-    return `<button onclick="pickVoice('${c.id}')" aria-pressed="${on}"
-      style="min-height:44px;padding:0 14px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;
-             border:1px solid ${on ? 'var(--volt)' : 'var(--border-md)'};background:${on ? 'var(--volt)' : 'transparent'};color:${on ? '#1a1a1a' : 'var(--text-2)'};">${c.label}</button>`;
-  }).join('');
-}
-
-function pickVoice(id) {
-  const s = store.get('settings', {}); s.voiceName = id; store.set('settings', s);
-  renderVoiceChoices();
-  voicePrefetchFirstLine();   // in the newly chosen voice
-  // Play a sample (we're inside a tap, so audio is allowed to start)
-  voiceEnsureCtx();
-  if (voiceCtx && voiceCtx.state !== 'running') voiceCtx.resume().catch(() => {});
-  voiceStopSpeech();
-  const gen = voiceSpeakGen;
-  voiceSayOne('Set two, twenty pounds. Say your reps when you finish.', () => gen === voiceSpeakGen);
 }
 
 function updateVoiceHUD(msg) { const el=document.getElementById('voice-hud-text'); if(el) el.textContent=msg; }

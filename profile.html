@@ -628,6 +628,13 @@ button, input, select, a, textarea { touch-action: manipulation; }
         <button class="unit-btn" id="unit-kg" onclick="setUnits('metric')">kg</button>
       </div>
     </div>
+    <!-- Coach voice (used in Voice workouts) -->
+    <div class="toggle-row" style="display:block;">
+      <div class="toggle-label">Coach voice</div>
+      <div class="toggle-sub">The voice you hear in Voice workouts. Tap one to hear it.</div>
+      <div id="coach-voices" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+      <div class="toggle-sub" style="margin-top:8px;">Marin, Cedar, Coral and Ash are AI-generated voices, not real people.</div>
+    </div>
     <!-- Notifications -->
     <div class="toggle-row">
       <div>
@@ -983,6 +990,64 @@ function calcNutrition() {
   protEl.textContent = proteinG;
   carbEl.textContent = carbG;
 }
+
+// ── COACH VOICE ────────────────────────────────────────────────────────────
+// 'phone' is the device's built-in voice; the others are natural AI voices from the `speak` function
+const COACH_VOICES = [['marin', 'Marin'], ['cedar', 'Cedar'], ['coral', 'Coral'], ['ash', 'Ash'], ['phone', 'Phone voice']];
+const COACH_SPEAK_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/speak';
+const COACH_SAMPLE = 'Set two, twenty pounds. Say your reps when you finish.';
+let coachCtx = null, coachPlaying = null, coachPick = 0;
+
+function coachVoiceName() {
+  let v; try { v = JSON.parse(localStorage.getItem('lf_settings') || '{}').voiceName; } catch (e) {}
+  return COACH_VOICES.some(c => c[0] === v) ? v : 'marin';
+}
+
+function renderCoachVoices() {
+  const box = document.getElementById('coach-voices');
+  if (!box) return;
+  const current = coachVoiceName();
+  box.innerHTML = COACH_VOICES.map(([id, label]) => {
+    const on = id === current;
+    return `<button onclick="pickCoachVoice('${id}')" aria-pressed="${on}"
+      style="min-height:44px;padding:0 14px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;
+             border:1px solid ${on ? 'var(--volt)' : 'var(--border-md)'};background:${on ? 'var(--volt)' : 'transparent'};color:${on ? '#1a1a1a' : 'var(--text-2)'};">${label}</button>`;
+  }).join('');
+}
+
+// Choose a voice and play a sample of it. The audio is unlocked here, inside the tap.
+async function pickCoachVoice(id) {
+  saveSetting('voiceName', id);
+  renderCoachVoices();
+  const pick = ++coachPick;
+  try { if (coachPlaying) coachPlaying.stop(); } catch (e) {}
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  if (id === 'phone') {
+    if (window.speechSynthesis) window.speechSynthesis.speak(new SpeechSynthesisUtterance(COACH_SAMPLE));
+    return;
+  }
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    coachCtx = coachCtx || new AC();
+    if (coachCtx.state !== 'running') coachCtx.resume().catch(() => {});
+    const session = await LF.auth.session();
+    if (!session) throw new Error('not signed in');
+    const res = await fetch(COACH_SPEAK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+      body: JSON.stringify({ text: COACH_SAMPLE, voice: id })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const buf = await coachCtx.decodeAudioData(await res.arrayBuffer());
+    if (pick !== coachPick) return;   // another voice was tapped meanwhile
+    const src = coachCtx.createBufferSource();
+    src.buffer = buf; src.connect(coachCtx.destination); src.start();
+    coachPlaying = src;
+  } catch (e) {
+    if (typeof showToast === 'function') showToast('Saved. The sample could not be played right now.');
+  }
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderCoachVoices); else renderCoachVoices();
 
 // ── SETTINGS SAVE ──────────────────────────────────────────────────────────
 function saveSetting(key, val) {

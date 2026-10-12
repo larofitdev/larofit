@@ -584,9 +584,10 @@ function applyCompletedState(session) {
   document.getElementById('today-excount').textContent  = exCount + ' exercise' + (exCount !== 1 ? 's' : '');
   document.getElementById('today-cal').textContent      = (session.prs ? session.prs + ' PR' + (session.prs !== 1 ? 's' : '') : volTxt);
 
+  // Still "Start workout": another one can be done today, and Progress is on the bottom bar
   if (btn) {
-    btn.innerHTML = 'View progress <i class="ti ti-arrow-right" aria-hidden="true"></i>';
-    btn.onclick   = () => location.href = 'progress.html';
+    btn.innerHTML = 'Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>';
+    btn.onclick   = () => location.href = 'workout.html';
   }
 }
 
