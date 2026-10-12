@@ -1668,7 +1668,7 @@ function beginWorkout(mode) {
   // still speaking (e.g. behind the permission prompt) leaves it deaf.
   const start = () => { if (_startFree) startFreeForm(); else buildExerciseList(_prestartExercises, _prestartName); };
   // The workout itself appears once the mic is open; until then, not the page with the Start button on it
-  if (workoutMode === 'voice') show('starting-state');
+  if (workoutMode === 'voice') { show('starting-state'); updateVoiceHUD('Getting the microphone ready…'); }
   if (workoutMode === 'voice') voicePrimeSpeech().then(voiceHoldMic).then(() => {
     start();
     if (voiceOnPhoneMic) speakText('Heads up. I am listening through the phone microphone, not your earbuds, so I may pick up the room.');
@@ -3519,7 +3519,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 79;
+const VOICE_BUILD = 80;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
