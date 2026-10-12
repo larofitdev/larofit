@@ -1697,6 +1697,7 @@ function showPrestart(exArr, name, wholeThing) {
 function showStartModal() {
   renderVoiceChoices();
   renderAiProgression();
+  voicePrefetchFirstLine();
   const el = document.getElementById('start-modal-overlay');
   el.style.display = 'flex';
 }
@@ -3525,6 +3526,7 @@ function toggleAiProgression() {
   st.aiProgression = !aiProgressionOn();
   store.set('settings', st);
   renderAiProgression();
+  voicePrefetchFirstLine();   // the opening weight may differ with progression on or off
 }
 
 function renderAiProgression() {
@@ -3680,7 +3682,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 66;
+const VOICE_BUILD = 67;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3741,6 +3743,7 @@ function initVoice() {
   document.getElementById('voice-hud').classList.add('show');
   voiceKeepAwake();
   voiceFmwSkipped = false;
+  voiceFirstLine = true;
   voiceLog = [];
   voiceEnsureCtx();
   if (voiceReady) return;
@@ -4215,6 +4218,27 @@ function voiceAnnounceExercise(ex) {
   }
 }
 
+// The opening line of the workout, fetched while the user is still on the start screen.
+// It works out the first exercise's weight the same way the workout itself will.
+function voicePrefetchFirstLine() {
+  try {
+    if (getVoiceName() === 'phone') return;
+    const ex = _prestartExercises[0];
+    if (!ex) return;
+    const lib = libRecordType(ex.id);
+    const exN = (lib && lib !== ex.recordType) ? { ...ex, recordType: lib } : ex;
+    const type = exTypeOf(exN);
+    if (type === 'cardio' || type === 'timed_bodyweight' || type === 'hiit') return;   // not voice-logged
+    const planned = { id: exN.id, name: exN.name || lookupExName(exN.id), reps: exN.reps || 10, planWeight: parseFloat(exN.weight) || 0 };
+    const bw = type === 'bodyweight';
+    if (!bw && isFirstTime(planned)) return;   // it opens with the starting-weight question instead
+    const first = buildLoggedSets(exN)[0] || {};
+    const target = { bw, sugWeight: bw ? 0 : (parseFloat(first.weight) || 0) };
+    if (!bw && !target.sugWeight) return;
+    voicePrefetch(voiceExerciseLine(planned, target) + '. Say your reps when finished.');
+  } catch (e) {}
+}
+
 // At the start of an exercise, fetch ahead the lines the coach is going to need for it:
 // the usual confirmation, the set numbers, and the introduction of the next exercise
 // (the longest line, and the one most likely to arrive late over a gym connection).
@@ -4550,6 +4574,7 @@ const VOICE_CHOICES = [
   { id: 'phone', label: 'Phone voice' },
 ];
 let voiceSpeakChain = Promise.resolve(), voiceStopCurrent = null;
+let voiceFirstLine = false;   // true until the first line of a voice workout has been said
 const voiceAudioCache = new Map();
 
 function getVoiceName() {
@@ -4573,6 +4598,7 @@ function renderVoiceChoices() {
 function pickVoice(id) {
   const s = store.get('settings', {}); s.voiceName = id; store.set('settings', s);
   renderVoiceChoices();
+  voicePrefetchFirstLine();   // in the newly chosen voice
   // Play a sample (we're inside a tap, so audio is allowed to start)
   voiceEnsureCtx();
   if (voiceCtx && voiceCtx.state !== 'running') voiceCtx.resume().catch(() => {});
@@ -4607,7 +4633,7 @@ function voiceFetchSpeech(text, name) {
       try { msg = (await res.json()).error || msg; } catch(e) {}
       throw new Error(msg);
     }
-    return voiceCtx.decodeAudioData(await res.arrayBuffer());
+    return res.arrayBuffer();
   })();
   if (voiceAudioCache.size >= 80) voiceAudioCache.delete(voiceAudioCache.keys().next().value);
   voiceAudioCache.set(key, request);
@@ -4622,12 +4648,17 @@ async function voiceSayOne(text, isCurrent) {
   if (name !== 'phone' && voiceCtx) {
     try {
       const t0 = Date.now();
-      const buf = await Promise.race([
+      // The first line of a workout gets longer: the speech service is often slow to wake,
+      // and a short wait is better than the workout opening in a different voice
+      const patience = voiceFirstLine ? 12000 : 7000;
+      voiceFirstLine = false;
+      const bytes = await Promise.race([
         voiceFetchSpeech(text, name),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('took over 7s')), 7000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('took over ' + patience / 1000 + 's')), patience))
       ]);
       const waited = Date.now() - t0;
       if (waited > 1500) voiceDbg('waited ' + waited + 'ms for the natural voice');
+      const buf = await voiceCtx.decodeAudioData(bytes.slice(0));   // a copy: decoding uses the bytes up
       if (!isCurrent()) return 'interrupted';
       if (voiceCtx.state !== 'running') {
         // resume() can hang if the phone has taken the audio away — don't wait on it forever
@@ -4683,7 +4714,7 @@ function voiceCleanText(text) {
 // Natural speech takes a couple of seconds to arrive — fetch a line we know is coming
 function voicePrefetch(text) {
   const name = getVoiceName();
-  if (name === 'phone' || !voiceCtx) return;
+  if (name === 'phone') return;
   voiceFetchSpeech(voiceCleanText(text), name).catch(() => {});
 }
 
