@@ -3709,7 +3709,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 70;
+const VOICE_BUILD = 71;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4374,7 +4374,7 @@ function handleVoiceResult(raw) {
   if (voicePhase !== 'fmw_offer') {
     // A set named outright ("edit the first set", "set 2 was at 20 pounds", "all sets were 20 pounds")
     const ref = voiceSetRef(t);
-    if (ref && voiceEditSets(ref.which, voiceEditParse(ref.rest), VOICE_CORRECTION.test(t))) return true;
+    if (ref && voiceEditSets(ref.which, voiceEditParse(ref.rest), VOICE_CORRECTION.test(t) || /\b(change|fix|correct|update|adjust|modify|redo)\b/.test(t))) return true;
     // "Set 3, ten reps" for the set being done now: the set number isn't one of the numbers
     if (ref && voicePending && ref.which === voicePending.setIdx + 1) t = ref.rest.replace(/\s+/g, ' ').trim();
     const justLogged = voiceLastLog && Date.now() - voiceLastLog.at < 180000;
