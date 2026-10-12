@@ -12,6 +12,8 @@ const INSTRUCTIONS =
 const MAX_TEXT_CHARS = 700;
 // Spoken lines per user per UTC day. A voice workout is roughly 100–150.
 const DAILY_LIMIT = 1000;
+// How long to give the speech service before starting a second request alongside the first
+const HEDGE_MS = 2500;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,6 +67,7 @@ serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
+    const tStart = Date.now();
     const jwt = (req.headers.get("Authorization") || "").replace("Bearer ", "").trim();
     if (!jwt) return json({ error: "Missing auth token" }, 401);
     const userId = await getUserId(jwt);
@@ -88,26 +91,64 @@ serve(async (req) => {
       return json({ error: "Daily speech limit reached. Try again tomorrow." }, 429);
     }
 
-    const response = await fetch(OPENAI_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${openaiKey}`,
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        voice: body.voice,
-        input: text,
-        instructions: INSTRUCTIONS,
-        response_format: "mp3",
-      }),
+    const tCounted = Date.now();
+
+    // The speech service usually answers in about a second but now and then takes
+    // ten. If the first request is still going after HEDGE_MS, a second is started
+    // and whichever finishes first is used, so one slow request doesn't stall the coach.
+    const aborts: AbortController[] = [];
+    const attempt = async (): Promise<ArrayBuffer> => {
+      const abort = new AbortController();
+      aborts.push(abort);
+      const response = await fetch(OPENAI_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openaiKey}`,
+        },
+        body: JSON.stringify({
+          model: MODEL,
+          voice: body.voice,
+          input: text,
+          instructions: INSTRUCTIONS,
+          response_format: "mp3",
+        }),
+        signal: abort.signal,
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.error?.message || "Speech failed");
+      }
+      return await response.arrayBuffer();
+    };
+
+    let hedged = false;
+    const first = attempt();
+    const second = new Promise<ArrayBuffer>((resolve, reject) => {
+      const timer = setTimeout(() => { hedged = true; attempt().then(resolve, reject); }, HEDGE_MS);
+      // No second request once the first has answered; if the first failed, try again at once
+      first.then(() => clearTimeout(timer), () => {
+        if (!hedged) { clearTimeout(timer); hedged = true; attempt().then(resolve, reject); }
+      });
     });
-    if (!response.ok) {
-      const data = await response.json().catch(() => null);
-      return json({ error: data?.error?.message || "Speech failed" }, 502);
+
+    let audio: ArrayBuffer;
+    try {
+      audio = await Promise.any([first, second]);
+    } catch (err) {
+      const reason = err instanceof AggregateError ? err.errors[0] : err;
+      return json({ error: reason?.message || "Speech failed" }, 502);
+    } finally {
+      for (const a of aborts) a.abort();   // stops whichever request is still running
     }
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "audio/mpeg" },
+
+    return new Response(audio, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "audio/mpeg",
+        "Access-Control-Expose-Headers": "X-Timing",
+        "X-Timing": `setup=${tCounted - tStart};speech=${Date.now() - tCounted};hedged=${hedged ? 1 : 0}`,
+      },
     });
 
   } catch (err) {

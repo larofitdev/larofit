@@ -1697,6 +1697,7 @@ function showPrestart(exArr, name, wholeThing) {
 function showStartModal() {
   renderVoiceChoices();
   renderAiProgression();
+  voiceKeepWarm();
   voicePrefetchFirstLine();
   const el = document.getElementById('start-modal-overlay');
   el.style.display = 'flex';
@@ -3682,7 +3683,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 67;
+const VOICE_BUILD = 68;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3869,9 +3870,20 @@ function voicePrimeSpeech() {
   });
 }
 
+// The speech and transcription services go to sleep when they aren't used for a few
+// minutes, and the next request then waits several seconds for them to wake. A nudge
+// each minute of a voice workout keeps them awake. It costs nothing and isn't counted.
+let voiceWarmAt = 0;
+function voiceKeepWarm() {
+  if (Date.now() - voiceWarmAt < 50000) return;
+  voiceWarmAt = Date.now();
+  for (const url of [SUPABASE_SPEAK_URL, SUPABASE_TRANSCRIBE_URL]) fetch(url, { method: 'OPTIONS' }).catch(() => {});
+}
+
 // Every 5s: is audio still arriving? If not, try to get it back.
 function voiceHealthCheck() {
   if (workoutMode !== 'voice' || !voiceReady || document.hidden) return;
+  voiceKeepWarm();
   const blocks = voiceVad.blocks; voiceVad.blocks = 0;
   if (voicePhase === 'idle' || voiceMicPending) return;
   if (!voiceMicStream) { voiceDbg('mic not open, opening'); voiceHoldMic().then(startListening); return; }
@@ -4609,32 +4621,47 @@ function pickVoice(id) {
 
 function updateVoiceHUD(msg) { const el=document.getElementById('voice-hud-text'); if(el) el.textContent=msg; }
 
-// Fetch (or reuse) natural speech for a line of text, decoded and ready to play
+// Fetch (or reuse) natural speech for a line of text
 function voiceFetchSpeech(text, name) {
   const key = name + '|' + text;
   if (voiceAudioCache.has(key)) return voiceAudioCache.get(key);
-  // The request itself is cached, so a line being fetched ahead of time and the
-  // moment it is needed share one request instead of racing two.
-  const request = (async () => {
+  const attempt = async () => {
     const session = await LF.auth.session();
-    if (!session) throw new Error('not signed in');
+    if (!session) { const e = new Error('not signed in'); e.final = true; throw e; }
     const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 15000);
-    let res;
     try {
-      res = await fetch(SUPABASE_SPEAK_URL, {
+      const res = await fetch(SUPABASE_SPEAK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
         body: JSON.stringify({ text, voice: name }),
         signal: abort.signal
       });
+      if (!res.ok) {
+        let msg = 'HTTP ' + res.status;
+        try { msg = (await res.json()).error || msg; } catch(e) {}
+        const e = new Error(msg);
+        e.final = res.status >= 400 && res.status < 500;   // asking again won't change the answer
+        throw e;
+      }
+      return await res.arrayBuffer();
     } finally { clearTimeout(timer); }
-    if (!res.ok) {
-      let msg = 'HTTP ' + res.status;
-      try { msg = (await res.json()).error || msg; } catch(e) {}
-      throw new Error(msg);
-    }
-    return res.arrayBuffer();
-  })();
+  };
+  // The request itself is cached, so a line being fetched ahead of time and the
+  // moment it is needed share one request instead of racing two.
+  // Most lines arrive in a second or two, but now and then one takes ten. If the
+  // first request is slow, or fails, a second is sent and the first to arrive is used.
+  const request = new Promise((resolve, reject) => {
+    let second = false, failures = 0;
+    const failed = e => { if (e.final || ++failures >= 2) reject(e); else again('failed (' + e.message + ')'); };
+    const again = why => {
+      if (second) return;
+      second = true; clearTimeout(timer);
+      voiceDbg('natural voice ' + why + ', asking again');
+      attempt().then(resolve, failed);
+    };
+    const timer = setTimeout(() => again('slow'), 3500);
+    attempt().then(bytes => { clearTimeout(timer); resolve(bytes); }, failed);
+  });
   if (voiceAudioCache.size >= 80) voiceAudioCache.delete(voiceAudioCache.keys().next().value);
   voiceAudioCache.set(key, request);
   request.catch(() => { if (voiceAudioCache.get(key) === request) voiceAudioCache.delete(key); });   // a failure isn't kept
