@@ -1790,7 +1790,16 @@ function startFreeForm() {
 }
 
 // ── SHOW/HIDE ─────────────────────────────────────────────────
+// Arriving from "Start workout" on the home screen: go straight to the Voice / Manual
+// popup instead of making the user press Start a second time. (The popup has to be on
+// this page: the phone only lets a page open the mic from a tap on that same page.)
+let _autoStart = new URLSearchParams(location.search).get('start') === '1';
+
 function show(id) {
+  if (_autoStart && (id === 'prestart-state' || id === 'rest-day-state' || id === 'no-program-state')) {
+    _autoStart = false;
+    setTimeout(() => showStartModal(id !== 'prestart-state'), 0);   // once the screen behind it is up
+  } else if (id === 'workout-state') _autoStart = false;            // a workout was already under way
   ['no-program-state','rest-day-state','prestart-state','workout-state','completion-state'].forEach(s => {
     const el = document.getElementById(s);
     if (!el) return;
@@ -3499,7 +3508,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 77;
+const VOICE_BUILD = 78;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();

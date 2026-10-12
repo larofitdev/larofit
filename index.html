@@ -280,7 +280,7 @@ if ('serviceWorker' in navigator) {
             <span id="today-cal">— cal</span>
           </div>
         </div>
-        <button id="today-start-btn" class="btn btn-volt btn-full" onclick="location.href='workout.html'" style="font-size:14px;padding:12px;">
+        <button id="today-start-btn" class="btn btn-volt btn-full" onclick="location.href='workout.html?start=1'" style="font-size:14px;padding:12px;">
           Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
@@ -296,8 +296,8 @@ if ('serviceWorker' in navigator) {
         </div>
         <button class="btn btn-outline btn-full"
                 style="border-color:rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);"
-                onclick="location.href='workout.html'">
-          Log a workout anyway
+                onclick="location.href='workout.html?start=1'">
+          Start a workout anyway
         </button>
       </div>
 
@@ -587,7 +587,7 @@ function applyCompletedState(session) {
   // Still "Start workout": another one can be done today, and Progress is on the bottom bar
   if (btn) {
     btn.innerHTML = 'Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>';
-    btn.onclick   = () => location.href = 'workout.html';
+    btn.onclick   = () => location.href = 'workout.html?start=1';
   }
 }
 
@@ -612,7 +612,7 @@ function applyPausedWorkoutState() {
   } else {
     if (eyebrow) eyebrow.textContent = "Today's workout";
     btn.innerHTML = 'Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>';
-    btn.onclick   = () => location.href = 'workout.html';
+    btn.onclick   = () => location.href = 'workout.html?start=1';
   }
 }
 
