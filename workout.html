@@ -2929,6 +2929,7 @@ function updateLogBtn() {
 // ── FINISH WORKOUT ────────────────────────────────────────────
 function finishWorkout() {
   stopRest(); clearInterval(elapsedTimer);
+  if (workoutMode === 'voice' && voiceLog.length) { voiceKeepLog(); voiceSendLog('workout finished'); }
   stopListening();
   const totalElapsed = elapsedSec + (startTime ? Math.floor((Date.now() - startTime) / 1000) : 0);
   const durationMin  = Math.round(totalElapsed / 60);
@@ -3679,13 +3680,46 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
+const VOICE_BUILD = 65;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
+  // Keep a copy on the phone as it goes, so it survives the app closing mid-workout
+  if (voiceLog.length % 10 === 0) voiceKeepLog();
 }
+function voiceLogText() {
+  return 'LaroFit voice build ' + VOICE_BUILD + '\n' + navigator.userAgent + '\n' + voiceLog.join('\n');
+}
+function voiceKeepLog() {
+  try { localStorage.setItem('lf_voice_log', JSON.stringify({ at: new Date().toISOString(), sent: false, text: voiceLogText() })); } catch (e) {}
+}
+
+// Send a log to the account's voice_logs table, so it can be read without any copy and paste.
+// Returns true if it was stored.
+async function voiceSendLog(reason, text) {
+  text = text || voiceLogText();
+  try {
+    const sb = await LF.ready();
+    const user = await LF.auth.user();
+    if (!user) return false;
+    const { error } = await sb.from('voice_logs').insert({ user_id: user.id, build: String(VOICE_BUILD), reason, log: text.slice(0, 200000) });
+    if (error) return false;
+    try {
+      const kept = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
+      if (kept) { kept.sent = true; localStorage.setItem('lf_voice_log', JSON.stringify(kept)); }
+    } catch (e) {}
+    return true;
+  } catch (e) { return false; }
+}
+
+// LOG button: sends the log (and also puts it on the clipboard, for what that is worth)
 function voiceCopyLog() {
-  const text = 'LaroFit voice build 64\n' + navigator.userAgent + '\n' + voiceLog.join('\n');
-  navigator.clipboard.writeText(text).then(() => showToast('Voice log copied'), () => showToast('Could not copy voice log'));
+  if (!voiceLog.length) { showToast('No voice log yet'); return; }
+  voiceKeepLog();
+  const text = voiceLogText();
+  try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(() => {}); } catch (e) {}
+  showToast('Sending voice log…');
+  voiceSendLog('LOG button', text).then(ok => showToast(ok ? 'Voice log sent' : 'Could not send — log is kept on this phone'));
 }
 function voiceHudNote(msg) { document.getElementById('voice-hud-heard').textContent = msg; }
 
@@ -3707,6 +3741,7 @@ function initVoice() {
   document.getElementById('voice-hud').classList.add('show');
   voiceKeepAwake();
   voiceFmwSkipped = false;
+  voiceLog = [];
   voiceEnsureCtx();
   if (voiceReady) return;
   voiceReady = true;
@@ -4661,6 +4696,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-plus').onclick  = () => adjustRest(15);
   document.getElementById('btn-skip').onclick  = () => skipRest();
   init();
+  try {
+    const kept = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
+    if (kept && kept.text && !kept.sent) voiceSendLog('recovered from ' + kept.at, kept.text);
+  } catch (e) {}
   // Prime custom exercises cache in background
   LF.db.getCustomExercises().then(() => {
     if (exercises[currentExIdx]) renderHowTo(exercises[currentExIdx]);
