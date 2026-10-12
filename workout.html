@@ -3709,7 +3709,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 69;
+const VOICE_BUILD = 70;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4363,11 +4363,20 @@ function voiceExerciseLine(ex, target) {
 
 // Returns true if the phrase was understood in the current phase
 function handleVoiceResult(raw) {
-  const t = normalizeSpeech(raw);
+  let t = normalizeSpeech(raw);
   if (!t) return false;
   if (/\b(repeat|say that again|say again)\b/.test(t)) { speakText(voiceLastPrompt, true); return true; }
 
+  // Part way through "edit the first set": this should be the right numbers
+  if (voiceEdit && Date.now() - voiceEdit.at < 30000) { if (voiceEditAnswer(t)) return true; }
+  else voiceEdit = null;
+
   if (voicePhase !== 'fmw_offer') {
+    // A set named outright ("edit the first set", "set 2 was at 20 pounds", "all sets were 20 pounds")
+    const ref = voiceSetRef(t);
+    if (ref && voiceEditSets(ref.which, voiceEditParse(ref.rest), VOICE_CORRECTION.test(t))) return true;
+    // "Set 3, ten reps" for the set being done now: the set number isn't one of the numbers
+    if (ref && voicePending && ref.which === voicePending.setIdx + 1) t = ref.rest.replace(/\s+/g, ' ').trim();
     const justLogged = voiceLastLog && Date.now() - voiceLastLog.at < 180000;
     if (VOICE_CORRECTION.test(t) || (justLogged && /^(no|nope|nah)\b/.test(t))) {
       voiceCorrectLast(parseSetSpeech(t.replace(/^(no|nope|nah)\b/, '').replace(/\b(last|the) set\b/g, ' ').trim()));
@@ -4464,6 +4473,114 @@ function voiceCorrectLast(said) {
   voicePrompt('Okay, set ' + (l.setIdx + 1) + ' removed. ' + (p.bw ? 'Say the reps again.' : 'Say the weight and reps again.'), true);
 }
 
+// ── EDITING AN EARLIER SET ────────────────────────────────────
+// "Edit the first set", "change set 2 to 20 pounds", "the first set was 10 at 20",
+// "all three sets were at 20 pounds". The set stays logged and is changed in place,
+// so the workout carries on from where it was.
+let voiceEdit = null;   // { exIdx, idxs, label, at } while waiting to hear the right numbers
+const VOICE_ORDINALS = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, '1st': 1, '2nd': 2, '3rd': 3, '4th': 4, '5th': 5, '6th': 6 };
+
+// Which set does a normalised phrase name? { which: 1-6 | 'all', rest: the phrase without it } or null.
+function voiceSetRef(t) {
+  let m;
+  if ((m = t.match(/\b(?:all|every|each|both)(?: of)?(?: the| my| those| these)?(?: \d(?= sets?))?(?: sets?| of them| one| 1)\b/))) return { which: 'all', rest: t.replace(m[0], ' ') };
+  if ((m = t.match(/\b(?:the |my )?(first|second|third|fourth|fifth|sixth|1st|2nd|3rd|4th|5th|6th)(?: set| one| 1)?\b/))) return { which: VOICE_ORDINALS[m[1]], rest: t.replace(m[0], ' ') };
+  if ((m = t.match(/\bsets? (?:number |no )?([1-6])\b(?! (?:reps?|pounds?|lbs?|kilos?))/))) return { which: +m[1], rest: t.replace(m[0], ' ') };
+  if ((m = t.match(/\bsets? (?:to|too)\b(?! \d)/))) return { which: 2, rest: t.replace(m[0], ' ') };   // "set two" heard as "set to"
+  return null;
+}
+
+// The right numbers out of an edit phrase. A number with nothing to say whether it
+// is the weight or the reps comes back as { unsure } so it can be asked about.
+function voiceEditParse(t) {
+  const aboutWeight = /\b(weight|heavy|heavier|lighter)\b/.test(t);
+  const clean = t.replace(/\b(edit|change|changed|fix|correct|correction|update|redo|undo|wrong|incorrect|mistake|actually|should|have|been|be|was|were|is|to|make|it|that|please|can|you|need|want|weight|instead|did|used|use|using|with|sets?|on|for the|in the|say|said|meant|mean)\b/g, ' ').replace(/\s+/g, ' ').trim();
+  const said = parseSetSpeech(clean);
+  const lone = clean.replace(VOICE_FILLER, ' ').replace(/\s+/g, ' ').trim().match(/^(\d+(?:\.\d+)?)$/);
+  if (lone) {
+    if (aboutWeight) return { weight: +lone[1], reps: null, unsure: null };
+    return { weight: null, reps: null, unsure: +lone[1] };
+  }
+  return { weight: said.weight, reps: said.reps, unsure: null };
+}
+
+// Change the named set(s). Returns false if the phrase wasn't about a logged set after all.
+// explicit: the phrase had a word like "edit" or "change" in it.
+function voiceEditSets(which, said, explicit) {
+  // The exercise on screen, or the one just finished if the app has already moved on
+  let exIdx = currentExIdx;
+  const anyLogged = i => exercises[i] && exercises[i].loggedSets.some(st => st.logged);
+  if (!anyLogged(exIdx) && voiceLastLog && anyLogged(voiceLastLog.exIdx)) exIdx = voiceLastLog.exIdx;
+  const ex = exercises[exIdx];
+  if (!ex || !(isStrength(ex) || isBW(ex))) return false;
+
+  let idxs;
+  if (which === 'all') idxs = ex.loggedSets.map((st, i) => st.logged ? i : -1).filter(i => i >= 0);
+  else idxs = ex.loggedSets[which - 1] && ex.loggedSets[which - 1].logged ? [which - 1] : [];
+  if (!idxs.length) {
+    if (!explicit) return false;   // e.g. "set 2, ten reps" for the set being done now
+    speakText(which === 'all' ? 'No sets have been logged yet.' : 'Set ' + which + ' has not been logged yet.', true);
+    return true;
+  }
+  // A set named in passing, with nothing to change it to ("give me a second"), isn't an edit
+  if (!explicit && !(said && (said.weight !== null || said.reps !== null || said.unsure !== null))) return false;
+  const label = which === 'all' ? (idxs.length === 1 ? 'Set ' + (idxs[0] + 1) : 'All ' + idxs.length + ' sets') : 'Set ' + which;
+  voiceEdit = { exIdx, idxs, label, all: which === 'all', at: Date.now() };
+  if (said && (said.weight !== null || said.reps !== null)) { voiceEditApply(said); return true; }
+  if (said && said.unsure !== null) { voiceEditAskWhich(said.unsure); return true; }
+  const first = ex.loggedSets[idxs[0]], bw = isBW(ex);
+  voiceEditSay(idxs.length === 1
+    ? label + ' was ' + first.reps + ' reps' + (!bw && parseFloat(first.weight) ? ' at ' + first.weight + ' ' + voiceUnit() : '') + '. ' + (bw ? 'Say the right reps.' : 'Say the right weight and reps.')
+    : label + '. Say the right weight.');
+  return true;
+}
+
+function voiceEditSay(msg) { voiceDbg('edit: ' + msg); updateVoiceHUD(msg); speakText(msg, true); }
+
+function voiceEditAskWhich(n) {
+  voiceEdit.at = Date.now();
+  voiceEditSay('Is ' + n + ' the weight or the reps? Say ' + n + ' ' + voiceUnit() + ', or ' + n + ' reps.');
+}
+
+// The next thing said after "edit the first set"
+function voiceEditAnswer(t) {
+  if (/\b(cancel|never ?mind|forget it|leave it|stop)\b/.test(t)) { voiceEdit = null; voiceEditSay('Okay, left as it was.'); return true; }
+  const said = voiceEditParse(t);
+  if (said.weight !== null || said.reps !== null) { voiceEditApply(said); return true; }
+  if (said.unsure !== null) { voiceEditAskWhich(said.unsure); return true; }
+  return false;
+}
+
+function voiceEditApply(said) {
+  const e = voiceEdit; voiceEdit = null;
+  const ex = exercises[e.exIdx], bw = isBW(ex);
+  const weight = bw ? null : said.weight, reps = said.reps;
+  if (weight === null && reps === null) { voiceEditSay('Nothing to change.'); return; }
+  for (const i of e.idxs) {
+    if (weight !== null) prefillWeight(e.exIdx, i, weight);
+    if (reps !== null)   prefillReps(e.exIdx, i, reps);
+  }
+  // "All sets were at 20": the sets still to come are at that weight too
+  if (e.all && weight !== null) {
+    ex.loggedSets.forEach((st, i) => { if (!st.logged) prefillWeight(e.exIdx, i, weight); });
+    if (voicePending && voicePending.exIdx === e.exIdx && !ex.loggedSets[voicePending.setIdx].logged) voicePending.sugWeight = weight;
+  }
+  if (voiceLastLog && voiceLastLog.exIdx === e.exIdx && e.idxs.includes(voiceLastLog.setIdx)) {
+    if (weight !== null) voiceLastLog.weight = weight;
+    if (reps !== null)   voiceLastLog.reps = reps;
+  }
+  // Next session's plan was worked out from the old numbers
+  delete ex.coachNext;
+  const last = ex.loggedSets[ex.loggedSets.length - 1];
+  if (ex.loggedSets.every(st => st.logged)) fetchSetCoaching(ex, ex.loggedSets.length - 1, last.weight, last.reps);
+  if (currentExIdx === e.exIdx) renderSets(ex, getLastSession(ex.id || ex.name));
+  saveSnapshot();
+  const one = ex.loggedSets[e.idxs[0]];
+  voiceEditSay(e.idxs.length === 1
+    ? e.label + ' changed to ' + one.reps + ' reps' + (!bw && parseFloat(one.weight) ? ' at ' + one.weight + ' ' + voiceUnit() : '') + '.'
+    : e.label + ' changed to ' + [reps !== null ? reps + ' reps' : '', weight !== null ? weight + ' ' + voiceUnit() : ''].filter(Boolean).join(' at ') + '.');
+}
+
 // A phrase the quick rules didn't understand: ask the coach model what was meant,
 // so the user can talk normally ("actually that last one was twelve and a half").
 async function voiceInterpret(text) {
@@ -4477,11 +4594,12 @@ async function voiceInterpret(text) {
     'Phrase: "' + text.replace(/"/g, "'") + '"\n\n' +
     'Choose one action:\n' +
     '"log" - they are reporting the set they just finished\n' +
-    '"correct" - the last logged set is wrong, or they want to change, edit or undo it\n' +
+    '"correct" - a logged set is wrong, or they want to change, edit or undo it\n' +
     '"ready" - they want to skip the rest and start the next set\n' +
     '"repeat" - they want the last prompt said again\n' +
     '"none" - anything else, including talk that is not meant for the app\n' +
-    'Reply exactly: {"action":"...","weight":number or null,"reps":number or null}. Only give numbers the phrase itself states.';
+    'Reply exactly: {"action":"...","weight":number or null,"reps":number or null,"set":number or "all" or null}. Only give numbers the phrase itself states. ' +
+    '"set" is which set they named for a correction (first set = 1, "all the sets" = "all"), or null if they did not name one.';
   let out;
   try {
     const res  = await aiCoachFetch({ model:'claude-haiku-4-5', max_tokens:60, messages:[{ role:'user', content: prompt }] });
@@ -4498,6 +4616,8 @@ async function voiceInterpret(text) {
                  reps: stated(out.reps) && Number.isInteger(out.reps) && out.reps >= 1 && out.reps <= 100 ? out.reps : null };
   voiceDbg('coach read ' + JSON.stringify(text) + ' as ' + out.action + ' ' + JSON.stringify(said));
 
+  const named = out.set === 'all' ? 'all' : (Number.isInteger(out.set) && out.set >= 1 && out.set <= 12 ? out.set : null);
+  if (out.action === 'correct' && named && voiceEditSets(named, { ...said, unsure: null }, true)) return;
   if (out.action === 'correct') { if (voiceLastLog) voiceCorrectLast(said); }
   else if (out.action === 'ready')  { if (phase === 'resting') skipRest(); }
   else if (out.action === 'repeat') speakText(voiceLastPrompt, true);
@@ -4523,10 +4643,11 @@ function normalizeSpeech(raw) {
     .replace(/£/g, ' pounds ').replace(/#/g, ' pounds ')
     .replace(/(\d),(\d)/g, '$1$2')
     .replace(/hundred and /g, 'hundred ')
-    .replace(/\.(?!\d)/g, ' ')
-    .replace(/[^a-z0-9.\s]/g, ' ')
+    .replace(/\.(?!\d)/g, ' | ').replace(/[,;!?]/g, ' | ')   // a pause: number words either side stay separate
+    .replace(/[^a-z0-9.|\s]/g, ' ')
     .replace(/\s+/g, ' ').trim();
-  if (t in VOICE_SOUNDALIKES) return String(VOICE_SOUNDALIKES[t]);
+  const whole = t.replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
+  if (whole in VOICE_SOUNDALIKES) return String(VOICE_SOUNDALIKES[whole]);
 
   const isNum = w => w in VOICE_ONES || w in VOICE_TENS || w === 'hundred';
   const out = [], words = t.split(' ');
@@ -4538,7 +4659,7 @@ function normalizeSpeech(raw) {
     const n = wordsToNumber(run);
     out.push(n !== null ? String(n) : run.map(w => VOICE_ONES[w] ?? VOICE_TENS[w] ?? '').join(' '));
   }
-  return out.join(' ').replace(/\s+/g, ' ')
+  return out.join(' ').replace(/\|/g, ' ').replace(/\s+/g, ' ')
     .replace(/(\d+) and a? ?half/g, '$1.5')      // "twelve and a half" → 12.5
     .replace(/(\d+) point (\d+)/g, '$1.$2')     // "twelve point five" → 12.5
     .trim();
