@@ -769,6 +769,15 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <button class="btn btn-volt lf-mt-sm btn-lg" onclick="showStartModal(true)" style="letter-spacing:0.08em;">START WORKOUT</button>
   </div>
 
+  <!-- STARTING STATE — while the phone asks for the microphone, before a Voice workout appears -->
+  <div class="no-program" id="starting-state" style="display:none;">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--volt-bg);border:1px solid var(--volt-border);display:flex;align-items:center;justify-content:center;" aria-hidden="true">
+      <i class="ti ti-microphone" style="font-size:32px;color:var(--volt-dark);"></i>
+    </div>
+    <div style="font-size:20px;font-weight:700;color:var(--text);">Starting your workout</div>
+    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">If your phone asks, allow the microphone so the coach can hear you.</div>
+  </div>
+
   <!-- PRE-START STATE — shown before the user taps Start -->
   <div id="prestart-state" style="display:none;">
     <div style="padding:32px var(--page-pad) 24px;">
@@ -1658,6 +1667,8 @@ function beginWorkout(mode) {
   // first prompt — strictly in that order. Opening the mic while the phone is
   // still speaking (e.g. behind the permission prompt) leaves it deaf.
   const start = () => { if (_startFree) startFreeForm(); else buildExerciseList(_prestartExercises, _prestartName); };
+  // The workout itself appears once the mic is open; until then, not the page with the Start button on it
+  if (workoutMode === 'voice') show('starting-state');
   if (workoutMode === 'voice') voicePrimeSpeech().then(voiceHoldMic).then(() => {
     start();
     if (voiceOnPhoneMic) speakText('Heads up. I am listening through the phone microphone, not your earbuds, so I may pick up the room.');
@@ -1800,7 +1811,7 @@ function show(id) {
     _autoStart = false;
     setTimeout(() => showStartModal(id !== 'prestart-state'), 0);   // once the screen behind it is up
   } else if (id === 'workout-state') _autoStart = false;            // a workout was already under way
-  ['no-program-state','rest-day-state','prestart-state','workout-state','completion-state'].forEach(s => {
+  ['no-program-state','rest-day-state','prestart-state','starting-state','workout-state','completion-state'].forEach(s => {
     const el = document.getElementById(s);
     if (!el) return;
     if (s === 'workout-state') {
@@ -3508,7 +3519,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 78;
+const VOICE_BUILD = 79;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
