@@ -3709,7 +3709,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 72;
+const VOICE_BUILD = 73;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4722,6 +4722,19 @@ function activeProgram() {
   return (store.get('programs', []) || []).find(p => p.id === activeId) || null;
 }
 
+// An exercise that isn't in the library, made from the name that was said. It takes
+// its muscle group and way of logging from the exercise it replaces, and its equipment
+// from the name where the name says ("cable y raise"). Not saved until it is confirmed.
+function exDraftFromName(said, replacing, all) {
+  const cur = all.find(e => e.id === replacing.id) || replacing;
+  const name = String(said).replace(/\s+/g, ' ').trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  const words = exWords(name);
+  const equipment = ['machine_cable', 'dumbbells', 'barbell', 'bands', 'kettlebells', 'ez_bar', 'bodyweight']
+    .find(eq => EX_EQUIP_WORDS[eq].some(w => words.includes(w))) || cur.equipment || 'bodyweight';
+  return { id: 'cx-' + Date.now(), name, primaryMuscle: cur.primaryMuscle || 'chest', secondaryMuscles: cur.secondaryMuscles || [],
+           equipment, recordType: cur.recordType || 'weight_reps', instructions: null, exerciseUrl: null, custom: true, draft: true };
+}
+
 // ── The conversation ──
 function voiceSwapSay(msg) { voiceDbg('replace: ' + msg); updateVoiceHUD(msg); speakText(msg, true); }
 
@@ -4732,6 +4745,8 @@ async function voiceSwapStart(target) {
   const all = exAllExercises(), inWorkout = exercises.map(e => e.id);
   const similar = () => exFindSimilar(ex, all, inWorkout);
   let cands;
+  const asNew = target.match(/\b(?:new|custom)(?: exercise)?(?: called| named)? (.+)$/);
+  if (asNew && asNew[1].trim()) { voiceSwap = { exIdx, cands: [exDraftFromName(asNew[1], ex, all)], pick: 0, at: Date.now() }; voiceSwapOffer(); return; }
   if (!target) cands = similar();
   else {
     const found = exFindByName(target, ex, all);
@@ -4744,11 +4759,10 @@ async function voiceSwapStart(target) {
     }
   }
   if (!cands.length) {
-    const fallback = target ? similar() : [];
-    voiceSwap = fallback.length ? { exIdx, cands: fallback, pick: -1, at: Date.now() } : null;
-    voiceSwapSay(target
-      ? 'I could not find ' + target + '.' + (fallback.length ? ' Say the name again, or say another for something similar.' : '')
-      : 'I could not find a similar exercise.');
+    if (!target) { voiceSwap = null; voiceSwapSay('I could not find a similar exercise.'); return; }
+    const fallback = similar();
+    voiceSwap = { exIdx, cands: fallback, pick: -1, newName: target, at: Date.now() };
+    voiceSwapSay('I could not find ' + target + '. Say add it to make it a new exercise' + (fallback.length ? ', or another for something similar.' : '.'));
     return;
   }
   voiceSwap = { exIdx, cands, pick: 0, at: Date.now() };
@@ -4766,7 +4780,7 @@ function voiceSwapOffer() {
   else if (s.count > 1) how = 'Say yes to change all ' + s.count + ' workouts in your program, today for just today' + more + '.';
   else how = 'Say yes' + more + '.';
   if (s.started && !s.count) { voiceSwap = null; voiceSwapSay(how); return; }
-  voiceSwapSay(cand.name + ' instead of ' + ex.name + '. ' + how);
+  voiceSwapSay((cand.draft ? 'New exercise, ' : '') + cand.name + ' instead of ' + ex.name + '. ' + how);
 }
 
 function voiceTomorrow() {
@@ -4778,6 +4792,10 @@ function voiceTomorrow() {
 function voiceSwapAnswer(t) {
   const s = voiceSwap;
   if (/\b(cancel|never ?mind|forget it|leave it|keep it|stop)\b/.test(t) || /^(no|nope|nah)$/.test(t)) { voiceSwap = null; voiceSwapSay('Okay, keeping ' + exercises[s.exIdx].name + '.'); return true; }
+  if (s.newName && s.pick < 0 && /\b(add|create|make|save|new|yes|yeah|yep|ok|okay|sure)\b/.test(t)) {
+    voiceSwap = { exIdx: s.exIdx, cands: [exDraftFromName(s.newName, exercises[s.exIdx], exAllExercises())], pick: 0, at: Date.now() };
+    voiceSwapOffer(); return true;
+  }
   if (/\b(another|different|next|other|something else|not that|else)\b/.test(t)) {
     if (s.pick + 1 >= s.cands.length) { voiceSwap = null; voiceSwapSay('That is all I have. Keeping ' + exercises[s.exIdx].name + '.'); return true; }
     s.pick++; voiceSwapOffer(); return true;
@@ -4793,6 +4811,12 @@ function voiceSwapAnswer(t) {
 function voiceSwapApply(wholeProgram) {
   const s = voiceSwap; voiceSwap = null;
   const old = exercises[s.exIdx], nw = s.cands[s.pick];
+  if (nw.draft) {   // a new exercise: it joins the user's own exercises
+    delete nw.draft;
+    nw.createdAt = new Date().toISOString();
+    LF.db.saveCustomExercise(nw).then(r => { if (r && r.error) voiceDbg('replace: new exercise not saved to the account (' + (r.error.message || r.error) + ')'); });
+    voiceDbg('replace: added new exercise ' + nw.name + ' (' + nw.primaryMuscle + ', ' + nw.equipment + ')');
+  }
   let changed = 0;
   if (wholeProgram && s.count) {
     const program = activeProgram();
