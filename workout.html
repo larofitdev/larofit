@@ -3545,7 +3545,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 86;
+const VOICE_BUILD = 87;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3608,7 +3608,7 @@ function initVoice() {
   voiceFirstLine = true;
   voiceOwnPeaks = []; voiceQuietRun = 0; voiceUnderstoodAt = Date.now();
   voicePaused = false; voicePausedRest = null;
-  voiceHadEarbuds = false; voiceEarbudsOut = false; voiceAutoPaused = false;
+  voiceHadEarbuds = false; voiceEarbudsOut = false; voiceAutoPaused = false; voiceOffEarbudsSince = 0;
   voiceLog = [];
   voiceEnsureCtx();
   if (voiceReady) return;
@@ -3622,6 +3622,7 @@ function startListening() {
   if (voiceSpeaking) return;       // resumes when the app finishes talking
   if (howToVideoPlaying) return;   // resumes when the how-to video is closed
   if (!voiceMicStream) return;     // the health check opens the mic, then calls back here
+  if (voiceOffEarbudsSince || voiceEarbudsOut) return;   // the mic may be the phone's own just now: not listened to
   isListening = true;
   document.getElementById('voice-hud').classList.add('show');
   document.getElementById('voice-pulse').classList.add('listening');
@@ -3688,14 +3689,45 @@ function voiceEarbudsBack(why) {
   });
 }
 
+// For a few seconds after the mic opens on AirPods, Bluetooth is still settling: the mic
+// can drop to the phone's, or the AirPods can vanish from the list altogether, and come
+// back about five seconds later. That looks exactly like the start of "earbuds out", so
+// nothing is decided until it has lasted this long. Meanwhile the phone's mic is not listened to.
+const VOICE_EARBUDS_WAIT = 9000;
+let voiceOffEarbudsSince = 0;
+
 // Called when the phone says its audio devices changed, and every few seconds.
-// Returns true while the earbuds are out (the caller then leaves the mic alone).
+// Returns true while the earbuds are out or may be (the caller then leaves the mic alone).
 function voiceCheckEarbuds() {
   if (workoutMode !== 'voice' || !voiceReady || !voiceHadEarbuds || voiceMicPending) return voiceEarbudsOut;
   if (!voiceEarbudsOut) {
     const track = voiceMicStream && voiceMicStream.getAudioTracks()[0];
-    if (track && track.readyState === 'live' && voiceIsBuiltInMic(track.label)) voiceEarbudsGone('mic moved to "' + track.label + '"');
-    return voiceEarbudsOut;
+    const off = !track || track.readyState !== 'live' || voiceIsBuiltInMic(track.label);
+    if (!off) {
+      if (voiceOffEarbudsSince) {
+        voiceDbg('mic is back on the earbuds after ' + Math.round((Date.now() - voiceOffEarbudsSince) / 1000) + 's (Bluetooth settling, not earbuds out)');
+        voiceOffEarbudsSince = 0;
+        if (!voicePaused) startListening();
+      }
+      return false;
+    }
+    if (!voiceOffEarbudsSince) {
+      voiceOffEarbudsSince = Date.now();
+      voiceDbg((track ? 'mic moved to "' + track.label + '"' : 'the earbud mic closed') + ': waiting to see whether the earbuds are really out');
+      pauseListening();
+      setTimeout(voiceCheckEarbuds, VOICE_EARBUDS_WAIT + 200);
+    }
+    if (Date.now() - voiceOffEarbudsSince >= VOICE_EARBUDS_WAIT) {
+      voiceOffEarbudsSince = 0;
+      voiceEarbudsGone(track ? 'mic on "' + track.label + '" for ' + VOICE_EARBUDS_WAIT / 1000 + 's' : 'they disconnected');
+      return true;
+    }
+    // Still deciding. If the mic closed outright and an earbud mic is listed again, open it
+    if (!track) navigator.mediaDevices.enumerateDevices().then(list => {
+      if (voiceMicStream || voiceMicPending || voiceEarbudsOut || !voiceOffEarbudsSince) return;
+      if (list.some(d => d.kind === 'audioinput' && d.label && !voiceIsBuiltInMic(d.label))) voiceHoldMic().then(voiceCheckEarbuds);
+    }).catch(() => {});
+    return true;
   }
   navigator.mediaDevices.enumerateDevices().then(list => {
     if (!voiceEarbudsOut) return;
@@ -3766,7 +3798,7 @@ function voiceHoldMic() {
       voiceDbg('mic closed by the phone');
       if (voiceMicStream !== stream) return;
       voiceReleaseMic();
-      if (voiceHadEarbuds && voicePhase !== 'idle') voiceEarbudsGone('they disconnected');   // back in their case
+      if (voiceHadEarbuds && voicePhase !== 'idle') voiceCheckEarbuds();   // in their case, or Bluetooth settling: it waits to see which
     });
     track.addEventListener('mute',   () => voiceDbg('mic muted by the phone'));
     track.addEventListener('unmute', () => { voiceDbg('mic unmuted'); if (voiceMicStream === stream) voiceAfterInterruption('audio returned'); });
@@ -5105,7 +5137,7 @@ function voiceResume() {
   if (!voicePaused) return;
   if (voiceEarbudsOut) {
     voiceDbg('resumed without earbuds: using the phone mic');
-    voiceEarbudsOut = false; voiceHadEarbuds = false; voiceAutoPaused = false;
+    voiceEarbudsOut = false; voiceHadEarbuds = false; voiceAutoPaused = false; voiceOffEarbudsSince = 0;
     voiceHoldMic().then(startListening);
   }
   voicePaused = false;
