@@ -644,3 +644,130 @@ window.LF = {
   else window.addEventListener('lf:ready', flush, { once: true });
   window.addEventListener('online', flush);
 })();
+
+// ── SETTINGS THAT FOLLOW THE ACCOUNT ──────────────────────────
+// Units, the coach's voice and timer sounds are kept on the device (lf_settings) so
+// pages can read them instantly, and copied to the account so a new phone or a
+// reinstall picks them up. Whichever copy was changed most recently wins.
+const LF_SYNCED_SETTINGS = ['units', 'voiceName', 'sound'];
+LF.settings = {
+  // Call after changing a setting on this device
+  async push() {
+    try {
+      const local = LS.get('settings', {}) || {};
+      const at = Date.now();
+      local._at = at; LS.set('settings', local);
+      const sb = await lfReady();
+      if (!(await LF.auth.user()) || !isOnline()) return;
+      const copy = { _at: at };
+      for (const k of LF_SYNCED_SETTINGS) if (local[k] !== undefined) copy[k] = local[k];
+      await sb.auth.updateUser({ data: { lf_settings: copy } });
+    } catch {}
+  },
+  // Call on load: takes the account's copy if it is newer than this device's
+  async pull() {
+    try {
+      const user = await LF.auth.user();
+      const remote = user && user.user_metadata && user.user_metadata.lf_settings;
+      if (!remote || !remote._at) return false;
+      const local = LS.get('settings', {}) || {};
+      if ((local._at || 0) >= remote._at) return false;
+      let changed = false;
+      for (const k of LF_SYNCED_SETTINGS) if (remote[k] !== undefined && local[k] !== remote[k]) { local[k] = remote[k]; changed = true; }
+      local._at = remote._at;
+      LS.set('settings', local);
+      if (changed) window.dispatchEvent(new Event('lf:settings'));
+      return changed;
+    } catch { return false; }
+  }
+};
+
+// ── TERMS ─────────────────────────────────────────────────────
+// New accounts agree at sign-up. An account from before the terms existed, or from
+// before they last changed, is asked once, the next time the app is opened.
+const LF_TERMS_VERSION = '2026-10-13';
+LF.terms = {
+  version: LF_TERMS_VERSION,
+  async check() {
+    try {
+      if (/\/(login|signup|verified|privacy|terms|disclaimer|404)(\.html)?$/.test(location.pathname)) return;
+      const user = await LF.auth.user();
+      if (!user || (user.user_metadata || {}).terms_version === LF_TERMS_VERSION) return;
+      if (document.getElementById('lf-terms')) return;
+      const wrap = document.createElement('div');
+      wrap.id = 'lf-terms';
+      wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true'); wrap.setAttribute('aria-labelledby', 'lf-terms-title');
+      wrap.style.cssText = 'position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.7);display:flex;align-items:flex-end;justify-content:center;';
+      wrap.innerHTML = `
+        <div style="background:var(--bg-card,#fff);color:var(--text,#111);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:24px 20px calc(20px + env(safe-area-inset-bottom,0px));font-family:var(--font-body,sans-serif);">
+          <div id="lf-terms-title" style="font-family:var(--font-display,sans-serif);font-size:28px;letter-spacing:0.5px;line-height:1.1;margin-bottom:8px;">BEFORE YOU CARRY ON</div>
+          <div style="font-size:14px;line-height:1.55;color:var(--text-2,#444);margin-bottom:14px;">
+            LaroFit now has a <a href="terms.html" target="_blank" rel="noopener" style="color:var(--volt-dark,#6a8a00);font-weight:700;">Terms of Service</a>,
+            a <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--volt-dark,#6a8a00);font-weight:700;">Privacy Policy</a> and a
+            <a href="disclaimer.html" target="_blank" rel="noopener" style="color:var(--volt-dark,#6a8a00);font-weight:700;">Health Disclaimer</a>. Please read them.
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:12px;font-size:14px;line-height:1.5;color:var(--text-2,#444);margin-bottom:16px;cursor:pointer;">
+            <input type="checkbox" id="lf-terms-box" style="width:24px;height:24px;margin:0;flex-shrink:0;accent-color:var(--volt-dark,#6a8a00);">
+            <span>I am at least 16 years old and I agree to all three.</span>
+          </label>
+          <div id="lf-terms-err" style="display:none;font-size:13px;color:var(--danger,#c00);margin-bottom:10px;"></div>
+          <button id="lf-terms-ok" class="btn btn-volt btn-full btn-lg" style="width:100%;min-height:52px;">Agree and continue</button>
+        </div>`;
+      document.body.appendChild(wrap);
+      const err = msg => { const e = document.getElementById('lf-terms-err'); e.textContent = msg; e.style.display = 'block'; };
+      document.getElementById('lf-terms-ok').onclick = async () => {
+        if (!document.getElementById('lf-terms-box').checked) return err('Tick the box to continue.');
+        const btn = document.getElementById('lf-terms-ok');
+        btn.disabled = true;
+        try {
+          const sb = await lfReady();
+          const { error } = await sb.auth.updateUser({ data: { terms_accepted_at: new Date().toISOString(), terms_version: LF_TERMS_VERSION } });
+          if (error) throw new Error(error.message);
+          wrap.remove();
+        } catch (e) {
+          btn.disabled = false;
+          err('That could not be saved. Check your connection and try again.');
+        }
+      };
+    } catch {}
+  }
+};
+
+// ── ERROR REPORTS ─────────────────────────────────────────────
+// When something in the app breaks on a user's device, a short report (what went
+// wrong, on which page) is saved to the account so it can be found and fixed.
+// At most five per page load, and never the same one twice.
+(function wireErrorReports() {
+  const sent = new Set();
+  // Not faults in the app: a dropped connection, a request the app cancelled itself
+  const ignore = /^Script error\.?$|ResizeObserver loop|Load failed|Failed to fetch|NetworkError|aborted|AbortError|The operation was aborted|cancelled/i;
+  const report = async (kind, message, stack) => {
+    try {
+      message = String(message || '').slice(0, 500);
+      if (!message || ignore.test(message) || sent.has(message) || sent.size >= 5 || !isOnline()) return;
+      sent.add(message);
+      const sb = await lfReady();
+      const user = await LF.auth.user();
+      if (!user) return;
+      await sb.from('client_errors').insert({
+        user_id: user.id,
+        page: location.pathname.slice(0, 120),
+        kind,
+        message,
+        stack: String(stack || '').slice(0, 2000) || null,
+        build: (typeof VOICE_BUILD !== 'undefined' ? 'voice ' + VOICE_BUILD : null),
+        device: navigator.userAgent.slice(0, 300)
+      });
+    } catch {}
+  };
+  window.addEventListener('error', e => report('error', e.message, e.error && e.error.stack || (e.filename ? e.filename + ':' + e.lineno : '')));
+  window.addEventListener('unhandledrejection', e => { const r = e.reason; report('promise', r && (r.message || r), r && r.stack); });
+  LF.reportError = (message, detail) => report('reported', message, detail);
+})();
+
+// On every page, once signed-in state is known: bring settings up to date and check the terms
+(function wireAccountChecks() {
+  const run = () => { LF.settings.pull(); LF.terms.check(); };
+  if (window._lf_sb) run();
+  else window.addEventListener('lf:ready', run, { once: true });
+})();

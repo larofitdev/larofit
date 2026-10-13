@@ -3400,8 +3400,13 @@ function setMode(mode) {
 //   every planned set hit target + 2         → weight goes up, back to the target
 //   anything less                            → same weight, same target
 //   a set fell more than 2 short of the target, two sessions running → weight drops back
-// The weight moves by 2.5 lbs under 25 lbs and by 5 lbs from 25 up.
-const PROG_HEAVY_FROM = 25, PROG_LIGHT_STEP = 2.5, PROG_HEAVY_STEP = 5, PROG_STRETCH = 2;
+// The weight moves by 2.5 lbs under 25 lbs and by 5 lbs from 25 up. For someone
+// working in kilograms it moves by 1 kg under 10 kg and by 2.5 kg from 10 up, which
+// are the steps gym dumbbells and plates actually come in.
+const PROG_STRETCH = 2;
+function progSteps() {
+  return typeof weightUnit === 'function' && weightUnit() === 'kg' ? { heavyFrom: 10, light: 1, heavy: 2.5 } : { heavyFrom: 25, light: 2.5, heavy: 5 };
+}
 
 // The last n finished sessions that included this exercise, newest first. A workout
 // finished earlier today counts, and two workouts on one day count as two sessions.
@@ -3446,13 +3451,15 @@ function progressionFor(ex, latestSets, earlierSets) {
   const needSets = parseInt(ex.sets) || 3, needReps = parseInt(ex.reps) || 10;
   const base = { top, needSets, needReps };
   if (progCleared(latestSets, needSets, needReps + PROG_STRETCH)) {
-    return { ...base, weight: top + (top < PROG_HEAVY_FROM ? PROG_LIGHT_STEP : PROG_HEAVY_STEP), reps: needReps, stage: 'up', change: 'up' };
+    const up = progSteps();
+    return { ...base, weight: top + (top < up.heavyFrom ? up.light : up.heavy), reps: needReps, stage: 'up', change: 'up' };
   }
   if (progCleared(latestSets, needSets, needReps)) {
     return { ...base, weight: top, reps: needReps + PROG_STRETCH, stage: 'stretch', change: 'same' };
   }
   if (progStruggled(latestSets, needReps) && progTopWeight(earlierSets) === top && progStruggled(earlierSets, needReps)) {
-    const lower = top - (top <= PROG_HEAVY_FROM ? PROG_LIGHT_STEP : PROG_HEAVY_STEP);
+    const down = progSteps();
+    const lower = top - (top <= down.heavyFrom ? down.light : down.heavy);
     if (lower > 0) return { ...base, weight: lower, reps: needReps, stage: 'down', change: 'down' };
   }
   return { ...base, weight: top, reps: needReps, stage: 'same', change: 'same' };
@@ -3548,7 +3555,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 88;
+const VOICE_BUILD = 89;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();

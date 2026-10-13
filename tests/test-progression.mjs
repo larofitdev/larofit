@@ -1,12 +1,12 @@
 // Checks the progression rule in workout.html against the rule as agreed
 import fs from 'fs';
 const src = fs.readFileSync(process.argv[2] || 'workout.html', 'utf8').replace(/\r\n/g, '\n');
-const a = src.indexOf('const PROG_HEAVY_FROM'), b = src.indexOf('// Progression is part of every workout');
+const a = src.indexOf('const PROG_STRETCH'), b = src.indexOf('// Progression is part of every workout');
 if (a < 0 || b < a) throw new Error('markers');
 
 const S = (...pairs) => pairs.map(([weight, reps]) => ({ weight, reps }));
 const three = (w, r = 10) => S([w, r], [w, r], [w, r]);
-const make = history => new Function('store', 'todayKey', 'aiProgressionOn', 'voiceUnit', src.slice(a, b) + '; return { coachPlanFor, progressionFor, progressionNote };')({ get: () => history }, '2026-10-10', () => true, () => 'pounds');
+const make = (history, unit = 'lbs') => new Function('store', 'todayKey', 'aiProgressionOn', 'voiceUnit', 'weightUnit', src.slice(a, b) + '; return { coachPlanFor, progressionFor, progressionNote };')({ get: () => history }, '2026-10-10', () => true, () => unit === 'kg' ? 'kilos' : 'pounds', () => unit);
 const EX = { id: 'x', name: 'x', sets: 3, reps: 10 };
 // sessions: newest first
 const plan = (sessions, ex = EX) => {
@@ -74,6 +74,25 @@ console.log('Workouts on the same day');
   sameDay('morning 3x10 at 25, evening 3x12 at 25', { '2026-10-10': day(three(25), three(25, 12)) }, '30 x 10 up');
   sameDay('morning 3x12 at 30, evening 3x8 at 30 (evening counts)', { '2026-10-10': day(three(30, 12), three(30, 8)) }, '30 x 10 same');
   sameDay('morning and evening both 3x7 at 30', { '2026-10-10': day(three(30, 7), three(30, 7)) }, '25 x 10 down');
+}
+
+console.log('Working in kilograms: +1 kg under 10 kg, +2.5 kg from 10 kg');
+{
+  const kg = (name, sessions, want) => {
+    const history = {}; sessions.forEach((sets, i) => { history['2026-10-0' + (9 - i)] = { exercises: [{ id: 'x', name: 'x', sets }] }; });
+    const p = make(history, 'kg').coachPlanFor(EX), got = p ? p.weight + ' x ' + p.reps + ' ' + p.stage : null, ok = got === want; if (!ok) fail++;
+    console.log((ok ? 'ok   ' : 'FAIL ') + name.padEnd(64) + '-> ' + got + (ok ? '' : '   expected ' + want));
+  };
+  kg('3x12 at 5 kg', [three(5, 12)], '6 x 10 up');
+  kg('3x12 at 9 kg', [three(9, 12)], '10 x 10 up');
+  kg('3x12 at 10 kg', [three(10, 12)], '12.5 x 10 up');
+  kg('3x12 at 60 kg', [three(60, 12)], '62.5 x 10 up');
+  kg('3x10 at 20 kg (aim for 2 more, as in pounds)', [three(20)], '20 x 12 stretch');
+  kg('3x6 at 12.5 kg, twice running', [three(12.5, 6), three(12.5, 6)], '10 x 10 down');
+  kg('3x6 at 10 kg, twice running', [three(10, 6), three(10, 6)], '9 x 10 down');
+  const note = make({}, 'kg'); const said = note.progressionNote({ ...EX, targetReps: 12 }, note.progressionFor(EX, three(60, 12), null));
+  const ok = said === 'Next time, go up to 62.5 kilos.'; if (!ok) fail++;
+  console.log((ok ? 'ok   ' : 'FAIL ') + 'the coach says kilos'.padEnd(64) + '-> ' + JSON.stringify(said));
 }
 
 console.log('What the coach says after the last set');

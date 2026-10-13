@@ -78,7 +78,7 @@
   if (!document.querySelector('link[href*="tabler"]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css';
+    link.href = 'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css';
     document.head.appendChild(link);
   }
 

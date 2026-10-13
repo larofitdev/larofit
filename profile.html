@@ -662,6 +662,13 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div class="prof-section" style="overflow:hidden;">
     <div class="danger-row">
       <div>
+        <div class="danger-label">Download my data</div>
+        <div class="danger-sub">One file with everything LaroFit holds for you</div>
+      </div>
+      <button class="btn btn-outline btn-sm" id="export-btn" onclick="downloadMyData()">Download</button>
+    </div>
+    <div class="danger-row">
+      <div>
         <div class="danger-label">Sign out</div>
         <div class="danger-sub">You'll need to sign back in</div>
       </div>
@@ -1051,6 +1058,52 @@ function saveSetting(key, val) {
   const st = JSON.parse(localStorage.getItem('lf_settings') || '{}');
   st[key] = val;
   localStorage.setItem('lf_settings', JSON.stringify(st));
+  if (typeof LF !== 'undefined' && LF.settings) LF.settings.push();   // so it follows the account to another phone
+}
+
+// Settings changed on another device have just arrived: show them
+window.addEventListener('lf:settings', () => location.reload());
+
+// ── DOWNLOAD MY DATA ───────────────────────────────────────────────────────
+// Everything LaroFit holds for this account, as one file
+async function downloadMyData() {
+  const btn = document.getElementById('export-btn');
+  btn.disabled = true; btn.textContent = 'Preparing…';
+  try {
+    const sb = await LF.ready();
+    const user = await LF.auth.user();
+    if (!user) throw new Error('not signed in');
+    const [profile, programs, workoutHistory, customExercises, measurements] = await Promise.all([
+      LF.db.getProfile(), LF.db.getPrograms(), LF.db.getWorkoutHistory(), LF.db.getCustomExercises(), LF.db.getMeasurements()
+    ]);
+    let voiceLogs = [];
+    try { voiceLogs = (await sb.from('voice_logs').select('created_at, build, reason, log').order('created_at')).data || []; } catch (e) {}
+    const meta = user.user_metadata || {};
+    const data = {
+      exportedAt: new Date().toISOString(),
+      account: { email: user.email, name: meta.full_name || meta.name || null, createdAt: user.created_at, termsAcceptedAt: meta.terms_accepted_at || null, termsVersion: meta.terms_version || null },
+      settings: JSON.parse(localStorage.getItem('lf_settings') || '{}'),
+      profile, programs, workoutHistory, customExercises, measurements, voiceLogs
+    };
+    const name = 'larofit-data-' + new Date().toISOString().slice(0, 10) + '.json';
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    // On a phone, hand it to the share sheet ("Save to Files"); otherwise download it
+    let shared = false;
+    try {
+      const file = new File([blob], name, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'My LaroFit data' }); shared = true; }
+    } catch (e) { if (e && e.name === 'AbortError') shared = true; }   // they closed the share sheet
+    if (!shared) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    }
+    showToast('Your data is ready');
+  } catch (e) {
+    showToast('Could not prepare your data. Check your connection and try again.');
+  }
+  btn.disabled = false; btn.textContent = 'Download';
 }
 
 // ── SAVE PROFILE ───────────────────────────────────────────────────────────
