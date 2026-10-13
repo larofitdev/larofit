@@ -3545,7 +3545,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 84;
+const VOICE_BUILD = 85;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3673,6 +3673,16 @@ async function voicePreferEarbuds(stream) {
 // Earbuds connected (or dropped) part-way through: re-open the mic so the right one is used
 if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
   navigator.mediaDevices.addEventListener('devicechange', () => {
+    // Record what the phone now lists, and what our own mic is doing, for the voice log
+    // (this is how we learn what a phone reports when earbuds come out or go back in)
+    if (workoutMode === 'voice' && voiceReady) {
+      const track = voiceMicStream && voiceMicStream.getAudioTracks()[0];
+      navigator.mediaDevices.enumerateDevices().then(list => {
+        const names = kind => list.filter(d => d.kind === kind).map(d => d.label || '(unnamed)').join(', ') || 'none';
+        voiceDbg('devices changed. mics: ' + names('audioinput') + ' | outputs: ' + names('audiooutput') +
+                 ' | our mic: ' + (track ? '"' + track.label + '" ' + track.readyState + (track.muted ? ' muted' : '') : 'closed'));
+      }).catch(() => {});
+    }
     if (workoutMode !== 'voice' || !voiceReady || voicePhase === 'idle' || voiceMicPending || !voiceOnPhoneMic) return;
     voiceDbg('audio devices changed, re-opening mic');
     voiceReleaseMic();
