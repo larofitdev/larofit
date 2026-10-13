@@ -3519,7 +3519,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 81;
+const VOICE_BUILD = 82;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3580,6 +3580,7 @@ function initVoice() {
   document.getElementById('voice-hud').classList.add('show');
   voiceKeepAwake();
   voiceFirstLine = true;
+  voiceOwnPeaks = []; voiceQuietRun = 0; voiceUnderstoodAt = Date.now();
   voiceLog = [];
   voiceEnsureCtx();
   if (voiceReady) return;
@@ -3817,6 +3818,21 @@ function voiceVadReset() {
   v.reportTicks = 0; v.reportPeak = 0;
 }
 
+// How loud a sound must be to count as the user speaking. It starts at VOICE_MIN_PEAK;
+// once a few of their phrases have been understood it rises to 40% of their usual level,
+// which keeps out people nearby and most gym noise (through earbud mics the wearer is
+// several times louder than anyone else).
+let voiceOwnPeaks = [], voiceQuietRun = 0, voiceUnderstoodAt = 0, voiceHeardPeak = 0;
+function voiceMinPeak() {
+  if (voiceOwnPeaks.length < 3) return VOICE_MIN_PEAK;
+  const sorted = [...voiceOwnPeaks].sort((a, b) => a - b);
+  return Math.max(VOICE_MIN_PEAK, sorted[Math.floor(sorted.length / 2)] * 0.4);
+}
+function voiceNoteOwnPeak(peak) {
+  voiceOwnPeaks.push(peak); if (voiceOwnPeaks.length > 10) voiceOwnPeaks.shift();
+  voiceQuietRun = 0; voiceUnderstoodAt = Date.now();
+}
+
 // Runs on every ~40ms of mic audio
 function voiceAudioBlock(input) {
   const v = voiceVad;
@@ -3870,7 +3886,17 @@ function voiceAudioBlock(input) {
     return;
   }
   if (voiceSignedOut) return;   // nothing can be transcribed until they sign in again
-  if (segPeak < VOICE_MIN_PEAK) { voiceDbg('ignored a quiet sound (peak ' + segPeak.toFixed(2) + ')'); return; }
+  const needPeak = voiceMinPeak();
+  if (segPeak < needPeak) {
+    voiceDbg('ignored a quiet sound (peak ' + segPeak.toFixed(2) + (needPeak > VOICE_MIN_PEAK ? ', need ' + needPeak.toFixed(2) : '') + ')');
+    if (needPeak > VOICE_MIN_PEAK && segPeak >= needPeak * 0.6 && voiceVoicedMs(chunks, rate) >= VOICE_MIN_VOICED_MS) {
+      voiceHudNote('Too quiet — say it again, louder');
+      // Nothing understood for four minutes and speech keeps arriving just under the bar:
+      // the user has gone quieter, so start learning their level again
+      if (++voiceQuietRun >= 4 && Date.now() - voiceUnderstoodAt > 240000) { voiceOwnPeaks = []; voiceQuietRun = 0; voiceDbg('listening for quieter speech again'); }
+    }
+    return;
+  }
   // Breathing, plates and machines are loud but have no voice in them
   const voicedMs = voiceVoicedMs(chunks, rate);
   if (voicedMs < VOICE_MIN_VOICED_MS) { voiceDbg('ignored a noise (' + spokenMs + 'ms, peak ' + segPeak.toFixed(2) + ', voice ' + voicedMs + 'ms)'); return; }
@@ -4009,7 +4035,9 @@ function voiceSendPhrase(blob, spokenMs, peak) {
       if (!/[a-z0-9]/i.test(text)) { voiceHudNote(''); voiceDbg('heard ' + JSON.stringify(text) + detail + ' -> not words, ignored'); return; }
       // The workout moved on while this was being transcribed — don't apply it to the wrong step
       if (voicePhase !== phaseAtCapture) { voiceDbg('heard ' + JSON.stringify(text) + detail + ' -> too late, ignored'); return; }
+      voiceHeardPeak = peak;
       const understood = handleVoiceResult(text);
+      if (understood) voiceNoteOwnPeak(peak);
       voiceDbg('heard ' + JSON.stringify(text) + detail + (understood ? ' -> understood' : ' -> asking coach'));
       if (!understood) await voiceInterpret(text);
     } catch (e) {
@@ -4957,12 +4985,19 @@ function voiceKnownIds() {
 function voiceTryExercise(t) {
   if (workoutMode !== 'voice' || voicePhase === 'idle') return false;
   if (/\d/.test(t.replace(/\b1 (arm|leg)\b/g, ''))) return false;   // numbers mean a set, not a name
-  const picking = voicePhase === 'pick_exercise' || !!voiceAskName;
+  const picking = voicePhase === 'pick_exercise' || (!!voiceAskName && !voiceAskName.confirmOnly);
   const said = voiceExerciseSaid(t), words = exWords(said.name);
   if (!words.length || words.length > 6) return false;
   const all = exAllExercises(), found = exFindByName(said.name, null, all, voiceKnownIds()), top = found.sure[0];
-  // Without a lead-in, only a clear name counts: two or more words, or the whole of a one-word name
-  if (top && (picking || said.led || words.length >= 2 || exWords(top.name).length === words.length)) { voiceStartExercise(top); return true; }
+  if (top && (picking || said.led)) { voiceStartExercise(top); return true; }
+  // Just a name, mid-workout, with nothing leading into it ("bench press"): it has to be a
+  // clear one (two or more words, or the whole of a one-word name), and it is checked first,
+  // because noise can come back from the transcriber as an exercise name.
+  if (top && (words.length >= 2 || exWords(top.name).length === words.length)) {
+    voiceAskName = { cand: top, said: said.name, at: Date.now(), confirmOnly: true };
+    voiceSwapSay('Switch to ' + top.name + '? Say yes or no.');
+    return true;
+  }
   if (picking || said.led) { voiceLookUpExercise(said.name, found.maybe, all); return true; }
   return false;
 }
@@ -5068,8 +5103,12 @@ function voiceFinishAnswer(t) {
 
 // A phrase the quick rules didn't understand: ask the coach model what was meant,
 // so the user can talk normally ("actually that last one was twelve and a half").
+let voiceNoneAt = 0, voiceChatterUntil = 0;
 async function voiceInterpret(text) {
   if (text.trim().split(/\s+/).length < 2) return;   // a single stray word isn't worth a call
+  // Two phrases in a row that weren't for the app means a conversation with someone else:
+  // stop asking about every sentence of it for half a minute
+  if (Date.now() < voiceChatterUntil) { voiceDbg('sounds like a conversation, not asking the coach'); return; }
   const phase = voicePhase, p = voicePending, ex = exercises[p.exIdx], last = voiceLastLog;
   if (!ex || phase === 'idle' || phase === 'pick_exercise') return;   // (when picking, names are looked up directly)
   const prompt = 'You interpret one spoken phrase from someone logging a gym workout by voice. Reply with JSON only.\n' +
@@ -5105,6 +5144,10 @@ async function voiceInterpret(text) {
   const said = { weight: stated(out.weight) ? out.weight : null,
                  reps: stated(out.reps) && Number.isInteger(out.reps) && out.reps >= 1 && out.reps <= 100 ? out.reps : null };
   voiceDbg('coach read ' + JSON.stringify(text) + ' as ' + out.action + ' ' + JSON.stringify(said));
+  if (out.action === 'none') {
+    if (Date.now() - voiceNoneAt < 30000) voiceChatterUntil = Date.now() + 30000;
+    voiceNoneAt = Date.now();
+  } else voiceNoneAt = 0;
 
   if (out.action === 'finish') { voiceFinishAsk(); return; }
   if (out.action === 'skip')   { voiceSkipExercise(); return; }
@@ -5118,7 +5161,11 @@ async function voiceInterpret(text) {
   else if (out.action === 'repeat') speakText(voiceLastPrompt, true);
   else if (out.action === 'log' && (phase === 'confirm_weight' || phase === 'count_reps')) {
     if (said.weight !== null && !p.bw) { p.sugWeight = said.weight; prefillWeight(p.exIdx, p.setIdx, p.sugWeight); }
-    if (said.reps !== null && !voiceRepsPlausible(said.reps, p.exIdx)) voicePrompt('I heard ' + said.reps + '. If that is your reps, say ' + said.reps + ' reps.', true);
+    // The model's reading of a vague phrase ("are the five") is only trusted when the number
+    // is near what was planned; otherwise the user is asked
+    const planned = parseInt(ex.targetReps) || parseInt(ex.reps) || 10;
+    const odd = said.reps !== null && said.weight === null && (said.reps < planned * 0.6 || said.reps > planned * 1.6);
+    if (said.reps !== null && (odd || !voiceRepsPlausible(said.reps, p.exIdx))) voicePrompt('I heard ' + said.reps + '. If that is your reps, say ' + said.reps + ' reps.', true);
     else if (said.reps !== null) voiceLogSet(said.reps, said.weight !== null);
     else if (said.weight !== null && !p.bw) { voicePhase = 'count_reps'; voicePrompt(p.sugWeight + ' ' + voiceUnit() + '. Say your reps when you finish.', true); }
   }
