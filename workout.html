@@ -3519,7 +3519,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 80;
+const VOICE_BUILD = 81;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3813,7 +3813,7 @@ function voiceHudTap() {
 // ── PHRASE DETECTION ──────────────────────────────────────────
 function voiceVadReset() {
   const v = voiceVad;
-  v.inSpeech = false; v.hot = 0; v.quietMs = 0; v.pre = []; v.seg = []; v.segPeak = 0; v.segSum = 0; v.segBlocks = 0;
+  v.inSpeech = false; v.hot = 0; v.quietMs = 0; v.pre = []; v.seg = []; v.segPeak = 0; v.segSum = 0; v.segBlocks = 0; v.padMs = 0;
   v.reportTicks = 0; v.reportPeak = 0;
 }
 
@@ -3839,9 +3839,15 @@ function voiceAudioBlock(input) {
   const copy = new Float32Array(input);
 
   if (!v.inSpeech) {
-    v.pre.push(copy); if (v.pre.length > 4) v.pre.shift();   // keep a little before speech starts
+    // Keep what came just before: a word's soft opening ("tw" in twelve) is too quiet to
+    // trip the detector, and without it the word is transcribed as something else.
+    const keep = Math.max(4, Math.ceil(450 / blockMs));
+    v.pre.push(copy); if (v.pre.length > keep) v.pre.shift();
     v.hot = loud ? v.hot + 1 : 0;
-    if (v.hot >= 2) { v.inSpeech = true; v.seg = v.pre; v.pre = []; v.segPeak = peak; v.quietMs = 0; }
+    if (v.hot >= 2) {
+      v.padMs = Math.max(0, v.pre.length - 4) * blockMs;   // the extra lead-in, not counted as speech
+      v.inSpeech = true; v.seg = v.pre; v.pre = []; v.segPeak = peak; v.quietMs = 0;
+    }
     return;
   }
   v.seg.push(copy);
@@ -3852,7 +3858,7 @@ function voiceAudioBlock(input) {
   if (v.quietMs < 700 && segMs < 5500) return;
 
   // Phrase finished
-  const chunks = v.seg, segPeak = v.segPeak, spokenMs = Math.round(segMs - v.quietMs);
+  const chunks = v.seg, segPeak = v.segPeak, spokenMs = Math.round(segMs - v.quietMs - (v.padMs || 0));
   const segLevel = v.segBlocks ? v.segSum / v.segBlocks : 0;
   voiceVadReset();
   if (spokenMs < 200) return;   // a click or a cough
@@ -3972,19 +3978,31 @@ function voiceSendPhrase(blob, spokenMs, peak) {
     try {
       const session = await voiceSession();
       if (!session) { voiceOnSignedOut(); return; }
-      const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 8000);
-      let res;
-      try {
-        res = await fetch(SUPABASE_TRANSCRIBE_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'audio/wav', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
-          body: blob,
-          signal: abort.signal
-        });
-      } finally { clearTimeout(timer); }
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
-      const text = String(data.text || '').trim();
+      const attempt = async () => {
+        const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 8000);
+        try {
+          const res = await fetch(SUPABASE_TRANSCRIBE_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'audio/wav', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+            body: blob,
+            signal: abort.signal
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+          return data;
+        } finally { clearTimeout(timer); }
+      };
+      // Usually back in two seconds, now and then eight or never: if the first request
+      // is slow or fails, a second is sent and the first answer to arrive is used.
+      const data = await new Promise((resolve, reject) => {
+        let second = false, failures = 0;
+        const failed = e => { if (++failures >= 2) reject(e); else again('failed'); };
+        const again = why => { if (second) return; second = true; clearTimeout(slow); voiceDbg('transcription ' + why + ', asking again'); attempt().then(resolve, failed); };
+        const slow = setTimeout(() => again('slow'), 2500);
+        attempt().then(d => { clearTimeout(slow); resolve(d); }, failed);
+      });
+      let text = String(data.text || '').trim();
+      if (/spoken gym workout commands/i.test(text)) text = '';   // given near-silence the transcriber echoes its own instructions
       const detail = ' (' + spokenMs + 'ms, peak ' + peak.toFixed(2) + ', took ' + (Date.now() - t0) + 'ms)';
       voiceHudNote(text ? '"' + text + '"' : '');
       if (!text) { voiceDbg('heard nothing' + detail); return; }
@@ -3997,6 +4015,8 @@ function voiceSendPhrase(blob, spokenMs, peak) {
     } catch (e) {
       voiceDbg('transcribe failed: ' + e.message);
       voiceHudNote('Voice service problem');
+      // Say so, rather than leave the user wondering whether they were heard
+      if (voicePhase === phaseAtCapture && voicePhase !== 'idle' && voicePhase !== 'resting') speakText('Sorry, I missed that. Say it again.', true);
     }
   });
 }
@@ -4191,8 +4211,10 @@ function handleVoiceResult(raw) {
   if (voiceFinishAt && Date.now() - voiceFinishAt < 25000 && voiceFinishAnswer(t)) return true;
   voiceFinishAt = 0;
   if (VOICE_FINISH.test(t) && !/\d/.test(t) && !/\b(sets?|reps?|exercise)\b/.test(t)) { voiceFinishAsk(); return true; }
+  if (VOICE_REMOVE.test(t)) { voiceRemoveExercise(); return true; }
+  if (voiceSaidSkip(t)) { voiceSkipExercise(); return true; }
   // "Replace this exercise with machine flys" (not "replace the first set...")
-  if (VOICE_SWAP.test(t) && !/\bsets?\b/.test(t) && voicePhase !== 'idle') { voiceSwapStart(voiceSwapTarget(t)); return true; }
+  if (VOICE_SWAP.test(t) && !/\bsets?\b/.test(t) && voicePhase !== 'idle') { voiceSwapStart(voiceSwapTarget(t), voiceSwapAvoid(t)); return true; }
 
   {
     // A set named outright ("edit the first set", "set 2 was at 20 pounds", "all sets were 20 pounds")
@@ -4394,6 +4416,7 @@ let voiceSayFirst = '';    // said ahead of the next prompt (e.g. "Done." before
 
 const VOICE_SWAP = new RegExp([
   '\\b(replace|swap|substitute|sub out|trade|exchange)\\b',
+  '\\bplace (this|that) exercise\\b',   // "replace this exercise" with its start cut off
   '\\bswitch (this|that|it|the|my|out)\\b',   // "switch to X" is today's exercise, not a change to the program
   '\\b(different|another|other|alternative|new|similar|like) (exercise|movement)\\b',
   '\\bsomething (else|different|similar)\\b',
@@ -4406,7 +4429,15 @@ const VOICE_SWAP_VAGUE = new Set(('another like similar different alternative ot
   'muscle muscles group that this it works easier new exercise exercises movement a an the some any me for with please thing option choice').split(' '));
 
 // What the user asked to have instead, from a normalised phrase. '' means "something similar".
+// "…nothing incline", "…not a machine": words the replacement must not have in its name
+const VOICE_SWAP_NOT = /\b(?:nothing|no|not|non|without|except|anything but|but not)\s+((?:[a-z]+\s?){1,3})$/;
+function voiceSwapAvoid(t) {
+  const m = t.match(VOICE_SWAP_NOT);
+  return m ? exWords(m[1]).filter(w => !VOICE_SWAP_VAGUE.has(w)) : [];
+}
+
 function voiceSwapTarget(t) {
+  t = t.replace(VOICE_SWAP_NOT, ' ').replace(/\s+/g, ' ').trim();
   let m, target = '';
   if ((m = t.match(/.*\b(?:with|for)\b (.+)$/))) target = m[1];
   else if ((m = t.match(/\b(?:switch|change|swap|move|go|replace)\b(?: \w+){0,3}? to (.+)$/))) target = m[1];
@@ -4414,7 +4445,13 @@ function voiceSwapTarget(t) {
   else if ((m = t.match(/^(.+?) instead\b/))) target = m[1];
   target = target.replace(/\binstead\b.*$/, ' ').replace(/\b(today|please|now|thanks|thank you)\b/g, ' ').replace(/\s+/g, ' ').trim();
   const words = target.split(' ').filter(Boolean);
-  return words.length && !words.every(w => VOICE_SWAP_VAGUE.has(w)) ? target : '';
+  if (words.length && !words.every(w => VOICE_SWAP_VAGUE.has(w))) return target;
+  if (target) return '';
+  // No "with" or "for" was heard ("replace those fishing chest press"): whatever is left
+  // after the asking words may still be the exercise
+  const left = t.replace(/\b(replace|swap|switch|substitute|sub out|trade|exchange|change|place|give|need|want|get|can|could|would|you|i|we|to|do|doing|don|t|cannot|like|hate|out|instead|let|s|have|try|those|these|1|and)\b/g, ' ')
+    .split(' ').filter(w => w && !VOICE_SWAP_VAGUE.has(w));
+  return left.length >= 2 ? left.join(' ') : '';
 }
 
 // ── Finding exercises by what they were called ──
@@ -4465,7 +4502,7 @@ function exFindByName(query, current, all, prefer) {
 
 // Exercises that could stand in for `current`: same muscle and kind of logging, the
 // closest movement first. `skipIds` are left out (those already in today's workout).
-function exFindSimilar(current, all, skipIds) {
+function exFindSimilar(current, all, skipIds, avoid) {
   const cur = all.find(e => e.id === current.id) || current;
   if (!cur.primaryMuscle) return [];
   const plain = name => exWords(name).filter(w => !Object.values(EX_EQUIP_WORDS).some(l => l.includes(w)));   // without the equipment
@@ -4474,11 +4511,12 @@ function exFindSimilar(current, all, skipIds) {
   for (const e of all) {
     if (e.id === cur.id || (skipIds || []).includes(e.id) || e.primaryMuscle !== cur.primaryMuscle) continue;
     if (cur.recordType && e.recordType !== cur.recordType) continue;
+    if (avoid && avoid.length && exWords(e.name).some(w => avoid.includes(w))) continue;   // "nothing incline"
     const words = plain(e.name), shared = words.filter(w => curWords.includes(w)).length;
     // The same movement with different equipment comes ahead of a variation of it
     out.push({ e, score: shared * 1.5 - (words.length - shared) * 0.3 + (cur.movement && e.movement === cur.movement ? 2 : 0) + (e.custom ? 0.25 : 0) });
   }
-  return out.sort((a, b) => b.score - a.score).slice(0, 6).map(x => x.e);
+  return out.sort((a, b) => b.score - a.score).slice(0, 8).map(x => x.e);
 }
 
 // ── Changing the program ──
@@ -4554,11 +4592,11 @@ function exGuessMuscle(words) {
 function voiceSwapSay(msg) { voiceDbg('replace: ' + msg); updateVoiceHUD(msg); speakText(msg, true); }
 
 // target: what they asked for, or '' for "something similar"
-async function voiceSwapStart(target) {
+async function voiceSwapStart(target, avoid) {
   const exIdx = currentExIdx, ex = exercises[exIdx];
   if (!ex) return;
   const all = exAllExercises(), inWorkout = exercises.map(e => e.id);
-  const similar = () => exFindSimilar(ex, all, inWorkout);
+  const similar = () => exFindSimilar(ex, all, inWorkout, avoid);
   let cands, closest = false;
   const asNew = target.match(/\b(?:new|custom)(?: exercise)?(?: called| named)? (.+)$/);
   if (asNew && asNew[1].trim()) { voiceSwap = { exIdx, cands: [exDraftFromName(asNew[1], ex, all)], pick: 0, at: Date.now() }; voiceSwapOffer(); return; }
@@ -4580,7 +4618,7 @@ async function voiceSwapStart(target) {
     voiceSwapSay('I could not find ' + target + '. Say add it to make it a new exercise' + (fallback.length ? ', or another for something similar.' : '.'));
     return;
   }
-  voiceSwap = { exIdx, cands, pick: 0, at: Date.now() };
+  voiceSwap = { exIdx, cands, pick: 0, at: Date.now(), avoid: avoid || [] };
   if (closest) { voiceSwap.newName = target; voiceSwap.closest = true; }   // not what was said, only near it
   voiceSwapOffer();
 }
@@ -4612,12 +4650,20 @@ function voiceTomorrow() {
 // What is said next while a replacement is on offer
 function voiceSwapAnswer(t) {
   const s = voiceSwap;
-  if (/\b(cancel|never ?mind|forget it|leave it|keep it|stop)\b/.test(t) || /^(no|nope|nah)$/.test(t)) { voiceSwap = null; voiceSwapSay('Okay, keeping ' + exercises[s.exIdx].name + '.'); return true; }
+  if (/\b(cancel|never ?mind|forget it|leave it|keep it|stop)\b/.test(t) || /^(no|nope|nah)( thanks| thank you)?$/.test(t)) { voiceSwap = null; voiceSwapSay('Okay, keeping ' + exercises[s.exIdx].name + '.'); return true; }
   if (s.newName && (/\b(add|create|make|save|new)\b/.test(t) || (s.pick < 0 && /\b(yes|yeah|yep|ok|okay|sure)\b/.test(t)))) {
     voiceSwap = { exIdx: s.exIdx, cands: [exDraftFromName(s.newName, exercises[s.exIdx], exAllExercises())], pick: 0, at: Date.now() };
     voiceSwapOffer(); return true;
   }
-  if (/\b(another|different|next|other|something else|not that|else)\b/.test(t)) {
+  const avoid = voiceSwapAvoid(t);
+  if (/\b(another|different|next|other|something else|not that|else)\b/.test(t) || avoid.length) {
+    if (avoid.length) {
+      // "Another, nothing incline": start the list again without those, and without what was already offered
+      s.avoid = (s.avoid || []).concat(avoid);
+      const seen = s.cands.slice(0, Math.max(0, s.pick + 1)).map(e => e.id);
+      s.cands = exFindSimilar(exercises[s.exIdx], exAllExercises(), exercises.map(e => e.id).concat(seen), s.avoid);
+      s.pick = -1;
+    }
     if (s.pick + 1 >= s.cands.length) { voiceSwap = null; voiceSwapSay('That is all I have. Keeping ' + exercises[s.exIdx].name + '.'); return true; }
     s.pick++; voiceSwapOffer(); return true;   // (s.newName stays, so "add it" still works)
   }
@@ -4820,6 +4866,64 @@ function voiceCorrectTimed(t, raw) {
   }
 }
 
+// ── SKIPPING AND REMOVING AN EXERCISE ─────────────────────────
+// "Skip this exercise" moves on and leaves it to come back to. "Remove this exercise"
+// takes it out of today's workout. Neither changes the program.
+const VOICE_SKIP = new RegExp([
+  '\\b(skip|pass on|move on from|moving on from)\\b.*\\b(this|that|it|exercise)\\b',
+  '\\b(skip it|skip this|skip that|move on|moving on|come back to (this|that|it))\\b',
+  '^(?:go to (?:the )?|on to (?:the )?|onto (?:the )?)?next exercise(?: please)?$',
+  '\\b(done|finished|through) with (this|that|the) (exercise|1)\\b',
+  '\\b(complete|finish|end) (this|that|the) exercise\\b'
+].join('|'));
+const VOICE_REMOVE = /\b(remove|delete|drop|take out|get rid of|cancel|scrap|lose)\b.*\b(this|that|the) (exercise|1)\b|\b(take|leave) (this|that|it)( 1| exercise)? out\b/;
+
+function voiceSaidSkip(t) {
+  return VOICE_SKIP.test(t) || (voicePhase !== 'resting' && /^(skip|pass|next)$/.test(t));   // during a rest those end the rest
+}
+
+function voiceSkipExercise() {
+  const idx = exercises.length ? nextIncompleteIdx(currentExIdx) : -1;
+  if (idx === -1) { voiceSwapSay('There is nothing else to move on to. Say an exercise, or say finish workout.'); return; }
+  voiceDbg('skipped ' + exercises[currentExIdx].name);
+  voiceSwap = null; voiceEdit = null;
+  stopRest(); restCallback = null;
+  voicePreAnnounced = -1;
+  goToEx(idx);   // shows it and announces it
+}
+
+function voiceRemoveExercise() {
+  const idx = currentExIdx, ex = exercises[idx];
+  if (!ex) return;
+  if (ex.loggedSets.some(st => st.logged)) { voiceSwapSay('You have logged sets of ' + ex.name + ', so it stays. Say skip to move on.'); return; }
+  voiceDbg('removed ' + ex.name + ' from today');
+  voiceSwap = null; voiceEdit = null;
+  stopRest(); restCallback = null;
+  exercises.splice(idx, 1);
+  // Notes and the last voice log are kept by position, so they move up with the rest
+  const notes = {};
+  Object.keys(exNotes).forEach(k => { const i = +k; if (i < idx) notes[i] = exNotes[k]; else if (i > idx) notes[i - 1] = exNotes[k]; });
+  exNotes = notes;
+  if (voiceLastLog) { if (voiceLastLog.exIdx === idx) voiceLastLog = null; else if (voiceLastLog.exIdx > idx) voiceLastLog.exIdx--; }
+  voicePreAnnounced = -1;
+  voiceSayFirst = 'Removed ' + ex.name + '.';
+  if (!exercises.length) {
+    currentExIdx = 0;
+    document.getElementById('ex-card').style.display = 'none';
+    document.getElementById('ex-dots').style.display = 'none';
+    voiceAskExercise();
+  } else {
+    const open = i => !exercises[i].loggedSets.every(st => st.logged);
+    let next = exercises.findIndex((e, i) => i >= idx && open(i));
+    if (next === -1) next = exercises.findIndex((e, i) => open(i));
+    if (next === -1) next = Math.min(idx, exercises.length - 1);
+    goToEx(next);   // shows it and announces it
+    renderDots();
+    if (voiceSayFirst) { speakText(voiceSayFirst, true); voiceSayFirst = ''; }   // nothing was announced
+  }
+  saveSnapshot();
+}
+
 // ── SAYING WHAT YOU ARE DOING ─────────────────────────────────
 // Name an exercise and it becomes the one on screen: "leg press", "I'm doing leg
 // press", "switch to curls". With nothing planned the coach asks what you are doing.
@@ -4940,7 +5044,7 @@ const VOICE_FINISH = new RegExp([
   '\\b(i m|i am|we re|we are|im) (all |totally |completely )?(done|finished|through|out|spent|cooked)\\b',
   '\\b(that s|that is|thats) (it|all|a wrap|everything|enough)\\b',
   '\\b(all done|all finished|call it|calling it|wrap it up|that will do|that ll do|done for (today|the day|now)|finished for (today|the day|now)|end it|finish up|finish it)\\b',
-  '^finish$'
+  '^(finish|stop|quit|end)$'
 ].join('|'));
 
 function voiceFinishAsk() {
@@ -4980,6 +5084,8 @@ async function voiceInterpret(text) {
     '"repeat" - they want the last prompt said again\n' +
     '"replace" - they want a different exercise in place of the current one, for good (set "exercise" to the one they named, or null for something similar)\n' +
     '"exercise" - they are saying which exercise they are doing now or next, without asking to replace anything (set "exercise" to its name)\n' +
+    '"skip" - they want to move on to the next exercise and leave this one (skip it, pass, come back to it later, done with this exercise)\n' +
+    '"remove" - they want this exercise taken out of today\'s workout (remove, delete, drop it)\n' +
     '"finish" - they are done with the whole workout and want to end it\n' +
     '"none" - anything else, including talk that is not meant for the app\n' +
     'Reply exactly: {"action":"...","weight":number or null,"reps":number or null,"set":number or "all" or null,"exercise":string or null}. Only give numbers the phrase itself states. ' +
@@ -5001,6 +5107,8 @@ async function voiceInterpret(text) {
   voiceDbg('coach read ' + JSON.stringify(text) + ' as ' + out.action + ' ' + JSON.stringify(said));
 
   if (out.action === 'finish') { voiceFinishAsk(); return; }
+  if (out.action === 'skip')   { voiceSkipExercise(); return; }
+  if (out.action === 'remove') { voiceRemoveExercise(); return; }
   if (out.action === 'exercise') { if (typeof out.exercise === 'string') voiceTryExercise('doing ' + normalizeSpeech(out.exercise)); return; }
   if (out.action === 'replace') { voiceSwapStart(typeof out.exercise === 'string' ? voiceSwapTarget('with ' + normalizeSpeech(out.exercise)) : ''); return; }
   const named = out.set === 'all' ? 'all' : (Number.isInteger(out.set) && out.set >= 1 && out.set <= 12 ? out.set : null);
@@ -5201,10 +5309,14 @@ async function voiceSayOne(text, isCurrent) {
       // and a short wait is better than the workout opening in a different voice
       const patience = voiceFirstLine ? 12000 : 7000;
       voiceFirstLine = false;
-      const bytes = await Promise.race([
-        voiceFetchSpeech(text, name),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('took over ' + patience / 1000 + 's')), patience))
-      ]);
+      let bytes;
+      voiceUrgent++;   // lines being fetched ahead wait for this one
+      try {
+        bytes = await Promise.race([
+          voiceFetchSpeech(text, name),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('took over ' + patience / 1000 + 's')), patience))
+        ]);
+      } finally { voiceUrgent--; voicePrefetchPump(); }
       const waited = Date.now() - t0;
       if (waited > 1500) voiceDbg('waited ' + waited + 'ms for the natural voice');
       const buf = await voiceCtx.decodeAudioData(bytes.slice(0));   // a copy: decoding uses the bytes up
@@ -5261,10 +5373,26 @@ function voiceCleanText(text) {
 }
 
 // Natural speech takes a couple of seconds to arrive — fetch a line we know is coming
+// Lines fetched ahead go two at a time and wait while a line that is needed now is
+// being fetched. (A burst of them was crowding out the line about to be spoken, which
+// then arrived too late and was said in the phone's voice.)
+let voicePrefetchQueue = [], voicePrefetchBusy = 0, voiceUrgent = 0;
+
 function voicePrefetch(text) {
   const name = getVoiceName();
   if (name === 'phone') return;
-  voiceFetchSpeech(voiceCleanText(text), name).catch(() => {});
+  const clean = voiceCleanText(text);
+  if (!clean || voiceAudioCache.has(name + '|' + clean)) return;
+  voicePrefetchQueue.push([clean, name]);
+  voicePrefetchPump();
+}
+
+function voicePrefetchPump() {
+  while (voicePrefetchBusy < 2 && !voiceUrgent && voicePrefetchQueue.length) {
+    const [text, name] = voicePrefetchQueue.shift();
+    voicePrefetchBusy++;
+    voiceFetchSpeech(text, name).catch(() => {}).then(() => { voicePrefetchBusy--; voicePrefetchPump(); });
+  }
 }
 
 // Cut off whatever is being said and drop anything queued
@@ -5283,6 +5411,8 @@ function speakText(text, interrupt) {
   text = voiceCleanText(text);
   if (!text) return;
   voiceDbg('say: ' + text.slice(0, 60));
+  // Start fetching it now, even if it is queued behind another line ("Done." then the next exercise)
+  if (getVoiceName() !== 'phone') voiceFetchSpeech(text, getVoiceName()).catch(() => {});
   if (interrupt) voiceStopSpeech();
   pauseListening();
   const gen = voiceSpeakGen;
