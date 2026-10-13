@@ -1989,20 +1989,21 @@ function initDrag() {
   list.addEventListener('pointermove', e => {
     if (!card || e.pointerId !== pointerId) return;
     shift += e.clientY - lastY; lastY = e.clientY;
-    // Past the middle of the card above or below: change places with it
-    const mid = r => r.top + r.height / 2;
-    const here = card.getBoundingClientRect();
-    const prev = card.previousElementSibling, next = card.nextElementSibling;
-    let swapped = null;
-    if (shift < 0 && prev && prev.classList.contains('bldr-ex-card') && mid(here) < mid(prev.getBoundingClientRect())) { list.insertBefore(card, prev); swapped = prev; }
-    else if (shift > 0 && next && next.classList.contains('bldr-ex-card') && mid(here) > mid(next.getBoundingClientRect())) { list.insertBefore(next, card); swapped = next; }
-    if (swapped) {
-      // The card now sits in a new slot: take that jump out of the offset so it stays under the finger
-      card.style.transform = '';
-      const moved = card.getBoundingClientRect().top - (here.top - shift);
-      shift -= moved;
-    }
     card.style.transform = 'translateY(' + shift + 'px)';
+    // Past the middle of the card above or below: change places with it (a fast
+    // movement can pass more than one card, so keep going until it has settled)
+    const mid = r => r.top + r.height / 2;
+    const isCard = el => !!el && el.classList.contains('bldr-ex-card');
+    for (let i = 0; i < 30; i++) {
+      const here = card.getBoundingClientRect();
+      const prev = card.previousElementSibling, next = card.nextElementSibling;
+      if (isCard(prev) && mid(here) < mid(prev.getBoundingClientRect())) list.insertBefore(card, prev);
+      else if (isCard(next) && mid(here) > mid(next.getBoundingClientRect())) list.insertBefore(next, card);
+      else break;
+      // The card now sits in a new slot: take that jump out of the offset so it stays under the finger
+      shift -= card.getBoundingClientRect().top - here.top;
+      card.style.transform = 'translateY(' + shift + 'px)';
+    }
     // Near the top or bottom of the screen, scroll so a long list can be crossed
     if (e.clientY < 90) window.scrollBy(0, -12); else if (e.clientY > window.innerHeight - 110) window.scrollBy(0, 12);
     e.preventDefault();
