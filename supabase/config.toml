@@ -23,3 +23,10 @@ enabled = true
 # Left off on purpose, as for ai-coach: the function itself requires a signed-in user's token.
 verify_jwt = false
 entrypoint = "./functions/speak/index.ts"
+
+[functions.admin-stats]
+enabled = true
+# Left off on purpose, as for ai-coach: the function itself requires a signed-in user's
+# token, and then only answers the addresses listed in the ADMIN_EMAILS secret.
+verify_jwt = false
+entrypoint = "./functions/admin-stats/index.ts"

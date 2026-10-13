@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="robots" content="noindex">
+<title>LaroFit — Admin</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="larofit.css?v=99">
+<style>
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); margin: 0; }
+.adm { max-width: 980px; margin: 0 auto; padding: calc(18px + env(safe-area-inset-top, 0px)) var(--page-pad) calc(48px + env(safe-area-inset-bottom, 0px)); }
+.adm-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.adm-top a { color: var(--text-2); font-size: 14px; font-weight: 600; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
+.adm h1 { font-family: var(--font-display); font-size: 38px; letter-spacing: 1px; line-height: 1.05; margin: 0; }
+.adm-sub { font-size: 12px; color: var(--text-3); font-family: var(--font-mono); margin: 4px 0 18px; }
+.adm h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); margin: 26px 0 8px; font-weight: 700; }
+.adm-note { font-size: 12px; color: var(--text-3); line-height: 1.5; margin: 6px 0 0; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.tile { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; }
+.tile-num { font-size: 30px; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.tile-label { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+.card { background: var(--bg-card); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: right; padding: 9px 12px; border-bottom: 0.5px solid var(--border); white-space: nowrap; font-variant-numeric: tabular-nums; }
+th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 700; }
+th:first-child, td:first-child { text-align: left; }
+tr:last-child td { border-bottom: none; }
+tr.total td { font-weight: 700; background: var(--bg-card2); }
+.zero { color: var(--text-3); }
+.row { padding: 12px 14px; border-bottom: 0.5px solid var(--border); font-size: 13px; line-height: 1.5; }
+.row:last-child { border-bottom: none; }
+.row-top { display: flex; gap: 10px; justify-content: space-between; color: var(--text-3); font-size: 11px; font-family: var(--font-mono); }
+.row-msg { color: var(--text); font-weight: 600; word-break: break-word; }
+.row-meta { color: var(--text-3); font-size: 12px; word-break: break-word; }
+button.row { display: block; width: 100%; text-align: left; background: none; border-left: none; border-right: none; border-top: none; font-family: inherit; color: inherit; cursor: pointer; min-height: 44px; }
+button.row:active { background: var(--bg-card2); }
+.empty { padding: 18px 14px; font-size: 13px; color: var(--text-3); }
+.state { padding: 60px 20px; text-align: center; color: var(--text-2); font-size: 15px; line-height: 1.6; }
+.log-view { position: fixed; inset: 0; z-index: 500; background: var(--bg); display: none; flex-direction: column; }
+.log-view.show { display: flex; }
+.log-head { display: flex; align-items: center; gap: 12px; padding: calc(10px + env(safe-area-inset-top, 0px)) var(--page-pad) 10px; border-bottom: 0.5px solid var(--border); }
+.log-head div { flex: 1; min-width: 0; font-size: 12px; color: var(--text-3); font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-body { flex: 1; overflow: auto; margin: 0; padding: 14px var(--page-pad) 40px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; color: var(--text-2); }
+</style>
+</head>
+<body>
+<main class="adm">
+  <div class="adm-top"><a href="profile.html">‹ Profile</a></div>
+  <h1>ADMIN</h1>
+  <div class="adm-sub" id="adm-sub">Loading…</div>
+  <div id="adm-body"><div class="state">Loading…</div></div>
+</main>
+
+<div class="log-view" id="log-view" role="dialog" aria-modal="true" aria-label="Voice log">
+  <div class="log-head">
+    <button class="btn btn-outline btn-sm" onclick="closeLog()">Close</button>
+    <div id="log-title"></div>
+    <button class="btn btn-outline btn-sm" onclick="copyLog()">Copy</button>
+  </div>
+  <pre class="log-body" id="log-body"></pre>
+</div>
+
+<div class="lf-toast" id="toast" aria-live="polite"></div>
+
+<script src="supabase.min.js"></script>
+<script src="supabase-client.js?v=99"></script>
+<script>
+const ADMIN_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/admin-stats';
+
+// Rough cost of one request, in US dollars. These are estimates from the providers'
+// list prices and typical request sizes, not billed amounts: check the providers' own
+// dashboards for the real figures.
+const COST = { voice: 0.0001, tts: 0.00075, ai: 0.002 };
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const when = iso => { const d = new Date(iso); return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); };
+const dayLabel = key => new Date(key + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+const num = n => n ? String(n) : '<span class="zero">0</span>';
+const money = n => '$' + n.toFixed(2);
+function showToast(msg) { const el = document.getElementById('toast'); el.textContent = msg; el.style.opacity = '1'; clearTimeout(showToast.t); showToast.t = setTimeout(() => { el.style.opacity = '0'; }, 2200); }
+
+async function call(body) {
+  const session = await LF.auth.session();
+  if (!session) return { status: 401 };
+  const res = await fetch(ADMIN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY },
+    body: JSON.stringify(body || {})
+  });
+  let data = null; try { data = await res.json(); } catch (e) {}
+  return { status: res.status, data };
+}
+
+async function load() {
+  await LF.ready();
+  const body = document.getElementById('adm-body'), sub = document.getElementById('adm-sub');
+  let r;
+  try { r = await call(); } catch (e) { r = { status: 0 }; }
+  if (r.status === 401) { sub.textContent = ''; body.innerHTML = '<div class="state">Sign in first.<br><a class="btn btn-volt" style="margin-top:14px;text-decoration:none;" href="login.html">Sign in</a></div>'; return; }
+  if (r.status === 403) { sub.textContent = ''; body.innerHTML = '<div class="state">This page is not available for your account.</div>'; return; }
+  if (r.status !== 200 || !r.data) { sub.textContent = ''; body.innerHTML = '<div class="state">Could not load the figures' + (r.data && r.data.error ? ': ' + esc(r.data.error) : '') + '.<br><button class="btn btn-outline" style="margin-top:14px;" onclick="load()">Try again</button></div>'; return; }
+  render(r.data);
+}
+
+function render(d) {
+  document.getElementById('adm-sub').textContent = 'As of ' + when(d.generatedAt);
+  const a = d.accounts, days = d.perDay.slice().reverse();   // newest first
+  const cost = r => r.voice * COST.voice + r.tts * COST.tts + r.ai * COST.ai;
+  const tot = d.perDay.reduce((t, r) => ({ signups: t.signups + r.signups, workoutDays: t.workoutDays + r.workoutDays, ai: t.ai + r.ai, voice: t.voice + r.voice, tts: t.tts + r.tts }), { signups: 0, workoutDays: 0, ai: 0, voice: 0, tts: 0 });
+  const today = d.perDay[d.perDay.length - 1];
+
+  document.getElementById('adm-body').innerHTML = `
+    <h2>Accounts</h2>
+    <div class="tiles">
+      <div class="tile"><div class="tile-num">${a.total}</div><div class="tile-label">Accounts</div></div>
+      <div class="tile"><div class="tile-num">${a.new7}</div><div class="tile-label">New in 7 days</div></div>
+      <div class="tile"><div class="tile-num">${a.new30}</div><div class="tile-label">New in 30 days</div></div>
+      <div class="tile"><div class="tile-num">${a.active7}</div><div class="tile-label">Signed in, last 7 days</div></div>
+    </div>
+
+    <h2>Today</h2>
+    <div class="tiles">
+      <div class="tile"><div class="tile-num">${today.workoutDays}</div><div class="tile-label">People who logged a workout</div></div>
+      <div class="tile"><div class="tile-num">${today.voice}</div><div class="tile-label">Phrases transcribed</div></div>
+      <div class="tile"><div class="tile-num">${today.tts}</div><div class="tile-label">Lines spoken by the coach</div></div>
+      <div class="tile"><div class="tile-num">${today.ai}</div><div class="tile-label">AI requests</div></div>
+      <div class="tile"><div class="tile-num">${money(cost(today))}</div><div class="tile-label">Estimated cost</div></div>
+    </div>
+
+    <h2>Last 14 days</h2>
+    <div class="card"><div class="scroll"><table>
+      <tr><th>Day</th><th>Sign-ups</th><th>Active</th><th>Workouts</th><th>Transcribed</th><th>Spoken</th><th>AI</th><th>Est. cost</th></tr>
+      ${days.map(r => `<tr><td>${esc(dayLabel(r.day))}</td><td>${num(r.signups)}</td><td>${num(r.activeUsers)}</td><td>${num(r.workoutDays)}</td><td>${num(r.voice)}</td><td>${num(r.tts)}</td><td>${num(r.ai)}</td><td>${cost(r) ? money(cost(r)) : '<span class="zero">$0.00</span>'}</td></tr>`).join('')}
+      <tr class="total"><td>Total</td><td>${tot.signups}</td><td></td><td>${tot.workoutDays}</td><td>${tot.voice}</td><td>${tot.tts}</td><td>${tot.ai}</td><td>${money(cost(tot))}</td></tr>
+    </table></div></div>
+    <p class="adm-note">Days are in UTC, which is how usage limits are counted. “Workouts” counts people who logged on that day. Cost is a rough estimate (about ${COST.voice * 100}¢ a transcribed phrase, ${COST.tts * 100}¢ a spoken line, ${COST.ai * 100}¢ an AI request), not a bill: the providers’ own dashboards have the real amounts.</p>
+
+    <h2>Newest accounts</h2>
+    <div class="card">${a.newest.length ? a.newest.map(u => `
+      <div class="row"><div class="row-msg">${esc(u.email || '(no email)')}</div>
+      <div class="row-meta">Joined ${esc(when(u.created_at))}${u.last_sign_in_at ? ' · last signed in ' + esc(when(u.last_sign_in_at)) : ' · never signed in'}</div></div>`).join('') : '<div class="empty">No accounts yet.</div>'}</div>
+
+    <h2>Latest error reports</h2>
+    <div class="card">${d.errors.length ? d.errors.map(e => `
+      <div class="row"><div class="row-top"><span>${esc(when(e.created_at))}</span><span>${esc(e.page || '')}${e.build ? ' · ' + esc(e.build) : ''}</span></div>
+      <div class="row-msg">${esc(e.message)}</div>
+      <div class="row-meta">${esc(e.email)} · ${esc((e.device || '').replace(/^Mozilla\/5\.0 \(([^)]*)\).*$/, '$1'))}</div></div>`).join('') : '<div class="empty">No error reports. That is good news.</div>'}</div>
+
+    <h2>Latest voice logs</h2>
+    <div class="card">${d.voiceLogs.length ? d.voiceLogs.map(l => `
+      <button class="row" onclick="openLog('${esc(l.id)}')"><div class="row-top"><span>${esc(when(l.created_at))}</span><span>build ${esc(l.build || '?')}</span></div>
+      <div class="row-msg">${esc(l.reason || 'voice log')}</div><div class="row-meta">${esc(l.email)}</div></button>`).join('') : '<div class="empty">No voice logs yet.</div>'}</div>
+    <p class="adm-note">Tap a voice log to read it.</p>`;
+}
+
+let currentLog = '';
+async function openLog(id) {
+  document.getElementById('log-title').textContent = 'Loading…';
+  document.getElementById('log-body').textContent = '';
+  document.getElementById('log-view').classList.add('show');
+  let r; try { r = await call({ voiceLog: id }); } catch (e) { r = { status: 0 }; }
+  if (r.status !== 200 || !r.data || !r.data.voiceLog) { document.getElementById('log-title').textContent = 'Could not load this log'; return; }
+  const l = r.data.voiceLog;
+  currentLog = l.log || '';
+  document.getElementById('log-title').textContent = when(l.created_at) + ' · ' + (l.reason || '');
+  document.getElementById('log-body').textContent = currentLog;
+}
+function closeLog() { document.getElementById('log-view').classList.remove('show'); }
+async function copyLog() { try { await navigator.clipboard.writeText(currentLog); showToast('Copied'); } catch (e) { showToast('Could not copy'); } }
+
+load();
+</script>
+</body>
+</html>

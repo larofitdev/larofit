@@ -10,6 +10,7 @@ const make = (kinds, aiReply = '{"action":"none"}') => new Function('aiReply', '
   let exNotes = {};
   let restInterval = null, isPaused = false; const pauseWorkout = () => { isPaused = true; }, resumeWorkout = () => { isPaused = false; };
   let voiceEarbudsOut = false, voiceHadEarbuds = false, voiceAutoPaused = false; const voiceHoldMic = async () => {};
+  const getExerciseHistory = id => id === 'e-hist' ? [{ sets: [{ duration: 30, distance: 2 }] }] : [];
   const _prCredited = new Set(), said = [], calls = [];
   let voiceSpeakChain = Promise.resolve(), holdShown = false, restEnd = null;
   const exercises = kinds.map((k, i) => ({ id: 'e' + i, name: k === 'timed' ? 'Plank' : k === 'cardio' ? 'Treadmill' : 'Bench Press', kind: k, sets: k === 'cardio' ? 1 : 3, reps: k === 'timed' ? 45 : 10, durationSec: k === 'timed' ? 45 : null, restSec: 60,

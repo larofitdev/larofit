@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=98">
+<link rel="stylesheet" href="larofit.css?v=99">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -568,6 +568,15 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 }
 .ex-name-bar-skip:active { background: var(--border); }
 .ex-name-bar-skip i { font-size: 14px; }
+#ex-replace-btn { min-width: 36px; min-height: 30px; justify-content: center; padding: 4px 8px; }
+#ex-replace-btn i { font-size: 16px; }
+
+/* "Today only, or every remaining workout?" */
+.replace-sheet { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.6); display: flex; align-items: flex-end; justify-content: center; }
+.replace-sheet-card { background: var(--bg-card); width: 100%; max-width: 520px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 22px var(--page-pad) calc(18px + env(safe-area-inset-bottom)); }
+.replace-sheet-title { font-family: var(--font-display); font-size: 26px; letter-spacing: 0.5px; line-height: 1.1; color: var(--text); margin-bottom: 6px; }
+.replace-sheet-sub { font-size: 14px; line-height: 1.5; color: var(--text-2); margin-bottom: 16px; }
+.replace-sheet-card .btn { margin-bottom: 10px; min-height: 50px; }
 
 /* Rest timer */
 .rest-overlay {
@@ -760,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=98"></script>
-<script src="larofit-exercises.js?v=98"></script>
+<script src="supabase-client.js?v=99"></script>
+<script src="larofit-exercises.js?v=99"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=98"></script>
+<script src="larofit-nav.js?v=99"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -870,6 +879,9 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       <div class="ex-name-bar">
         <div class="ex-name-bar-title" id="ex-name">—</div>
         <div class="ex-name-bar-1rm"   id="ex-1rm" style="display:none;"></div>
+        <button class="ex-name-bar-skip" id="ex-replace-btn" onclick="openReplacePicker()" aria-label="Replace this exercise with another">
+          <i class="ti ti-replace"></i>
+        </button>
         <button class="ex-name-bar-skip" id="ex-skip-btn" onclick="skipExercise()" aria-label="Skip to next exercise" style="display:none;">
           <span>Skip</span><i class="ti ti-player-skip-forward"></i>
         </button>
@@ -1718,30 +1730,52 @@ function libRecordType(id) {
   return e ? (e.recordType || null) : null;
 }
 
+// A planned exercise as it is worked on today: its sets to fill in, today's rep target
+// (weights) or hold time (holds), and the weight the program or the coach calls for.
+function workoutExerciseFrom(ex) {
+  // Normalize built-in record types from the library before building the row
+  const lib = libRecordType(ex.id);
+  const exN = (lib && lib !== ex.recordType) ? { ...ex, recordType: lib } : ex;
+  const type = exTypeOf(exN), timed = type === 'timed_bodyweight' || type === 'hiit';
+  const planHold = timed ? (parseInt(exN.durationSec) || parseInt(exN.reps) || 30) : null;   // what the program asks for
+  return {
+    id:         exN.id,
+    name:       exN.name || lookupExName(exN.id),
+    sets:       exN.sets    || 3,
+    reps:       exN.reps    || 10,
+    durationSec: timed ? holdTargetFor({ id: exN.id, name: exN.name, planHold }) : (exN.durationSec || null),   // today's hold
+    planHold,
+    restSec:    exN.restSec || 90,
+    type,
+    mediaUrl:   exN.mediaUrl || lookupMediaUrl(exN.id),
+    planWeight: parseFloat(exN.weight) || 0,   // weight set in the program builder
+    targetReps: (type === 'strength' && coachPlanFor(exN) || {}).reps || null,   // today's aim, when the coach has one
+    loggedSets: buildLoggedSets(exN)
+  };
+}
+
 function buildExerciseList(exArr, workoutName) {
   totalPRs = 0; _prCredited = new Set();
-  exercises = exArr.map(ex => {
-    // Normalize built-in record types from the library before building the row
-    const lib = libRecordType(ex.id);
-    const exN = (lib && lib !== ex.recordType) ? { ...ex, recordType: lib } : ex;
-    return {
-      id:         exN.id,
-      name:       exN.name || lookupExName(exN.id),
-      sets:       exN.sets    || 3,
-      reps:       exN.reps    || 10,
-      durationSec: exN.durationSec || null,
-      restSec:    exN.restSec || 90,
-      type:       exTypeOf(exN),
-      mediaUrl:   exN.mediaUrl || lookupMediaUrl(exN.id),
-      planWeight: parseFloat(exN.weight) || 0,   // weight set in the program builder
-      targetReps: (exTypeOf(exN) === 'strength' && coachPlanFor(exN) || {}).reps || null,   // today's aim, when the coach has one
-      loggedSets: buildLoggedSets(exN)
-    };
-  });
+  exercises = exArr.map(workoutExerciseFrom);
 
   if (!exercises.length && !isFreeForm) { show('no-program-state'); return; }
 
   startWorkout(workoutName);
+}
+
+// "Last: 40s, 40s, 35s · Today: 45s" for a hold, "Last: 30 min · 2 mi" for cardio
+function lastTimeText(ex) {
+  const last = (isTimed(ex) || isCardio(ex)) ? getExerciseHistory(ex.id || ex.name, 1)[0] : null;
+  if (isTimed(ex)) {
+    const held = last ? last.sets.map(st => parseFloat(st.holdTime) || 0).filter(Boolean) : [];
+    const today = 'Today: ' + (parseInt(ex.durationSec) || 30) + 's' + (last && last.coach && last.coach.stage === 'up' ? ' (5 more than last time)' : '');
+    return (held.length ? 'Last: ' + held.map(h => h + 's').join(', ') + ' · ' : '') + today;
+  }
+  if (isCardio(ex) && last) {
+    const st = last.sets[0] || {}, mins = parseFloat(st.duration) || 0, dist = parseFloat(st.distance) || 0;
+    return mins ? 'Last: ' + mins + ' min' + (dist ? ' · ' + dist + ' mi' : '') : '';
+  }
+  return '';
 }
 
 function buildLoggedSets(ex) {
@@ -1955,8 +1989,10 @@ function renderExercise() {
     tipEl.textContent   = '';
     tipEl.style.display = tipEl.textContent ? '' : 'none';
   } else {
-    prevEl.style.display = 'none';
     document.getElementById('coach-tip').style.display = 'none';
+    const text = lastTimeText(ex);
+    prevEl.style.display = text ? 'flex' : 'none';
+    if (text) document.getElementById('prev-best-text').textContent = text;
   }
 
   renderHowTo(ex);
@@ -2494,6 +2530,7 @@ function logTimedSet(exIdx, setIdx) {
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
+  if (allDone) holdFinished(ex);
   if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
   else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
 }
@@ -2673,6 +2710,7 @@ function finishHold(actualSecs) {
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); renderDots(); updateOverallProgress();
   const exIdx = holdExIdx;
+  if (allDone) holdFinished(ex);
   if (allDone) {
     const ni = nextIncompleteIdx(exIdx);
     if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: ' + exercises[ni].name);
@@ -3191,6 +3229,7 @@ function openExPicker() {
 }
 
 function closeExPicker() {
+  pickerReplaceIdx = null;   // closed without choosing
   document.getElementById('ex-picker-overlay').classList.remove('show');
   document.getElementById('ex-picker-search').value = '';
   filterPicker();
@@ -3346,11 +3385,66 @@ function toggleDetailSection(btn) {
   content.classList.toggle('open');
 }
 
+// ── REPLACE (by tap) ──────────────────────────────────────────
+// The button on the exercise card opens the same picker used for adding an exercise;
+// what is chosen takes the place of the exercise on screen.
+let pickerReplaceIdx = null;   // which exercise the picker is choosing a replacement for
+
+function openReplacePicker() {
+  if (!exercises[currentExIdx]) return;
+  pickerReplaceIdx = currentExIdx;
+  openExPicker();
+  showToast('Choose what to do instead of ' + exercises[currentExIdx].name);
+}
+
+function askReplaceScope(exIdx, nw) {
+  const old = exercises[exIdx];
+  if (!old || nw.id === old.id) return;
+  const started = old.loggedSets.some(st => st.logged);
+  const count = programSwapCount(activeProgram(), old, started ? voiceTomorrow() : localDateStr());
+  if (started && !count) { showToast('You have already logged sets of ' + old.name + ' today'); return; }
+  const done = whole => {
+    closeReplaceSheet();
+    const r = applyExerciseSwap(exIdx, nw, whole);
+    if (!r.started) goToEx(exIdx);
+    renderDots();
+    showToast(r.started ? nw.name + ' replaces ' + old.name + ' from your next workout'
+            : r.changed > 1 ? 'Replaced in ' + r.changed + ' workouts' : 'Replaced with ' + nw.name);
+  };
+  if (!started && count <= 1) { done(count === 1); return; }   // nothing else in the program to ask about
+  const wrap = document.createElement('div');
+  wrap.className = 'replace-sheet'; wrap.id = 'replace-sheet';
+  wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
+  wrap.onclick = e => { if (e.target === wrap) closeReplaceSheet(); };
+  wrap.innerHTML = `<div class="replace-sheet-card">
+    <div class="replace-sheet-title">${escHtml(nw.name)}</div>
+    <div class="replace-sheet-sub">${started
+      ? 'You have logged sets of ' + escHtml(old.name) + ' today, so today stays as it is. Replace it from your next workout?'
+      : 'In place of ' + escHtml(old.name) + '. Just today, or in every remaining workout of your program?'}</div>
+    ${started ? '' : '<button class="btn btn-outline btn-full" id="replace-today">Today only</button>'}
+    <button class="btn btn-volt btn-full" id="replace-all">${started ? 'Replace from next workout' : 'All ' + count + ' remaining workouts'}</button>
+    <button class="btn btn-ghost btn-full" id="replace-cancel" style="color:var(--text-3);margin-bottom:0;">Cancel</button>
+  </div>`;
+  document.body.appendChild(wrap);
+  if (!started) document.getElementById('replace-today').onclick = () => done(false);
+  document.getElementById('replace-all').onclick = () => done(true);
+  document.getElementById('replace-cancel').onclick = closeReplaceSheet;
+}
+
+function closeReplaceSheet() { const el = document.getElementById('replace-sheet'); if (el) el.remove(); }
+
 function addExerciseFreeForm(exId) {
   if (typeof LAROFIT_EXERCISES === 'undefined') return;
   const customs = getCustomExercises();
   const data = customs.find(e => e.id === exId) || LAROFIT_EXERCISES.find(e => e.id === exId);
   if (!data) return;
+  if (pickerReplaceIdx !== null) {   // the picker was opened by Replace
+    const exIdx = pickerReplaceIdx;
+    pickerReplaceIdx = null;
+    closeExPicker();
+    askReplaceScope(exIdx, data);
+    return;
+  }
 
   const newEx = {
     id:         data.id,
@@ -3489,6 +3583,50 @@ function coachPlanFor(ex) {
   };
 }
 
+// ── Holds ──
+// A timed hold has no weight to add, so the time is what moves:
+//   every planned set held for the target              → 5 seconds more next time
+//   a set under 70% of the target, two sessions running → 5 seconds less (never under 10)
+//   anything else                                       → the same target
+const HOLD_STEP = 5, HOLD_MIN = 10;
+
+// Today's hold for a planned exercise: where the coach left it last time, or what the
+// program asks for. If the program's own time has been changed since, start from that.
+function holdTargetFor(ex) {
+  const base = parseInt(ex.planHold) || 30;
+  const last = getExerciseHistory(ex.id || ex.name, 1)[0];
+  const c = last && last.coach;
+  return c && c.nextHold && c.planHold === base ? c.nextHold : base;
+}
+
+// What to hold next time, given today's sets and the session before
+function holdProgression(ex, sets, earlier) {
+  const target = parseInt(ex.durationSec) || 30, need = parseInt(ex.sets) || sets.length;
+  const held = (sets || []).map(st => parseFloat(st.holdTime) || 0).filter(Boolean);
+  if (!held.length) return null;
+  const cleared = held.length >= need && held.every(h => h >= target);
+  const struggled = held.some(h => h < target * 0.7);
+  let next = target, stage = 'same';
+  if (cleared) { next = target + HOLD_STEP; stage = 'up'; }
+  else if (struggled && earlier && earlier.coach && earlier.coach.struggled && target - HOLD_STEP >= HOLD_MIN) { next = target - HOLD_STEP; stage = 'down'; }
+  return {
+    nextHold: next, stage, planHold: parseInt(ex.planHold) || target, v: 3,
+    struggled: struggled && stage !== 'down',   // remembered, so a second time running can be recognised
+    note: stage === 'up' ? 'Next time, hold for ' + next + ' seconds.' : stage === 'down' ? 'Next time, drop back to ' + next + ' seconds.' : ''
+  };
+}
+
+// The last set of a hold exercise is in: keep next time's target with the workout
+function holdFinished(ex) {
+  if (!isTimed(ex) || !ex.loggedSets.every(st => st.logged)) return;
+  const before = getExerciseHistory(ex.id || ex.name, 1)[0];
+  const p = holdProgression(ex, ex.loggedSets, before);
+  if (!p) return;
+  ex.coachNext = p;
+  saveSnapshot();
+  if (p.note && workoutMode !== 'voice') showToast(p.note);
+}
+
 // Progression is part of every workout (there used to be a switch for it)
 function aiProgressionOn() { return true; }
 
@@ -3555,7 +3693,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 89;
+const VOICE_BUILD = 90;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4301,7 +4439,7 @@ function voiceAnnounceExercise(ex) {
     voicePreAnnounced = -1;
     voicePrompt(target.kind === 'timed'
       ? voiceExerciseLine(ex, target) + '. Say start and I will time you, or say your time when finished.'
-      : ex.name + '. Say your time when finished, like 20 minutes, 2 miles.', true);
+      : ex.name + '. ' + voiceLastCardio(ex), true);
     return;
   }
   if (target.bw) {
@@ -4936,27 +5074,33 @@ function voiceSwapApply(wholeProgram) {
     LF.db.saveCustomExercise(nw).then(r => { if (r && r.error) voiceDbg('replace: new exercise not saved to the account (' + (r.error.message || r.error) + ')'); });
     voiceDbg('replace: added new exercise ' + nw.name + ' (' + nw.primaryMuscle + ', ' + nw.equipment + ')');
   }
+  const r = applyExerciseSwap(s.exIdx, nw, wholeProgram && s.count);
+  voiceDbg('replace: ' + old.name + ' -> ' + nw.name + (r.changed ? ' in ' + r.changed + ' workouts' : ' today only'));
+  if (r.started) { voiceSwapSay('Done. ' + nw.name + ' replaces ' + old.name + ' from your next workout.'); return; }
+  voiceSayFirst = r.changed > 1 ? 'Done. Changed in ' + r.changed + ' workouts.' : 'Done.';
+  goToEx(s.exIdx);   // shows it and announces it
+}
+
+// Put `nw` in place of the exercise at exIdx. With wholeProgram, every remaining
+// workout in the active program changes too. If sets of it are already logged today,
+// today's stays as it is and the change starts tomorrow. Returns { changed, started }.
+function applyExerciseSwap(exIdx, nw, wholeProgram) {
+  const old = exercises[exIdx];
+  const started = old.loggedSets.some(st => st.logged);
   let changed = 0;
-  if (wholeProgram && s.count) {
+  if (wholeProgram) {
     const program = activeProgram();
-    changed = programSwapExercise(program, old, nw, s.started ? voiceTomorrow() : localDateStr());
+    if (program) changed = programSwapExercise(program, old, nw, started ? voiceTomorrow() : localDateStr());
     if (changed) LF.db.saveProgram(program).then(r => { if (r && r.error) voiceDbg('replace: program not saved to the account (' + (r.error.message || r.error) + ')'); });
   }
-  voiceDbg('replace: ' + old.name + ' -> ' + nw.name + (changed ? ' in ' + changed + ' workouts' : ' today only'));
-  if (s.started) { voiceSwapSay('Done. ' + nw.name + ' replaces ' + old.name + ' from your next workout.'); return; }
-
-  // Today's workout: same sets, reps and rest, with the new exercise's own weights
-  const plan = { id: nw.id, name: nw.name, recordType: nw.recordType, sets: old.sets, reps: old.reps, restSec: old.restSec };
-  exercises[s.exIdx] = {
-    id: nw.id, name: nw.name, sets: old.sets, reps: old.reps, durationSec: old.durationSec || null, restSec: old.restSec,
-    type: exTypeOf(plan), mediaUrl: lookupMediaUrl(nw.id), planWeight: 0,
-    targetReps: (exTypeOf(plan) === 'strength' && coachPlanFor(plan) || {}).reps || null,
-    loggedSets: buildLoggedSets(plan)
-  };
-  stopRest();
-  voiceSayFirst = changed > 1 ? 'Done. Changed in ' + changed + ' workouts.' : 'Done.';
-  goToEx(s.exIdx);   // shows it and announces it
+  if (!started) {
+    // Today's workout: same sets, reps and rest, with the new exercise's own weights
+    exercises[exIdx] = workoutExerciseFrom({ id: nw.id, name: nw.name, recordType: nw.recordType, sets: old.sets, reps: old.reps, restSec: old.restSec,
+                                             durationSec: old.planHold || old.durationSec || null, mediaUrl: nw.mediaUrl });
+    stopRest();
+  }
   saveSnapshot();
+  return { changed, started };
 }
 
 // The quick match found nothing: ask the coach model which exercises were meant
@@ -5032,6 +5176,14 @@ function voiceHoldRunning() {
   return !!el && el.classList.contains('show');
 }
 
+// "Last time, 30 minutes, 2 miles. Say your time when finished." (or the example, the first time)
+function voiceLastCardio(ex) {
+  const last = getExerciseHistory(ex.id || ex.name, 1)[0], st = last && last.sets[0] || {};
+  const mins = parseFloat(st.duration) || 0, dist = parseFloat(st.distance) || 0;
+  if (!mins) return 'Say your time when finished, like 20 minutes, 2 miles.';
+  return 'Last time, ' + voiceSayTime(mins * 60) + (dist ? ', ' + dist + (dist === 1 ? ' mile' : ' miles') : '') + '. Say your time when finished.';
+}
+
 // Planned length of a hold, in seconds
 function voiceHoldTarget(ex) { return parseInt(ex.durationSec) || parseInt(ex.reps) || 30; }
 
@@ -5095,6 +5247,7 @@ function voiceAfterLog(exIdx, msg) {
   voicePhase = 'resting';
   voicePrompt(msg, true);
   if (!exercises[exIdx].loggedSets.every(st => st.logged)) return;
+  if (exercises[exIdx].coachNext && exercises[exIdx].coachNext.note) speakText(exercises[exIdx].coachNext.note);
   if (exercises.every(ex => ex.loggedSets.every(st => st.logged))) return;
   const ni = nextIncompleteIdx(exIdx);
   if (ni !== -1) { speakText(voiceNextExerciseLine(ni)); voicePreAnnounced = ni; }

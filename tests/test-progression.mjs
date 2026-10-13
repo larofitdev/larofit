@@ -6,7 +6,7 @@ if (a < 0 || b < a) throw new Error('markers');
 
 const S = (...pairs) => pairs.map(([weight, reps]) => ({ weight, reps }));
 const three = (w, r = 10) => S([w, r], [w, r], [w, r]);
-const make = (history, unit = 'lbs') => new Function('store', 'todayKey', 'aiProgressionOn', 'voiceUnit', 'weightUnit', src.slice(a, b) + '; return { coachPlanFor, progressionFor, progressionNote };')({ get: () => history }, '2026-10-10', () => true, () => unit === 'kg' ? 'kilos' : 'pounds', () => unit);
+const make = (history, unit = 'lbs') => new Function('store', 'todayKey', 'aiProgressionOn', 'voiceUnit', 'weightUnit', src.slice(a, b) + '; return { coachPlanFor, progressionFor, progressionNote, holdTargetFor, holdProgression };')({ get: () => history }, '2026-10-10', () => true, () => unit === 'kg' ? 'kilos' : 'pounds', () => unit);
 const EX = { id: 'x', name: 'x', sets: 3, reps: 10 };
 // sessions: newest first
 const plan = (sessions, ex = EX) => {
@@ -93,6 +93,35 @@ console.log('Working in kilograms: +1 kg under 10 kg, +2.5 kg from 10 kg');
   const note = make({}, 'kg'); const said = note.progressionNote({ ...EX, targetReps: 12 }, note.progressionFor(EX, three(60, 12), null));
   const ok = said === 'Next time, go up to 62.5 kilos.'; if (!ok) fail++;
   console.log((ok ? 'ok   ' : 'FAIL ') + 'the coach says kilos'.padEnd(64) + '-> ' + JSON.stringify(said));
+}
+
+console.log('Holds: 5 seconds more when every set reaches the target');
+{
+  const H = (...secs) => secs.map(s => ({ holdTime: s }));
+  const api = make({});
+  const hold = (name, ex, sets, earlier, want) => {
+    const r = api.holdProgression(ex, sets, earlier), got = r ? r.nextHold + 's ' + r.stage : null, ok = got === want; if (!ok) fail++;
+    console.log((ok ? 'ok   ' : 'FAIL ') + name.padEnd(64) + '-> ' + got + (r && r.note ? '   "' + r.note + '"' : '') + (ok ? '' : '   expected ' + want));
+    return r;
+  };
+  const PLANK = { id: 'p', name: 'Plank', sets: 3, durationSec: 45, planHold: 45 };
+  hold('45, 45, 45 with a 45s target', PLANK, H(45, 45, 45), null, '50s up');
+  hold('50, 47, 45 with a 45s target', PLANK, H(50, 47, 45), null, '50s up');
+  hold('45, 45, 40 (one set short)', PLANK, H(45, 45, 40), null, '45s same');
+  hold('only two of three sets done', PLANK, H(45, 45), null, '45s same');
+  const first = hold('45, 30, 25 (well short, first time)', PLANK, H(45, 30, 25), null, '45s same');
+  hold('well short again the next session', PLANK, H(40, 30, 28), { coach: first }, '40s down');
+  hold('short, but the session before was fine', PLANK, H(40, 30, 28), { coach: { struggled: false } }, '45s same');
+  hold('a 10s hold cannot drop further', { ...PLANK, durationSec: 10, planHold: 10 }, H(5, 5, 5), { coach: { struggled: true } }, '10s same');
+
+  // carried to the next workout
+  const hist = coach => ({ '2026-10-09': { exercises: [{ id: 'p', name: 'Plank', sets: H(45, 45, 45), coach }] } });
+  const target = (name, history, ex, want) => { const got = make(history).holdTargetFor(ex), ok = got === want; if (!ok) fail++;
+    console.log((ok ? 'ok   ' : 'FAIL ') + name.padEnd(64) + '-> ' + got + 's' + (ok ? '' : '   expected ' + want)); };
+  target("never done: the program's own time", {}, { id: 'p', planHold: 45 }, 45);
+  target('after a session that earned 5 more', hist({ nextHold: 50, planHold: 45, stage: 'up' }), { id: 'p', planHold: 45 }, 50);
+  target("the program's time was changed since: start from that", hist({ nextHold: 50, planHold: 45 }), { id: 'p', planHold: 60 }, 60);
+  target('a session saved before this rule existed', hist(null), { id: 'p', planHold: 45 }, 45);
 }
 
 console.log('What the coach says after the last set');
