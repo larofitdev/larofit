@@ -8,7 +8,7 @@
 <title>LaroFit — Admin</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=99">
+<link rel="stylesheet" href="larofit.css?v=100">
 <style>
 body { background: var(--bg); color: var(--text); font-family: var(--font-body); margin: 0; }
 .adm { max-width: 980px; margin: 0 auto; padding: calc(18px + env(safe-area-inset-top, 0px)) var(--page-pad) calc(48px + env(safe-area-inset-bottom, 0px)); }
@@ -67,14 +67,17 @@ button.row:active { background: var(--bg-card2); }
 <div class="lf-toast" id="toast" aria-live="polite"></div>
 
 <script src="supabase.min.js"></script>
-<script src="supabase-client.js?v=99"></script>
+<script src="supabase-client.js?v=100"></script>
 <script>
 const ADMIN_URL = 'https://sdaswuokokoxgsuwfjpg.supabase.co/functions/v1/admin-stats';
 
 // Rough cost of one request, in US dollars. These are estimates from the providers'
 // list prices and typical request sizes, not billed amounts: check the providers' own
 // dashboards for the real figures.
-const COST = { voice: 0.0001, tts: 0.00075, ai: 0.002 };
+// Speech and transcription were calibrated on 2026-10-13 against OpenAI's bill: $1.11 for
+// 853 spoken lines and 1,347 transcriptions. The AI figure has not been checked against
+// Anthropic's bill yet.
+const COST = { voice: 0.00014, tts: 0.0011, ai: 0.002 };
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const when = iso => { const d = new Date(iso); return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); };
@@ -137,7 +140,7 @@ function render(d) {
       ${days.map(r => `<tr><td>${esc(dayLabel(r.day))}</td><td>${num(r.signups)}</td><td>${num(r.activeUsers)}</td><td>${num(r.workoutDays)}</td><td>${num(r.voice)}</td><td>${num(r.tts)}</td><td>${num(r.ai)}</td><td>${cost(r) ? money(cost(r)) : '<span class="zero">$0.00</span>'}</td></tr>`).join('')}
       <tr class="total"><td>Total</td><td>${tot.signups}</td><td></td><td>${tot.workoutDays}</td><td>${tot.voice}</td><td>${tot.tts}</td><td>${tot.ai}</td><td>${money(cost(tot))}</td></tr>
     </table></div></div>
-    <p class="adm-note">Days are in UTC, which is how usage limits are counted. “Workouts” counts people who logged on that day. Cost is a rough estimate (about ${COST.voice * 100}¢ a transcribed phrase, ${COST.tts * 100}¢ a spoken line, ${COST.ai * 100}¢ an AI request), not a bill: the providers’ own dashboards have the real amounts.</p>
+    <p class="adm-note">Days are in UTC, which is how usage limits are counted. “Workouts” counts people who logged on that day. Cost is a rough estimate (about ${(COST.voice * 100).toFixed(3)}¢ a transcribed phrase, ${(COST.tts * 100).toFixed(2)}¢ a spoken line, ${(COST.ai * 100).toFixed(1)}¢ an AI request), not a bill: the providers’ own dashboards have the real amounts.</p>
 
     <h2>Newest accounts</h2>
     <div class="card">${a.newest.length ? a.newest.map(u => `
