@@ -99,7 +99,7 @@ window.LF = {
     },
 
     // Sign up with email + password
-    async signUp(email, password, fullName) {
+    async signUp(email, password, fullName, extra) {
       const sb = await lfReady();
       const firstName = fullName.trim().split(' ')[0];
       const { data, error } = await sb.auth.signUp({
@@ -109,6 +109,7 @@ window.LF = {
           data: {
             full_name: fullName.trim(),
             name:      firstName,
+            ...(extra || {}),   // e.g. when the terms were accepted
           },
           emailRedirectTo: 'https://larofit.com/verified.html'
         }

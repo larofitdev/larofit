@@ -178,6 +178,13 @@ input, select { font-size: 16px !important; }
 .su-btn.loading .btn-text { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.su-agree {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin: 4px 0 14px; cursor: pointer;
+  font-size: 13px; line-height: 1.5; color: var(--text-2);
+}
+.su-agree input { width: 24px; height: 24px; margin: 0; flex-shrink: 0; accent-color: var(--volt-dark); }
+.su-agree a { color: var(--volt-dark); font-weight: 700; }
 .su-note {
   font-size: 11px;
   color: var(--text-3);
@@ -271,6 +278,14 @@ input, select { font-size: 16px !important; }
              autocomplete="new-password">
     </div>
 
+    <!-- Age and agreement -->
+    <label class="su-agree" for="f-agree">
+      <input type="checkbox" id="f-agree">
+      <span>I am at least 16 years old and I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a>,
+      the <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a> and the
+      <a href="disclaimer.html" target="_blank" rel="noopener">Health Disclaimer</a>.</span>
+    </label>
+
     <!-- Error -->
     <div class="su-error" id="su-error"></div>
 
@@ -280,7 +295,7 @@ input, select { font-size: 16px !important; }
       <span class="btn-text"><i class="ti ti-rocket"></i> Create account</span>
     </button>
 
-    <div class="su-note">By creating an account you agree to our Terms of Service.</div>
+    <div class="su-note">Exercise carries risk. Talk to a doctor before starting a new programme.</div>
     <div class="su-signin">Already have an account? <a href="login.html">Sign in</a></div>
 
    </div><!-- /su-form-view -->
@@ -355,13 +370,14 @@ async function handleSignup() {
   if (!email || !email.includes('@')) return showError('Please enter a valid email address.');
   if (pass.length < 8)                return showError('Password must be at least 8 characters.');
   if (pass !== pass2)                 return showError('Passwords do not match.');
+  if (!document.getElementById('f-agree').checked) return showError('Please confirm your age and agree to the terms to continue.');
 
   // Loading state
   btn.disabled = true;
   btn.classList.add('loading');
 
   await LF.ready();
-  const { data, error } = await LF.auth.signUp(email, pass, name);
+  const { data, error } = await LF.auth.signUp(email, pass, name, { terms_accepted_at: new Date().toISOString(), terms_version: '2026-10-13' });
 
   btn.disabled = false;
   btn.classList.remove('loading');
