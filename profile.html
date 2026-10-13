@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#f5f5f0">
 <title>LaroFit — Profile</title>
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="appletouchicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="larofit.css?v=2">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
@@ -588,27 +588,19 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <!-- ── TOOLS ── -->
   <div class="lf-section-label">Tools</div>
   <div class="prof-section" style="overflow:hidden;">
-    <a class="nav-link-row" href="ai-coach.html">
+    <a class="nav-link-row" href="ai-builder.html">
       <div class="nav-link-icon">🤖</div>
       <div class="nav-link-text">
-        <div class="nav-link-title">AI Coach</div>
-        <div class="nav-link-sub">Chat with your personal AI fitness coach</div>
+        <div class="nav-link-title">Build a workout with AI</div>
+        <div class="nav-link-sub">Describe what you want and the coach builds it</div>
       </div>
       <div class="nav-link-arrow">›</div>
     </a>
-    <a class="nav-link-row" href="find-trainer.html">
-      <div class="nav-link-icon">🔍</div>
+    <a class="nav-link-row" href="measurements.html">
+      <div class="nav-link-icon">📏</div>
       <div class="nav-link-text">
-        <div class="nav-link-title">Find a Trainer</div>
-        <div class="nav-link-sub">Browse certified personal trainers</div>
-      </div>
-      <div class="nav-link-arrow">›</div>
-    </a>
-    <a class="nav-link-row" href="group-feed.html">
-      <div class="nav-link-icon">👥</div>
-      <div class="nav-link-text">
-        <div class="nav-link-title">Group Feed</div>
-        <div class="nav-link-sub">See what your community is working on</div>
+        <div class="nav-link-title">Body measurements</div>
+        <div class="nav-link-sub">Log your weight and measurements</div>
       </div>
       <div class="nav-link-arrow">›</div>
     </a>
@@ -635,22 +627,11 @@ button, input, select, a, textarea { touch-action: manipulation; }
       <div id="coach-voices" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
       <div class="toggle-sub" style="margin-top:8px;">Marin, Cedar, Coral and Ash are AI-generated voices, not real people.</div>
     </div>
-    <!-- Notifications -->
-    <div class="toggle-row">
-      <div>
-        <div class="toggle-label">Workout reminders</div>
-        <div class="toggle-sub">Daily push notifications</div>
-      </div>
-      <label class="lf-toggle">
-        <input type="checkbox" id="tog-notif" onchange="saveSetting('notif', this.checked)">
-        <span class="lf-toggle-slider"></span>
-      </label>
-    </div>
     <!-- Rest timer sound -->
     <div class="toggle-row">
       <div>
-        <div class="toggle-label">Rest timer sound</div>
-        <div class="toggle-sub">Audio alert when rest ends</div>
+        <div class="toggle-label">Timer sounds</div>
+        <div class="toggle-sub">Beeps at the end of a rest or a timed hold</div>
       </div>
       <label class="lf-toggle">
         <input type="checkbox" id="tog-sound" checked onchange="saveSetting('sound', this.checked)">
@@ -809,7 +790,6 @@ async function init() {
   // Settings
   units = st.units || 'imperial';
   applyUnits();
-  if (st.notif !== undefined) document.getElementById('tog-notif').checked = st.notif;
   if (st.sound !== undefined) document.getElementById('tog-sound').checked = st.sound;
 
   updateHero();

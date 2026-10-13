@@ -1,0 +1,6 @@
+# Local Cloudflare tool state (cached copies of media, account details)
+.wrangler/
+# Supabase CLI working files
+supabase/.temp/
+# Editor settings
+.vscode/

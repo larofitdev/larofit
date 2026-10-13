@@ -1,0 +1,10 @@
+# Not part of the app: server code, database setup, tests, tools, editor and build leftovers
+/supabase/*          /404.html  302
+/tests/*             /404.html  302
+/tools/*             /404.html  302
+/.wrangler/*         /404.html  302
+/.vscode/*           /404.html  302
+/scrape-movekit.mjs  /404.html  302
+/.gitignore          /404.html  302
+# Trainer pages: unfinished, running on sample data, not linked from the app
+/larofit-trainer*    /404.html  302

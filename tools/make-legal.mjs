@@ -1,0 +1,228 @@
+// Writes privacy.html, terms.html and disclaimer.html from one layout.
+// Edit the text here, then from the project folder run:  node tools/make-legal.mjs
+import fs from 'fs';
+
+const UPDATED = 'October 13, 2026';
+const T = s => `<span class="todo">${s}</span>`;   // something only the owner can fill in
+const NAME = 'LARO Farms Inc., doing business as LaroFit';
+const EMAIL = '<a href="mailto:support@larofit.com">support@larofit.com</a>';
+const ADDRESS = 'PO Box 4391, Kingman, AZ 86402, USA';
+const LAW = 'the State of Arizona, USA';
+
+const page = (file, title, intro, body) => `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<title>LaroFit — ${title}</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="larofit.css?v=2">
+<style>
+body { background: var(--bg); color: var(--text); font-family: var(--font-body); margin: 0; }
+.legal { max-width: 720px; margin: 0 auto; padding: calc(20px + env(safe-area-inset-top, 0px)) var(--page-pad) calc(48px + env(safe-area-inset-bottom, 0px)); }
+.legal-back { display: inline-flex; align-items: center; min-height: 44px; color: var(--text-2); font-size: 14px; font-weight: 600; text-decoration: none; }
+.legal h1 { font-family: var(--font-display); font-size: 40px; letter-spacing: 1px; line-height: 1.05; margin: 8px 0 6px; }
+.legal .updated { font-size: 12px; color: var(--text-3); font-family: var(--font-mono); margin-bottom: 18px; }
+.legal .draft { background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.35); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; line-height: 1.5; color: var(--text-2); margin-bottom: 20px; }
+.legal .intro { font-size: 16px; line-height: 1.6; color: var(--text-2); margin-bottom: 8px; }
+.legal h2 { font-size: 18px; font-weight: 700; margin: 30px 0 8px; scroll-margin-top: 16px; }
+.legal h3 { font-size: 14px; font-weight: 700; margin: 18px 0 4px; color: var(--text); }
+.legal p, .legal li { font-size: 15px; line-height: 1.65; color: var(--text-2); }
+.legal p { margin: 0 0 12px; }
+.legal ul { margin: 0 0 12px; padding-left: 20px; }
+.legal li { margin-bottom: 6px; }
+.legal a { color: var(--volt-dark); font-weight: 600; }
+.legal strong { color: var(--text); }
+.legal table { width: 100%; border-collapse: collapse; margin: 0 0 14px; font-size: 14px; }
+.legal th, .legal td { text-align: left; vertical-align: top; padding: 9px 10px 9px 0; border-bottom: 0.5px solid var(--border); line-height: 1.5; color: var(--text-2); }
+.legal th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); font-weight: 700; }
+.legal .tablewrap { overflow-x: auto; }
+.legal .todo { background: rgba(245,158,11,0.18); border-radius: 4px; padding: 0 4px; color: var(--text); font-weight: 600; }
+.legal .others { margin-top: 36px; padding-top: 18px; border-top: 0.5px solid var(--border); font-size: 13px; color: var(--text-3); }
+</style>
+</head>
+<body>
+<main class="legal">
+  <a class="legal-back" href="index.html">‹ Back to LaroFit</a>
+  <h1>${title.toUpperCase()}</h1>
+  <div class="updated">Last updated ${UPDATED}</div>
+  <div class="draft"><strong>Draft.</strong> This document has not yet been reviewed by a lawyer. </div>
+  <p class="intro">${intro}</p>
+${body}
+  <div class="others">
+    ${['privacy.html|Privacy Policy', 'terms.html|Terms of Service', 'disclaimer.html|Health Disclaimer'].filter(x => !x.startsWith(file)).map(x => { const [h, l] = x.split('|'); return `<a href="${h}">${l}</a>`; }).join(' &nbsp;·&nbsp; ')}
+  </div>
+</main>
+</body>
+</html>
+`;
+
+// ───────────────────────────── PRIVACY ─────────────────────────────
+const privacy = page('privacy.html', 'Privacy Policy',
+`This policy explains what LaroFit collects, why, who else handles it, and what you can do about it. LaroFit is run by ${NAME} (“we”, “us”).`,
+`
+  <h2>The short version</h2>
+  <ul>
+    <li>We collect what you give us to run your training: your account details, your profile, your workouts, programs and measurements.</li>
+    <li>In a Voice workout, short clips of your speech are sent to a transcription service so the app can understand you. <strong>We do not keep the audio.</strong></li>
+    <li>We do not sell your data and we do not use it for advertising.</li>
+    <li>You can delete your account, and everything in it, from the Profile page at any time.</li>
+  </ul>
+
+  <h2>What we collect</h2>
+  <div class="tablewrap"><table>
+    <tr><th>What</th><th>Details</th><th>Why</th></tr>
+    <tr><td><strong>Account</strong></td><td>Your name, email address and password. The password is stored in protected (hashed) form by our sign-in provider; we cannot read it.</td><td>To sign you in and keep your data yours.</td></tr>
+    <tr><td><strong>Profile</strong></td><td>What you choose to enter: date of birth, sex, height, weight, fitness level, goals, training style and nutrition preferences.</td><td>To tailor workouts and suggestions to you.</td></tr>
+    <tr><td><strong>Training data</strong></td><td>Programs and workouts you build, every set you log (exercise, weight, reps, time, distance), notes, personal records, and exercises you create, including any notes or video links you attach.</td><td>To record your training, show your progress and work out your next targets.</td></tr>
+    <tr><td><strong>Body measurements</strong></td><td>Body weight and any measurements you log.</td><td>To show your progress over time.</td></tr>
+    <tr><td><strong>Voice</strong></td><td>See “Voice workouts and your microphone” below.</td><td>To let you log hands-free.</td></tr>
+    <tr><td><strong>Messages to the AI builder</strong></td><td>What you type when building a workout with AI or during setup.</td><td>To build the workout you asked for.</td></tr>
+    <tr><td><strong>Usage counts</strong></td><td>How many AI, transcription and speech requests your account makes each day.</td><td>To enforce daily limits and control cost.</td></tr>
+    <tr><td><strong>Device details</strong></td><td>The type of browser and device, recorded in voice diagnostic logs.</td><td>To fix problems that only happen on certain devices.</td></tr>
+  </table></div>
+  <p>We do not collect your location, your contacts, your photos, or payment card details, and LaroFit contains no advertising or advertising trackers.</p>
+
+  <h2>Voice workouts and your microphone</h2>
+  <p>LaroFit only uses your microphone when you choose <strong>Voice</strong> to start a workout, and your device will ask your permission first. While a Voice workout is running:</p>
+  <ul>
+    <li>The microphone stays on so the app can hear your commands. Sound is checked on your device; only short stretches that appear to contain speech are sent anywhere.</li>
+    <li>Those short clips are sent to a transcription service (see “Who else handles your data”) and turned into text. <strong>We do not store the audio.</strong></li>
+    <li>If someone speaks near you, their words may be picked up and transcribed too. Use “pause” or end the workout when you are having a conversation.</li>
+    <li>The app keeps a <strong>diagnostic log</strong> of the workout: the text of what was heard, what the coach said, timings, loudness levels, the name of the microphone in use, and your browser and device type. This log is saved to your account so that voice problems can be diagnosed and fixed. It may be read by the people who build and support LaroFit.</li>
+    <li>The coach’s spoken lines are produced by sending their text (for example an exercise name, a weight and a number of reps) to a text-to-speech service.</li>
+  </ul>
+  <p>LaroFit does not create a voiceprint or identify people by their voice. If that ever changes, this policy will be updated and you will be asked first.</p>
+
+  <h2>How we use your data</h2>
+  <ul>
+    <li>To provide the app: storing your training, working out progression, building workouts and answering your voice commands.</li>
+    <li>To keep the service working: finding and fixing faults, and preventing misuse.</li>
+    <li>To contact you about your account, for example to verify your email or reset your password.</li>
+  </ul>
+  <p>We do not use your data for advertising, and we do not sell or rent it to anyone.</p>
+
+  <h2>Who else handles your data</h2>
+  <p>LaroFit relies on other companies to run. They receive only what they need to do their part, and they handle it under their own terms and privacy policies, which we do not control.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Company</th><th>What it does for LaroFit</th><th>What it receives</th></tr>
+    <tr><td><strong>Supabase</strong></td><td>Stores your account and all your LaroFit data, and handles sign-in.</td><td>Everything listed under “What we collect”.</td></tr>
+    <tr><td><strong>OpenAI</strong></td><td>Turns your speech into text, and the coach’s lines into speech.</td><td>Short audio clips from Voice workouts, and the text of the coach’s lines.</td></tr>
+    <tr><td><strong>Anthropic</strong></td><td>Runs the AI workout builder and helps interpret spoken commands the app does not recognise.</td><td>Your messages to the builder, relevant profile and exercise details, and the text of some spoken phrases.</td></tr>
+    <tr><td><strong>Cloudflare</strong></td><td>Delivers the app and the exercise videos to your device.</td><td>Standard web request details, such as your IP address.</td></tr>
+  </table></div>
+  <p>We may also disclose information if the law requires it, or if the business is sold or merged, in which case this policy would continue to apply to your data.</p>
+
+  <h2>Where your data is kept</h2>
+  <p>Your data is stored on our providers’ servers, which may be in a different country from yours. A copy of your recent data is also kept on your own device so the app loads quickly and works with a poor connection; signing out or clearing the app’s data removes it.</p>
+
+  <h2>How long we keep it</h2>
+  <p>We keep your data for as long as you have an account. When you delete your account, your profile, programs, workouts, measurements, custom exercises, voice logs, usage counts and sign-in details are deleted from our database. Copies in our providers’ routine backups are removed on their normal schedule.</p>
+
+  <h2>Your choices and rights</h2>
+  <ul>
+    <li><strong>See and change your data:</strong> in the app, on the Profile, Progress and Build pages.</li>
+    <li><strong>Delete everything:</strong> Profile → Delete account. This cannot be undone.</li>
+    <li><strong>Get a copy of your data, or ask a question:</strong> email ${EMAIL}.</li>
+    <li><strong>Turn off the microphone:</strong> use Manual workouts, or remove the microphone permission in your device settings.</li>
+  </ul>
+  <p>Depending on where you live, the law may give you further rights, such as objecting to certain uses of your data or complaining to a data protection authority. We will honour valid requests wherever you are.</p>
+
+  <h2>Health and fitness information</h2>
+  <p>Some of what LaroFit stores, such as your body weight, measurements and training history, may count as health information under the law where you live. We use it only to provide the app to you, as described above, and you can delete it at any time.</p>
+
+  <h2>Children</h2>
+  <p>LaroFit is not for anyone under 16. We do not knowingly collect data from children under 16; if you believe a child has created an account, contact us and we will delete it.</p>
+
+  <h2>Security</h2>
+  <p>Your data is sent over encrypted connections, and the database is set up so that each account can read only its own data. No system is perfectly secure, so we cannot promise that a breach will never happen. If one affects you, we will tell you as the law requires.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If we change this policy in a way that matters, we will tell you in the app or by email before the change takes effect.</p>
+
+  <h2>Contact</h2>
+  <p>${NAME}<br>${ADDRESS}<br>${EMAIL}</p>
+`);
+
+// ───────────────────────────── TERMS ─────────────────────────────
+const terms = page('terms.html', 'Terms of Service',
+`These terms are the agreement between you and ${NAME} (“we”, “us”) for using LaroFit. By creating an account you agree to them, to the <a href="privacy.html">Privacy Policy</a> and to the <a href="disclaimer.html">Health Disclaimer</a>.`,
+`
+  <h2>1. Who can use LaroFit</h2>
+  <p>You must be at least 16 years old. You are responsible for keeping your password secret and for what happens in your account. Give us accurate information when you sign up, and tell us if you think someone else has used your account.</p>
+
+  <h2>2. What LaroFit is</h2>
+  <p>LaroFit is a tool for planning, logging and tracking exercise. It includes automated features: suggested weights and repetitions, workouts built by AI, and a voice coach. It is not a medical service, a personal trainer or a substitute for professional advice. The <a href="disclaimer.html">Health Disclaimer</a> is part of these terms; please read it.</p>
+
+  <h2>3. Automated and AI features</h2>
+  <ul>
+    <li>Suggestions are produced by fixed rules and by AI systems. They can be wrong or unsuitable for you. You decide what to lift and when to stop.</li>
+    <li>Voice recognition makes mistakes. It may mishear you, or hear someone else. Check what the coach reads back and correct it if it is wrong.</li>
+    <li>AI-built workouts are a starting point. Review any workout before you do it.</li>
+    <li>Daily limits apply to AI, voice recognition and coach speech. If you reach one, that feature stops until the next day.</li>
+  </ul>
+
+  <h2>4. Your content</h2>
+  <p>Your training data, notes and the exercises you create remain yours. You give us permission to store and process them so that we can provide the app to you. Do not add anything you do not have the right to use, or anything unlawful.</p>
+
+  <h2>5. Our content</h2>
+  <p>The app, its design, the exercise library and the exercise videos belong to us or are licensed to us. You may use them within LaroFit for your own training. You may not copy, download in bulk, resell or republish them.</p>
+
+  <h2>6. Acceptable use</h2>
+  <p>Do not misuse LaroFit. In particular, do not try to access other people’s data, interfere with the service, get round its limits, use automated tools to extract its content, or use it to break the law.</p>
+
+  <h2>7. Price</h2>
+  <p>LaroFit is currently provided without charge while it is being developed. If paid plans are introduced, we will tell you the price and what is included before you are charged anything, and you will be able to decline.</p>
+
+  <h2>8. Availability and changes</h2>
+  <p>LaroFit is still being developed. Features may change or be removed, and the service may be interrupted. We may update these terms; if a change matters, we will tell you in the app or by email before it takes effect. If you do not accept a change, you can stop using LaroFit and delete your account.</p>
+
+  <h2>9. Ending your account</h2>
+  <p>You can delete your account at any time from the Profile page. We may suspend or close an account that breaks these terms or puts the service or other people at risk.</p>
+
+  <h2>10. No warranty</h2>
+  <p>LaroFit is provided “as is” and “as available”. To the fullest extent the law allows, we make no promises that it will be accurate, uninterrupted or free of errors, or that it will meet your fitness goals.</p>
+
+  <h2>11. Limit of our liability</h2>
+  <p>To the fullest extent the law allows, we are not liable for injury, loss or damage arising from your use of LaroFit, including from following its suggestions, from voice recognition errors, or from lost data. Where liability cannot be excluded, it is limited to the amount you paid us in the twelve months before the claim, or US $100 if you paid nothing. Nothing in these terms limits liability that cannot legally be limited.</p>
+
+  <h2>12. Governing law</h2>
+  <p>These terms are governed by the law of ${LAW}. If part of them is found to be unenforceable, the rest still applies.</p>
+
+  <h2>13. Contact</h2>
+  <p>${NAME}<br>${ADDRESS}<br>${EMAIL}</p>
+`);
+
+// ───────────────────────────── DISCLAIMER ─────────────────────────────
+const disclaimer = page('disclaimer.html', 'Health Disclaimer',
+`Exercise carries risk. Please read this before you train with LaroFit.`,
+`
+  <h2>Talk to a doctor first</h2>
+  <p>Before starting this or any exercise programme, consult a doctor or other qualified health professional, especially if you are pregnant, are recovering from an injury or surgery, have a heart, lung, joint or other medical condition, take medication, or have not exercised for some time.</p>
+
+  <h2>LaroFit is not medical advice</h2>
+  <p>Nothing in LaroFit is medical advice, diagnosis, treatment or physiotherapy, and it is not a substitute for a doctor, physiotherapist or qualified trainer who knows you. If you are following a rehabilitation plan, follow your clinician’s instructions over anything the app suggests.</p>
+
+  <h2>Suggestions are automated</h2>
+  <p>The weights, repetitions, hold times and workouts LaroFit suggests are produced automatically, by fixed rules and by AI. They do not take account of your health, your injuries, how you feel today or your technique. They can be wrong. <strong>You are responsible for choosing what you lift and for deciding when to stop.</strong> If a suggested weight seems too heavy, use less.</p>
+
+  <h2>Train safely</h2>
+  <ul>
+    <li>Learn the correct technique for an exercise before adding weight. The videos and instructions are a guide, not supervision.</li>
+    <li>Use equipment that is in good condition, and a spotter or safety bars where appropriate.</li>
+    <li>Stop immediately and seek medical help if you feel pain, dizziness, faintness, chest discomfort or shortness of breath.</li>
+    <li>In a Voice workout, keep your attention on your surroundings and your lift, not on the app.</li>
+  </ul>
+
+  <h2>You train at your own risk</h2>
+  <p>By using LaroFit you accept that exercise can cause injury, and that you take part voluntarily and at your own risk. To the fullest extent the law allows, ${NAME} is not responsible for any injury or loss that results. See the <a href="terms.html">Terms of Service</a> for the full terms.</p>
+
+  <h2>In an emergency</h2>
+  <p>LaroFit cannot call for help. In a medical emergency, call your local emergency number.</p>
+`);
+
+fs.writeFileSync('privacy.html', privacy);
+fs.writeFileSync('terms.html', terms);
+fs.writeFileSync('disclaimer.html', disclaimer);
+console.log('wrote privacy.html (' + privacy.length + '), terms.html (' + terms.length + '), disclaimer.html (' + disclaimer.length + ')');

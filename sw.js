@@ -1,4 +1,4 @@
-const CACHE_NAME = 'larofit-v95';
+const CACHE_NAME = 'larofit-v96';
 
 const STATIC_ASSETS = [
   '/index.html',
@@ -22,9 +22,9 @@ const STATIC_ASSETS = [
   '/supabase.min.js',
   '/manifest.json',
   '/sw.js',
-  '/icon192.png',
-  '/icon512.png',
-  '/appletouchicon.png'
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png'
 ];
 
 // Install — cache all static assets
