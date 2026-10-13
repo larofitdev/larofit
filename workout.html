@@ -3545,7 +3545,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 87;
+const VOICE_BUILD = 88;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4440,6 +4440,11 @@ function handleVoiceResult(raw) {
   if (voiceSwap && Date.now() - voiceSwap.at < 40000) { if (voiceSwapAnswer(t)) return true; }
   else voiceSwap = null;
   if (VOICE_PAUSE.test(t) && !(voicePhase === 'log_time' && /\d/.test(t))) { voicePause(); return true; }
+  // "Resume" when nothing is paused: say where things stand rather than nothing at all
+  if (/^(okay |ok )?(resume|unpause|i m back|i am back|im back)( workout| the workout)?$/.test(t)) {
+    speakText(voicePhase === 'resting' ? 'Not paused. Resting.' : 'Not paused. ' + (voiceLastPrompt || ''), true);
+    return true;
+  }
   // "Did you say leg press?" and "Finish the workout?" are waiting for an answer
   if (voiceAskName && Date.now() - voiceAskName.at < 30000) { if (voiceAskNameAnswer(t)) return true; }
   else voiceAskName = null;
