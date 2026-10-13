@@ -1431,6 +1431,7 @@ function pauseWorkout() {
   updatePauseBtn();
   saveSnapshot();
   showToast('Workout paused — progress saved');
+  if (workoutMode === 'voice') voicePause();
 }
 
 function resumeWorkout() {
@@ -1442,6 +1443,7 @@ function resumeWorkout() {
   updatePauseBtn();
   saveSnapshot();
   showToast('Workout resumed');
+  if (workoutMode === 'voice') voiceResume();
 }
 
 function togglePause() {
@@ -3543,7 +3545,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 83;
+const VOICE_BUILD = 84;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3605,6 +3607,7 @@ function initVoice() {
   voiceKeepAwake();
   voiceFirstLine = true;
   voiceOwnPeaks = []; voiceQuietRun = 0; voiceUnderstoodAt = Date.now();
+  voicePaused = false; voicePausedRest = null;
   voiceLog = [];
   voiceEnsureCtx();
   if (voiceReady) return;
@@ -3889,6 +3892,7 @@ document.addEventListener('visibilitychange', () => {
 // tap the phone allows everything, so this is the manual recovery
 function voiceHudTap() {
   if (workoutMode !== 'voice' || !voiceReady) return;
+  if (voicePaused) { voiceResume(); return; }
   if (voiceSpeaking) voiceStopSpeech();
   if (voicePhase === 'idle') {
     const target = voiceTargetFor(currentExIdx);
@@ -3976,6 +3980,7 @@ function voiceAudioBlock(input) {
     return;
   }
   if (voiceSignedOut) return;   // nothing can be transcribed until they sign in again
+  if (voicePaused && spokenMs > 2500) { voiceDbg('paused: ignored talk (' + spokenMs + 'ms)'); return; }
   const needPeak = voiceMinPeak();
   if (segPeak < needPeak) {
     voiceDbg('ignored a quiet sound (peak ' + segPeak.toFixed(2) + (needPeak > VOICE_MIN_PEAK ? ', need ' + needPeak.toFixed(2) : '') + ')');
@@ -4127,7 +4132,8 @@ function voiceSendPhrase(blob, spokenMs, peak) {
       if (voicePhase !== phaseAtCapture) { voiceDbg('heard ' + JSON.stringify(text) + detail + ' -> too late, ignored'); return; }
       voiceHeardPeak = peak;
       const understood = handleVoiceResult(text);
-      if (understood) voiceNoteOwnPeak(peak);
+      if (understood && !voiceSkipPeak) voiceNoteOwnPeak(peak);
+      voiceSkipPeak = false;
       voiceDbg('heard ' + JSON.stringify(text) + detail + (understood ? ' -> understood' : ' -> asking coach'));
       if (!understood) await voiceInterpret(text);
     } catch (e) {
@@ -4312,6 +4318,8 @@ function voiceExerciseLine(ex, target) {
 function handleVoiceResult(raw) {
   let t = normalizeSpeech(raw);
   if (!t) return false;
+  // Paused: nothing is acted on except "resume" (and nothing is passed to the coach model)
+  if (voicePaused) { if (voiceSaidResume(t)) voiceResume(); else voiceSkipPeak = true; return true; }
   if (/\b(repeat|say that again|say again)\b/.test(t)) { speakText(voiceLastPrompt, true); return true; }
   // While a hold is being timed, the only thing listened for is "stop"
   if (voicePhase === 'log_time' && voiceHoldRunning()) return voiceHearTimed(t, raw);
@@ -4323,6 +4331,7 @@ function handleVoiceResult(raw) {
   // A replacement exercise is on offer: this should be yes, today, another, or a name
   if (voiceSwap && Date.now() - voiceSwap.at < 40000) { if (voiceSwapAnswer(t)) return true; }
   else voiceSwap = null;
+  if (VOICE_PAUSE.test(t) && !(voicePhase === 'log_time' && /\d/.test(t))) { voicePause(); return true; }
   // "Did you say leg press?" and "Finish the workout?" are waiting for an answer
   if (voiceAskName && Date.now() - voiceAskName.at < 30000) { if (voiceAskNameAnswer(t)) return true; }
   else voiceAskName = null;
@@ -4984,6 +4993,46 @@ function voiceCorrectTimed(t, raw) {
   }
 }
 
+// ── PAUSING ───────────────────────────────────────────────────
+// "Pause" when someone comes over to talk: the coach stops acting on anything it hears
+// until "resume" (or a tap on the voice bar). The workout clock stops too.
+let voicePaused = false, voicePausedRest = null, voiceSkipPeak = false;
+const VOICE_PAUSE = new RegExp([
+  '^(pause|wait|hold on|hang on|time ?out|brb)$',
+  '\\b(pause|hold on|hang on|be right back|time ?out|stop listening|take a break|taking a break|taking 5)\\b',
+  '\\b(give me|just|wait) (a|1) (sec|second|minute|min|moment)\\b',
+  '\\bwait (a|1) (sec|second|minute|min|moment)\\b'
+].join('|'));
+// Short and to the point, so a sentence in a conversation that happens to contain "go" does not count
+function voiceSaidResume(t) {
+  if (t.split(' ').length > 5) return false;
+  return /\b(resume|unpause|continue|carry on|keep going|start again|back to it|back at it|let s go|i m back|i am back|we re back|im back|okay go|ready)\b/.test(t) || /^(go|start|back)$/.test(t);
+}
+
+function voicePause() {
+  if (voicePaused) return;
+  voicePaused = true;
+  // A rest that was counting down is ended; what it was leading to happens on resume
+  voicePausedRest = restInterval ? restCallback : null;
+  if (restInterval) { stopRest(); restCallback = null; }
+  voiceSwap = null; voiceEdit = null; voiceAskName = null; voiceFinishAt = 0;
+  if (!isPaused) pauseWorkout();
+  voiceDbg('paused');
+  speakText('Paused. Say resume when you are ready.', true);
+  updateVoiceHUD('Paused — say resume, or tap here');
+}
+
+function voiceResume() {
+  if (!voicePaused) return;
+  voicePaused = false;
+  if (isPaused) resumeWorkout();
+  const next = voicePausedRest; voicePausedRest = null;
+  voiceDbg('resumed');
+  if (next) { next(); return; }   // "Set 2." or the next exercise is the announcement
+  updateVoiceHUD(voiceLastPrompt || 'Listening...');
+  speakText('Resuming. ' + (voicePhase === 'resting' ? '' : (voiceLastPrompt || '')), true);
+}
+
 // ── SKIPPING AND REMOVING AN EXERCISE ─────────────────────────
 // "Skip this exercise" moves on and leaves it to come back to. "Remove this exercise"
 // takes it out of today's workout. Neither changes the program.
@@ -5216,6 +5265,7 @@ async function voiceInterpret(text) {
     '"skip" - they want to move on to the next exercise and leave this one (skip it, pass, come back to it later, done with this exercise)\n' +
     '"remove" - they want this exercise taken out of today\'s workout (remove, delete, drop it)\n' +
     '"finish" - they are done with the whole workout and want to end it\n' +
+    '"pause" - they want the app to stop listening for a while (someone is talking to them, they need a break)\n' +
     '"none" - anything else, including talk that is not meant for the app\n' +
     'Reply exactly: {"action":"...","weight":number or null,"reps":number or null,"set":number or "all" or null,"exercise":string or null}. Only give numbers the phrase itself states. ' +
     '"set" is which set they named for a correction (first set = 1, "all the sets" = "all"), or null if they did not name one.';
@@ -5240,6 +5290,7 @@ async function voiceInterpret(text) {
   } else voiceNoneAt = 0;
 
   if (out.action === 'finish') { voiceFinishAsk(); return; }
+  if (out.action === 'pause')  { voicePause(); return; }
   if (out.action === 'skip')   { voiceSkipExercise(); return; }
   if (out.action === 'remove') { voiceRemoveExercise(); return; }
   if (out.action === 'exercise') { if (typeof out.exercise === 'string') voiceTryExercise('doing ' + normalizeSpeech(out.exercise)); return; }
