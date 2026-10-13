@@ -646,6 +646,23 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 /* Voice HUD */
 .voice-hud { position: fixed; bottom: calc(var(--nav-h) + 12px); left: 16px; right: 16px; background: var(--bg-dark); border-radius: var(--radius); border: 1px solid rgba(198,241,53,0.2); padding: 14px 16px; z-index: 200; display: none; align-items: center; gap: 12px; }
 .voice-hud.show { display: flex; }
+/* When the Log Set or Finish bar is showing, the voice bar goes above it. (It used to
+   cover it, and a tap meant for the voice bar could log a set.) */
+.log-btn-fixed.show ~ .voice-hud { bottom: calc(var(--nav-h) + 84px + env(safe-area-inset-bottom, 0px)); }
+
+/* Full-screen "tap to restart the microphone" */
+.voice-recover {
+  position: fixed; inset: 0; z-index: 900; display: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  padding: 32px; text-align: center;
+  background: rgba(10,10,10,0.94); color: #fff;
+  border: none; width: 100%; font-family: var(--font-body); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.voice-recover.show { display: flex; }
+.voice-recover-icon { width: 96px; height: 96px; border-radius: 50%; background: var(--volt); color: #111; display: flex; align-items: center; justify-content: center; font-size: 44px; }
+.voice-recover-title { font-family: var(--font-display); font-size: 34px; letter-spacing: 1px; line-height: 1.1; }
+.voice-recover-sub { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.5; max-width: 280px; }
 .voice-pulse { width: 32px; height: 32px; border-radius: 50%; background: rgba(198,241,53,0.12); border: 2px solid var(--volt); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; transition: all 0.2s; }
 .voice-pulse.listening { background: rgba(198,241,53,0.25); box-shadow: 0 0 0 6px rgba(198,241,53,0.12); animation: voicePulse 1.2s ease-in-out infinite; }
 @keyframes voicePulse { 0%,100% { box-shadow: 0 0 0 4px rgba(198,241,53,0.12); } 50% { box-shadow: 0 0 0 10px rgba(198,241,53,0.05); } }
@@ -953,6 +970,13 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <i class="ti ti-check" aria-hidden="true"></i> Finish workout
   </button>
 </div>
+
+<!-- MIC RECOVERY — covers the screen so the tap cannot land on anything else -->
+<button class="voice-recover" id="voice-recover" onclick="voiceRecoverTap()" aria-live="assertive">
+  <span class="voice-recover-icon" aria-hidden="true"><i class="ti ti-microphone"></i></span>
+  <span class="voice-recover-title">TAP TO RESTART THE MIC</span>
+  <span class="voice-recover-sub">The microphone stopped (a phone call or another app took it). Tap anywhere and the coach carries on from where you were.</span>
+</button>
 
 <!-- VOICE HUD -->
 <div class="voice-hud" id="voice-hud" onclick="voiceHudTap()">
@@ -3361,7 +3385,7 @@ function setMode(mode) {
   workoutMode = mode;
   const s = store.get('settings', {}); s.workoutMode = mode; store.set('settings', s);
   if (mode === 'voice') initVoice();
-  else { stopListening(); document.getElementById('voice-hud').classList.remove('show'); }
+  else { stopListening(); document.getElementById('voice-hud').classList.remove('show'); voiceHideRecover(); }
 }
 
 // ── PROGRESSION RULE ──────────────────────────────────────────
@@ -3519,7 +3543,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 82;
+const VOICE_BUILD = 83;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3612,6 +3636,7 @@ function stopListening() {
   voiceStopSpeech();
   pauseListening();
   document.getElementById('voice-hud').classList.remove('show');
+  voiceHideRecover();
   if (voiceWakeLock) { voiceWakeLock.release().catch(() => {}); voiceWakeLock = null; }
   voiceReleaseMic();
 }
@@ -3688,6 +3713,62 @@ function voiceReleaseMic() {
   voiceVadReset();
 }
 
+// After a phone call the iPhone can hand the microphone back to an audio engine that
+// says it is running but never delivers another sound. Reopening the mic on that engine
+// does nothing; it has to be thrown away and a new one made.
+function voiceRebuildAudio(why) {
+  voiceDbg(why + ': new audio engine');
+  pauseListening();
+  voiceReleaseMic();
+  const old = voiceCtx;
+  voiceCtx = null;
+  try { if (old) { old.onstatechange = null; old.close().catch(() => {}); } } catch (e) {}
+  voiceEnsureCtx();
+  if (voiceCtx.state !== 'running') voiceCtx.resume().catch(() => {});
+  return voiceHoldMic().then(startListening);
+}
+
+// How many health checks in a row have found the mic or the audio engine not working
+let voiceTrouble = 0, voiceRecoverShown = false;
+
+function voiceShowRecover() {
+  if (voiceRecoverShown) return;
+  voiceRecoverShown = true;
+  document.getElementById('voice-recover').classList.add('show');
+  voiceDbg('asking for a tap to restart the mic');
+  // The natural voice plays through the engine that has stopped, so use the phone's own
+  try {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance('The microphone stopped. Tap the screen to restart it.'));
+    }
+  } catch (e) {}
+}
+
+function voiceHideRecover() {
+  if (!voiceRecoverShown) return;
+  voiceRecoverShown = false;
+  document.getElementById('voice-recover').classList.remove('show');
+}
+
+// The tap on the full-screen prompt: inside a tap the phone always allows audio to start
+function voiceRecoverTap() {
+  voiceHideRecover();
+  voiceTrouble = 0;
+  voiceBackSay = true;
+  voiceRebuildAudio('tapped to restart');
+}
+
+// Audio is flowing again after trouble: say so, and repeat what the coach was waiting for
+let voiceBackSay = false;
+function voiceAudioIsBack() {
+  voiceHideRecover();
+  voiceHudNote('');
+  voiceDbg('mic is working again');
+  voiceBackSay = false;
+  if (voicePhase !== 'idle') speakText('Microphone is back. ' + (voicePhase === 'resting' ? '' : (voiceLastPrompt || '')), true);
+}
+
 // iPhone only lets a page speak if its first utterance starts inside a tap.
 // Call this synchronously from the Start tap; resolves when it has been said.
 function voicePrimeSpeech() {
@@ -3726,20 +3807,32 @@ function voiceHealthCheck() {
 
   const track = voiceMicStream.getAudioTracks()[0];
   if (voiceCtx.state !== 'running') {
+    voiceTrouble++;
     voiceDbg('audio engine ' + voiceCtx.state + ', resuming');
-    voiceHudNote('Mic problem — tap here');
+    voiceHudNote('Mic problem — tap the screen');
     voiceCtx.resume().catch(() => {});
+    // Still not running after ~10s (a call in progress, or the phone wants a tap): ask for one
+    if (voiceTrouble >= 3) voiceShowRecover();
     return;
   }
   voiceMutedChecks = track.muted ? voiceMutedChecks + 1 : 0;
   if (track.readyState !== 'live' || !blocks || voiceMutedChecks >= 2) {
-    voiceDbg('no audio from mic (' + track.readyState + (track.muted ? ', muted' : '') + ', blocks ' + blocks + '), re-opening');
-    voiceHudNote('Mic problem — tap here');
+    voiceTrouble++;
+    voiceHudNote('Mic problem — tap the screen');
     voiceMutedChecks = 0;
+    if (voiceTrouble >= 2 && !blocks) {
+      // Reopening the mic didn't bring the sound back: the engine itself is stuck
+      voiceRebuildAudio('no audio from mic after re-opening (' + track.readyState + ', blocks 0)');
+      if (voiceTrouble >= 4) voiceShowRecover();   // two new engines and still nothing: it needs a tap
+      return;
+    }
+    voiceDbg('no audio from mic (' + track.readyState + (track.muted ? ', muted' : '') + ', blocks ' + blocks + '), re-opening');
     voiceReleaseMic();
     voiceHoldMic().then(startListening);
     return;
   }
+  if (voiceTrouble >= 2 || voiceBackSay || voiceRecoverShown) { voiceTrouble = 0; voiceAudioIsBack(); }
+  voiceTrouble = 0;
   if (voiceSignedOut) voiceSession();
   if (isListening) {
     const v = voiceVad, peak = v.winPeak; v.winPeak = 0;
@@ -3803,12 +3896,9 @@ function voiceHudTap() {
     voicePending = target; voicePhase = 'count_reps';
     updateVoiceHUD(target.bw ? 'Say your reps.' : 'Say weight and reps, like 135 for 8.');
   }
-  voiceDbg('bar tapped: resetting mic');
   voiceHudNote('Listening again…');
-  pauseListening();
-  voiceReleaseMic();
-  if (voiceCtx.state !== 'running') voiceCtx.resume().catch(() => {});
-  voiceHoldMic().then(startListening);
+  voiceTrouble = 0;
+  voiceRebuildAudio('bar tapped');
 }
 
 // ── PHRASE DETECTION ──────────────────────────────────────────
