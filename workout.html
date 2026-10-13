@@ -3545,7 +3545,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 85;
+const VOICE_BUILD = 86;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3608,6 +3608,7 @@ function initVoice() {
   voiceFirstLine = true;
   voiceOwnPeaks = []; voiceQuietRun = 0; voiceUnderstoodAt = Date.now();
   voicePaused = false; voicePausedRest = null;
+  voiceHadEarbuds = false; voiceEarbudsOut = false; voiceAutoPaused = false;
   voiceLog = [];
   voiceEnsureCtx();
   if (voiceReady) return;
@@ -3651,6 +3652,63 @@ function stopListening() {
 let voiceOnPhoneMic = false;
 function voiceIsBuiltInMic(label) { return /iphone|ipad|built-?in|internal|macbook|default/i.test(label || ''); }
 
+// ── EARBUDS OUT / BACK IN ─────────────────────────────────────
+// What an iPhone reports (seen in a test log): when both AirPods leave the ears, our own
+// mic track quietly becomes "iPhone Microphone" and the default output becomes the
+// speaker, though the AirPods are still listed; when they go back in, both return to
+// "AirPods"; in the case with the lid shut they vanish from the list and the track ends.
+// So, in a workout that began on earbuds: mic moved to the phone = earbuds out. The
+// workout is paused and the mic closed (nothing in the room is heard). Default output
+// back on the earbuds = they are in again: the mic reopens and the workout carries on.
+let voiceHadEarbuds = false, voiceEarbudsOut = false, voiceAutoPaused = false, voiceEarbudsTriedAt = 0;
+function voiceIsBuiltInOutput(label) { return /speaker|receiver|iphone|ipad|built-?in|internal|macbook/i.test(label || ''); }
+
+function voiceEarbudsGone(why) {
+  if (voiceEarbudsOut) return;
+  voiceEarbudsOut = true; voiceEarbudsTriedAt = Date.now();
+  voiceDbg('earbuds out (' + why + '): pausing and closing the mic');
+  voiceStopSpeech();   // or the coach carries on out of the phone's speaker
+  if (!voicePaused) { voiceAutoPaused = true; voicePause(true); }
+  pauseListening();
+  voiceReleaseMic();
+  updateVoiceHUD('Earbuds out — paused. Put them back in to carry on, or tap here to use the phone mic.');
+}
+
+function voiceEarbudsBack(why) {
+  if (!voiceEarbudsOut) return;
+  voiceEarbudsOut = false;
+  voiceDbg('earbuds back (' + why + '): opening the mic');
+  voiceHoldMic().then(() => {
+    startListening();
+    if (voiceAutoPaused) { voiceAutoPaused = false; voiceResume(); }   // it paused itself, so it restarts itself
+    else if (voicePaused) {                                             // the user said "pause": wait for "resume"
+      updateVoiceHUD('Paused — say resume, or tap here');
+      speakText('Earbuds are back. Say resume when you are ready.', true);
+    }
+  });
+}
+
+// Called when the phone says its audio devices changed, and every few seconds.
+// Returns true while the earbuds are out (the caller then leaves the mic alone).
+function voiceCheckEarbuds() {
+  if (workoutMode !== 'voice' || !voiceReady || !voiceHadEarbuds || voiceMicPending) return voiceEarbudsOut;
+  if (!voiceEarbudsOut) {
+    const track = voiceMicStream && voiceMicStream.getAudioTracks()[0];
+    if (track && track.readyState === 'live' && voiceIsBuiltInMic(track.label)) voiceEarbudsGone('mic moved to "' + track.label + '"');
+    return voiceEarbudsOut;
+  }
+  navigator.mediaDevices.enumerateDevices().then(list => {
+    if (!voiceEarbudsOut) return;
+    const def = list.find(d => d.kind === 'audiooutput' && (d.deviceId === 'default' || /^default\b/i.test(d.label)));
+    if (def && def.label) { if (!voiceIsBuiltInOutput(def.label)) voiceEarbudsBack('sound is going to "' + def.label + '"'); return; }
+    // This phone doesn't say where sound is going: every 15s, open the mic and see which one it gets
+    if (Date.now() - voiceEarbudsTriedAt < 15000 || voiceMicPending) return;
+    voiceEarbudsTriedAt = Date.now();
+    if (list.some(d => d.kind === 'audioinput' && d.label && !voiceIsBuiltInMic(d.label)) || !list.some(d => d.label)) voiceEarbudsBack('an earbud mic is available');
+  }).catch(() => {});
+  return true;
+}
+
 async function voicePreferEarbuds(stream) {
   const track = stream.getAudioTracks()[0];
   if (!voiceIsBuiltInMic(track.label)) return stream;
@@ -3683,6 +3741,7 @@ if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
                  ' | our mic: ' + (track ? '"' + track.label + '" ' + track.readyState + (track.muted ? ' muted' : '') : 'closed'));
       }).catch(() => {});
     }
+    if (voicePhase !== 'idle' && voiceCheckEarbuds()) return;   // earbuds are out: the mic stays closed until they are back
     if (workoutMode !== 'voice' || !voiceReady || voicePhase === 'idle' || voiceMicPending || !voiceOnPhoneMic) return;
     voiceDbg('audio devices changed, re-opening mic');
     voiceReleaseMic();
@@ -3700,9 +3759,15 @@ function voiceHoldMic() {
     voiceMicStream = stream;
     const track = stream.getAudioTracks()[0];
     voiceOnPhoneMic = voiceIsBuiltInMic(track.label);
+    if (!voiceOnPhoneMic) voiceHadEarbuds = true;
     voiceDbg('mic open "' + track.label + '" ' + voiceCtx.sampleRate + 'Hz' + (voiceOnPhoneMic ? ' (the phone\'s own mic, not earbuds)' : ''));
     if (voiceOnPhoneMic) voiceHudNote('Using the phone mic — connect earbuds');
-    track.addEventListener('ended', () => { voiceDbg('mic closed by the phone'); if (voiceMicStream === stream) voiceReleaseMic(); });
+    track.addEventListener('ended', () => {
+      voiceDbg('mic closed by the phone');
+      if (voiceMicStream !== stream) return;
+      voiceReleaseMic();
+      if (voiceHadEarbuds && voicePhase !== 'idle') voiceEarbudsGone('they disconnected');   // back in their case
+    });
     track.addEventListener('mute',   () => voiceDbg('mic muted by the phone'));
     track.addEventListener('unmute', () => { voiceDbg('mic unmuted'); if (voiceMicStream === stream) voiceAfterInterruption('audio returned'); });
 
@@ -3816,6 +3881,7 @@ function voiceHealthCheck() {
   voiceKeepWarm();
   const blocks = voiceVad.blocks; voiceVad.blocks = 0;
   if (voicePhase === 'idle' || voiceMicPending) return;
+  if (voiceCheckEarbuds()) return;   // earbuds are out: nothing to check until they are back
   if (!voiceMicStream) { voiceDbg('mic not open, opening'); voiceHoldMic().then(startListening); return; }
 
   const track = voiceMicStream.getAudioTracks()[0];
@@ -4376,7 +4442,9 @@ function handleVoiceResult(raw) {
   if (voicePhase === 'confirm_weight' || voicePhase === 'count_reps') {
     const p = voicePending, said = parseSetSpeech(t);
     if (said.weight !== null && !p.bw) { p.sugWeight = said.weight; prefillWeight(p.exIdx, p.setIdx, p.sugWeight); }
-    if (said.reps !== null && !said.repsLabelled && !voiceRepsPlausible(said.reps, p.exIdx)) {
+    const aim = parseInt((exercises[p.exIdx] || {}).targetReps) || parseInt((exercises[p.exIdx] || {}).reps) || 10;
+    const farLow = said.reps !== null && said.weight === null && said.reps < aim * 0.5;   // "two" when the aim is 10
+    if (said.reps !== null && !said.repsLabelled && (farLow || !voiceRepsPlausible(said.reps, p.exIdx))) {
       voicePrompt('I heard ' + said.reps + '. If that is your reps, say ' + said.reps + ' reps.', true);
       return true;
     }
@@ -5019,7 +5087,7 @@ function voiceSaidResume(t) {
   return /\b(resume|unpause|continue|carry on|keep going|start again|back to it|back at it|let s go|i m back|i am back|we re back|im back|okay go|ready)\b/.test(t) || /^(go|start|back)$/.test(t);
 }
 
-function voicePause() {
+function voicePause(silent) {
   if (voicePaused) return;
   voicePaused = true;
   // A rest that was counting down is ended; what it was leading to happens on resume
@@ -5028,12 +5096,18 @@ function voicePause() {
   voiceSwap = null; voiceEdit = null; voiceAskName = null; voiceFinishAt = 0;
   if (!isPaused) pauseWorkout();
   voiceDbg('paused');
+  if (silent) return;
   speakText('Paused. Say resume when you are ready.', true);
   updateVoiceHUD('Paused — say resume, or tap here');
 }
 
 function voiceResume() {
   if (!voicePaused) return;
+  if (voiceEarbudsOut) {
+    voiceDbg('resumed without earbuds: using the phone mic');
+    voiceEarbudsOut = false; voiceHadEarbuds = false; voiceAutoPaused = false;
+    voiceHoldMic().then(startListening);
+  }
   voicePaused = false;
   if (isPaused) resumeWorkout();
   const next = voicePausedRest; voicePausedRest = null;
