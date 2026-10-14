@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=107">
+<link rel="stylesheet" href="larofit.css?v=108">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -568,8 +568,8 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 }
 .ex-name-bar-skip:active { background: var(--border); }
 .ex-name-bar-skip i { font-size: 14px; }
-#ex-replace-btn { min-width: 36px; min-height: 30px; justify-content: center; padding: 4px 8px; }
-#ex-replace-btn i { font-size: 16px; }
+#ex-replace-btn, #ex-remove-btn { min-width: 36px; min-height: 30px; justify-content: center; padding: 4px 8px; }
+#ex-replace-btn i, #ex-remove-btn i { font-size: 16px; }
 
 /* "Today only, or every remaining workout?" */
 .replace-sheet { position: fixed; inset: 0; z-index: 800; background: rgba(0,0,0,0.6); display: flex; align-items: flex-end; justify-content: center; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=107"></script>
-<script src="larofit-exercises.js?v=107"></script>
+<script src="supabase-client.js?v=108"></script>
+<script src="larofit-exercises.js?v=108"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=107"></script>
+<script src="larofit-nav.js?v=108"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -881,6 +881,9 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div class="ex-name-bar-1rm"   id="ex-1rm" style="display:none;"></div>
         <button class="ex-name-bar-skip" id="ex-replace-btn" onclick="openReplacePicker()" aria-label="Replace this exercise with another">
           <i class="ti ti-replace"></i>
+        </button>
+        <button class="ex-name-bar-skip" id="ex-remove-btn" onclick="removeCurrentExercise()" aria-label="Remove this exercise from today's workout">
+          <i class="ti ti-trash"></i>
         </button>
         <button class="ex-name-bar-skip" id="ex-skip-btn" onclick="skipExercise()" aria-label="Skip to next exercise" style="display:none;">
           <span>Skip</span><i class="ti ti-player-skip-forward"></i>
@@ -3735,7 +3738,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 95;
+const VOICE_BUILD = 96;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -4658,6 +4661,8 @@ function handleVoiceResult(raw) {
   if (voiceAskName && Date.now() - voiceAskName.at < 30000) { if (voiceAskNameAnswer(t)) return true; }
   else voiceAskName = null;
   if (voiceFinishAt && Date.now() - voiceFinishAt < 25000 && voiceFinishAnswer(t)) return true;
+  if (voiceRemoveAsk && Date.now() - voiceRemoveAsk.at < 25000) { if (voiceRemoveAnswer(t)) return true; }
+  else voiceRemoveAsk = null;
   voiceFinishAt = 0;
   if (VOICE_FINISH.test(t) && !/\d/.test(t) && !/\b(sets?|reps?|exercise)\b/.test(t)) { voiceFinishAsk(); return true; }
   if (VOICE_REMOVE.test(t)) { voiceRemoveExercise(); return true; }
@@ -5452,12 +5457,49 @@ function voiceSkipExercise() {
   goToEx(idx);   // shows it and announces it
 }
 
+// Removing an exercise from today's workout is always allowed, logged sets and all: they are
+// the user's to throw away. When there are logged sets it asks first, so a misheard phrase
+// (or a stray tap) can't throw them away.
+let voiceRemoveAsk = null;   // { ex, at } while "Remove it and the set you logged?" waits for an answer
+const loggedCount = ex => ex.loggedSets.filter(st => st.logged).length;
+const loggedSetsText = n => n === 1 ? 'the set you logged' : 'the ' + n + ' sets you logged';
+
 function voiceRemoveExercise() {
   const idx = voiceThisExercise(), ex = exercises[idx];
   if (!ex) return;
-  if (ex.loggedSets.some(st => st.logged)) { voiceSwapSay('You have logged sets of ' + ex.name + ', so it stays. Say skip to move on.'); return; }
-  voiceDbg('removed ' + ex.name + ' from today');
-  voiceSwap = null; voiceEdit = null;
+  const n = loggedCount(ex);
+  if (n) { voiceRemoveAsk = { ex, at: Date.now() }; voiceSwapSay('Remove ' + ex.name + ' and ' + loggedSetsText(n) + '? Say yes or no.'); return; }
+  removeExerciseFromToday(idx);
+}
+
+function voiceRemoveAnswer(t) {
+  const idx = exercises.indexOf(voiceRemoveAsk.ex);
+  if (/^(yes|yeah|yep|yup|ok|okay|sure|correct|right|do it|go ahead|remove it|delete it|please)\b/.test(t)) {
+    voiceRemoveAsk = null;
+    if (idx !== -1) removeExerciseFromToday(idx);
+    return true;
+  }
+  if (/^(no|nope|nah|cancel|keep it|leave it|never ?mind)\b/.test(t)) { voiceRemoveAsk = null; voiceSwapSay('Okay, it stays.'); return true; }
+  return false;
+}
+
+// The trash button beside Replace
+function removeCurrentExercise() {
+  const ex = exercises[currentExIdx];
+  if (!ex) return;
+  const n = loggedCount(ex);
+  if (n && !confirm('Remove ' + ex.name + ' from today\'s workout? ' + (n === 1 ? 'The set you logged' : 'The ' + n + ' sets you logged') + ' will be deleted.')) return;
+  removeExerciseFromToday(currentExIdx);
+}
+
+function removeExerciseFromToday(idx) {
+  const ex = exercises[idx];
+  if (!ex) return;
+  voiceDbg('removed ' + ex.name + ' from today' + (loggedCount(ex) ? ' (' + loggedCount(ex) + ' logged sets)' : ''));
+  // A record it set today goes with it
+  const prKey = ex.id || ex.name;
+  if (_prCredited.has(prKey)) { _prCredited.delete(prKey); totalPRs = Math.max(0, totalPRs - 1); }
+  voiceSwap = null; voiceEdit = null; voiceRemoveAsk = null;
   stopRest(); restCallback = null;
   exercises.splice(idx, 1);
   // Notes and the last voice log are kept by position, so they move up with the rest
@@ -5466,12 +5508,15 @@ function voiceRemoveExercise() {
   exNotes = notes;
   if (voiceLastLog) { if (voiceLastLog.exIdx === idx) voiceLastLog = null; else if (voiceLastLog.exIdx > idx) voiceLastLog.exIdx--; }
   voicePreAnnounced = -1;
-  voiceSayFirst = 'Removed ' + ex.name + '.';
+  const voice = workoutMode === 'voice';
+  voiceSayFirst = voice ? 'Removed ' + ex.name + '.' : '';
+  if (!voice) showToast('Removed ' + ex.name);
   if (!exercises.length) {
     currentExIdx = 0;
     document.getElementById('ex-card').style.display = 'none';
     document.getElementById('ex-dots').style.display = 'none';
-    voiceAskExercise();
+    if (voice) voiceAskExercise();
+    else document.getElementById('free-add-wrap').style.display = 'block';   // nothing left: add one
   } else {
     const open = i => !exercises[i].loggedSets.every(st => st.logged);
     let next = exercises.findIndex((e, i) => i >= idx && open(i));

@@ -70,7 +70,11 @@ for (const phrase of ['Remove this exercise', 'Delete this exercise.', 'drop thi
   const w = make(PLAN); w.hear('remove this exercise');
   check('notes follow their exercises: ' + JSON.stringify(w.notes()), w.notes()[0] === 'note on the second' && w.notes()[1] === undefined);
   const w2 = make(PLAN); w2.hear('ten'); w2.hear('remove this exercise');
-  check('with a set logged it stays: "' + last(w2) + '"', w2.names().length === 3 && /so it stays/.test(last(w2)));
+  check('with a set logged it asks first: "' + last(w2) + '"', w2.names().length === 3 && /^Remove Dumbbell Incline Bench Press and the set you logged\? Say yes or no\.$/.test(last(w2)));
+  w2.hear('no');
+  check('"no" keeps it: "' + last(w2) + '"', w2.names().length === 3 && last(w2) === 'Okay, it stays.');
+  w2.hear('remove this exercise'); w2.hear('yes');
+  check('"yes" removes it, logged set and all: ' + w2.names().join(' | ') + '   "' + w2.said.slice(-2).join('" "') + '"', w2.names().length === 2 && !w2.names().includes('Dumbbell Incline Bench Press') && /Removed Dumbbell Incline Bench Press/.test(w2.said.slice(-3).join(' ')));
   const w3 = make(['Dumbbell Pullover']); w3.hear('remove this exercise');
   check('removing the only one asks what to do: "' + last(w3) + '"', w3.names().length === 0 && /What exercise are you doing/.test(last(w3)) && w3.phase() === 'pick_exercise');
   const w4 = make(PLAN, 'confirm_weight', '{"action":"remove","weight":null,"reps":null}'); await w4.interpret('Renew this exercise.');
