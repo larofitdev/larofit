@@ -126,25 +126,36 @@ console.log('A name that is not clear');
 console.log('Finishing: phrases that ask to finish');
 for (const phrase of ['Finish workout', 'finish the workout', 'End workout', 'end my workout', "I'm done", "I'm all done", "I'm finished", "That's it", "That's it for today", "That's all", 'All done', "Let's call it a day", "Let's call it", 'Wrap it up', 'Wrap up the workout', 'Stop the workout', 'End the session', 'Workout complete', "Workout's done", 'Done for today', "I'm done for the day", 'Finished for today', 'Save the workout', 'Finish', "We're done", 'Finish up', "That's enough for today", 'End it', 'Complete workout']) {
   const w = make(['Barbell Bench Press'], 'confirm_weight'); w.hear(phrase);
-  check(phrase.padEnd(28) + ' -> "' + (last(w) || '') + '"', /Finish the workout\? Say yes or no/.test(last(w) || '') && !w.calls.includes('finishWorkout'));
+  check(phrase.padEnd(28) + ' -> "' + (last(w) || '') + '"', /^End the workout now/.test(last(w) || '') && !w.calls.includes('finishWorkout'));
 }
 console.log('Finishing: phrases that must not');
 for (const phrase of ['ten', 'ten done', "that's ten done", 'done', 'finished', 'I got ten', '10 at 20', 'ready', 'I am done with this set', "I'm done with this exercise", 'finish the set', 'edit the first set', 'no that was wrong', 'skip', 'last set', 'one more set']) {
   const w = make(['Barbell Bench Press'], 'confirm_weight'); w.hear(phrase);
-  check(('"' + phrase + '"').padEnd(32), !/Finish the workout/.test(last(w) || '') && !w.calls.includes('finishWorkout'), 'said: ' + last(w));
+  check(('"' + phrase + '"').padEnd(32), !/End the workout/.test(last(w) || '') && !w.calls.includes('finishWorkout'), 'said: ' + last(w));
 }
 console.log('Finishing: the answer');
 {
   const w = make(['Barbell Bench Press'], 'confirm_weight'); w.hear('ten'); w.hear("I'm done");
-  check('one exercise part done is mentioned: "' + last(w) + '"', /1 exercise is part done\. Finish the workout\?/.test(last(w)));
+  check('the unfinished exercise is mentioned, and the question is about ending: "' + last(w) + '"', /^End the workout now, with 1 exercise not finished\? Say yes to end it, or no to keep going\.$/.test(last(w)));
   w.hear('yes'); await w.settle();
   check('"yes" finishes: "' + last(w) + '"', w.calls.includes('finishWorkout') && /Workout finished/.test(last(w)));
 }
 {
   const w = make(['Barbell Bench Press'], 'confirm_weight'); w.hear('finish workout'); w.hear('no'); await w.settle();
-  check('"no" carries on: "' + last(w) + '"', !w.calls.includes('finishWorkout') && /carrying on/.test(last(w)));
+  check('"no" carries on: "' + last(w) + '"', !w.calls.includes('finishWorkout') && /the workout carries on/.test(last(w)));
   w.hear('ten');
   check('and the next "ten" logs a set as normal: ' + w.sets(0), w.sets(0).startsWith('L25x10'));
+}
+{
+  // The 2026-10-14 morning: "finish", "no", "finish" again, then the answer
+  const w = make(['Barbell Bench Press'], 'confirm_weight'); w.hear('finish'); w.hear('no'); w.hear('finish');
+  check('asked again after a "no": "' + last(w) + '"', /^End the workout now/.test(last(w)) && !w.calls.includes('finishWorkout'));
+  for (const answer of ['end it']) { w.hear(answer); await w.settle(); }
+  check('"end it" ends it: "' + last(w) + '"', w.calls.includes('finishWorkout'));
+  for (const answer of ["I'm done", 'keep going']) {
+    const v = make(['Barbell Bench Press'], 'confirm_weight'); v.hear('finish workout'); v.hear(answer); await v.settle();
+    check('"' + answer + '" as the answer: "' + last(v) + '"', answer === 'keep going' ? !v.calls.includes('finishWorkout') && /carries on/.test(last(v)) : v.calls.includes('finishWorkout'));
+  }
 }
 {
   const w = make(['Barbell Bench Press'], 'confirm_weight'); w.hear('finish workout'); w.hear('ten');

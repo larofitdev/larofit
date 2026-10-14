@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=108">
+<link rel="stylesheet" href="larofit.css?v=109">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=108"></script>
-<script src="larofit-exercises.js?v=108"></script>
+<script src="supabase-client.js?v=109"></script>
+<script src="larofit-exercises.js?v=109"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=108"></script>
+<script src="larofit-nav.js?v=109"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3738,7 +3738,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 96;
+const VOICE_BUILD = 97;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -5659,14 +5659,17 @@ const VOICE_FINISH = new RegExp([
   '^(finish|stop|quit|end)$'
 ].join('|'));
 
+// The question is about ending the workout, and says so first: "2 exercises are part done.
+// Finish the workout?" was heard as "finish those exercises?", and answered no.
 function voiceFinishAsk() {
-  const left = exercises.filter(ex => ex.loggedSets.some(st => st.logged) && !ex.loggedSets.every(st => st.logged)).length;
+  const left = exercises.filter(ex => !ex.loggedSets.every(st => st.logged)).length;
   voiceFinishAt = Date.now();
-  voiceSwapSay((left ? left + (left === 1 ? ' exercise is' : ' exercises are') + ' part done. ' : '') + 'Finish the workout? Say yes or no.');
+  voiceSwapSay(left ? 'End the workout now, with ' + left + (left === 1 ? ' exercise' : ' exercises') + ' not finished? Say yes to end it, or no to keep going.'
+                    : 'End the workout now? Say yes or no.');
 }
 
 function voiceFinishAnswer(t) {
-  if (/^(yes|yeah|yep|yup|ok|okay|sure|correct|right|do it|go ahead|finish|finish it|please)\b/.test(t)) {
+  if (/^(yes|yeah|yep|yup|ok|okay|sure|correct|right|do it|go ahead|finish|finish it|end it|end the workout|end workout|i m done|im done|i am done|done|please)\b/.test(t)) {
     voiceFinishAt = 0;
     voiceDbg('finishing the workout by voice');
     speakText('Workout finished. Nice work.', true);
@@ -5674,7 +5677,7 @@ function voiceFinishAnswer(t) {
     voiceSpeakChain.then(() => finishWorkout());   // once that has been said
     return true;
   }
-  if (/^(no|nope|nah|cancel|not yet|never ?mind|keep going|carry on)\b/.test(t)) { voiceFinishAt = 0; voiceSwapSay('Okay, carrying on.'); return true; }
+  if (/^(no|nope|nah|cancel|not yet|never ?mind|keep going|carry on|continue)\b/.test(t)) { voiceFinishAt = 0; voiceSwapSay('Okay, the workout carries on.'); return true; }
   return false;
 }
 

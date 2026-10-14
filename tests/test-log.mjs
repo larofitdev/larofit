@@ -199,7 +199,7 @@ for (const [phrase, want] of [['Tens.', 'L--'], ['10s.', 'L--'], ['twelves', 'L-
 console.log('Stopping');
 {
   const w = make(PLAN); w.hear('Stop.');
-  check('a bare "Stop." asks before finishing: "' + last(w) + '"', /Finish the workout\? Say yes or no/.test(last(w)) && !w.calls.includes('finishWorkout'));
+  check('a bare "Stop." asks before finishing: "' + last(w) + '"', /^End the workout now/.test(last(w)) && !w.calls.includes('finishWorkout'));
 }
 
 console.log('Still fine');
