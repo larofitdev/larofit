@@ -818,9 +818,28 @@ LF.terms = {
   LF.reportError = (message, detail) => report('reported', message, detail);
 })();
 
+// ── VOICE LOGS LEFT ON THE PHONE ──────────────────────────────
+// A voice workout keeps a copy of its log on the phone as it goes. Finishing sends it; if the
+// app was closed part way, whichever page opens next sends what was kept, so a log arrives
+// without anyone having to remember to send it.
+LF.sendKeptVoiceLog = async function () {
+  try {
+    const kept = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
+    if (!kept || !kept.text || kept.sent || !isOnline()) return;
+    const sb = await lfReady();
+    const user = await LF.auth.user();
+    if (!user) return;
+    const { error } = await sb.from('voice_logs').insert({ user_id: user.id, build: String(kept.build || ''), reason: 'recovered from ' + kept.at, log: kept.text.slice(0, 200000) });
+    if (error) return;
+    // Marked sent only if it is still the same copy (a workout may have saved a newer one meanwhile)
+    const now = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
+    if (now && now.at === kept.at) { now.sent = true; localStorage.setItem('lf_voice_log', JSON.stringify(now)); }
+  } catch {}
+};
+
 // On every page, once signed-in state is known: bring settings up to date and check the terms
 (function wireAccountChecks() {
-  const run = () => { LF.settings.pull(); LF.terms.check(); };
+  const run = () => { LF.settings.pull(); LF.terms.check(); LF.sendKeptVoiceLog(); };
   if (window._lf_sb) run();
   else window.addEventListener('lf:ready', run, { once: true });
 })();

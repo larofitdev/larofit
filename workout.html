@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=106">
+<link rel="stylesheet" href="larofit.css?v=107">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=106"></script>
-<script src="larofit-exercises.js?v=106"></script>
+<script src="supabase-client.js?v=107"></script>
+<script src="larofit-exercises.js?v=107"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=106"></script>
+<script src="larofit-nav.js?v=107"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1427,7 +1427,17 @@ function leaveAbandon() {
   clearSnapshot();
   document.getElementById('leave-overlay').classList.remove('show');
   _pendingLeaveHref = null;
-  if (href) window.location.href = href;
+  if (!href) return;
+  // A voice workout left without saving still sends its log (waiting at most 3 seconds)
+  if (workoutMode === 'voice' && voiceLog.length) {
+    voiceKeepLog();
+    let gone = false;
+    const go = () => { if (!gone) { gone = true; window.location.href = href; } };
+    voiceSendLog('left without saving').then(go, go);
+    setTimeout(go, 3000);
+    return;
+  }
+  window.location.href = href;
 }
 
 // ── PAUSE / RESUME ────────────────────────────────────────────
@@ -3725,7 +3735,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 94;
+const VOICE_BUILD = 95;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3736,8 +3746,12 @@ function voiceLogText() {
   return 'LaroFit voice build ' + VOICE_BUILD + '\n' + navigator.userAgent + '\n' + voiceLog.join('\n');
 }
 function voiceKeepLog() {
-  try { localStorage.setItem('lf_voice_log', JSON.stringify({ at: new Date().toISOString(), sent: false, text: voiceLogText() })); } catch (e) {}
+  try { localStorage.setItem('lf_voice_log', JSON.stringify({ at: new Date().toISOString(), sent: false, build: VOICE_BUILD, text: voiceLogText() })); } catch (e) {}
 }
+// The phone can close the app without warning once it is in the background: keep the log up to date first
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && workoutMode === 'voice' && voiceLog.length) voiceKeepLog();
+});
 
 // Send a log to the account's voice_logs table, so it can be read without any copy and paste.
 // Returns true if it was stored.
@@ -3769,6 +3783,12 @@ function voiceCopyLog() {
   try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(() => {}); } catch (e) {}
   showToast('Sending voice log…');
   voiceSendLog('LOG button', text).then(ok => showToast(ok ? 'Voice log sent' : 'Could not send — log is kept on this phone'));
+}
+// The LOG button by voice ("send the log", "check voice log")
+function voiceSendLogBySpeech() {
+  voiceDbg('send log by voice');
+  voiceKeepLog();
+  voiceSendLog('said send log').then(ok => speakText(ok ? 'Voice log sent.' : 'Could not send the log. It is kept on this phone.', true));
 }
 function voiceHudNote(msg) { document.getElementById('voice-hud-heard').textContent = msg; }
 
@@ -4617,6 +4637,9 @@ function handleVoiceResult(raw) {
   if (/\b(repeat|say that again|say again)\b/.test(t)) { speakText(voiceLastPrompt, true); return true; }
   // While a hold is being timed, the only thing listened for is "stop"
   if (voicePhase === 'log_time' && voiceHoldRunning()) return voiceHearTimed(t, raw);
+  // "Send the log", "check voice log": the same as the LOG button
+  // The whole phrase has to be about the log, so "log 10 reps" is untouched
+  if (/^(please |can you |could you |hey |ok |okay )?(send|check|save|upload|submit|report|share)( me| off| in)?( the| my| a| this| that| your)?( voice| workout| debug| coach)? logs?( please| now| file| to claude| for claude)?$|^(the |my )?voice logs?( please)?$/.test(t)) { voiceSendLogBySpeech(); return true; }
 
   // Part way through "edit the first set": this should be the right numbers
   if (voiceEdit && Date.now() - voiceEdit.at < 30000) { if (voiceEditAnswer(t)) return true; }
@@ -5993,11 +6016,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-minus').onclick = () => adjustRest(-15);
   document.getElementById('btn-plus').onclick  = () => adjustRest(15);
   document.getElementById('btn-skip').onclick  = () => skipRest();
-  init();
-  try {
-    const kept = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
-    if (kept && kept.text && !kept.sent) voiceSendLog('recovered from ' + kept.at, kept.text);
-  } catch (e) {}
+  init();   // a log left on the phone by a workout that never finished is sent by supabase-client.js
   // Prime custom exercises cache in background
   LF.db.getCustomExercises().then(() => {
     if (exercises[currentExIdx]) renderHowTo(exercises[currentExIdx]);
