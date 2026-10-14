@@ -9,7 +9,7 @@
 <title>LaroFit — Profile</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=101">
+<link rel="stylesheet" href="larofit.css?v=102">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="text"], input[type="email"], input[type="number"],
@@ -280,10 +280,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=101"></script>
-<script src="larofit-exercises.js?v=101"></script>
+<script src="supabase-client.js?v=102"></script>
+<script src="larofit-exercises.js?v=102"></script>
 <script>window.LF_PAGE = 'profile';</script>
-<script src="larofit-nav.js?v=101"></script>
+<script src="larofit-nav.js?v=102"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -455,47 +455,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 
   <!-- ── TRAINING STYLE ── -->
   <div class="lf-section-label">Training Style</div>
-  <div class="prof-section">
-    <div class="prof-section-body">
-      <div style="font-size:12px;color:var(--text-3);">How do you like to train? This shapes your program suggestions.</div>
-      <div class="ts-grid" id="ts-grid">
-        <div class="ts-tile" onclick="selectTS(this,'db')">
-          <div class="ts-tile-icon">🏋️</div>
-          <div class="ts-tile-label">Dumbbells only</div>
-          <div class="ts-tile-desc">Free weights, dumbbell-focused</div>
-        </div>
-        <div class="ts-tile" onclick="selectTS(this,'mc')">
-          <div class="ts-tile-icon">⚙️</div>
-          <div class="ts-tile-label">Machines only</div>
-          <div class="ts-tile-desc">Cable & weight stack machines</div>
-        </div>
-        <div class="ts-tile" onclick="selectTS(this,'db_mc')">
-          <div class="ts-tile-icon">🏋️⚙️</div>
-          <div class="ts-tile-label">Dumbbells + machines</div>
-          <div class="ts-tile-desc">Mix of free weights & machines</div>
-        </div>
-        <div class="ts-tile" onclick="selectTS(this,'full')">
-          <div class="ts-tile-icon">🪃</div>
-          <div class="ts-tile-label">Full gym</div>
-          <div class="ts-tile-desc">Barbells, dumbbells, all machines</div>
-        </div>
-        <div class="ts-tile" onclick="selectTS(this,'bw')">
-          <div class="ts-tile-icon">🤸</div>
-          <div class="ts-tile-label">Bodyweight only</div>
-          <div class="ts-tile-desc">No equipment needed</div>
-        </div>
-        <div class="ts-tile" onclick="selectTS(this,'bw_bands')">
-          <div class="ts-tile-icon">🎽</div>
-          <div class="ts-tile-label">Bodyweight + bands</div>
-          <div class="ts-tile-desc">Minimal equipment</div>
-        </div>
-        <div class="ts-tile" onclick="selectTS(this,'mix')" style="grid-column:1/-1;">
-          <div class="ts-tile-icon">🔀</div>
-          <div class="ts-tile-label">Mix of everything</div>
-          <div class="ts-tile-desc">Show me all options</div>
-        </div>
-      </div>
-    </div>
+  <div class="prof-section" style="padding:14px 16px;">
+    <div style="font-size:13px;color:var(--text-2);line-height:1.5;margin-bottom:12px;">What do you train with? Tick everything you use. The AI builder, the exercise lists and “replace” will stick to it. Leave everything unticked to be offered any exercise.</div>
+    <div id="equip-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    <div id="equip-note" style="font-size:12px;color:var(--text-3);margin-top:10px;"></div>
   </div>
 
   <!-- ── NUTRITION ── -->
@@ -604,14 +567,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
       </div>
       <div class="nav-link-arrow">›</div>
     </a>
-  </div>
-
-  <!-- ── EQUIPMENT ── -->
-  <div class="lf-section-label">Equipment I use</div>
-  <div class="prof-section" style="padding:14px 16px;">
-    <div style="font-size:13px;color:var(--text-2);line-height:1.5;margin-bottom:12px;">Tick what you train with. The AI builder, the exercise lists and “replace” will stick to it. Leave everything unticked to be offered any exercise.</div>
-    <div id="equip-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-    <div id="equip-note" style="font-size:12px;color:var(--text-3);margin-top:10px;"></div>
   </div>
 
   <!-- ── SETTINGS ── -->
@@ -785,10 +740,8 @@ async function init() {
   if (pr.goalNotes) document.getElementById('p-goal-notes').value = pr.goalNotes;
 
   // Training style
-  if (pr.trainingStyle) selectTS(
-    document.querySelector(`#ts-grid .ts-tile[onclick*="${pr.trainingStyle}"]`),
-    pr.trainingStyle, true
-  );
+  if (pr.trainingStyle) selectedTS = pr.trainingStyle;   // the earlier single choice; the checklist starts from it
+  renderEquipment();
 
   // Nutrition
   if (pr.diet)     document.getElementById('p-diet').value     = pr.diet;
@@ -917,12 +870,6 @@ function togglePill(btn, val) {
 }
 
 // ── TRAINING STYLE ─────────────────────────────────────────────────────────
-function selectTS(el, val, silent) {
-  if (!el) return;
-  document.querySelectorAll('#ts-grid .ts-tile').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  selectedTS = val;
-}
 
 // ── UNITS ──────────────────────────────────────────────────────────────────
 function setUnits(u) {

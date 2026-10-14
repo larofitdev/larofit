@@ -668,10 +668,22 @@ LF.equipment = {
     { id: 'bodyweight',     label: 'Bodyweight' },
     { id: 'cardio_machine', label: 'Cardio machines' },
   ],
-  // The ticked ids, or null when the user hasn't narrowed it down
+  // What the earlier single-choice "Training Style" meant, as ticks
+  fromStyle: {
+    db: ['dumbbells'], mc: ['machine_cable'], db_mc: ['dumbbells', 'machine_cable'],
+    full: ['dumbbells', 'barbell', 'ez_bar', 'machine_cable', 'smith'],
+    bw: ['bodyweight'], bw_bands: ['bands', 'bodyweight'], mix: []
+  },
+  // The ticked ids, or null when the user hasn't narrowed it down. Someone who has never
+  // used the checklist gets what they chose under the old Training Style.
   get() {
-    const mine = (LS.get('settings', {}) || {}).equipment;
-    return Array.isArray(mine) && mine.length ? mine : null;
+    let mine = (LS.get('settings', {}) || {}).equipment;
+    if (!Array.isArray(mine)) {
+      const profile = LS.get('profile') || {};
+      const style = (profile.details && profile.details.trainingStyle) || profile.trainingStyle;
+      mine = this.fromStyle[style] || [];
+    }
+    return mine.length ? mine : null;
   },
   // Which option an exercise belongs to (the library files Smith machine lifts under machines)
   kindOf(ex) {
