@@ -10,7 +10,7 @@
 <title>LaroFit</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=104">
+<link rel="stylesheet" href="larofit.css?v=105">
 <style>
 /* ── BUILD POPUP ── */
 .build-overlay {
@@ -198,10 +198,10 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- Nav injected by larofit-nav.js -->
-<script src="supabase-client.js?v=104"></script>
-<script src="larofit-exercises.js?v=104"></script>
+<script src="supabase-client.js?v=105"></script>
+<script src="larofit-exercises.js?v=105"></script>
 <script>window.LF_PAGE = 'home';</script>
-<script src="larofit-nav.js?v=104"></script>
+<script src="larofit-nav.js?v=105"></script>
 
 <!-- ── MAIN CONTENT ── -->
 <main class="lf-main-desktop" id="main">
@@ -841,13 +841,12 @@ function sessDur(sec){sec=Math.round(Number(sec)||0);if(sec>=60){const m=Math.fl
 function sessVol(lbs){lbs=Number(lbs)||0;return lbs>=1000?(lbs/1000).toFixed(1)+'k':Math.round(lbs).toString();}
 function sessFmtDate(dateStr){try{return new Date(dateStr+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});}catch(e){return dateStr;}}
 function sessSetLabel(set){
-  const w=Number(set.weight)||0,r=Number(set.reps)||0,h=Number(set.holdTime)||0,d=Number(set.duration)||0,dist=Number(set.distance)||0;
+  const w=Number(set.weight)||0,r=Number(set.reps)||0,h=Number(set.holdTime)||0,d=Number(set.duration)||0,dist=Number(set.distance)||0,sp=Number(set.speed)||0;
   if(w>0&&r>0){let s=sessNum(w)+' lbs × '+r;if(h>0)s+=' · '+h+'s';return s;}
   if(r>0&&h>0)return r+' × '+h+'s hold';
   if(h>0)return h+'s hold';
-  if(d>0&&dist>0)return sessDur(d)+' · '+sessNum(dist);
-  if(d>0)return sessDur(d);
-  if(dist>0)return sessNum(dist)+'';
+  if(d>0)return sessNum(d)+' min'+(sp>0?' at '+sessNum(sp)+' mph':'')+(dist>0?' · '+sessNum(dist)+' mi':'');
+  if(dist>0)return sessNum(dist)+' mi';
   if(r>0)return r+' reps';
   if(w>0)return sessNum(w)+' lbs';
   return '—';
@@ -963,7 +962,7 @@ function sessEditInputs(ex, exIdx){
     let fields;
     if(type==='cardio'){
       fields = '<input class="sess-edit-inp" type="number" inputmode="decimal" placeholder="min" value="'+(set.duration||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'duration\',this.value)"><span class="sess-edit-unit">min</span>'
-             + '<input class="sess-edit-inp" type="number" inputmode="decimal" placeholder="mi" value="'+(set.distance||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'distance\',this.value)"><span class="sess-edit-unit">mi</span>';
+             + '<input class="sess-edit-inp" type="number" inputmode="decimal" placeholder="mph" value="'+(set.speed||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'speed\',this.value)"><span class="sess-edit-unit">mph</span>';
     } else if(type==='timed_bodyweight'){
       fields = '<input class="sess-edit-inp" type="number" inputmode="numeric" placeholder="sec" value="'+(set.holdTime||'')+'" onchange="sessEditSetVal('+exIdx+','+i+',\'holdTime\',this.value)"><span class="sess-edit-unit">sec</span>';
     } else if(type==='bodyweight'){
@@ -1024,8 +1023,10 @@ async function saveSessEdit(){
     const sets=(ex.sets||[]).map(function(s){return {
       weight:parseFloat(s.weight)||0, reps:parseFloat(s.reps)||0,
       holdTime:parseFloat(s.holdTime)||0, duration:parseFloat(s.duration)||0,
-      distance:parseFloat(s.distance)||0
+      distance:parseFloat(s.distance)||0, speed:parseFloat(s.speed)||0
     };});
+    // Cardio distance follows from the time and speed
+    if(ex.type==='cardio') sets.forEach(function(s){ if(s.speed>0&&s.duration>0) s.distance=Math.round(s.speed*s.duration/60*100)/100; });
     if(ex.type==='strength'||ex.type==='bodyweight'){
       sets.forEach(function(s){ totalVolume += (s.weight||0)*(s.reps||0); });
     }

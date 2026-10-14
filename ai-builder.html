@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css">
-<link rel="stylesheet" href="larofit.css?v=104">
+<link rel="stylesheet" href="larofit.css?v=105">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -182,8 +182,8 @@ body { display: flex; flex-direction: column; background: var(--bg); padding-bot
 
 <div class="aib-toast" id="toast" role="status"></div>
 
-<script src="supabase-client.js?v=104"></script>
-<script src="larofit-exercises.js?v=104"></script>
+<script src="supabase-client.js?v=105"></script>
+<script src="larofit-exercises.js?v=105"></script>
 <script>
 LF.ready().then(() => LF.guard());
 
@@ -424,7 +424,7 @@ function trimToDays(r, n) {
 // What gets stored in a program day / handed to the workout page (the builder's own exercise shape)
 function toProgramExercise(x) {
   const base = { id: x.id, name: x.name, primaryMuscle: x.primaryMuscle, secondaryMuscles: x.secondaryMuscles, recordType: x.recordType };
-  if (x.kind === 'cardio') return { ...base, durationMin: x.durationMin, distance: '' };
+  if (x.kind === 'cardio') return { ...base, durationMin: x.durationMin, speed: '' };
   if (x.kind === 'timed')  return { ...base, sets: x.sets, durationSec: x.durationSec, restSec: x.restSec };
   if (x.kind === 'reps')   return { ...base, sets: x.sets, reps: x.reps, restSec: x.restSec };
   return { ...base, sets: x.sets, weight: 0, reps: x.reps, restSec: x.restSec };

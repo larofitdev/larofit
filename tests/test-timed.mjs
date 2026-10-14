@@ -14,7 +14,7 @@ const make = (kinds, aiReply = '{"action":"none"}') => new Function('aiReply', '
   const _prCredited = new Set(), said = [], calls = [];
   let voiceSpeakChain = Promise.resolve(), holdShown = false, restEnd = null;
   const exercises = kinds.map((k, i) => ({ id: 'e' + i, name: k === 'timed' ? 'Plank' : k === 'cardio' ? 'Treadmill' : 'Bench Press', kind: k, sets: k === 'cardio' ? 1 : 3, reps: k === 'timed' ? 45 : 10, durationSec: k === 'timed' ? 45 : null, restSec: 60,
-    loggedSets: k === 'cardio' ? [{ duration: '', distance: '', logged: false }] : k === 'timed' ? [0,1,2].map(() => ({ holdTime: '', logged: false })) : [0,1,2].map(() => ({ weight: 100, reps: '', logged: false })) }));
+    loggedSets: k === 'cardio' ? [{ duration: '', speed: '', distance: '', logged: false }] : k === 'timed' ? [0,1,2].map(() => ({ holdTime: '', logged: false })) : [0,1,2].map(() => ({ weight: 100, reps: '', logged: false })) }));
   let voicePending = { exIdx: 0, setIdx: 0, sugWeight: 0, bw: false };
   const isTimed = ex => ex.kind === 'timed', isCardio = ex => ex.kind === 'cardio', isBW = () => false, isStrength = ex => ex.kind === 'strength';
   const store = { get: (k, d) => d }, LAROFIT_EXERCISES = [];
@@ -46,7 +46,7 @@ const make = (kinds, aiReply = '{"action":"none"}') => new Function('aiReply', '
   ${src.slice(src.indexOf('// Rest is over — prompt for the next set of this exercise'), src.indexOf('// Log the pending set with the spoken reps'))}
   ${src.slice(a, b)}
   return { begin: () => goToEx(0), hear: t => handleVoiceResult(t), said, calls, phase: () => voicePhase, current: () => exercises[currentExIdx].name, endRest: () => skipRest(), timerDone: s => finishHold(s),
-           sets: e => exercises[e].loggedSets.map(s => (s.logged ? 'L' : '-') + (s.holdTime !== undefined ? s.holdTime + 's' : s.duration !== undefined ? s.duration + 'min' + (s.distance ? '/' + s.distance + 'mi' : '') : s.weight + 'x' + s.reps)).join(' '),
+           sets: e => exercises[e].loggedSets.map(s => (s.logged ? 'L' : '-') + (s.holdTime !== undefined ? s.holdTime + 's' : s.duration !== undefined ? s.duration + 'min' + (s.speed ? '@' + s.speed : '') + (s.distance ? '/' + s.distance + 'mi' : '') : s.weight + 'x' + s.reps)).join(' '),
            time: (t, unit, raw) => parseTimeSpeech(normalizeSpeech(t), unit, raw === undefined ? t : raw), cardio: t => parseCardioSpeech(normalizeSpeech(t), t), sayTime: voiceSayTime };
 `)(aiReply, kinds);
 
@@ -66,9 +66,20 @@ for (const [phrase, want] of [['45 seconds', 45], ['forty five seconds', 45], ['
 console.log('Cardio (a number on its own is minutes)');
 for (const [phrase, min, dist] of [['30 minutes', 30, null], ['thirty minutes', 30, null], ['20', 20, null], ['twenty', 20, null], ['30 minutes, 2 miles', 30, 2], ['thirty minutes two miles', 30, 2],
   ['2 miles in 18 minutes', 18, 2], ['twenty minutes and a mile and a half', 20, 1.5], ['an hour', 60, null], ['half an hour', 30, null], ['an hour and a half', 90, null], ['1 hour 15 minutes', 75, null],
-  ['45 minutes 3.2 miles', 45, 3.2], ['25:30', 25.5, null], ['20 minutes 5 kilometers', 20, 3.11], ['I ran for 22 minutes', 22, null], ['12 and a half minutes', 12.5, null], ['2 miles', null, 2], ['ready', null, null]]) {
+  ['45 minutes 3.2 miles', 45, 3.2], ['25:30', 25.5, null], ['20 minutes 5 kilometers', 20, 3.11], ['I ran for 22 minutes', 22, null], ['12 and a half minutes', 12.5, null], ['2 miles', null, 2], ['ready', null, null],
+  ['20 minutes 30', 20.5, null]]) {
   const got = P.cardio(phrase);
   check(('"' + phrase + '"').padEnd(40) + ' -> ' + got.minutes + ' min' + (got.distance !== null ? ', ' + got.distance + ' mi' : ''), got.minutes === min && got.distance === dist, 'expected ' + min + ' / ' + dist);
+}
+
+console.log('Cardio with speed (the distance is worked out)');
+for (const [phrase, min, speed, dist] of [['30 minutes at 3.5', 30, 3.5, 1.75], ['thirty minutes at three point five', 30, 3.5, 1.75], ['30 minutes 3.5 mph', 30, 3.5, 1.75],
+  ['30 minutes at 3.5 miles an hour', 30, 3.5, 1.75], ['30 minutes 3.5 miles per hour', 30, 3.5, 1.75], ['30 minutes, 3.5', 30, 3.5, 1.75], ['3.5 for 30 minutes', 30, 3.5, 1.75],
+  ['at 3.5 for 30 minutes', 30, 3.5, 1.75], ['twenty five minutes at 4', 25, 4, 1.67], ['20 at 3', 20, 3, 1], ['speed 3.5 for 40 minutes', 40, 3.5, 2.33],
+  ['30 minutes at three and a half', 30, 3.5, 1.75], ['an hour at 3', 60, 3, 3], ['20 minutes at 10 kilometers an hour', 20, 6.2, 2.07], ['30 minutes, 2 miles', 30, 4, 2],
+  ['at 3.5', null, 3.5, null], ['30 minutes', 30, null, null]]) {
+  const got = P.cardio(phrase);
+  check(('"' + phrase + '"').padEnd(40) + ' -> ' + got.minutes + ' min at ' + got.speed + ', ' + got.distance + ' mi', got.minutes === min && got.speed === speed && got.distance === dist, 'expected ' + min + ' / ' + speed + ' / ' + dist);
 }
 
 console.log('Reading a time back');
@@ -109,17 +120,24 @@ console.log('Corrections');
 console.log('Cardio');
 {
   const w = make(['cardio', 'strength']); w.begin();
-  check('announced: "' + last(w) + '"', /^Treadmill\. Say your time when finished, like 20 minutes, 2 miles\.$/.test(last(w)) && w.phase() === 'log_cardio');
+  check('announced: "' + last(w) + '"', /^Treadmill\. Say your time and speed when finished, like 30 minutes at 3\.5\.$/.test(last(w)) && w.phase() === 'log_cardio');
   w.hear('two miles');
   check('distance only asks for the time: "' + last(w) + '"', /How long/.test(last(w)) && w.sets(0) === '-min');
+  w.hear('at 3.5');
+  check('speed only asks for the time: "' + last(w) + '"', /How long/.test(last(w)) && w.sets(0) === '-min');
   w.hear('30 minutes, 2 miles');
-  check('"30 minutes, 2 miles" -> ' + w.sets(0) + '   "' + w.said[w.said.length - 2] + '" then "' + last(w) + '"', w.sets(0) === 'L30min/2mi' && w.said[w.said.length - 2] === '30 minutes, 2 miles logged.' && /^Next, Bench Press/.test(last(w)));
+  check('"30 minutes, 2 miles" -> ' + w.sets(0) + '   "' + w.said[w.said.length - 2] + '" then "' + last(w) + '"', w.sets(0) === 'L30min@4/2mi' && w.said[w.said.length - 2] === '30 minutes, 2 miles logged.' && /^Next, Bench Press/.test(last(w)));
+}
+{
+  const w = make(['cardio', 'strength']); w.begin();
+  w.hear('thirty minutes at three point five');
+  check('"thirty minutes at three point five" -> ' + w.sets(0) + '   "' + w.said[w.said.length - 2] + '"', w.sets(0) === 'L30min@3.5/1.75mi' && w.said[w.said.length - 2] === '30 minutes at 3.5 logged, 1.75 miles.');
 }
 {
   const w = make(['cardio']); w.begin(); w.hear('twenty');
   check('a bare "twenty" is minutes -> ' + w.sets(0) + '   "' + last(w) + '"', w.sets(0) === 'L20min' && last(w) === '20 minutes logged.');
-  w.hear('no, 25 minutes and 3 miles');
-  check('corrected -> ' + w.sets(0) + '   "' + last(w) + '"', w.sets(0) === 'L25min/3mi' && last(w) === '25 minutes, 3 miles logged.');
+  w.hear('no, 25 minutes at 4');
+  check('corrected -> ' + w.sets(0) + '   "' + last(w) + '"', w.sets(0) === 'L25min@4/1.67mi' && last(w) === '25 minutes at 4 logged, 1.67 miles.');
 }
 console.log('Weight and reps are unaffected');
 {
