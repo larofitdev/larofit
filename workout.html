@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=102">
+<link rel="stylesheet" href="larofit.css?v=103">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=102"></script>
-<script src="larofit-exercises.js?v=102"></script>
+<script src="supabase-client.js?v=103"></script>
+<script src="larofit-exercises.js?v=103"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=102"></script>
+<script src="larofit-nav.js?v=103"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3694,7 +3694,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 90;
+const VOICE_BUILD = 91;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -3710,8 +3710,12 @@ function voiceKeepLog() {
 
 // Send a log to the account's voice_logs table, so it can be read without any copy and paste.
 // Returns true if it was stored.
+let voiceLastSent = { text: '', at: 0 };
 async function voiceSendLog(reason, text) {
   text = text || voiceLogText();
+  // The same log a moment ago (several taps on LOG) is not sent again
+  if (text === voiceLastSent.text && Date.now() - voiceLastSent.at < 10000) return true;
+  voiceLastSent = { text, at: Date.now() };
   try {
     const sb = await LF.ready();
     const user = await LF.auth.user();
@@ -4425,6 +4429,8 @@ function voicePrompt(msg, interrupt) {
 
 // Called when an exercise comes on screen
 function voiceAnnounceExercise(ex) {
+  // An unanswered "X instead of Y?", "Finish the workout?" or "Which set?" belonged to the moment before
+  voiceSwap = null; voiceFinishAt = 0; voiceEdit = null; voiceAskedWhichSetAt = 0;
   const target = voiceTargetFor(currentExIdx);
   if (!target) {
     // Nothing left to log here: stay listening for the next exercise
@@ -4608,9 +4614,16 @@ function handleVoiceResult(raw) {
   {
     // A set named outright ("edit the first set", "set 2 was at 20 pounds", "all sets were 20 pounds")
     const ref = voiceSetRef(t);
-    if (ref && voiceEditSets(ref.which, voiceEditParse(ref.rest), VOICE_CORRECTION.test(t) || /\b(change|fix|correct|update|adjust|modify|redo)\b/.test(t))) return true;
+    const askedWhich = Date.now() - voiceAskedWhichSetAt < 20000;   // "Which set?" was just asked: "the first one" is the answer
+    if (ref && voiceEditSets(ref.which, voiceEditParse(ref.rest), askedWhich || VOICE_CORRECTION.test(t) || /\b(change|fix|correct|update|adjust|modify|redo)\b/.test(t))) { voiceAskedWhichSetAt = 0; return true; }
+    // "Edit", "change", "fix" with no set named and no numbers: ask which set
+    if (!ref && /\b(edit|change|fix|correct|update|adjust|modify)\b/.test(t) && !/\d/.test(t) && !/\b(last|previous|that|it)\b/.test(t) && !VOICE_SWAP.test(t)) {
+      voiceAskedWhichSetAt = Date.now();
+      voiceSwapSay('Which set? Say first set, second set, or last set.');
+      return true;
+    }
     // "Set 3, ten reps" for the set being done now: the set number isn't one of the numbers
-    if (ref && voicePending && ref.which === voicePending.setIdx + 1) t = ref.rest.replace(/\s+/g, ' ').trim();
+    if (ref && voicePending && exercises[voicePending.exIdx] && !(exercises[voicePending.exIdx].loggedSets[ref.which - 1] || {}).logged) t = ref.rest.replace(/\s+/g, ' ').trim();
     const justLogged = voiceLastLog && Date.now() - voiceLastLog.at < 180000;
     if (VOICE_CORRECTION.test(t) || (justLogged && /^(no|nope|nah)\b/.test(t))) {
       if (voiceLastLog && voiceLastLog.kind) voiceCorrectTimed(t, raw);   // a hold or cardio entry
@@ -4695,6 +4708,7 @@ function voiceCorrectLast(said) {
 // "all three sets were at 20 pounds". The set stays logged and is changed in place,
 // so the workout carries on from where it was.
 let voiceEdit = null;   // { exIdx, idxs, label, at } while waiting to hear the right numbers
+let voiceAskedWhichSetAt = 0;   // when "Which set?" was asked
 const VOICE_ORDINALS = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, '1st': 1, '2nd': 2, '3rd': 3, '4th': 4, '5th': 5, '6th': 6 };
 
 // Which set does a normalised phrase name? { which: 1-6 | 'all', rest: the phrase without it } or null.
@@ -4984,11 +4998,11 @@ function exGuessMuscle(words) {
 }
 
 // ── The conversation ──
-function voiceSwapSay(msg) { voiceDbg('replace: ' + msg); updateVoiceHUD(msg); speakText(msg, true); }
+function voiceSwapSay(msg) { voiceDbg('coach: ' + msg); updateVoiceHUD(msg); speakText(msg, true); }
 
 // target: what they asked for, or '' for "something similar"
 async function voiceSwapStart(target, avoid) {
-  const exIdx = currentExIdx, ex = exercises[exIdx];
+  const exIdx = voiceThisExercise(), ex = exercises[exIdx];
   if (!ex) return;
   const all = exAllExercises(), inWorkout = exercises.map(e => e.id);
   const similar = () => exFindSimilar(ex, all, inWorkout, avoid);
@@ -5322,6 +5336,17 @@ function voiceResume() {
   speakText('Resuming. ' + (voicePhase === 'resting' ? '' : (voiceLastPrompt || '')), true);
 }
 
+// Which exercise "this exercise" means. Normally the one on screen; but in the rest after
+// its last set, the coach has already announced the next one, and that is what is meant.
+function voiceThisExercise() {
+  const cur = exercises[currentExIdx];
+  if (voicePhase === 'resting' && cur && cur.loggedSets.every(st => st.logged)) {
+    const ni = nextIncompleteIdx(currentExIdx);
+    if (ni !== -1) return ni;
+  }
+  return currentExIdx;
+}
+
 // ── SKIPPING AND REMOVING AN EXERCISE ─────────────────────────
 // "Skip this exercise" moves on and leaves it to come back to. "Remove this exercise"
 // takes it out of today's workout. Neither changes the program.
@@ -5339,9 +5364,10 @@ function voiceSaidSkip(t) {
 }
 
 function voiceSkipExercise() {
-  const idx = exercises.length ? nextIncompleteIdx(currentExIdx) : -1;
+  const from = voiceThisExercise();
+  const idx = exercises.length ? nextIncompleteIdx(from) : -1;
   if (idx === -1) { voiceSwapSay('There is nothing else to move on to. Say an exercise, or say finish workout.'); return; }
-  voiceDbg('skipped ' + exercises[currentExIdx].name);
+  voiceDbg('skipped ' + exercises[from].name);
   voiceSwap = null; voiceEdit = null;
   stopRest(); restCallback = null;
   voicePreAnnounced = -1;
@@ -5349,7 +5375,7 @@ function voiceSkipExercise() {
 }
 
 function voiceRemoveExercise() {
-  const idx = currentExIdx, ex = exercises[idx];
+  const idx = voiceThisExercise(), ex = exercises[idx];
   if (!ex) return;
   if (ex.loggedSets.some(st => st.logged)) { voiceSwapSay('You have logged sets of ' + ex.name + ', so it stays. Say skip to move on.'); return; }
   voiceDbg('removed ' + ex.name + ' from today');
@@ -5618,6 +5644,8 @@ function normalizeSpeech(raw) {
     .replace(/\.(?!\d)/g, ' | ').replace(/[,;!?]/g, ' | ')   // a pause: number words either side stay separate
     .replace(/[^a-z0-9.|\s]/g, ' ')
     .replace(/\s+/g, ' ').trim();
+  // A number said as a plural ("tens", "10s"): the number
+  t = t.replace(/\b(\d+)s\b/g, '$1').replace(/\b(one|two|three|four|five|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)s\b/g, '$1').replace(/\bsixes\b/g, 'six');
   const whole = t.replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
   if (whole in VOICE_SOUNDALIKES) return String(VOICE_SOUNDALIKES[whole]);
 

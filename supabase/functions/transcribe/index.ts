@@ -88,6 +88,8 @@ serve(async (req) => {
     form.append("file", new File([audio], "phrase.wav", { type: "audio/wav" }));
     form.append("model", MODEL);
     form.append("prompt", PROMPT);
+    // English only: without it, a grunt or a clatter sometimes comes back as German or Japanese words
+    form.append("language", "en");
 
     const response = await fetch(OPENAI_URL, {
       method: "POST",

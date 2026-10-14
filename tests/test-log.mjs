@@ -38,7 +38,7 @@ const make = (planned, phase = 'confirm_weight', aiReply = '{"ids":[]}') => new 
   const nextIncompleteIdx = from => { const n = exercises.length; for (let k = 1; k <= n; k++) { const i = (from + k) % n; if (i !== from && !exercises[i].loggedSets.every(s => s.logged)) return i; } return -1; };
   ${src.slice(a, b)}
   return { hear: t => handleVoiceResult(t), interpret: t => voiceInterpret(t), said, calls, names: () => exercises.map(e => e.name), current: () => exercises[currentExIdx] && exercises[currentExIdx].name,
-           paused: () => voicePaused, clockStopped: () => isPaused, rest: cb => { restInterval = 1; restCallback = cb; }, tapBar: () => { if (voicePaused) voiceResume(); }, sets: e => exercises[e].loggedSets.map(s => s.logged ? 'L' : '-').join(''),
+           setPhase: p => { voicePhase = p; }, paused: () => voicePaused, clockStopped: () => isPaused, rest: cb => { restInterval = 1; restCallback = cb; }, tapBar: () => { if (voicePaused) voiceResume(); }, sets: e => exercises[e].loggedSets.map(s => s.logged ? 'L' : '-').join(''),
            phase: () => voicePhase, notes: () => exNotes, byName, settle: () => new Promise(r => setTimeout(r, 30)), offered: () => voiceSwap && voiceSwap.cands[voiceSwap.pick] && voiceSwap.cands[voiceSwap.pick].name };
 `)(LIB, aiReply, planned, phase);
 
@@ -151,6 +151,45 @@ for (const phrase of ['Resume.', 'resume workout', 'Continue', "I'm back", "Okay
   check('pausing during a rest ends the rest quietly', w.paused() && ran === 0);
   w.hear('resume');
   check('and resuming goes on to what the rest was leading to (the next set or exercise)', !w.paused() && ran === 1);
+}
+
+console.log('From the workout of 2026-10-13 evening (build 90)');
+// A set logged, then the rest ends (the stand-in workout doesn't run a rest timer)
+const did = (w, phrase = 'ten') => { w.hear(phrase); w.setPhase('confirm_weight'); };
+{
+  // The rest after the last set of the first exercise: the coach has announced the second
+  const finished = () => { const w = make(PLAN); did(w); did(w); w.hear('ten'); return w; };
+  const w = finished();
+  check('setup: first exercise done, resting', w.sets(0) === 'LLL' && w.phase() === 'resting');
+  w.hear('Replace.'); await w.settle();
+  check('"Replace." in that rest is about the exercise coming up: "' + last(w) + '"', /instead of Dumbbell Chest Fly/.test(last(w)));
+  const w2 = finished(); w2.hear('Skip this exercise.');
+  check('"Skip this exercise." in that rest skips the one coming up -> on ' + w2.current(), w2.current() === 'Dumbbell Pullover');
+  const w3 = finished(); w3.hear('Delete this exercise.');
+  check('"Delete this exercise." in that rest removes the one coming up -> ' + w3.names().join(' | '), w3.names().join('|') === 'Dumbbell Incline Bench Press|Dumbbell Pullover');
+  const w4 = make(PLAN); did(w4); w4.hear('Edit first set, 20 pounds');
+  check('during a set, edits still go to the exercise on screen: ' + w4.sets(0), w4.sets(0) === 'L--');
+}
+{
+  const w = make(PLAN); did(w); did(w);
+  w.hear('Edit for set.');
+  check('"Edit for set." (a misheard "edit first set") asks which set: "' + last(w) + '"', /Which set?/.test(last(w)) && w.sets(0) === 'LL-');
+  w.hear('first set');
+  check('"first set" then starts editing it: "' + last(w) + '"', /Set 1 was 10 reps/.test(last(w)));
+  const w2 = make(PLAN); did(w2); w2.hear('edit last set');
+  check('"edit last set" still takes back the last set', /set 1 removed/i.test(last(w2)));
+  const w3 = make(PLAN); did(w3); w3.hear('no, that was wrong');
+  check('"no, that was wrong" still takes back the last set', w3.sets(0) === '---');
+}
+{
+  const w = make(PLAN); did(w); w.hear('Log, set three.');
+  check('"Log, set three." is not 3 reps: ' + w.sets(0) + '   "' + (last(w) || '') + '"', w.sets(0) === 'L--' && !/I heard 3/.test(last(w) || ''));
+  const w2 = make(PLAN); w2.hear('Start set three.');
+  check('"Start set three." is not 3 reps: ' + w2.sets(0), w2.sets(0) === '---');
+}
+for (const [phrase, want] of [['Tens.', 'L--'], ['10s.', 'L--'], ['twelves', 'L--']]) {
+  const w = make(PLAN); w.hear(phrase);
+  check(('"' + phrase + '"').padEnd(12) + ' logs a set: ' + w.sets(0) + '   "' + last(w) + '"', w.sets(0) === want);
 }
 
 console.log('Stopping');
