@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=103">
+<link rel="stylesheet" href="larofit.css?v=104">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=103"></script>
-<script src="larofit-exercises.js?v=103"></script>
+<script src="supabase-client.js?v=104"></script>
+<script src="larofit-exercises.js?v=104"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=103"></script>
+<script src="larofit-nav.js?v=104"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1747,7 +1747,7 @@ function workoutExerciseFrom(ex) {
     planHold,
     restSec:    exN.restSec || 90,
     type,
-    mediaUrl:   exN.mediaUrl || lookupMediaUrl(exN.id),
+    mediaUrl:   lookupMediaUrl(exN.id) || exN.mediaUrl,
     planWeight: parseFloat(exN.weight) || 0,   // weight set in the program builder
     targetReps: (type === 'strength' && coachPlanFor(exN) || {}).reps || null,   // today's aim, when the coach has one
     loggedSets: buildLoggedSets(exN)
@@ -2136,7 +2136,8 @@ function renderGifSlot(ex) {
   const slot        = document.getElementById('gif-slot');
   const video       = document.getElementById('gif-video');
   const placeholder = document.getElementById('gif-placeholder');
-  const mediaUrl    = ex.mediaUrl || lookupMediaUrl(ex.id);
+  // The library's address first: a saved program can hold an older one from before a video was renamed
+  const mediaUrl    = lookupMediaUrl(ex.id) || ex.mediaUrl;
 
   // Reset to expanded state for each new exercise
   slot.classList.remove('collapsed');
@@ -2150,6 +2151,7 @@ function renderGifSlot(ex) {
   if (mediaUrl) {
     _gifHasMedia = true;
     slot.style.display        = '';   // restore CSS flex
+    video.poster              = lookupPosterUrl(ex.id);
     video.src                 = mediaUrl;
     video.style.display       = 'block';
     placeholder.style.display = 'none';
@@ -3181,6 +3183,12 @@ function lookupMediaUrl(id) {
   const f = LAROFIT_EXERCISES.find(e => e.id === id);
   return f ? (f.mediaUrl || null) : null;
 }
+// The still picture shown while an exercise's video loads
+function lookupPosterUrl(id) {
+  if (!id || typeof LAROFIT_EXERCISES === 'undefined') return '';
+  const f = LAROFIT_EXERCISES.find(e => e.id === id);
+  return f ? (f.posterUrl || '') : '';
+}
 
 // ── FREE FORM EXERCISE PICKER ─────────────────────────────────
 let pickerCat = 'all';
@@ -3317,8 +3325,9 @@ function openExDetail(exId, addFn) {
   // Video
   const video = document.getElementById('ex-detail-video');
   const placeholder = document.getElementById('ex-detail-video-placeholder');
-  const mediaUrl = ex.mediaUrl || lookupMediaUrl(ex.id);
+  const mediaUrl = lookupMediaUrl(ex.id) || ex.mediaUrl;
   if (mediaUrl) {
+    video.poster = lookupPosterUrl(ex.id);
     video.src = mediaUrl; video.style.display = 'block';
     placeholder.style.display = 'none';
     video.load(); video.play().catch(()=>{});
@@ -3694,7 +3703,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 91;
+const VOICE_BUILD = 92;
 function voiceDbg(msg) {
   voiceLog.push(new Date().toTimeString().slice(0, 8) + ' [' + voicePhase + '] ' + msg);
   if (voiceLog.length > 500) voiceLog.shift();
@@ -5504,7 +5513,7 @@ function voiceStartExercise(data) {
     const hold = isTimed(plan) ? (last && Math.max(...last.sets.map(st => parseFloat(st.holdTime) || 0)) || 30) : null;
     exercises.push({
       id: data.id, name: data.name, sets, reps: hold || 10, durationSec: hold, restSec: 60,
-      type: exTypeOf(plan), mediaUrl: data.mediaUrl || lookupMediaUrl(data.id), planWeight: 0,
+      type: exTypeOf(plan), mediaUrl: lookupMediaUrl(data.id) || data.mediaUrl, planWeight: 0,
       targetReps: (exTypeOf(plan) === 'strength' && coachPlanFor(plan) || {}).reps || null,
       loggedSets: buildLoggedSets(plan)
     });

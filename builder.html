@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=103">
+<link rel="stylesheet" href="larofit.css?v=104">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -819,10 +819,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=103"></script>
-<script src="larofit-exercises.js?v=103"></script>
+<script src="supabase-client.js?v=104"></script>
+<script src="larofit-exercises.js?v=104"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=103"></script>
+<script src="larofit-nav.js?v=104"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -2320,6 +2320,7 @@ function openExDetail(exId, addFn) {
   const video = document.getElementById('ex-detail-video');
   const placeholder = document.getElementById('ex-detail-video-placeholder');
   if (ex.mediaUrl) {
+    video.poster = ex.posterUrl || '';   // shows while the video loads
     video.src = ex.mediaUrl; video.style.display = 'block';
     placeholder.style.display = 'none';
     video.load(); video.play().catch(()=>{});

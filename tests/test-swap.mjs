@@ -74,8 +74,8 @@ for (const [query, current, want] of [
   check(('"' + query + '" (replacing ' + current + ')').padEnd(58) + ' -> ' + got + (found.sure[1] ? '   then ' + found.sure.slice(1, 3).map(e => e.name).join(', ') : ''), got === want, 'expected ' + want);
 }
 {
-  const found = api.exFindByName('zercher wobble', byName('Barbell Bench Press'), all);
-  check('"zercher wobble" finds nothing certain (goes to the coach model)', found.sure.length === 0);
+  const found = api.exFindByName('flamingo wobble', byName('Barbell Bench Press'), all);
+  check('"flamingo wobble" finds nothing certain (goes to the coach model)', found.sure.length === 0);
 }
 
 console.log('Something similar');

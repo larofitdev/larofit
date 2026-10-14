@@ -113,10 +113,10 @@ console.log('A name that is not clear');
   check('"no, goblet squat" -> ' + (w.current() || last(w)), /Goblet Squat/i.test(w.current() || ''));
 }
 {
-  const w = make([], 'pick_exercise'); w.hear('zercher wobble'); await w.settle();
-  check('not in the library: "' + last(w) + '"', /could not find zercher wobble.*add it/i.test(last(w)));
+  const w = make([], 'pick_exercise'); w.hear('flamingo wobble'); await w.settle();
+  check('not in the library: "' + last(w) + '"', /could not find flamingo wobble.*add it/i.test(last(w)));
   w.hear('add it');
-  check('"add it" makes it and starts it: ' + w.current() + ' / saved ' + (w.saved[0] && w.saved[0].name), w.current() === 'Zercher Wobble' && w.saved.length === 1);
+  check('"add it" makes it and starts it: ' + w.current() + ' / saved ' + (w.saved[0] && w.saved[0].name), w.current() === 'Flamingo Wobble' && w.saved.length === 1);
 }
 {
   const w = make([], 'pick_exercise'); w.hear('cable y raise'); await w.settle(); w.hear('add it');

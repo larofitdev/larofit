@@ -1,4 +1,4 @@
-const CACHE_NAME = 'larofit-v103';
+const CACHE_NAME = 'larofit-v104';
 
 const STATIC_ASSETS = [
   '/index.html',
@@ -15,10 +15,10 @@ const STATIC_ASSETS = [
   '/privacy.html',
   '/terms.html',
   '/disclaimer.html',
-  '/larofit.css?v=103',
-  '/larofit-nav.js?v=103',
-  '/larofit-exercises.js?v=103',
-  '/supabase-client.js?v=103',
+  '/larofit.css?v=104',
+  '/larofit-nav.js?v=104',
+  '/larofit-exercises.js?v=104',
+  '/supabase-client.js?v=104',
   '/supabase.min.js',
   '/manifest.json',
   '/sw.js',
