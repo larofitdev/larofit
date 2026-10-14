@@ -649,7 +649,48 @@ window.LF = {
 // Units, the coach's voice and timer sounds are kept on the device (lf_settings) so
 // pages can read them instantly, and copied to the account so a new phone or a
 // reinstall picks them up. Whichever copy was changed most recently wins.
-const LF_SYNCED_SETTINGS = ['units', 'voiceName', 'sound'];
+const LF_SYNCED_SETTINGS = ['units', 'voiceName', 'sound', 'equipment'];
+
+// ── EQUIPMENT I USE ───────────────────────────────────────────
+// Ticked once on Profile. The AI builder, the exercise pickers and "replace" then
+// only offer exercises that use it. Nothing ticked (or never set) means everything.
+// Exercises the user made themselves always count, and so does anything they ask for by name.
+LF.equipment = {
+  options: [
+    { id: 'dumbbells',      label: 'Dumbbells' },
+    { id: 'barbell',        label: 'Barbell' },
+    { id: 'ez_bar',         label: 'EZ bar' },
+    { id: 'machine_cable',  label: 'Machines & cables' },
+    { id: 'smith',          label: 'Smith machine' },
+    { id: 'kettlebells',    label: 'Kettlebells' },
+    { id: 'bands',          label: 'Bands' },
+    { id: 'exercise_ball',  label: 'Exercise ball' },
+    { id: 'bodyweight',     label: 'Bodyweight' },
+    { id: 'cardio_machine', label: 'Cardio machines' },
+  ],
+  // The ticked ids, or null when the user hasn't narrowed it down
+  get() {
+    const mine = (LS.get('settings', {}) || {}).equipment;
+    return Array.isArray(mine) && mine.length ? mine : null;
+  },
+  // Which option an exercise belongs to (the library files Smith machine lifts under machines)
+  kindOf(ex) {
+    if (/\bsmith\b/i.test(ex.name || '')) return 'smith';
+    return ex.equipment || '';
+  },
+  allows(ex) {
+    const mine = this.get();
+    if (!mine || !ex || ex.custom) return true;
+    const kind = this.kindOf(ex);
+    if (!kind || kind === 'bench') return true;   // a bench is assumed wherever there are weights
+    return mine.includes(kind);
+  },
+  // "dumbbells, machines & cables" for a sentence
+  describe() {
+    const mine = this.get();
+    return mine ? this.options.filter(o => mine.includes(o.id)).map(o => o.label.toLowerCase()).join(', ') : '';
+  }
+};
 LF.settings = {
   // Call after changing a setting on this device
   async push() {
@@ -673,7 +714,7 @@ LF.settings = {
       const local = LS.get('settings', {}) || {};
       if ((local._at || 0) >= remote._at) return false;
       let changed = false;
-      for (const k of LF_SYNCED_SETTINGS) if (remote[k] !== undefined && local[k] !== remote[k]) { local[k] = remote[k]; changed = true; }
+      for (const k of LF_SYNCED_SETTINGS) if (remote[k] !== undefined && JSON.stringify(local[k]) !== JSON.stringify(remote[k])) { local[k] = remote[k]; changed = true; }
       local._at = remote._at;
       LS.set('settings', local);
       if (changed) window.dispatchEvent(new Event('lf:settings'));

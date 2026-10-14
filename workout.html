@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=100">
+<link rel="stylesheet" href="larofit.css?v=101">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=100"></script>
-<script src="larofit-exercises.js?v=100"></script>
+<script src="supabase-client.js?v=101"></script>
+<script src="larofit-exercises.js?v=101"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=100"></script>
+<script src="larofit-nav.js?v=101"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3184,7 +3184,7 @@ function lookupMediaUrl(id) {
 
 // ── FREE FORM EXERCISE PICKER ─────────────────────────────────
 let pickerCat = 'all';
-let pickerEquip = 'all';
+let pickerEquip = (typeof LF !== 'undefined' && LF.equipment && LF.equipment.get()) ? 'mine' : 'all';   // 'mine' = the equipment ticked on Profile
 
 function buildExPicker() {
   // Build category pills
@@ -3210,6 +3210,7 @@ function buildExPicker() {
     { id:'ez_bar', name:'EZ Bar' }, { id:'cardio_machine', name:'Cardio Machine' },
     { id:'exercise_ball', name:'Exercise Ball' }, { id:'bench', name:'Bench' },
   ];
+  if (typeof LF !== 'undefined' && LF.equipment && LF.equipment.get()) equips.unshift({ id:'mine', name:'My equipment' });
   const equipEl = document.getElementById('ex-picker-equip');
   if (equipEl) equipEl.innerHTML = equips.map(e =>
     `<button class="ex-picker-cat${e.id===pickerEquip?' active':''}" onclick="setPickerEquip('${e.id}')">${e.name}</button>`
@@ -3260,7 +3261,7 @@ function filterPicker() {
 
   const results = allEx.filter(ex => {
     const catMatch   = pickerCat === 'all' || ex.primaryMuscle === pickerCat;
-    const equipMatch = pickerEquip === 'all' || ex.equipment === pickerEquip;
+    const equipMatch = pickerEquip === 'all' || (pickerEquip === 'mine' ? LF.equipment.allows(ex) : ex.equipment === pickerEquip);
     const qMatch     = !q || ex.name.toLowerCase().includes(q);
     return catMatch && equipMatch && qMatch;
   }).slice(0, 80);
@@ -4896,12 +4897,16 @@ function exFindSimilar(current, all, skipIds, avoid) {
   const cur = all.find(e => e.id === current.id) || current;
   if (!cur.primaryMuscle) return [];
   const plain = name => exWords(name).filter(w => !Object.values(EX_EQUIP_WORDS).some(l => l.includes(w)));   // without the equipment
+  // Keep to the equipment ticked on Profile, unless that would leave nothing to offer
+  const fits = typeof LF !== 'undefined' && LF.equipment && LF.equipment.get() ? e => LF.equipment.allows(e) : null;
+  const mineOnly = !!fits && all.some(e => e.id !== cur.id && e.primaryMuscle === cur.primaryMuscle && (!cur.recordType || e.recordType === cur.recordType) && fits(e));
   const curWords = plain(cur.name);
   const out = [];
   for (const e of all) {
     if (e.id === cur.id || (skipIds || []).includes(e.id) || e.primaryMuscle !== cur.primaryMuscle) continue;
     if (cur.recordType && e.recordType !== cur.recordType) continue;
     if (avoid && avoid.length && exWords(e.name).some(w => avoid.includes(w))) continue;   // "nothing incline"
+    if (mineOnly && !LF.equipment.allows(e)) continue;                                      // equipment they don't use
     const words = plain(e.name), shared = words.filter(w => curWords.includes(w)).length;
     // The same movement with different equipment comes ahead of a variation of it
     out.push({ e, score: shared * 1.5 - (words.length - shared) * 0.3 + (cur.movement && e.movement === cur.movement ? 2 : 0) + (e.custom ? 0.25 : 0) });

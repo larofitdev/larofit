@@ -90,6 +90,38 @@ for (const current of ['Dumbbell Chest Fly', 'Barbell Bench Press', 'Dumbbell La
   check('an exercise already in today\'s workout is not offered', !again.some(e => e.id === first.id));
 }
 
+console.log('Equipment I use (ticked on Profile)');
+{
+  // the shared rule from supabase-client.js, with a stand-in for what is ticked
+  const client = fs.readFileSync('supabase-client.js', 'utf8').split('\r').join('');
+  const ea = client.indexOf('LF.equipment = {'), eb = client.indexOf('};', client.indexOf('describe()', ea)) + 2;
+  let ticked = null;
+  const LFx = {}; new Function('LF', 'LS', client.slice(ea, eb))(LFx, { get: () => ({ equipment: ticked }) });
+  const withEquipment = new Function('LAROFIT_EXERCISES', 'store', 'LF', src.slice(n1, n2) + src.slice(a, b) + '; return { exFindSimilar };')(LIB, { get: (k, d) => k === 'custom_exercises' ? CUSTOM : d }, LFx);
+  const similar = current => { const cur = byName(current); return withEquipment.exFindSimilar(cur, all, [cur.id]); };
+  const kinds = list => [...new Set(list.map(e => LFx.equipment.kindOf(e)))].sort().join(', ');
+
+  ticked = ['dumbbells', 'machine_cable'];
+  let got = similar('Barbell Bench Press');
+  check('dumbbells + machines ticked: replacements for Barbell Bench Press use only those -> ' + got.slice(0, 3).map(e => e.name).join(', ') + '  [' + kinds(got) + ']', got.length > 0 && got.every(e => ['dumbbells', 'machine_cable'].includes(LFx.equipment.kindOf(e))));
+  check('Smith machine lifts are left out unless Smith machine is ticked', !got.some(e => /smith/i.test(e.name)));
+  got = similar('Dumbbell Lateral Raise');
+  check('…and for Dumbbell Lateral Raise -> ' + got.slice(0, 3).map(e => e.name).join(', '), got.length > 0 && got.every(e => e.custom || ['dumbbells', 'machine_cable'].includes(LFx.equipment.kindOf(e))));
+  check('their own exercises are always offered', similar('Dumbbell Lateral Raise').length > 0 && LFx.equipment.allows(CUSTOM[0]));
+
+  ticked = ['dumbbells'];
+  got = similar('Push Up');
+  check('only dumbbells ticked, replacing a bodyweight move with no dumbbell equivalent: falls back to everything -> ' + got.slice(0, 2).map(e => e.name).join(', '), got.length > 0);
+
+  ticked = ['dumbbells', 'machine_cable', 'smith'];
+  check('with Smith machine ticked, Smith lifts are allowed', LFx.equipment.allows(byName('Smith Machine Incline Bench Press')));
+
+  ticked = [];
+  got = similar('Barbell Bench Press');
+  check('nothing ticked: every kind of equipment is offered  [' + kinds(got) + ']', kinds(got).split(', ').length >= 3);
+  check('describe() reads naturally', (ticked = ['dumbbells', 'machine_cable'], LFx.equipment.describe()) === 'dumbbells, machines & cables');
+}
+
 console.log('Changing the program');
 {
   const old = byName('Dumbbell Chest Fly'), nw = byName('Machine Pec Fly'), other = byName('Barbell Bench Press');

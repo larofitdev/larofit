@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=100">
+<link rel="stylesheet" href="larofit.css?v=101">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -819,10 +819,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=100"></script>
-<script src="larofit-exercises.js?v=100"></script>
+<script src="supabase-client.js?v=101"></script>
+<script src="larofit-exercises.js?v=101"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=100"></script>
+<script src="larofit-nav.js?v=101"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -1114,7 +1114,7 @@ let editingDate      = null;   // 'YYYY-MM-DD' of day being edited
 let pasteMode        = false;
 let copiedDate       = null;
 let libMuscle         = 'all';
-let libEq             = 'all';
+let libEq             = (typeof LF !== 'undefined' && LF.equipment && LF.equipment.get()) ? 'mine' : 'all';   // 'mine' = the equipment ticked on Profile
 let cxSelectedMuscles = [];
 let _customsCache     = [];  // seeded from localStorage in init(), updated by Supabase in background
 
@@ -2052,7 +2052,8 @@ function buildLibraryFilters() {
     `<button class="lib-filter-chip${f.id===libMuscle?' active':''}"
              onclick="setLibMuscle('${f.id}')">${f.label}</button>`
   ).join('');
-  eRow.innerHTML = EQ_FILTERS.map(f =>
+  const mine = typeof LF !== 'undefined' && LF.equipment && LF.equipment.get();
+  eRow.innerHTML = (mine ? [{ id: 'mine', label: 'My equipment' }] : []).concat(EQ_FILTERS).map(f =>
     `<button class="lib-eq-chip${f.id===libEq?' active':''}"
              onclick="setLibEq('${f.id}')">${f.label}</button>`
   ).join('');
@@ -2087,7 +2088,7 @@ function renderLibrary() {
   let exercises  = [...customs, ...(LAROFIT_EXERCISES || [])];
 
   if (libMuscle !== 'all') exercises = exercises.filter(e => e.primaryMuscle === libMuscle);
-  if (libEq     !== 'all') exercises = exercises.filter(e => e.equipment === libEq);
+  if (libEq     !== 'all') exercises = exercises.filter(e => libEq === 'mine' ? LF.equipment.allows(e) : e.equipment === libEq);
   // Custom exercises pinned to top, built-ins sorted alphabetically below
   exercises.sort((a, b) => {
     if (a.custom && !b.custom) return -1;

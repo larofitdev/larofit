@@ -9,7 +9,7 @@
 <title>LaroFit — Profile</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=100">
+<link rel="stylesheet" href="larofit.css?v=101">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="text"], input[type="email"], input[type="number"],
@@ -280,10 +280,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=100"></script>
-<script src="larofit-exercises.js?v=100"></script>
+<script src="supabase-client.js?v=101"></script>
+<script src="larofit-exercises.js?v=101"></script>
 <script>window.LF_PAGE = 'profile';</script>
-<script src="larofit-nav.js?v=100"></script>
+<script src="larofit-nav.js?v=101"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -604,6 +604,14 @@ button, input, select, a, textarea { touch-action: manipulation; }
       </div>
       <div class="nav-link-arrow">›</div>
     </a>
+  </div>
+
+  <!-- ── EQUIPMENT ── -->
+  <div class="lf-section-label">Equipment I use</div>
+  <div class="prof-section" style="padding:14px 16px;">
+    <div style="font-size:13px;color:var(--text-2);line-height:1.5;margin-bottom:12px;">Tick what you train with. The AI builder, the exercise lists and “replace” will stick to it. Leave everything unticked to be offered any exercise.</div>
+    <div id="equip-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    <div id="equip-note" style="font-size:12px;color:var(--text-3);margin-top:10px;"></div>
   </div>
 
   <!-- ── SETTINGS ── -->
@@ -994,6 +1002,30 @@ function calcNutrition() {
   protEl.textContent = proteinG;
   carbEl.textContent = carbG;
 }
+
+// ── EQUIPMENT I USE ────────────────────────────────────────────────────────
+function renderEquipment() {
+  const box = document.getElementById('equip-list');
+  if (!box || typeof LF === 'undefined' || !LF.equipment) return;
+  const mine = LF.equipment.get() || [];
+  box.innerHTML = LF.equipment.options.map(o => {
+    const on = mine.includes(o.id);
+    return `<button onclick="toggleEquipment('${o.id}')" role="checkbox" aria-checked="${on}"
+      style="min-height:44px;padding:0 14px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;
+             border:1px solid ${on ? 'var(--volt)' : 'var(--border-md)'};background:${on ? 'var(--volt)' : 'transparent'};color:${on ? '#1a1a1a' : 'var(--text-2)'};">${on ? '✓ ' : ''}${o.label}</button>`;
+  }).join('');
+  document.getElementById('equip-note').textContent = mine.length
+    ? 'You will be offered exercises using: ' + LF.equipment.describe() + '. Your own exercises are always included.'
+    : 'Nothing ticked: you will be offered every exercise.';
+}
+
+function toggleEquipment(id) {
+  const mine = LF.equipment.get() || [];
+  const next = mine.includes(id) ? mine.filter(x => x !== id) : mine.concat(id);
+  saveSetting('equipment', LF.equipment.options.map(o => o.id).filter(x => next.includes(x)));   // kept in the list's order
+  renderEquipment();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderEquipment); else renderEquipment();
 
 // ── COACH VOICE ────────────────────────────────────────────────────────────
 // 'phone' is the device's built-in voice; the others are natural AI voices from the `speak` function

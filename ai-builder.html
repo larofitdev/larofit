@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css">
-<link rel="stylesheet" href="larofit.css?v=100">
+<link rel="stylesheet" href="larofit.css?v=101">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -182,8 +182,8 @@ body { display: flex; flex-direction: column; background: var(--bg); padding-bot
 
 <div class="aib-toast" id="toast" role="status"></div>
 
-<script src="supabase-client.js?v=100"></script>
-<script src="larofit-exercises.js?v=100"></script>
+<script src="supabase-client.js?v=101"></script>
+<script src="larofit-exercises.js?v=101"></script>
 <script>
 LF.ready().then(() => LF.guard());
 
@@ -246,6 +246,7 @@ MEMBER
 - Goals: ${say(details.goals) || say(profile.goal) || 'not given'}${say(details.goalNotes) ? ' (' + say(details.goalNotes) + ')' : ''}
 - Training style: ${say(details.trainingStyle) || 'not given'}
 - Trains at: ${say(details.gym) || 'not given'}
+- Equipment they use: ${(typeof LF !== 'undefined' && LF.equipment && LF.equipment.describe()) || 'anything'}${(typeof LF !== 'undefined' && LF.equipment && LF.equipment.get() || []).includes('smith') ? '' : (typeof LF !== 'undefined' && LF.equipment && LF.equipment.get() ? ' (no Smith machine lifts)' : '')}
 
 EXERCISE LIBRARY — the only exercises you may use. Format: Name [id] (equipment, main muscle, how it is counted)
 ${allExercises().map(line).join('\n')}
@@ -253,6 +254,7 @@ ${allExercises().map(line).join('\n')}
 HOW TO WORK
 - If the request is clear enough to build something sensible, build it straight away. Do not interview them. Ask one short question only when you truly cannot proceed, for example "a workout" with no hint of focus or equipment.
 - Respect equipment limits exactly. "Dumbbell only" means every exercise has equipment "dumbbells". Use bodyweight moves only if they allow it.
+- When "Equipment they use" lists equipment, build only from exercises with that equipment, plus their own exercises, without being asked. If this request names other equipment ("a barbell workout"), the request wins for this routine.
 - A single workout has 4 to 7 exercises unless they ask otherwise.
 - For a program, count the days. The "days" lists of all workouts put together must contain exactly as many weekdays as the training days they asked for, never more. Example: a 4-day push pull legs program is Push [Mon], Pull [Tue], Legs [Thu], and a fourth session such as Upper Body [Fri] — four weekdays in total, not Push [Mon, Thu], Pull [Tue, Fri], Legs [Wed, Sat], which is six.
 - Strength work defaults to 3 sets of 10 with 60 seconds rest; heavy compound lifts 90 seconds. Follow any sets, reps or time limit they give.
