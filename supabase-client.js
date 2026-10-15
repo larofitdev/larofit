@@ -829,7 +829,7 @@ LF.sendKeptVoiceLog = async function () {
     const sb = await lfReady();
     const user = await LF.auth.user();
     if (!user) return;
-    const { error } = await sb.from('voice_logs').insert({ user_id: user.id, build: String(kept.build || ''), reason: 'recovered from ' + kept.at, log: kept.text.slice(0, 200000) });
+    const { error } = await sb.from('voice_logs').insert({ user_id: user.id, build: String(kept.build || ''), reason: 'recovered from ' + kept.at, log: kept.text.slice(-600000) });
     if (error) return;
     // Marked sent only if it is still the same copy (a workout may have saved a newer one meanwhile)
     const now = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
