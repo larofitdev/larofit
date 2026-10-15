@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=110">
+<link rel="stylesheet" href="larofit.css?v=111">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=110"></script>
-<script src="larofit-exercises.js?v=110"></script>
+<script src="supabase-client.js?v=111"></script>
+<script src="larofit-exercises.js?v=111"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=110"></script>
+<script src="larofit-nav.js?v=111"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1436,6 +1436,7 @@ function leaveAbandon() {
     voiceKeepLog();
     let gone = false;
     const go = () => { if (!gone) { gone = true; window.location.href = href; } };
+    voiceLogClosed = true;
     voiceSendLog('left without saving').then(go, go);
     setTimeout(go, 3000);
     return;
@@ -2976,7 +2977,7 @@ function updateLogBtn() {
 // ── FINISH WORKOUT ────────────────────────────────────────────
 function finishWorkout() {
   stopRest(); clearInterval(elapsedTimer);
-  if (workoutMode === 'voice' && voiceLog.length) { voiceKeepLog(); voiceSendLog('workout finished'); }
+  if (workoutMode === 'voice' && voiceLog.length) { voiceKeepLog(); voiceLogClosed = true; voiceSendLog('workout finished'); }
   stopListening();
   const totalElapsed = elapsedSec + (startTime ? Math.floor((Date.now() - startTime) / 1000) : 0);
   const durationMin  = Math.round(totalElapsed / 60);
@@ -3738,7 +3739,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 98;
+const VOICE_BUILD = 99;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -3759,7 +3760,12 @@ function voiceDbg(msg) {
 function voiceLogText() {
   return 'LaroFit voice build ' + VOICE_BUILD + '\n' + navigator.userAgent + '\n' + voiceLog.join('\n');
 }
+// Once a workout's log has been sent at the end (finished, or left without saving), the copy on
+// the phone is no longer kept up: otherwise the app going to the background a moment later saved
+// a fresh copy, and the next page sent the same log again as "recovered".
+let voiceLogClosed = false;
 function voiceKeepLog() {
+  if (voiceLogClosed) return;
   try { localStorage.setItem('lf_voice_log', JSON.stringify({ at: new Date().toISOString(), sent: false, build: VOICE_BUILD, text: voiceLogText() })); } catch (e) {}
 }
 // The phone can close the app without warning once it is in the background: keep the log up to date first
@@ -3827,7 +3833,8 @@ function initVoice() {
   voiceOwnPeaks = []; voiceQuietRun = 0; voiceUnderstoodAt = Date.now();
   voicePaused = false; voicePausedRest = null;
   voiceHadEarbuds = false; voiceEarbudsOut = false; voiceAutoPaused = false; voiceOffEarbudsSince = 0;
-  voiceLog = []; voiceDbgLast = ""; voiceDbgRepeats = 0;
+  voiceLog = []; voiceDbgLast = ""; voiceDbgRepeats = 0; voiceLogClosed = false;
+  voiceEarbudsWorked = false; voiceOnEarbudsSince = 0;
   voiceEnsureCtx();
   if (voiceReady) return;
   voiceReady = true;
@@ -3880,17 +3887,24 @@ function voiceIsBuiltInMic(label) { return /iphone|ipad|built-?in|internal|macbo
 // workout is paused and the mic closed (nothing in the room is heard). Default output
 // back on the earbuds = they are in again: the mic reopens and the workout carries on.
 let voiceHadEarbuds = false, voiceEarbudsOut = false, voiceAutoPaused = false, voiceEarbudsTriedAt = 0;
+// Whether the earbuds have actually worked this workout (the mic stayed on them for 15 seconds).
+// If they never have, "earbuds out" is really "the iPhone won't use them": connected, but its
+// sound is set to the phone's speaker, or another device (a Mac, an iPad, a laptop) has them.
+let voiceEarbudsWorked = false, voiceOnEarbudsSince = 0;
 function voiceIsBuiltInOutput(label) { return /speaker|receiver|iphone|ipad|built-?in|internal|macbook/i.test(label || ''); }
 
 function voiceEarbudsGone(why) {
   if (voiceEarbudsOut) return;
   voiceEarbudsOut = true; voiceEarbudsTriedAt = Date.now();
-  voiceDbg('earbuds out (' + why + '): pausing and closing the mic');
+  voiceDbg('earbuds out (' + why + '): pausing and closing the mic' + (voiceEarbudsWorked ? '' : ' (they have not worked yet this workout: the phone is not using them)'));
   voiceStopSpeech();   // or the coach carries on out of the phone's speaker
   if (!voicePaused) { voiceAutoPaused = true; voicePause(true); }
   pauseListening();
   voiceReleaseMic();
-  updateVoiceHUD('Earbuds out — paused. Put them back in to carry on, or tap here to use the phone mic.');
+  if (voiceEarbudsWorked) { updateVoiceHUD('Earbuds out — paused. Put them back in to carry on, or tap here to use the phone mic.'); return; }
+  // Said once, out of the phone's speaker, since that is where the sound is going
+  updateVoiceHUD('Your earbuds are connected, but the iPhone is not using them. Open Control Center, tap the sound output button and choose your earbuds. Or tap here to use the phone mic.');
+  speakText('Your earbuds are connected, but the phone is not using them. Open Control Center and choose your earbuds for sound. Or tap the screen to use the phone.', true);
 }
 
 function voiceEarbudsBack(why) {
@@ -3921,6 +3935,9 @@ function voiceCheckEarbuds() {
   if (!voiceEarbudsOut) {
     const track = voiceMicStream && voiceMicStream.getAudioTracks()[0];
     const off = !track || track.readyState !== 'live' || voiceIsBuiltInMic(track.label);
+    if (off) voiceOnEarbudsSince = 0;
+    else if (!voiceOnEarbudsSince) voiceOnEarbudsSince = Date.now();
+    else if (!voiceEarbudsWorked && Date.now() - voiceOnEarbudsSince >= 15000) { voiceEarbudsWorked = true; voiceDbg('earbuds working'); }
     if (!off) {
       if (voiceOffEarbudsSince) {
         voiceDbg('mic is back on the earbuds after ' + Math.round((Date.now() - voiceOffEarbudsSince) / 1000) + 's (Bluetooth settling, not earbuds out)');
