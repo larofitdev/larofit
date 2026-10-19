@@ -10,7 +10,7 @@
 <title>LaroFit</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=112">
+<link rel="stylesheet" href="larofit.css?v=113">
 <style>
 /* ── BUILD POPUP ── */
 .build-overlay {
@@ -198,10 +198,10 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- Nav injected by larofit-nav.js -->
-<script src="supabase-client.js?v=112"></script>
-<script src="larofit-exercises.js?v=112"></script>
+<script src="supabase-client.js?v=113"></script>
+<script src="larofit-exercises.js?v=113"></script>
 <script>window.LF_PAGE = 'home';</script>
-<script src="larofit-nav.js?v=112"></script>
+<script src="larofit-nav.js?v=113"></script>
 
 <!-- ── MAIN CONTENT ── -->
 <main class="lf-main-desktop" id="main">
@@ -541,6 +541,8 @@ async function loadTodayCard() {
   // Flatten AM/PM sessions into a single exercise list for display
   let sessions = [];
   let displayName = program.name;
+  // A day left unnamed in Builder is saved as "Workout": show the program's name instead
+  const dayName = n => (n && n.trim() && n.trim() !== 'Workout') ? n : '';
 
   if (dayPlan.am || dayPlan.pm) {
     // New AM/PM format
@@ -548,15 +550,15 @@ async function loadTodayCard() {
     if (dayPlan.pm && (dayPlan.pm.exercises||[]).length) sessions.push(dayPlan.pm);
     if (!sessions.length) { restCard.style.display = 'block'; return; }
     displayName = sessions.length > 1
-      ? sessions.map(s => s.name || '').filter(Boolean).join(' + ') || program.name
-      : sessions[0].name || program.name;
+      ? sessions.map(s => dayName(s.name)).filter(Boolean).join(' + ') || program.name
+      : dayName(sessions[0].name) || program.name;
   } else if (dayPlan.rest) {
     restCard.style.display = 'block';
     return;
   } else {
     // Legacy flat format
     sessions = [dayPlan];
-    displayName = dayPlan.name || program.name;
+    displayName = dayName(dayPlan.name) || program.name;
   }
 
   const allExercises = sessions.flatMap(s => s.exercises || []);

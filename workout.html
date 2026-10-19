@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=112">
+<link rel="stylesheet" href="larofit.css?v=113">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=112"></script>
-<script src="larofit-exercises.js?v=112"></script>
+<script src="supabase-client.js?v=113"></script>
+<script src="larofit-exercises.js?v=113"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=112"></script>
+<script src="larofit-nav.js?v=113"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1632,7 +1632,9 @@ function _loadFromProgram(program) {
   if ('am' in dayPlan || 'pm' in dayPlan) {
     const amEx = (dayPlan.am && dayPlan.am.exercises) ? dayPlan.am.exercises : [];
     const pmEx = (dayPlan.pm && dayPlan.pm.exercises) ? dayPlan.pm.exercises : [];
-    const name = (dayPlan.am && dayPlan.am.name) || (dayPlan.pm && dayPlan.pm.name) || program.name || 'Workout';
+    // A day left unnamed in Builder is saved as "Workout": the program's name is used instead
+    const dayName = n => (n && n.trim() && n.trim() !== 'Workout') ? n : '';
+    const name = dayName(dayPlan.am && dayPlan.am.name) || dayName(dayPlan.pm && dayPlan.pm.name) || program.name || 'Workout';
     const allEx = [...amEx, ...pmEx];
     if (!allEx.length) { show('rest-day-state'); setHeader('Rest day'); return; }
     showPrestart(allEx, name);
@@ -1645,7 +1647,7 @@ function _loadFromProgram(program) {
     // Legacy flat format with no exercises
     show('rest-day-state'); setHeader('Rest day'); return;
   }
-  showPrestart(exercises, dayPlan.name || program.name || 'Workout');
+  showPrestart(exercises, (dayPlan.name && dayPlan.name.trim() !== 'Workout' ? dayPlan.name : '') || program.name || 'Workout');
 }
 
 // Exercises of a planned workout that were NOT fully logged in a workout finished earlier today.
@@ -3739,7 +3741,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 99;
+const VOICE_BUILD = 100;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
