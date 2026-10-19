@@ -10,7 +10,7 @@
 <title>LaroFit</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=111">
+<link rel="stylesheet" href="larofit.css?v=112">
 <style>
 /* ── BUILD POPUP ── */
 .build-overlay {
@@ -198,10 +198,10 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- Nav injected by larofit-nav.js -->
-<script src="supabase-client.js?v=111"></script>
-<script src="larofit-exercises.js?v=111"></script>
+<script src="supabase-client.js?v=112"></script>
+<script src="larofit-exercises.js?v=112"></script>
 <script>window.LF_PAGE = 'home';</script>
-<script src="larofit-nav.js?v=111"></script>
+<script src="larofit-nav.js?v=112"></script>
 
 <!-- ── MAIN CONTENT ── -->
 <main class="lf-main-desktop" id="main">
@@ -306,13 +306,16 @@ if ('serviceWorker' in navigator) {
         <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);
                     letter-spacing:0.12em;text-transform:uppercase;
                     font-family:var(--font-mono);margin-bottom:6px;">Get started</div>
-        <div style="font-size:18px;font-weight:700;color:var(--text-inv);margin-bottom:4px;">
+        <div id="no-prog-title" style="font-size:18px;font-weight:700;color:var(--text-inv);margin-bottom:4px;">
           No program yet
         </div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:14px;">
+        <div id="no-prog-text" style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:14px;">
           Build your first program to get daily workouts here.
         </div>
-        <button class="btn btn-volt btn-full" onclick="openBuildSheet()">
+        <button class="btn btn-volt btn-full" id="no-prog-choose" onclick="location.href='programs.html'" style="display:none;margin-bottom:8px;">
+          Choose a program <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+        <button class="btn btn-volt btn-full" id="no-prog-build" onclick="openBuildSheet()">
           Build a program <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
@@ -500,13 +503,26 @@ async function loadUser() {
 async function loadTodayCard() {
   const programs = await LF.db.getPrograms();
   const activeId = (() => { try { return JSON.parse(localStorage.getItem('lf_active_program')); } catch { return null; } })();
-  const program  = programs.find(p => p.id === activeId || p.isActive);
+  let program    = programs.find(p => p.id === activeId || p.isActive);
+  // Programs saved but none of them active (Builder used to save them that way): a single one
+  // becomes the active one; with several, Home asks which one is being followed
+  if (!program && programs.length === 1) {
+    program = programs[0];
+    program.isActive = true;
+    LF.db.setActiveProgram(program.id);
+  }
 
   const hasCard  = document.getElementById('today-has-workout');
   const restCard = document.getElementById('today-rest-day');
   const noProg   = document.getElementById('today-no-program');
 
   if (!program) {
+    if (programs.length) {
+      document.getElementById('no-prog-title').textContent = 'Choose your program';
+      document.getElementById('no-prog-text').textContent = 'You have ' + programs.length + ' programs. In Programs, tap Activate on the one you are following, and its workouts show here.';
+      document.getElementById('no-prog-choose').style.display = '';
+      document.getElementById('no-prog-build').style.display = 'none';
+    }
     noProg.style.display = 'block';
     return;
   }
