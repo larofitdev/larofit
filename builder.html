@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=123">
+<link rel="stylesheet" href="larofit.css?v=124">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -444,6 +444,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
   cursor: pointer;
   transition: all 0.15s;
 }
+.bldr-add-ex-btn.first { margin-bottom: 8px; }
 .bldr-add-ex-btn:active {
   border-color: var(--volt-dark);
   color: var(--volt-dark);
@@ -570,6 +571,27 @@ button, input, select, a, textarea { touch-action: manipulation; }
   font-size: 18px; font-weight: 700; flex-shrink: 0; transition: transform 0.15s;
 }
 .lib-ex-row:active .lib-ex-add { transform: scale(0.88); }
+/* Ticking exercises: the number is the order they'll be done in */
+.lib-pick {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  border: 2px solid var(--border-md); background: transparent; color: #1a1a1a;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700;
+}
+.lib-ex-row.picked { background: var(--volt-bg); }
+.lib-ex-row.picked .lib-pick { background: var(--volt); border-color: var(--volt); }
+.lib-pick-bar { display: none; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); border-top: 0.5px solid var(--border); background: var(--bg-card); }
+.lib-pick-bar.show { display: block; }
+.lib-pick-bar .btn[disabled] { opacity: 0.45; }
+.lib-group-setup { margin-top: 10px; }
+.lib-group-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lib-seg-btn {
+  min-height: 36px; padding: 0 14px; border-radius: 18px; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  border: 1px solid var(--border-md); background: transparent; color: var(--text-2); font-size: 13px; font-weight: 700;
+}
+.lib-seg-btn.on { background: var(--volt); border-color: var(--volt); color: #1a1a1a; }
+.lib-rounds { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-2); }
+.lib-rounds input { width: 52px; padding: 6px 4px; text-align: center; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); border: 1px solid var(--border-md); background: var(--bg); color: var(--text); }
+.lib-group-hint { font-size: 11px; color: var(--text-3); margin-top: 8px; line-height: 1.4; }
 .lib-ex-row.already-added .lib-ex-add {
   background: var(--success-bg); color: var(--success); font-size: 14px;
 }
@@ -842,10 +864,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=123"></script>
-<script src="larofit-exercises.js?v=123"></script>
+<script src="supabase-client.js?v=124"></script>
+<script src="larofit-exercises.js?v=124"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=123"></script>
+<script src="larofit-nav.js?v=124"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -973,9 +995,13 @@ button, input, select, a, textarea { touch-action: manipulation; }
 
   <div class="bldr-ex-list" id="ex-list"></div>
 
-  <button class="bldr-add-ex-btn" onclick="openLibrary()">
+  <button class="bldr-add-ex-btn first" onclick="openLibrary()">
     <i class="ti ti-plus" style="font-size:18px;"></i>
-    Add exercise
+    Add exercises
+  </button>
+  <button class="bldr-add-ex-btn" onclick="openLibrary('group')">
+    <i class="ti ti-link" style="font-size:18px;"></i>
+    Add superset or circuit
   </button>
 
 </main>
@@ -1013,7 +1039,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
 <div class="lib-sheet" id="lib-sheet">
   <div class="lib-sheet-handle"></div>
   <div class="lib-sheet-top">
-    <div class="lib-sheet-title">Add Exercise</div>
+    <div class="lib-sheet-title" id="lib-sheet-title">Add exercises</div>
+    <div class="lib-group-setup" id="lib-group-setup" style="display:none;"></div>
     <div class="lib-search-wrap">
       <i class="ti ti-search lib-search-icon"></i>
       <input
@@ -1034,6 +1061,9 @@ button, input, select, a, textarea { touch-action: manipulation; }
     </div>
   </div>
   <div class="lib-ex-list" id="lib-results"></div>
+  <div class="lib-pick-bar" id="lib-pick-bar">
+    <button class="btn btn-volt btn-full" id="lib-pick-btn" onclick="addPicked()">Add</button>
+  </div>
 </div>
 
 <!-- ══════════════════════════════════════
@@ -1941,6 +1971,12 @@ function renderExList(noAnim) {
   normalizeGroups(session.exercises);
   const exs = session.exercises, count = exs.length;
   const sameGroup = (a, b) => !!(a && b && a.group && b.group && a.group.id === b.group.id);
+  const groupSize = e => e && e.group ? exs.filter(x => x.group && x.group.id === e.group.id).length : 0;
+  const linkLabel = (a, b) => sameGroup(a, b) ? '<i class="ti ti-unlink" aria-hidden="true"></i> Unlink from the next exercise'
+    : a.group && b.group ? '<i class="ti ti-link" aria-hidden="true"></i> Join with the next group'
+    : a.group ? '<i class="ti ti-link" aria-hidden="true"></i> ' + (groupSize(a) === 2 ? 'Add the next exercise (makes a circuit)' : 'Add the next exercise to the circuit')
+    : b.group ? '<i class="ti ti-link" aria-hidden="true"></i> Add to the next ' + (groupSize(b) === 2 ? 'superset (makes a circuit)' : 'circuit')
+    : '<i class="ti ti-link" aria-hidden="true"></i> Superset with the next exercise';
   list.innerHTML = exs.map((ex, ei) => `
     <div class="bldr-ex-card${noAnim ? ' no-anim' : ''}${ex.group ? ' grouped' : ''}${sameGroup(ex, exs[ei + 1]) ? ' grouped-next' : ''}" id="ex-card-${ei}" data-idx="${ei}">
       ${ex.group && !sameGroup(exs[ei - 1], ex) ? buildGroupHead(ei) : ''}
@@ -1957,10 +1993,7 @@ function renderExList(noAnim) {
       <div class="bldr-ex-params">
         ${buildExParams(ex, ei)}
       </div>
-      ${ei < count - 1 ? `<div class="bldr-link-row"><button class="bldr-link-btn" onclick="toggleLink(${ei})">${
-        sameGroup(ex, exs[ei + 1]) ? '<i class="ti ti-unlink" aria-hidden="true"></i> Unlink from the next exercise'
-        : ex.group || exs[ei + 1].group ? '<i class="ti ti-link" aria-hidden="true"></i> Link with the next exercise'
-        : '<i class="ti ti-link" aria-hidden="true"></i> Superset with the next exercise'}</button></div>` : ''}
+      ${ei < count - 1 ? `<div class="bldr-link-row"><button class="bldr-link-btn" onclick="toggleLink(${ei})">${linkLabel(ex, exs[ei + 1])}</button></div>` : ''}
     </div>`).join('');
 
   initDrag();
@@ -2031,6 +2064,7 @@ function buildGroupHead(ei) {
       </div>
       <div class="bldr-group-note">${g.timed
         ? 'Each exercise is worked for the time set, then the timer moves you to the next.'
+        : n === 2 ? 'Two exercises back to back, then the round rest. Add another and it becomes a circuit.'
         : 'One set of each exercise in turn, with no rest between them, then the round rest.'}</div>
     </div>`;
 }
@@ -2227,7 +2261,19 @@ function buildLibraryFilters() {
 function setLibMuscle(val) { libMuscle = val; buildLibraryFilters(); renderLibrary(); }
 function setLibEq(val)     { libEq     = val; buildLibraryFilters(); renderLibrary(); }
 
-function openLibrary() {
+// The library ticks exercises rather than adding each one as it's tapped: tick as many as
+// wanted (numbered in the order they'll be done), then add them in one go. Opened from
+// "Add superset or circuit" it adds them as one group, with Reps or Timed and the rounds
+// chosen at the top: 2 make a superset, 3 or more a circuit.
+let libMode = 'single', libPicked = [], libGroupTimed = false, libGroupRounds = 3;
+
+function openLibrary(mode) {
+  libMode = mode === 'group' ? 'group' : 'single';
+  libPicked = [];
+  document.getElementById('lib-sheet-title').textContent = libMode === 'group' ? 'Superset or circuit' : 'Add exercises';
+  document.getElementById('lib-group-setup').style.display = libMode === 'group' ? '' : 'none';
+  renderGroupSetup();
+  updatePickBar();
   document.getElementById('lib-sheet').classList.add('open');
   document.getElementById('lib-backdrop').classList.add('open');
   document.getElementById('lib-search').value = '';
@@ -2278,12 +2324,12 @@ function renderLibrary() {
   document.getElementById('lib-results').innerHTML = exercises.length === 0
     ? `<div class="lib-empty">No exercises found.<br>Try a different search or filter.</div>`
     : exercises.map(ex => {
-        const added = addedIds.has(ex.id);
+        const added = addedIds.has(ex.id), order = libPicked.indexOf(ex.id) + 1;
         const meta  = [ex.primaryMuscle, ...(ex.secondaryMuscles||[])]
-          .filter(Boolean).slice(0,2).map(m => m.replace('_',' ')).join(' · ');
+          .filter(Boolean).slice(0,2).map(m => m.replace('_',' ')).join(' · ') + (added ? ' · in this day' : '');
         return `
-          <div class="lib-ex-row${added?' already-added':''}"
-               onclick="addExercise('${ex.id}')"
+          <div class="lib-ex-row${order ? ' picked' : ''}"
+               onclick="togglePick('${ex.id}')"
                ontouchstart="startExDetailPress('${ex.id}',event)"
                ontouchend="cancelExDetailPress()"
                ontouchmove="cancelExDetailPress()"
@@ -2295,10 +2341,8 @@ function renderLibrary() {
               <div class="lib-ex-name">${escHtml(ex.name)}${isCustom(ex.id)?'<span class="custom-badge">CUSTOM</span>':''}</div>
               <div class="lib-ex-meta">${meta}</div>
             </div>
-            ${isCustom(ex.id)
-              ? `<button class="lib-ex-delete" onclick="deleteCustomExercise(event,'${ex.id}')">🗑</button>`
-              : `<div class="lib-ex-add">${added ? '✓' : '+'}</div>`
-            }
+            ${isCustom(ex.id) ? `<button class="lib-ex-delete" onclick="deleteCustomExercise(event,'${ex.id}')">🗑</button>` : ''}
+            <div class="lib-pick" aria-hidden="true">${order || ''}</div>
           </div>`;
       }).join('');
 }
@@ -2311,20 +2355,39 @@ function deleteCustomExercise(e, id) {
   showToast('Exercise deleted');
 }
 
-function addExercise(exId) {
-  const customs = getCustomExercises();
-  const ex      = customs.find(e => e.id === exId) || (LAROFIT_EXERCISES || []).find(e => e.id === exId);
-  if (!ex) return;
+function togglePick(exId) {
+  const i = libPicked.indexOf(exId);
+  if (i >= 0) libPicked.splice(i, 1); else libPicked.push(exId);
+  renderLibrary();
+  updatePickBar();
+}
 
-  const session = currentSession();
-  if (!session) return;
+function updatePickBar() {
+  const n = libPicked.length, group = libMode === 'group', btn = document.getElementById('lib-pick-btn');
+  document.getElementById('lib-pick-bar').classList.toggle('show', group || n > 0);
+  btn.disabled = group ? n < 2 : n < 1;
+  btn.textContent = !group ? (n === 1 ? 'Add 1 exercise' : 'Add ' + n + ' exercises')
+    : n < 2 ? 'Tick at least 2 exercises' : (n === 2 ? 'Add superset' : 'Add circuit') + ' (' + n + ')';
+}
 
-  const existing = session.exercises.findIndex(e => e.id === exId);
-  if (existing >= 0) {
-    session.exercises.splice(existing, 1);
-    renderLibrary(); renderExList(); return;
-  }
+function renderGroupSetup() {
+  const box = document.getElementById('lib-group-setup');
+  if (!box) return;
+  box.innerHTML = `
+    <div class="lib-group-row">
+      <button class="lib-seg-btn${libGroupTimed ? '' : ' on'}" onclick="setLibGroupTimed(false)" aria-pressed="${!libGroupTimed}">Reps</button>
+      <button class="lib-seg-btn${libGroupTimed ? ' on' : ''}" onclick="setLibGroupTimed(true)" aria-pressed="${libGroupTimed}"><i class="ti ti-clock" aria-hidden="true"></i> Timed</button>
+      <label class="lib-rounds">Rounds <input type="number" inputmode="numeric" min="1" max="20" value="${libGroupRounds}" onchange="libGroupRounds = Math.max(1, parseInt(this.value) || 3); this.value = libGroupRounds;"></label>
+    </div>
+    <div class="lib-group-hint">${libGroupTimed
+      ? 'Each exercise is worked for 40 seconds, with 20 seconds to move to the next. You can change the times after.'
+      : 'One set of each in turn, no rest between them, then a rest before the next round.'}
+      Tick 2 for a superset, 3 or more for a circuit, in the order you'll do them.</div>`;
+}
+function setLibGroupTimed(on) { libGroupTimed = on; renderGroupSetup(); }
 
+// A library exercise as it goes into a day: its type's usual sets, reps and rest
+function newExerciseEntry(ex) {
   const rt = ex.recordType || 'weight_reps';
   const defaults =
     rt === 'weight_reps'   ? { sets: 3, weight: 0, reps: 10, restSec: 60 } :
@@ -2334,10 +2397,31 @@ function addExercise(exId) {
     rt === 'cardio'        ? { durationMin: 20, speed: '' } :
     rt === 'reps_duration' ? { sets: 3, reps: 10, durationSec: 30, restSec: 60 } :
                              { sets: 3, reps: 10, restSec: 60 };
-  session.exercises.push({ id: ex.id, name: ex.name, primaryMuscle: ex.primaryMuscle, secondaryMuscles: ex.secondaryMuscles || [], recordType: rt, ...defaults });
-  renderLibrary();
+  return { id: ex.id, name: ex.name, primaryMuscle: ex.primaryMuscle, secondaryMuscles: ex.secondaryMuscles || [], recordType: rt, ...defaults };
+}
+
+// Add what's ticked, in the order ticked; from "Add superset or circuit", as one group
+function addPicked() {
+  const session = currentSession();
+  if (!session) return;
+  const all = [...getCustomExercises(), ...(LAROFIT_EXERCISES || [])];
+  const entries = libPicked.map(id => all.find(e => e.id === id)).filter(Boolean).map(newExerciseEntry);
+  if (!entries.length) return;
+  const group = libMode === 'group';
+  if (group) {
+    if (entries.length < 2) { showToast('Tick at least 2: 2 make a superset, 3 or more a circuit'); return; }
+    const g = { id: newGroupId(), rounds: libGroupRounds, roundRestSec: libGroupTimed ? 90 : 60, timed: libGroupTimed, workSec: 40, moveSec: 20 };
+    entries.forEach(e => { e.group = { ...g }; e.sets = g.rounds; });
+  }
+  const first = session.exercises.length;
+  session.exercises.push(...entries);
+  libPicked = [];
+  closeLibrary();
   renderExList();
-  showToast(ex.name + ' added');
+  showToast(group ? (entries.length === 2 ? 'Superset added' : 'Circuit added')
+                  : entries.length === 1 ? entries[0].name + ' added' : entries.length + ' exercises added');
+  const card = document.getElementById('ex-card-' + first);
+  if (card) card.scrollIntoView({ block: 'start', behavior: 'smooth' });
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -2442,9 +2526,8 @@ function saveCustomExercise() {
   _customsCache.unshift(ex);
   LF.db.saveCustomExercise(ex);
   closeCustomExSheet();
-  addExercise(ex.id);
-  renderLibrary();
-  showToast(ex.name + ' created and added');
+  togglePick(ex.id);
+  showToast(ex.name + ' created and ticked');
 }
 
 // ══════════════════════════════════════════════════════════════════════
@@ -2478,7 +2561,7 @@ function startExDetailPress(exId, e) {
   cancelExDetailPress();
   _exDetailPressTimer = setTimeout(() => {
     _exDetailPressTimer = null;
-    openExDetail(exId, () => addExercise(exId));
+    openExDetail(exId, () => togglePick(exId));
   }, 500);
 }
 
@@ -2492,6 +2575,7 @@ function openExDetail(exId, addFn) {
   if (!ex) return;
 
   _exDetailAddFn = addFn;
+  document.getElementById('ex-detail-add-btn').textContent = libPicked.includes(exId) ? 'UNTICK' : 'TICK THIS EXERCISE';
 
   const video = document.getElementById('ex-detail-video');
   const placeholder = document.getElementById('ex-detail-video-placeholder');
