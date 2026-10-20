@@ -5,7 +5,7 @@ const a = src.indexOf('function voiceLogSet(reps, saidWeight) {'), b = src.index
 if (a < 0 || b < a) throw new Error('markers');
 
 // kinds: one per exercise, 'timed' | 'cardio' | 'strength'
-const make = (kinds, aiReply = '{"action":"none"}') => new Function('aiReply', 'kinds', `
+const make = (kinds, aiReply = '{"action":"none"}', groups = []) => new Function('aiReply', 'kinds', 'groups', `
   let workoutMode = 'voice', voicePhase = 'idle', voiceLastLog = null, voiceLastPrompt = '', totalPRs = 0, currentExIdx = 0, restCallback = null, voicePreAnnounced = -1;
   let exNotes = {};
   let restInterval = null, isPaused = false; const pauseWorkout = () => { isPaused = true; }, resumeWorkout = () => { isPaused = false; };
@@ -15,6 +15,7 @@ const make = (kinds, aiReply = '{"action":"none"}') => new Function('aiReply', '
   let voiceSpeakChain = Promise.resolve(), holdShown = false, restEnd = null;
   const exercises = kinds.map((k, i) => ({ id: 'e' + i, name: k === 'timed' ? 'Plank' : k === 'cardio' ? 'Treadmill' : 'Bench Press', kind: k, sets: k === 'cardio' ? 1 : 3, reps: k === 'timed' ? 45 : 10, durationSec: k === 'timed' ? 45 : null, restSec: 60,
     loggedSets: k === 'cardio' ? [{ duration: '', speed: '', distance: '', logged: false }] : k === 'timed' ? [0,1,2].map(() => ({ holdTime: '', logged: false })) : [0,1,2].map(() => ({ weight: 100, reps: '', logged: false })) }));
+  groups.forEach((g, i) => { if (g) exercises[i].group = g; });
   let voicePending = { exIdx: 0, setIdx: 0, sugWeight: 0, bw: false };
   const isTimed = ex => ex.kind === 'timed', isCardio = ex => ex.kind === 'cardio', isBW = () => false, isStrength = ex => ex.kind === 'strength';
   const store = { get: (k, d) => d }, LAROFIT_EXERCISES = [];
@@ -45,10 +46,10 @@ const make = (kinds, aiReply = '{"action":"none"}') => new Function('aiReply', '
   ${src.slice(src.indexOf('// Called when an exercise comes on screen'), src.indexOf('// The opening line of the workout'))}
   ${src.slice(src.indexOf('// Rest is over — prompt for the next set of this exercise'), src.indexOf('// Log the pending set with the spoken reps'))}
   ${src.slice(a, b)}
-  return { begin: () => goToEx(0), hear: t => handleVoiceResult(t), said, calls, phase: () => voicePhase, current: () => exercises[currentExIdx].name, endRest: () => skipRest(), timerDone: s => finishHold(s),
+  return { begin: () => goToEx(0), go: i => goToEx(i), hear: t => handleVoiceResult(t), said, calls, phase: () => voicePhase, current: () => exercises[currentExIdx].name, endRest: () => skipRest(), timerDone: s => finishHold(s),
            sets: e => exercises[e].loggedSets.map(s => (s.logged ? 'L' : '-') + (s.holdTime !== undefined ? s.holdTime + 's' : s.duration !== undefined ? s.duration + 'min' + (s.speed ? '@' + s.speed : '') + (s.distance ? '/' + s.distance + 'mi' : '') : s.weight + 'x' + s.reps)).join(' '),
            time: (t, unit, raw) => parseTimeSpeech(normalizeSpeech(t), unit, raw === undefined ? t : raw), cardio: t => parseCardioSpeech(normalizeSpeech(t), t), sayTime: voiceSayTime };
-`)(aiReply, kinds);
+`)(aiReply, kinds, groups);
 
 let fail = 0;
 const check = (name, ok, extra = '') => { console.log((ok ? 'ok   ' : 'FAIL ') + name + (ok ? '' : '   ' + extra)); if (!ok) fail++; };
@@ -139,6 +140,22 @@ console.log('Cardio');
   w.hear('no, 25 minutes at 4');
   check('corrected -> ' + w.sets(0) + '   "' + last(w) + '"', w.sets(0) === 'L25min@4/1.67mi' && last(w) === '25 minutes at 4 logged, 1.67 miles.');
 }
+console.log('In a superset the coach says less once the drill is known');
+{
+  const G = { id: 'g', rounds: 3, roundRestSec: 60 };
+  const w = make(['strength', 'strength', 'strength'], undefined, [G, G]);
+  w.begin();
+  check('the first exercise, first round: the full line "' + last(w) + '"', /^Bench Press, 100 pounds, 10 reps\. Say your reps when finished\.$/.test(last(w)));
+  w.hear('ten'); w.go(1);
+  check('the second, first round: weight and reps, no instructions "' + last(w) + '"', last(w) === 'Bench Press, 100 pounds, 10 reps.');
+  w.hear('ten'); w.go(0);
+  check('later rounds: just the name "' + last(w) + '"', last(w) === 'Bench Press.');
+  w.hear('ten');
+  check('and the reps still log: ' + w.sets(0), w.sets(0) === 'L100x10 L100x10 -100x');
+  w.go(2);
+  check('an exercise outside the superset: the full line "' + last(w) + '"', /Say your reps when finished\.$/.test(last(w)));
+}
+
 console.log('Weight and reps are unaffected');
 {
   const w = make(['strength']); w.begin(); w.hear('ten');

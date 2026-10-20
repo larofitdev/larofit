@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=119">
+<link rel="stylesheet" href="larofit.css?v=120">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=119"></script>
-<script src="larofit-exercises.js?v=119"></script>
+<script src="supabase-client.js?v=120"></script>
+<script src="larofit-exercises.js?v=120"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=119"></script>
+<script src="larofit-nav.js?v=120"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3740,7 +3740,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 106;
+const VOICE_BUILD = 107;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -3765,9 +3765,12 @@ function voiceLogText() {
 // the phone is no longer kept up: otherwise the app going to the background a moment later saved
 // a fresh copy, and the next page sent the same log again as "recovered".
 let voiceLogClosed = false;
+// A copy identical to a log already sent (LOG pressed, then the app put away) is kept as sent
+let voiceSentText = '';
 function voiceKeepLog() {
   if (voiceLogClosed) return;
-  try { localStorage.setItem('lf_voice_log', JSON.stringify({ at: new Date().toISOString(), sent: false, build: VOICE_BUILD, text: voiceLogText() })); } catch (e) {}
+  const text = voiceLogText();
+  try { localStorage.setItem('lf_voice_log', JSON.stringify({ at: new Date().toISOString(), sent: text === voiceSentText, build: VOICE_BUILD, text })); } catch (e) {}
 }
 // The phone can close the app without warning once it is in the background: keep the log up to date first
 document.addEventListener('visibilitychange', () => {
@@ -3794,6 +3797,7 @@ async function voiceSendLog(reason, text) {
     if (!user) return false;
     const { error } = await sb.from('voice_logs').insert({ user_id: user.id, build: String(VOICE_BUILD), reason, log: text.slice(-600000) });
     if (error) return false;
+    voiceSentText = text;
     try {
       const kept = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
       if (kept) { kept.sent = true; localStorage.setItem('lf_voice_log', JSON.stringify(kept)); }
@@ -4547,6 +4551,12 @@ function voiceAnnounceExercise(ex) {
   }
   voicePending = target;
   setTimeout(() => voicePrefetchForExercise(target.exIdx), 1500);   // after this exercise's own line is on its way
+  // In a superset or circuit, after its first exercise the drill is known: the next one is
+  // named with its weight and reps in the first round, and only named after that
+  // ("Round 2. Dumbbell Curl." / "Tricep Kickback."). The full line every switch was too much.
+  const grp = groupOf(currentExIdx);
+  const brief = grp && (target.setIdx > 0 || grp.members.indexOf(currentExIdx) > 0) && !target.kind;
+  const say = full => voicePrompt(brief ? (target.setIdx > 0 ? ex.name : voiceExerciseLine(ex, target)) + '.' : full, true);
   if (target.kind) {
     voicePhase = target.kind === 'timed' ? 'log_time' : 'log_cardio';
     voicePreAnnounced = -1;
@@ -4560,7 +4570,7 @@ function voiceAnnounceExercise(ex) {
   if (target.bw) {
     voicePhase = 'count_reps';
     voicePreAnnounced = -1;
-    voicePrompt(voiceExerciseLine(ex, target) + '. Say your reps when finished.', true);
+    say(voiceExerciseLine(ex, target) + '. Say your reps when finished.');
     return;
   }
   const sug = target.sugWeight || getSuggestedWeight(ex);
@@ -4571,11 +4581,11 @@ function voiceAnnounceExercise(ex) {
     const introduced = voicePreAnnounced === currentExIdx;
     voicePreAnnounced = -1;
     // Already introduced during the rest before it: only the cue is needed now
-    voicePrompt((introduced ? ex.name : voiceExerciseLine(ex, target)) + '. Say your reps when finished.', true);
+    say((introduced ? ex.name : voiceExerciseLine(ex, target)) + '. Say your reps when finished.');
   } else {
     voicePhase = 'count_reps';
     voicePreAnnounced = -1;
-    voicePrompt(voiceExerciseLine(ex, target) + '. Say weight and reps when finished.', true);
+    say(voiceExerciseLine(ex, target) + '. Say weight and reps when finished.');
   }
 }
 
@@ -4721,7 +4731,7 @@ function groupNextStep(exIdx) {
 // workout once the coach has read back the set). A timed station starts its own timer.
 function groupMove(g, idx, secs, label, round) {
   const go = () => {
-    if (round && workoutMode === 'voice') voiceSayFirst = 'Round ' + round + ' of ' + g.rounds + '.';
+    if (round && workoutMode === 'voice') voiceSayFirst = round >= g.rounds ? 'Last round.' : 'Round ' + round + '.';
     if (g.timed) groupAutoStart = idx;
     goToEx(idx);
     const setIdx = exercises[idx].loggedSets.findIndex(st => !st.logged);

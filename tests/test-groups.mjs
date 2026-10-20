@@ -104,7 +104,9 @@ console.log('Voice workouts');
     await tick();
     check('then moves on: ' + w.log.join(' | '), w.log.join('|') === 'go Triceps');
     w.done('Triceps'); w.endRest();
-    check('a new round is said first: "' + w.sayFirst() + '"', w.sayFirst() === 'Round 2 of 3.');
+    check('a new round is said first, briefly: "' + w.sayFirst() + '"', w.sayFirst() === 'Round 2.');
+    w.done('Curl'); await tick(); w.done('Triceps'); w.endRest();
+    check('the last one says so: "' + w.sayFirst() + '"', w.sayFirst() === 'Last round.');
   }
 
   console.log('Rests');
