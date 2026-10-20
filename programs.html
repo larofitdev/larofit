@@ -9,7 +9,7 @@
 <title>LaroFit — Programs</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=124">
+<link rel="stylesheet" href="larofit.css?v=125">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -389,9 +389,9 @@ button, a { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=124"></script>
+<script src="supabase-client.js?v=125"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=124"></script>
+<script src="larofit-nav.js?v=125"></script>
 
 <main class="lf-main-desktop">
 
@@ -458,8 +458,8 @@ button, a { touch-action: manipulation; }
     <button class="btn btn-outline btn-sm" id="detail-edit-btn" onclick="editFromDetail()">
       <i class="ti ti-edit" aria-hidden="true"></i> Edit
     </button>
-    <button class="btn btn-volt btn-full" id="detail-activate-btn" onclick="activateFromDetail()">
-      <i class="ti ti-player-play" aria-hidden="true"></i> Set as active
+    <button class="btn btn-volt btn-full" id="detail-activate-btn" onclick="startFromDetail()">
+      <i class="ti ti-player-play" aria-hidden="true"></i> Start today's workout
     </button>
   </div>
 </div>
@@ -523,7 +523,6 @@ const store = {
 
 // ── STATE ─────────────────────────────────────────────────────
 let programs  = [];
-let activeId  = null;
 let detailId  = null;  // program currently open in detail sheet
 let deleteId  = null;  // program pending delete confirmation
 
@@ -531,7 +530,6 @@ let deleteId  = null;  // program pending delete confirmation
 document.addEventListener('DOMContentLoaded', () => {
   // Render immediately from localStorage — page is never blank
   programs = store.get('programs', []);
-  activeId = store.get('active_program', null);
   render();
   checkImportParam();
 
@@ -540,12 +538,6 @@ document.addEventListener('DOMContentLoaded', () => {
     LF.db.getPrograms().then(remote => {
       if (!remote || !remote.length) return;
       programs = remote;
-      // Derive activeId from the remote isActive flag if present
-      const remoteActive = remote.find(p => p.isActive);
-      if (remoteActive) {
-        activeId = remoteActive.id;
-        store.set('active_program', activeId);
-      }
       render();
     }).catch(() => {}); // silently fall back to localStorage on network error
   });
@@ -638,20 +630,19 @@ function render() {
   listEl.style.display  = 'flex';
   fabEl.style.display   = 'flex';
 
-  // Active banner
-  const active = programs.find(p => p.id === activeId);
-  if (active) {
-    const trainingDays = trainingDayCount(active);
-    const totalEx      = allExercises(active).length;
+  // Today: the workouts scheduled, from any program
+  const todays = LF.workoutsOn(programs, localToday());
+  if (todays.length) {
+    const one = todays.length === 1 ? todays[0] : null;
     bannerEl.innerHTML = `
       <div class="active-banner">
         <div class="active-pulse"></div>
         <div class="active-banner-text">
-          <div class="active-banner-eyebrow">Active Program</div>
-          <div class="active-banner-name">${esc(active.name || 'My Program')}</div>
-          <div class="active-banner-meta">${trainingDays} training days · ${totalEx} exercises · ${active.weeks || 6} weeks</div>
+          <div class="active-banner-eyebrow">Today</div>
+          <div class="active-banner-name">${one ? esc(one.name) : todays.length + ' workouts planned'}</div>
+          <div class="active-banner-meta">${one ? esc(one.program.name || 'My Program') + ' · ' + one.exercises.length + ' exercises' : todays.map(w => esc(w.name)).join(' · ')}</div>
         </div>
-        <button class="btn btn-volt btn-sm" onclick="location.href='workout.html'" style="flex-shrink:0;">
+        <button class="btn btn-volt btn-sm" onclick="location.href='${one ? startHref(one.program.id) : 'workout.html?start=1'}'" style="flex-shrink:0;">
           Go <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>`;
@@ -667,8 +658,12 @@ function render() {
   listEl.innerHTML = programs.map((p, idx) => buildCard(p, idx)).join('');
 }
 
+// Today's date as programs store it, and where Start goes for a program's workout today
+function localToday() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function startHref(id) { return 'workout.html?start=1&program=' + encodeURIComponent(id); }
+
 function buildCard(p, idx) {
-  const isActive     = p.id === activeId;
+  const isToday      = LF.workoutsOn([p], localToday()).length > 0;
   const exList       = allExercises(p);
   const trainingDays = trainingDayCount(p);
   const totalEx      = exList.length;
@@ -679,22 +674,21 @@ function buildCard(p, idx) {
 
   // Badge
   let badge = '';
-  if (isActive) {
-    badge = `<span class="badge" style="background:var(--volt-bg);color:var(--volt-dark);border:1px solid var(--volt-border);">● ACTIVE</span>`;
+  if (isToday) {
+    badge = `<span class="badge" style="background:var(--volt-bg);color:var(--volt-dark);border:1px solid var(--volt-border);">● TODAY</span>`;
   } else if (p.aiGenerated) {
     badge = `<span class="badge badge-cardio">AI</span>`;
   }
 
-  const activateBtn = isActive
-    ? `<button class="prog-action-btn" onclick="startWorkout(event)">
+  // Start today's workout from this program (only on a day it has one)
+  const startBtn = isToday
+    ? `<button class="prog-action-btn" onclick="startWorkout(event,'${p.id}')">
          <i class="ti ti-player-play" aria-hidden="true"></i> Start
        </button>`
-    : `<button class="prog-action-btn activate" onclick="setActive(event,'${p.id}')">
-         <i class="ti ti-circle-check" aria-hidden="true"></i> Activate
-       </button>`;
+    : '';
 
   return `
-    <div class="prog-card${isActive ? ' is-active' : ''}" style="animation-delay:${idx * 0.04}s">
+    <div class="prog-card${isToday ? ' is-active' : ''}" style="animation-delay:${idx * 0.04}s">
       <div class="prog-card-header" onclick="openDetail('${p.id}')" style="cursor:pointer;">
         <div>
           <div class="prog-card-name">${esc(p.name || 'My Program')}</div>
@@ -726,7 +720,7 @@ function buildCard(p, idx) {
         <button class="prog-action-btn" onclick="editProgram(event,'${p.id}')">
           <i class="ti ti-edit" aria-hidden="true"></i> Edit
         </button>
-        ${activateBtn}
+        ${startBtn}
         <button class="prog-action-btn danger" onclick="openDelete(event,'${p.id}')">
           <i class="ti ti-trash" aria-hidden="true"></i>
         </button>
@@ -735,19 +729,9 @@ function buildCard(p, idx) {
 }
 
 // ── ACTIONS ──────────────────────────────────────────────────
-function setActive(e, id) {
+function startWorkout(e, id) {
   e.stopPropagation();
-  activeId = id;
-  store.set('active_program', activeId);
-  render();
-  showToast('Program activated');
-  // Sync to Supabase in the background
-  LF.ready().then(() => LF.db.setActiveProgram(id).catch(() => {}));
-}
-
-function startWorkout(e) {
-  e.stopPropagation();
-  location.href = 'workout.html';
+  location.href = startHref(id);
 }
 
 function editProgram(e, id) {
@@ -818,11 +802,8 @@ function openDetail(id) {
 
   // Show/hide activate button
   const activateBtn = document.getElementById('detail-activate-btn');
-  if (id === activeId) {
-    activateBtn.style.display = 'none';
-  } else {
-    activateBtn.style.display = 'flex';
-  }
+  const det = programs.find(x => x.id === id);
+  activateBtn.style.display = det && LF.workoutsOn([det], localToday()).length ? 'flex' : 'none';
 
   document.getElementById('detail-backdrop').classList.add('open');
   document.getElementById('detail-sheet').classList.add('open');
@@ -848,15 +829,8 @@ function editFromDetail() {
   location.href = 'builder.html';
 }
 
-function activateFromDetail() {
-  if (!detailId) return;
-  activeId = detailId;
-  store.set('active_program', activeId);
-  render();
-  closeDetail();
-  showToast('Program activated');
-  // Sync to Supabase in the background
-  LF.ready().then(() => LF.db.setActiveProgram(activeId).catch(() => {}));
+function startFromDetail() {
+  if (detailId) location.href = startHref(detailId);
 }
 
 // ── DELETE SHEET ──────────────────────────────────────────────
@@ -879,11 +853,7 @@ function confirmDelete() {
   if (!deleteId) return;
   const idToDelete = deleteId;
   programs = programs.filter(p => p.id !== idToDelete);
-  if (activeId === idToDelete) {
-    activeId = programs.length ? programs[0].id : null;
-  }
   store.set('programs', programs);
-  store.set('active_program', activeId);
   render();
   closeDelete();
   showToast('Program deleted');
@@ -1022,7 +992,7 @@ function showToast(msg) {
 </script>
 
 <!-- Exercise data for name lookups -->
-<script src="larofit-exercises.js?v=124"></script>
+<script src="larofit-exercises.js?v=125"></script>
 
 </body>
 </html>

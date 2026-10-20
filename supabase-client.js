@@ -839,6 +839,25 @@ LF.sendKeptVoiceLog = async function () {
   } catch {}
 };
 
+// ── TODAY'S WORKOUTS ──────────────────────────────────────────
+// Programs aren't "activated": whatever is scheduled on a date, in any program, can be done.
+// Every program's workout for that date: [{ program, name, exercises }]. A day left unnamed
+// in Builder is saved as "Workout", so the program's name is used for it.
+LF.workoutsOn = function (programs, dateKey) {
+  const named = n => (n && String(n).trim() && String(n).trim() !== 'Workout') ? String(n).trim() : '';
+  const out = [];
+  (programs || []).forEach(p => {
+    let day = p.days && !Array.isArray(p.days) ? p.days[dateKey] : null;
+    if (!day && Array.isArray(p.days)) day = p.days[(new Date(dateKey + 'T00:00:00').getDay() + 6) % 7];   // old weekly plans
+    if (!day || day.rest) return;
+    const sessions = (day.am || day.pm) ? [day.am, day.pm].filter(s => s && (s.exercises || []).length) : [day];
+    const exercises = sessions.flatMap(s => s.exercises || []);
+    if (!exercises.length) return;
+    out.push({ program: p, name: sessions.map(s => named(s.name)).filter(Boolean).join(' + ') || p.name || 'Workout', exercises });
+  });
+  return out;
+};
+
 // On every page, once signed-in state is known: bring settings up to date and check the terms
 (function wireAccountChecks() {
   const run = () => { LF.settings.pull(); LF.terms.check(); LF.sendKeptVoiceLog(); };

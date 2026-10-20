@@ -10,7 +10,7 @@
 <title>LaroFit</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=124">
+<link rel="stylesheet" href="larofit.css?v=125">
 <style>
 /* ── BUILD POPUP ── */
 .build-overlay {
@@ -198,10 +198,10 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- Nav injected by larofit-nav.js -->
-<script src="supabase-client.js?v=124"></script>
-<script src="larofit-exercises.js?v=124"></script>
+<script src="supabase-client.js?v=125"></script>
+<script src="larofit-exercises.js?v=125"></script>
 <script>window.LF_PAGE = 'home';</script>
-<script src="larofit-nav.js?v=124"></script>
+<script src="larofit-nav.js?v=125"></script>
 
 <!-- ── MAIN CONTENT ── -->
 <main class="lf-main-desktop" id="main">
@@ -266,6 +266,8 @@ if ('serviceWorker' in navigator) {
         <div id="today-name"
              style="font-size:18px;font-weight:700;color:var(--text-inv);
                     line-height:1.25;margin-bottom:10px;"></div>
+        <!-- Two or more workouts today: one row each, with its own Start -->
+        <div id="today-list" style="display:none;margin-bottom:4px;"></div>
         <div style="display:flex;gap:16px;margin-bottom:14px;" id="today-meta">
           <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,0.55);">
             <i class="ti ti-clock" style="font-size:13px;color:var(--volt);" aria-hidden="true"></i>
@@ -280,7 +282,7 @@ if ('serviceWorker' in navigator) {
             <span id="today-cal">— cal</span>
           </div>
         </div>
-        <button id="today-start-btn" class="btn btn-volt btn-full" onclick="location.href='workout.html?start=1'" style="font-size:14px;padding:12px;">
+        <button id="today-start-btn" class="btn btn-volt btn-full" onclick="location.href=todayStartHref" style="font-size:14px;padding:12px;">
           Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
       </div>
@@ -312,9 +314,6 @@ if ('serviceWorker' in navigator) {
         <div id="no-prog-text" style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:14px;">
           Build your first program to get daily workouts here.
         </div>
-        <button class="btn btn-volt btn-full" id="no-prog-choose" onclick="location.href='programs.html'" style="display:none;margin-bottom:8px;">
-          Choose a program <i class="ti ti-arrow-right" aria-hidden="true"></i>
-        </button>
         <button class="btn btn-volt btn-full" id="no-prog-build" onclick="openBuildSheet()">
           Build a program <i class="ti ti-arrow-right" aria-hidden="true"></i>
         </button>
@@ -500,72 +499,26 @@ async function loadUser() {
 }
 
 // ── TODAY'S WORKOUT ──────────────────────────────────────────
+// Where "Start workout" goes: today's workout of the program it belongs to
+let todayStartHref = 'workout.html?start=1';
+const startHrefFor = programId => 'workout.html?start=1&program=' + encodeURIComponent(programId);
+
 async function loadTodayCard() {
   const programs = await LF.db.getPrograms();
-  const activeId = (() => { try { return JSON.parse(localStorage.getItem('lf_active_program')); } catch { return null; } })();
-  let program    = programs.find(p => p.id === activeId || p.isActive);
-  // Programs saved but none of them active (Builder used to save them that way): a single one
-  // becomes the active one; with several, Home asks which one is being followed
-  if (!program && programs.length === 1) {
-    program = programs[0];
-    program.isActive = true;
-    LF.db.setActiveProgram(program.id);
-  }
-
   const hasCard  = document.getElementById('today-has-workout');
   const restCard = document.getElementById('today-rest-day');
   const noProg   = document.getElementById('today-no-program');
 
-  if (!program) {
-    if (programs.length) {
-      document.getElementById('no-prog-title').textContent = 'Choose your program';
-      document.getElementById('no-prog-text').textContent = 'You have ' + programs.length + ' programs. In Programs, tap Activate on the one you are following, and its workouts show here.';
-      document.getElementById('no-prog-choose').style.display = '';
-      document.getElementById('no-prog-build').style.display = 'none';
-    }
-    noProg.style.display = 'block';
-    return;
-  }
-
-  // Look up today by date key (new format) or day index (legacy)
-  let dayPlan = program.days && program.days[todayKey];
-
-  // Legacy fallback: array indexed by day-of-week
-  if (!dayPlan && Array.isArray(program.days)) {
-    const lf_day = (today.getDay() + 6) % 7;
-    dayPlan = program.days[lf_day];
-  }
-
-  if (!dayPlan) { restCard.style.display = 'block'; return; }
-
-  // Flatten AM/PM sessions into a single exercise list for display
-  let sessions = [];
-  let displayName = program.name;
-  // A day left unnamed in Builder is saved as "Workout": show the program's name instead
-  const dayName = n => (n && n.trim() && n.trim() !== 'Workout') ? n : '';
-
-  if (dayPlan.am || dayPlan.pm) {
-    // New AM/PM format
-    if (dayPlan.am && (dayPlan.am.exercises||[]).length) sessions.push(dayPlan.am);
-    if (dayPlan.pm && (dayPlan.pm.exercises||[]).length) sessions.push(dayPlan.pm);
-    if (!sessions.length) { restCard.style.display = 'block'; return; }
-    displayName = sessions.length > 1
-      ? sessions.map(s => dayName(s.name)).filter(Boolean).join(' + ') || program.name
-      : dayName(sessions[0].name) || program.name;
-  } else if (dayPlan.rest) {
-    restCard.style.display = 'block';
-    return;
-  } else {
-    // Legacy flat format
-    sessions = [dayPlan];
-    displayName = dayName(dayPlan.name) || program.name;
-  }
-
-  const allExercises = sessions.flatMap(s => s.exercises || []);
-  if (!allExercises.length) { restCard.style.display = 'block'; return; }
-
+  if (!programs.length) { noProg.style.display = 'block'; return; }
+  // Every workout scheduled today, from any program: nothing has to be "activated"
+  const todays = LF.workoutsOn(programs, todayKey);
+  if (!todays.length) { restCard.style.display = 'block'; return; }
   hasCard.style.display = 'block';
-  document.getElementById('today-name').textContent = displayName;
+  if (todays.length > 1) { renderTodayList(todays); return; }
+
+  const w = todays[0], allExercises = w.exercises;
+  todayStartHref = startHrefFor(w.program.id);
+  document.getElementById('today-name').textContent = w.name;
 
   const exCount = allExercises.length;
   const estMins = Math.round(exCount * 7 + allExercises.reduce((acc, ex) => {
@@ -584,6 +537,34 @@ async function loadTodayCard() {
   } else {
     applyPausedWorkoutState();
   }
+}
+
+// Two or more workouts today (from different programs): a row each, with its own Start.
+// One already done today says so (it can still be done again).
+async function renderTodayList(todays) {
+  document.getElementById('today-eyebrow').textContent = "Today's workouts";
+  ['today-name', 'today-meta', 'today-start-btn'].forEach(id => { document.getElementById(id).style.display = 'none'; });
+  let doneNames = [];
+  try {
+    const day = (await LF.db.getWorkoutHistory())[todayKey];
+    doneNames = day ? (day.sessionList || [{ name: day.name }]).map(s => s.name) : [];
+  } catch (e) {}
+  const list = document.getElementById('today-list');
+  list.style.display = '';
+  list.innerHTML = todays.map(w => {
+    const n = w.exercises.length, done = doneNames.includes(w.name);
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,0.08);">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:700;color:var(--text-inv);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(w.name)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            ${done ? '<i class="ti ti-circle-check" style="color:var(--volt);" aria-hidden="true"></i> Done · ' : ''}${escHtml(w.program.name || 'Program')} · ${n} exercise${n !== 1 ? 's' : ''}</div>
+        </div>
+        <button class="btn btn-volt btn-sm" onclick="location.href='${startHrefFor(w.program.id)}'" style="flex-shrink:0;">Start</button>
+      </div>`;
+  }).join('');
+  // A paused workout comes first: Resume, above the list
+  if (applyPausedWorkoutState()) ['today-name', 'today-start-btn'].forEach(id => { document.getElementById(id).style.display = ''; });
 }
 
 // Today's planned workout is already in history → show a "done" card.
@@ -605,7 +586,7 @@ function applyCompletedState(session) {
   // Still "Start workout": another one can be done today, and Progress is on the bottom bar
   if (btn) {
     btn.innerHTML = 'Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>';
-    btn.onclick   = () => location.href = 'workout.html?start=1';
+    btn.onclick   = () => location.href = todayStartHref;
   }
 }
 
@@ -627,11 +608,12 @@ function applyPausedWorkoutState() {
     btn.innerHTML = 'Resume workout <i class="ti ti-player-play" aria-hidden="true"></i>';
     btn.onclick   = () => location.href = 'workout.html';
     if (snap.headerName) document.getElementById('today-name').textContent = snap.headerName;
-  } else {
+  } else if (document.getElementById('today-list').style.display === 'none') {
     if (eyebrow) eyebrow.textContent = "Today's workout";
     btn.innerHTML = 'Start workout <i class="ti ti-arrow-right" aria-hidden="true"></i>';
-    btn.onclick   = () => location.href = 'workout.html?start=1';
+    btn.onclick   = () => location.href = todayStartHref;
   }
+  return !!isFreshPause;
 }
 
 // ── STREAK ───────────────────────────────────────────────────
@@ -743,7 +725,6 @@ function loadAIInsight() {
 // ── PROGRAMS LIST ────────────────────────────────────────────
 async function loadPrograms() {
   const programs = await LF.db.getPrograms();
-  const activeId = (() => { try { return JSON.parse(localStorage.getItem('lf_active_program')); } catch { return null; } })();
   const el       = document.getElementById('programs-list');
 
   if (!programs.length) {
@@ -760,7 +741,7 @@ async function loadPrograms() {
   }
 
   el.innerHTML = programs.slice(0, 3).map(p => {
-    const isActive = p.id === activeId || p.isActive;
+    const today = LF.workoutsOn([p], todayKey).length > 0;   // has a workout today
     const days = (() => {
       if (!p.days) return 0;
       if (Array.isArray(p.days)) return p.days.filter(d => !d.rest).length;
@@ -782,7 +763,7 @@ async function loadPrograms() {
           <div class="lf-list-row-sub">${days} training day${days !== 1 ? 's' : ''} · ${p.weeks || '?'} weeks</div>
         </div>
         <div class="lf-list-row-right" style="display:flex;align-items:center;gap:6px;">
-          ${isActive ? '<span style="font-size:9px;font-weight:700;color:var(--volt-dark);background:var(--volt-bg);padding:2px 8px;border-radius:999px;font-family:var(--font-mono);letter-spacing:0.06em;">ACTIVE</span>' : ''}
+          ${today ? '<span style="font-size:9px;font-weight:700;color:var(--volt-dark);background:var(--volt-bg);padding:2px 8px;border-radius:999px;font-family:var(--font-mono);letter-spacing:0.06em;">TODAY</span>' : ''}
           <i class="ti ti-chevron-right" style="font-size:16px;" aria-hidden="true"></i>
         </div>
       </div>`;

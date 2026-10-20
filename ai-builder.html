@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css">
-<link rel="stylesheet" href="larofit.css?v=124">
+<link rel="stylesheet" href="larofit.css?v=125">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -167,10 +167,6 @@ body { display: flex; flex-direction: column; background: var(--bg); padding-bot
       <select class="aib-field" id="save-weeks">
         <option value="4">4 weeks</option><option value="6">6 weeks</option><option value="8" selected>8 weeks</option><option value="12">12 weeks</option>
       </select>
-      <div class="aib-row">
-        <div id="save-active-label">Make this my active program</div>
-        <button class="aib-switch" id="save-active" role="switch" aria-checked="true" aria-labelledby="save-active-label" onclick="this.setAttribute('aria-checked', this.getAttribute('aria-checked') === 'true' ? 'false' : 'true')"><span></span></button>
-      </div>
     </div>
     <div class="aib-error" id="save-error" role="alert"></div>
     <div class="aib-sheet-actions">
@@ -182,8 +178,8 @@ body { display: flex; flex-direction: column; background: var(--bg); padding-bot
 
 <div class="aib-toast" id="toast" role="status"></div>
 
-<script src="supabase-client.js?v=124"></script>
-<script src="larofit-exercises.js?v=124"></script>
+<script src="supabase-client.js?v=125"></script>
+<script src="larofit-exercises.js?v=125"></script>
 <script>
 LF.ready().then(() => LF.guard());
 
@@ -484,8 +480,9 @@ function startNow(workoutIdx) {
 // ── SAVE AS PROGRAM ───────────────────────────────────────────
 let saveDays = [];   // saveDays[workoutIdx] = ['Mon', 'Thu']
 
-let saveMode = 'new';        // 'add' = into the active program, 'new' = its own program
-let activeProgram = null;
+let saveMode = 'new';        // 'add' = into one of their programs (activeProgram), 'new' = its own program
+let activeProgram = null;    // the program it is added to
+let savePrograms = [];       // their programs, most recently changed first
 
 async function openSave() {
   if (!routine) return;
@@ -495,16 +492,16 @@ async function openSave() {
   const taken = new Set();
   saveDays = routine.workouts.map(w => w.days.filter(d => !taken.has(d) && taken.add(d)));
 
-  // The program they're already following, if any — adding to it is the default
-  activeProgram = null;
+  // Adding to one of their programs (the one with a workout today, else the latest) is the default
+  activeProgram = null; savePrograms = [];
   try {
     await LF.ready();
-    const list = await LF.db.getPrograms();
-    const id = JSON.parse(localStorage.getItem('lf_active_program') || 'null');
-    activeProgram = (list || []).find(p => p.id === id) || (list || []).find(p => p.isActive) || null;
+    savePrograms = ((await LF.db.getPrograms()) || []).slice().sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')));
+    activeProgram = savePrograms.find(p => LF.workoutsOn([p], localDateStr()).length) || savePrograms[0] || null;
   } catch (e) {}
-  saveMode = activeProgram ? 'add' : 'new';
-  document.getElementById('save-active').setAttribute('aria-checked', activeProgram ? 'false' : 'true');
+  // Offered: that one first, then the next latest, three at most
+  savePrograms = activeProgram ? [activeProgram, ...savePrograms.filter(p => p !== activeProgram)].slice(0, 3) : [];
+  saveMode = activeProgram ? 'add:' + activeProgram.id : 'new';
   renderSaveMode();
   renderSaveDays();
   document.getElementById('save-overlay').classList.add('show');
@@ -525,11 +522,13 @@ function renderSaveMode() {
     b.onclick = () => { saveMode = mode; renderSaveMode(); };
     box.appendChild(b);
   };
-  if (activeProgram) option('add', 'Add to ' + (activeProgram.name || 'my active program'), 'Goes after what is already planned on the days you pick');
-  option('new', 'Save as a new program', activeProgram ? 'Kept separately; your active program is not changed' : 'A program of its own');
-  box.style.display = activeProgram ? '' : 'none';
+  // One choice per program offered, then a program of its own
+  activeProgram = savePrograms.find(p => 'add:' + p.id === saveMode) || null;
+  savePrograms.forEach(p => option('add:' + p.id, 'Add to ' + (p.name || 'My Program'), 'Goes after what is already planned on the days you pick'));
+  option('new', 'Save as a new program', savePrograms.length ? 'Kept separately; your other programs are not changed' : 'A program of its own');
+  box.style.display = savePrograms.length ? '' : 'none';
 
-  const adding = saveMode === 'add';
+  const adding = saveMode.startsWith('add');
   document.getElementById('save-new-fields').style.display   = adding ? 'none' : '';
   document.getElementById('save-new-fields-2').style.display = adding ? 'none' : '';
   document.getElementById('save-intro').textContent = adding
@@ -539,12 +538,12 @@ function renderSaveMode() {
   updateSaveCount();
 }
 
-function saveGo() { return saveMode === 'add' ? addToActiveProgram() : saveProgram(); }
+function saveGo() { return saveMode.startsWith('add') ? addToActiveProgram() : saveProgram(); }
 
 function updateSaveCount() {
   const el = document.getElementById('save-count');
   if (!el) return;
-  if (saveMode !== 'add' || !activeProgram) { el.textContent = ''; return; }
+  if (!saveMode.startsWith('add') || !activeProgram) { el.textContent = ''; return; }
   const picked = saveDays.reduce((n, list) => n + list.length, 0);
   if (Array.isArray(activeProgram.days)) {
     el.textContent = picked ? 'Adds it to ' + picked + ' day' + (picked === 1 ? '' : 's') + ' of the weekly plan.' : '';
@@ -661,7 +660,6 @@ async function saveProgram() {
   const errEl = document.getElementById('save-error');
   const name = document.getElementById('save-name').value.trim();
   const weeks = parseInt(document.getElementById('save-weeks').value) || 8;
-  const makeActive = document.getElementById('save-active').getAttribute('aria-checked') === 'true';
   errEl.textContent = '';
   if (!name) { errEl.textContent = 'Give the program a name.'; return; }
   const unplaced = routine.workouts.filter((w, i) => !saveDays[i].length);
@@ -678,7 +676,7 @@ async function saveProgram() {
   }
   const program = {
     id: crypto.randomUUID(), name, goal: 'hypertrophy', weeks, startDate: localDateStr(),
-    aiGenerated: true, isActive: makeActive, savedAt: new Date().toISOString(), days,
+    aiGenerated: true, savedAt: new Date().toISOString(), days,
   };
 
   const btn = document.getElementById('save-go');
@@ -687,12 +685,6 @@ async function saveProgram() {
     await LF.ready();
     const res = await LF.db.saveProgram(program);
     if (res && res.error && !res.offline) throw new Error(typeof res.error === 'string' ? res.error : res.error.message);
-    if (makeActive) {
-      // Only one program is active at a time
-      const local = JSON.parse(localStorage.getItem('lf_programs') || '[]').map(p => ({ ...p, isActive: p.id === program.id }));
-      localStorage.setItem('lf_programs', JSON.stringify(local));
-      await LF.db.setActiveProgram(program.id);
-    }
     location.href = 'programs.html';
   } catch (err) {
     errEl.textContent = 'Could not save: ' + ((err && err.message) || 'unknown error');

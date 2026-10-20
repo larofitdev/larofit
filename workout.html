@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=124">
+<link rel="stylesheet" href="larofit.css?v=125">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,21 +752,28 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=124"></script>
-<script src="larofit-exercises.js?v=124"></script>
+<script src="supabase-client.js?v=125"></script>
+<script src="larofit-exercises.js?v=125"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=124"></script>
+<script src="larofit-nav.js?v=125"></script>
 
 <main class="lf-main-desktop" id="main">
 
   <!-- NO PROGRAM STATE -->
   <div class="no-program" id="no-program-state" style="display:none;">
     <div style="font-size:48px;" aria-hidden="true">🏋️</div>
-    <div style="font-size:20px;font-weight:700;color:var(--text);">No active program</div>
+    <div style="font-size:20px;font-weight:700;color:var(--text);">No program yet</div>
     <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:260px;">Choose or build a program to get your daily workouts here.</div>
     <button class="btn btn-dark lf-mt-sm btn-lg" onclick="location.href='programs.html'">Go to programs <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
     <button class="btn btn-volt lf-mt-sm" onclick="location.href='ai-builder.html'"><i class="ti ti-sparkles" aria-hidden="true"></i> Build a workout with AI</button>
     <button class="btn btn-volt lf-mt-sm btn-lg" onclick="showStartModal(true)" style="letter-spacing:0.08em;">START WORKOUT</button>
+  </div>
+
+  <!-- TWO OR MORE WORKOUTS TODAY -->
+  <div class="no-program" id="choose-workout-state" style="display:none;">
+    <div style="font-size:20px;font-weight:700;color:var(--text);">Which workout?</div>
+    <div style="font-size:14px;color:var(--text-3);line-height:1.6;max-width:280px;">You have more than one planned for today.</div>
+    <div id="choose-workout-list" style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:360px;margin-top:6px;"></div>
   </div>
 
   <!-- REST DAY STATE -->
@@ -1295,6 +1302,7 @@ function saveSnapshot() {
       prCredited:   Array.from(_prCredited),
       exNotes:      exNotes,
       currentExIdx: currentExIdx,
+      programId:    workoutProgramId,
       exercises:    exercises
     }));
   } catch (e) {}
@@ -1330,6 +1338,7 @@ function clearSnapshot() {
 
 function resumeFromSnapshot(snap) {
   exercises    = snap.exercises;
+  workoutProgramId = snap.programId || null;
   isFreeForm   = !!snap.isFreeForm;
   totalPRs     = snap.totalPRs || 0;
   _prCredited  = new Set(snap.prCredited || []);
@@ -1580,61 +1589,50 @@ function init() {
     return;
   }
 
+  // Today's workout, from whichever program it is in. Home's Start says which (?program=);
+  // with only one today it's that one; with several the user picks.
+  const wanted = new URLSearchParams(location.search).get('program');
+  const choose = programs => {
+    if (!programs.length) { show('no-program-state'); setHeader('Workout'); return; }
+    const todays = LF.workoutsOn(programs, localDateStr());
+    const picked = (wanted && todays.find(w => w.program.id === wanted)) || (todays.length === 1 ? todays[0] : null);
+    if (picked) startPlanned(picked);
+    else if (todays.length) showWorkoutChoice(todays);
+    else { show('rest-day-state'); setHeader('Rest day'); }
+  };
   const programs = store.get('programs', []);
-  const activeId = store.get('active_program', null);
-  const program  = programs.find(p => p.id === activeId);
-
-  if (program) {
-    _loadFromProgram(program);
-  } else {
-    // Not in localStorage — try Supabase (fresh install / cleared cache)
-    LF.ready().then(() =>
-      LF.db.getPrograms().then(remote => {
-        const remoteActive = (remote || []).find(p => p.isActive) || (remote || [])[0] || null;
-        if (!remoteActive) { show('no-program-state'); setHeader('Workout'); return; }
-        _loadFromProgram(remoteActive);
-      })
-    ).catch(() => { show('no-program-state'); setHeader('Workout'); });
+  if (programs.length) choose(programs);
+  else {
+    // Not on this phone yet (fresh install, cleared data): from the account
+    LF.ready().then(() => LF.db.getPrograms().then(remote => choose(remote || [])))
+      .catch(() => { show('no-program-state'); setHeader('Workout'); });
   }
 }
+
+// Start today's workout from the program it is in (see workoutProgram)
+function startPlanned(w) {
+  workoutProgramId = w.program.id;
+  showPrestart(w.exercises, w.name);
+}
+
+// Two or more workouts today: which one?
+function showWorkoutChoice(todays) {
+  _choiceList = todays;
+  document.getElementById('choose-workout-list').innerHTML = todays.map((w, i) => `
+    <button class="btn btn-outline btn-full" onclick="pickWorkout(${i})" style="justify-content:space-between;text-align:left;min-height:56px;">
+      <span><span style="display:block;font-weight:700;color:var(--text);">${escHtml(w.name)}</span>
+      <span style="display:block;font-size:12px;color:var(--text-3);font-weight:500;">${escHtml(w.program.name || 'Program')} · ${w.exercises.length} exercises</span></span>
+      <i class="ti ti-arrow-right" aria-hidden="true"></i>
+    </button>`).join('');
+  show('choose-workout-state'); setHeader("Today's workouts");
+}
+let _choiceList = [];
+function pickWorkout(i) { if (_choiceList[i]) startPlanned(_choiceList[i]); }
 
 // Pending exercises/name for when user taps Start Workout
 let _prestartExercises = [];
 let _prestartName = '';
 
-function _loadFromProgram(program) {
-  const dateKey = localDateStr();
-  let dayPlan = program.days && program.days[dateKey];
-
-  // Legacy fallback: array indexed by day-of-week
-  if (!dayPlan && Array.isArray(program.days)) {
-    const idx = (new Date().getDay() + 6) % 7;
-    dayPlan = program.days[idx];
-  }
-
-  if (!dayPlan) { show('rest-day-state'); setHeader('Rest day'); return; }
-
-  // Handle legacy AM/PM format: flatten to single exercise list
-  if ('am' in dayPlan || 'pm' in dayPlan) {
-    const amEx = (dayPlan.am && dayPlan.am.exercises) ? dayPlan.am.exercises : [];
-    const pmEx = (dayPlan.pm && dayPlan.pm.exercises) ? dayPlan.pm.exercises : [];
-    // A day left unnamed in Builder is saved as "Workout": the program's name is used instead
-    const dayName = n => (n && n.trim() && n.trim() !== 'Workout') ? n : '';
-    const name = dayName(dayPlan.am && dayPlan.am.name) || dayName(dayPlan.pm && dayPlan.pm.name) || program.name || 'Workout';
-    const allEx = [...amEx, ...pmEx];
-    if (!allEx.length) { show('rest-day-state'); setHeader('Rest day'); return; }
-    showPrestart(allEx, name);
-    return;
-  }
-
-  // Flat format: { name, exercises[] }
-  const exercises = dayPlan.exercises || [];
-  if (!exercises.length) {
-    // Legacy flat format with no exercises
-    show('rest-day-state'); setHeader('Rest day'); return;
-  }
-  showPrestart(exercises, (dayPlan.name && dayPlan.name.trim() !== 'Workout' ? dayPlan.name : '') || program.name || 'Workout');
-}
 
 // Exercises of a planned workout that were NOT fully logged in a workout finished earlier today.
 // Lets the first half of a day's card be done in the morning and the rest in the evening.
@@ -1878,7 +1876,7 @@ function show(id) {
     _autoStart = false;
     setTimeout(() => showStartModal(id !== 'prestart-state'), 0);   // once the screen behind it is up
   } else if (id === 'workout-state') _autoStart = false;            // a workout was already under way
-  ['no-program-state','rest-day-state','prestart-state','starting-state','workout-state','completion-state'].forEach(s => {
+  ['no-program-state','rest-day-state','choose-workout-state','prestart-state','starting-state','workout-state','completion-state'].forEach(s => {
     const el = document.getElementById(s);
     if (!el) return;
     if (s === 'workout-state') {
@@ -2995,16 +2993,9 @@ function finishWorkout() {
   });
 
   const history  = store.get('workout_history', {});
-  const programs = store.get('programs', []);
-  const activeId = store.get('active_program', null);
-  const program  = programs.find(p => p.id === activeId);
-  const _todayKey = localDateStr();
-  const _dayPlanFW = !isFreeForm && program && program.days && program.days[_todayKey];
   const wName    = isFreeForm
     ? (document.getElementById('free-workout-name').value.trim() || 'Free Workout')
-    : (_dayPlanFW
-        ? (_dayPlanFW.name || document.getElementById('header-title').textContent || 'Workout')
-        : (document.getElementById('header-title').textContent || 'Workout'));
+    : (document.getElementById('header-title').textContent || 'Workout');
 
   const earlier   = history[todayKey] && Array.isArray(history[todayKey].exercises) && history[todayKey].exercises.length ? history[todayKey] : null;
   const sessionNo = earlier ? (earlier.sessions || 1) + 1 : 1;
@@ -3450,7 +3441,7 @@ function askReplaceScope(exIdx, nw) {
   const old = exercises[exIdx];
   if (!old || nw.id === old.id) return;
   const started = old.loggedSets.some(st => st.logged);
-  const count = programSwapCount(activeProgram(), old, started ? voiceTomorrow() : localDateStr());
+  const count = programSwapCount(workoutProgram(), old, started ? voiceTomorrow() : localDateStr());
   if (started && !count) { showToast('You have already logged sets of ' + old.name + ' today'); return; }
   const done = whole => {
     closeReplaceSheet();
@@ -3773,7 +3764,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 110;
+const VOICE_BUILD = 111;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -5222,9 +5213,11 @@ function programSwapExercise(program, old, nw, fromDate) {
   return changed;
 }
 
-function activeProgram() {
-  const activeId = store.get('active_program', null);
-  return (store.get('programs', []) || []).find(p => p.id === activeId) || null;
+// The program today's workout came from (null for a workout built as it goes): replacing an
+// exercise "in the program" changes this one
+let workoutProgramId = null;
+function workoutProgram() {
+  return workoutProgramId ? (store.get('programs', []) || []).find(p => p.id === workoutProgramId) || null : null;
 }
 
 // An exercise that isn't in the library, made from the name that was said. It takes
@@ -5295,7 +5288,7 @@ function voiceSwapOffer() {
   const s = voiceSwap, ex = exercises[s.exIdx], cand = s.cands[s.pick];
   s.at = Date.now();
   s.started = ex.loggedSets.some(st => st.logged);   // sets already logged: today's stays as it is
-  s.count = programSwapCount(activeProgram(), ex, s.started ? voiceTomorrow() : localDateStr());
+  s.count = programSwapCount(workoutProgram(), ex, s.started ? voiceTomorrow() : localDateStr());
   const more = s.cands.length > 1 ? ', or another' : '';
   let how;
   if (s.started) how = s.count ? 'Say yes to change it from your next workout' + more + '.' : 'You have already logged sets of this one today.';
@@ -5367,7 +5360,7 @@ function applyExerciseSwap(exIdx, nw, wholeProgram) {
   const started = old.loggedSets.some(st => st.logged);
   let changed = 0;
   if (wholeProgram) {
-    const program = activeProgram();
+    const program = workoutProgram();
     if (program) changed = programSwapExercise(program, old, nw, started ? voiceTomorrow() : localDateStr());
     if (changed) LF.db.saveProgram(program).then(r => { if (r && r.error) voiceDbg('replace: program not saved to the account (' + (r.error.message || r.error) + ')'); });
   }

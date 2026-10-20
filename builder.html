@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=124">
+<link rel="stylesheet" href="larofit.css?v=125">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -864,10 +864,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=124"></script>
-<script src="larofit-exercises.js?v=124"></script>
+<script src="supabase-client.js?v=125"></script>
+<script src="larofit-exercises.js?v=125"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=124"></script>
+<script src="larofit-nav.js?v=125"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -1263,7 +1263,6 @@ function leaveSaveAndGo() {
   // Persist without saveProgram's own redirect
   program.savedAt = new Date().toISOString();
   const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
-  activateIfNoneActive(programs);
   const idx = programs.findIndex(p => p.id === program.id);
   if (idx >= 0) programs[idx] = program; else programs.push(program);
   localStorage.setItem('lf_programs', JSON.stringify(programs));
@@ -2427,16 +2426,6 @@ function addPicked() {
 // ══════════════════════════════════════════════════════════════════════
 // SAVE PROGRAM
 // ══════════════════════════════════════════════════════════════════════
-// A program saved when no other one is active becomes the active one, so a first program
-// shows on Home straight away (it used to be saved inactive, and Home said "No program yet")
-function activateIfNoneActive(programs) {
-  let activeId = null;
-  try { activeId = JSON.parse(localStorage.getItem('lf_active_program')); } catch (e) {}
-  if (programs.some(p => p.id !== program.id && (p.id === activeId || p.isActive))) return;
-  program.isActive = true;
-  localStorage.setItem('lf_active_program', JSON.stringify(program.id));
-}
-
 function saveProgram() {
   flushSetupToProgram();
 
@@ -2450,7 +2439,6 @@ function saveProgram() {
 
   // Optimistic localStorage write — always works offline
   const programs = JSON.parse(localStorage.getItem('lf_programs') || '[]');
-  activateIfNoneActive(programs);
   const idx      = programs.findIndex(p => p.id === program.id);
   if (idx >= 0) programs[idx] = program;
   else          programs.push(program);
