@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=121">
+<link rel="stylesheet" href="larofit.css?v=122">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=121"></script>
-<script src="larofit-exercises.js?v=121"></script>
+<script src="supabase-client.js?v=122"></script>
+<script src="larofit-exercises.js?v=122"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=121"></script>
+<script src="larofit-nav.js?v=122"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -964,6 +964,9 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 
 <!-- FIXED FINISH BUTTON — shown when all sets done -->
 <div class="log-btn-fixed" id="finish-bar">
+  <div id="finish-bar-note" style="display:none;text-align:center;font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">
+    <i class="ti ti-circle-check" aria-hidden="true" style="color:var(--volt-dark);"></i> All exercises complete
+  </div>
   <button class="btn btn-volt btn-full btn-lg" style="height:52px;" onclick="finishWorkout()">
     <i class="ti ti-check" aria-hidden="true"></i> Finish workout
   </button>
@@ -2484,11 +2487,38 @@ function afterSetLogged(exIdx, setIdx) {
   if (ex.loggedSets.every(s => s.logged)) {
     const ni = nextIncompleteIdx(exIdx);
     if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), nextExerciseLabel(ni));
-    else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
+    else workoutComplete();
   } else {
     startRest(ex.restSec, () => { renderSets(ex, isStrength(ex) ? getLastSession(ex.id || ex.name) : null); voiceNextSet(exIdx); },
               'Set ' + (setIdx + 2) + ' of ' + ex.sets + ' up next');
   }
+}
+
+// After the last set of the last exercise there is no rest to take: "All exercises complete"
+// and the Finish button instead. If nothing more happens for 2 minutes the workout saves
+// itself (correcting a set or adding an exercise cancels that; see checkAllDone). A workout
+// built as it goes is finished by the user, so it gets neither.
+const AUTO_FINISH_SEC = 120;
+let autoFinishTimer = null;
+function workoutComplete() {
+  stopRest(); restCallback = null;
+  checkAllDone();
+  if (isFreeForm) return;
+  showToast('All exercises complete');
+  setTimeout(() => speakText('All exercises complete. Say finish to save your workout.'), 0);   // after the set is read back
+  clearTimeout(autoFinishTimer);
+  autoFinishTimer = setTimeout(autoFinish, AUTO_FINISH_SEC * 1000);
+}
+function cancelAutoFinish() { clearTimeout(autoFinishTimer); autoFinishTimer = null; }
+function autoFinish() {
+  autoFinishTimer = null;
+  if (!exercises.length || !exercises.every(ex => ex.loggedSets.every(st => st.logged))) return;
+  if (workoutMode === 'voice' && voicePaused) { autoFinishTimer = setTimeout(autoFinish, 60000); return; }   // talking to someone
+  if (workoutMode === 'voice') {
+    speakText('Workout saved. Nice work.', true);
+    voicePhase = 'idle';
+    voiceSpeakChain.then(() => finishWorkout());
+  } else finishWorkout();
 }
 
 function logBWSet(exIdx, setIdx) {
@@ -2548,7 +2578,7 @@ function logCardioSet(exIdx, saidDistance) {
   if (groupOf(exIdx)) { groupNextStep(exIdx); return; }
   const ni = nextIncompleteIdx(exIdx);
   if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: '+exercises[ni].name);
-  else { checkAllDone(); }
+  else workoutComplete();
 }
 
 function updateSet(exIdx, setIdx, field, value) {
@@ -2782,6 +2812,8 @@ function checkAllDone() {
     return;
   }
   const allDone = exercises.length > 0 && exercises.every(ex => ex.loggedSets.every(s => s.logged));
+  if (!allDone) cancelAutoFinish();   // a set taken back or an exercise added: not finished after all
+  document.getElementById('finish-bar-note').style.display = allDone ? '' : 'none';
   document.getElementById('finish-bar').classList.toggle('show', allDone);
   if (allDone) document.getElementById('log-btn-fixed').classList.remove('show');
 }
@@ -2946,6 +2978,7 @@ function updateLogBtn() {
 
 // ── FINISH WORKOUT ────────────────────────────────────────────
 function finishWorkout() {
+  cancelAutoFinish();
   stopRest(); clearInterval(elapsedTimer);
   if (workoutMode === 'voice' && voiceLog.length) { voiceKeepLog(); voiceLogClosed = true; voiceSendLog('workout finished'); }
   stopListening();
@@ -3740,7 +3773,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 108;
+const VOICE_BUILD = 109;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4718,7 +4751,7 @@ function groupNextStep(exIdx) {
   if (g.members.every(exAllLogged)) {
     const ni = nextIncompleteIdx(g.members[g.members.length - 1]);
     if (ni !== -1) startRest(restAfterAt(exIdx), () => goToEx(ni), nextExerciseLabel(ni));
-    else { startRest(parseInt(g.roundRestSec) || 60, null, 'Last exercise done!'); checkAllDone(); }
+    else workoutComplete();
     return;
   }
   const round = done(exIdx), pos = g.members.indexOf(exIdx);
@@ -5822,18 +5855,25 @@ const VOICE_FINISH = new RegExp([
 // Finish the workout?" was heard as "finish those exercises?", and answered no.
 function voiceFinishAsk() {
   const left = exercises.filter(ex => !ex.loggedSets.every(st => st.logged)).length;
+  // Every planned exercise done (the coach has just said "say finish to save it"): no need to ask.
+  // A workout built as it goes still asks, as more may be coming.
+  if (!left && exercises.length && !isFreeForm) { voiceFinishNow(); return; }
   voiceFinishAt = Date.now();
   voiceSwapSay(left ? 'End the workout now, with ' + left + (left === 1 ? ' exercise' : ' exercises') + ' not finished? Say yes to end it, or no to keep going.'
                     : 'End the workout now? Say yes or no.');
 }
 
+function voiceFinishNow() {
+  voiceFinishAt = 0;
+  voiceDbg('finishing the workout by voice');
+  speakText('Workout finished. Nice work.', true);
+  voicePhase = 'idle';   // nothing more to listen for
+  voiceSpeakChain.then(() => finishWorkout());   // once that has been said
+}
+
 function voiceFinishAnswer(t) {
   if (/^(yes|yeah|yep|yup|ok|okay|sure|correct|right|do it|go ahead|finish|finish it|end it|end the workout|end workout|i m done|im done|i am done|done|please)\b/.test(t)) {
-    voiceFinishAt = 0;
-    voiceDbg('finishing the workout by voice');
-    speakText('Workout finished. Nice work.', true);
-    voicePhase = 'idle';   // nothing more to listen for
-    voiceSpeakChain.then(() => finishWorkout());   // once that has been said
+    voiceFinishNow();
     return true;
   }
   if (/^(no|nope|nah|cancel|not yet|never ?mind|keep going|carry on|continue)\b/.test(t)) { voiceFinishAt = 0; voiceSwapSay('Okay, the workout carries on.'); return true; }

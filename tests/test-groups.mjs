@@ -28,12 +28,14 @@ const make = (list, mode = 'manual') => new Function('list', 'mode', `
   const goToEx = i => log.push('go ' + exercises[i].name);
   const startHold = (i, setIdx) => log.push('timer ' + exercises[i].name + ' round ' + (setIdx + 1));
   const checkAllDone = () => log.push('all done');
+  let restCallback = null, isFreeForm = list.freeForm || false, voicePaused = false, voicePhase = 'resting';
+  const stopRest = () => {}, showToast = m => log.push('toast ' + m), speakText = m => log.push('say ' + m), finishWorkout = () => log.push('finished');
   const renderSets = () => {}, voiceNextSet = i => log.push('set ' + exercises[i].name), getLastSession = () => null, isStrength = () => true;
   const weightUnit = () => 'lbs', voiceUnit = () => 'pounds', voiceSpeakChain = Promise.resolve();
   const restAfter = ex => parseInt(ex.restAfterSec) >= 0 ? parseInt(ex.restAfterSec) : 120;
   ${flow}
   return {
-    log, exercises, sayFirst: () => voiceSayFirst, restAfterAt, note: i => voiceProgressNote(i),
+    log, exercises, sayFirst: () => voiceSayFirst, restAfterAt, note: i => voiceProgressNote(i), autoFinish: () => autoFinish(),
     endRest: () => { const cb = restCb; restCb = null; if (cb) cb(); },
     // log the next open set of an exercise, as the LOG button or the voice coach does
     done: name => { const i = exercises.findIndex(e => e.name === name), s = exercises[i].loggedSets.findIndex(x => !x.logged); exercises[i].loggedSets[s].logged = true; afterSetLogged(i, s); },
@@ -72,7 +74,7 @@ console.log('Circuit of three');
   check('one round in order, then the rest: ' + w.log.join(' | '), w.log.join('|') === 'go Push-Up|go Plank|rest 90 (Round 2 of 2 · Squat)');
   w.endRest(); w.done('Squat'); w.done('Push-Up');
   const n = w.log.length; w.done('Plank');
-  check('the last exercise of the workout: ' + steps(w, n).join(' | '), steps(w, n).join('|') === 'rest 90 (Last exercise done!)|all done');
+  check('the last set of the workout: no rest, all complete: ' + steps(w, n).join(' | '), steps(w, n).join('|') === 'all done|toast All exercises complete');
 }
 
 console.log('Timed circuit: the timer moves you on and starts the next station');
@@ -140,6 +142,22 @@ console.log('Voice workouts');
     const solo = make([['Row', 1]]);
     solo.exercises[0].coachNext = { note: 'Next time, aim for 12 reps on every set.' }; solo.exercises[0].loggedSets[0].logged = true;
     check('an exercise on its own: its note as before', solo.note(0) === 'Next time, aim for 12 reps on every set.');
+  }
+
+  console.log('The end of the workout');
+  {
+    const w = make([['Row', 2]]);
+    w.done('Row'); w.endRest(); const n = w.log.length; w.done('Row');
+    check('after the last set: no rest timer, all complete: ' + steps(w, n).join(' | '), steps(w, n).join('|') === 'all done|toast All exercises complete');
+    await tick();
+    check('the coach says so (Voice workouts): ' + w.log[w.log.length - 1], w.log[w.log.length - 1] === 'say All exercises complete. Say finish to save your workout.');
+    w.autoFinish();
+    check('two minutes on with nothing more: it saves itself', w.log[w.log.length - 1] === 'finished');
+    w.exercises[0].loggedSets[1].logged = false; const m = w.log.length; w.autoFinish();
+    check('not if a set was taken back meanwhile', w.log.length === m);
+    const list = [['Row', 1]]; list.freeForm = true;
+    const f = make(list); f.done('Row');
+    check('a workout built as it goes: no announcement: ' + f.log.join(' | '), f.log.join('|') === 'all done');
   }
 
   console.log('Loading a planned group');
