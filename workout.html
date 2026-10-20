@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=115">
+<link rel="stylesheet" href="larofit.css?v=116">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -534,28 +534,6 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 }
 .prev-best strong { color: var(--text-2); }
 
-/* Progress dots */
-.ex-progress-dots {
-  display: flex; justify-content: center; gap: 6px;
-  padding: 6px 0 4px; flex-shrink: 0;
-  background: var(--bg);
-}
-.ex-dot {
-  width: 6px; height: 6px; border-radius: 50%; padding: 0;
-  background: var(--bg-card2); border: 1px solid var(--border-md); transition: all 0.2s;
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
-  appearance: none; -webkit-appearance: none;
-  position: relative;
-}
-/* Invisible expanded hit area so the tiny dots are easy to tap */
-.ex-dot::after {
-  content: ''; position: absolute; top: -10px; bottom: -10px; left: -6px; right: -6px;
-}
-.ex-dot.done   { background: var(--volt); border-color: var(--volt); }
-.ex-dot.active { background: var(--bg-dark); border-color: var(--bg-dark); width: 18px; border-radius: 3px; }
-/* Started but not finished — distinguishes a skipped/in-progress exercise from an untouched one */
-.ex-dot.partial { background: var(--volt); border-color: var(--volt); opacity: 0.4; }
-
 /* Skip-to-next button in the exercise name bar */
 .ex-name-bar-skip {
   flex-shrink: 0; align-self: center;
@@ -769,10 +747,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=115"></script>
-<script src="larofit-exercises.js?v=115"></script>
+<script src="supabase-client.js?v=116"></script>
+<script src="larofit-exercises.js?v=116"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=115"></script>
+<script src="larofit-nav.js?v=116"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -849,9 +827,6 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
     <div class="lf-prog-bar" id="overall-prog-wrap" style="flex-shrink:0;">
       <div class="lf-prog-fill" id="overall-prog" style="width:0%"></div>
     </div>
-
-    <!-- Progress dots row -->
-    <div class="ex-progress-dots" id="ex-dots"></div>
 
     <!-- Free form name bar -->
     <div id="free-name-bar" style="display:none;padding:6px var(--page-pad) 4px;flex-shrink:0;">
@@ -1856,11 +1831,9 @@ function startWorkout(workoutName) {
   }
 
   if (exercises.length > 0) {
-    renderDots();
     goToEx(0);
   } else {
     document.getElementById('ex-card').style.display = 'none';
-    document.getElementById('ex-dots').style.display  = 'none';
   }
 
   saveSnapshot();
@@ -1917,33 +1890,11 @@ function updateElapsed() {
   document.getElementById('workout-timer').textContent = m + ':' + String(s).padStart(2,'0');
 }
 
-// ── PROGRESS DOTS ─────────────────────────────────────────────
-function renderDots() {
-  if (!exercises.length) { document.getElementById('ex-dots').innerHTML = ''; return; }
-  document.getElementById('ex-dots').innerHTML = exercises.map((ex, i) => {
-    const allLogged = ex.loggedSets.every(s => s.logged);
-    const anyLogged = ex.loggedSets.some(s => s.logged);
-    let cls = 'ex-dot';
-    if (allLogged)               cls += ' done';
-    else if (i === currentExIdx) cls += ' active';
-    else if (anyLogged)          cls += ' partial';
-    return `<button class="${cls}" onclick="jumpToEx(${i})" aria-label="Go to exercise ${i+1}"></button>`;
-  }).join('');
-}
-
-// Manual jump between exercises via the progress dots
-function jumpToEx(idx) {
-  if (idx === currentExIdx) return;
-  stopRest();
-  goToEx(idx);
-}
-
 // ── GO TO EXERCISE ────────────────────────────────────────────
 function goToEx(idx) {
   if (idx < 0 || idx >= exercises.length) return;
   currentExIdx = idx;
   renderExercise();
-  renderDots();
   updateOverallProgress();
 }
 
@@ -2496,7 +2447,7 @@ function logSet(exIdx, setIdx) {
 
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, lastSession);
-  renderDots(); updateOverallProgress();
+  updateOverallProgress();
 
   if (workoutMode === 'voice' && !allDone) voicePending = { exIdx, setIdx: setIdx+1, sugWeight: parseFloat(weight)||0 };
 
@@ -2527,7 +2478,7 @@ function logBWSet(exIdx, setIdx) {
   checkPR(ex);
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
-  renderSets(ex, null); renderDots(); updateOverallProgress();
+  renderSets(ex, null); updateOverallProgress();
   if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
   else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
 }
@@ -2549,7 +2500,7 @@ function logTimedSet(exIdx, setIdx) {
   checkPR(ex);
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
-  renderSets(ex, null); renderDots(); updateOverallProgress();
+  renderSets(ex, null); updateOverallProgress();
   if (allDone) holdFinished(ex);
   if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
   else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
@@ -2572,7 +2523,7 @@ function logCardioSet(exIdx, saidDistance) {
   set.logged   = true;
   checkPR(ex);
   saveSnapshot();
-  renderSets(ex, null); renderDots(); updateOverallProgress();
+  renderSets(ex, null); updateOverallProgress();
   const ni = nextIncompleteIdx(exIdx);
   if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name);
   else { checkAllDone(); }
@@ -2596,7 +2547,7 @@ function addSet(exIdx) {
   ex.sets = ex.loggedSets.length;            // keep rest-timer "Set X of Y" labels correct
   saveSnapshot();
   renderSets(ex, getLastSession(ex.id || ex.name));
-  renderDots(); updateOverallProgress();
+  updateOverallProgress();
 }
 
 function deleteSet(exIdx, setIdx) {
@@ -2609,7 +2560,7 @@ function deleteSet(exIdx, setIdx) {
   ex.sets = ex.loggedSets.length;
   saveSnapshot();
   renderSets(ex, getLastSession(ex.id || ex.name));
-  renderDots(); updateOverallProgress();
+  updateOverallProgress();
 }
 
 function fillSet(exIdx, setIdx, weight, reps) {
@@ -2747,7 +2698,7 @@ function finishHold(actualSecs) {
   checkPR(ex);
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
-  renderSets(ex, null); renderDots(); updateOverallProgress();
+  renderSets(ex, null); updateOverallProgress();
   const exIdx = holdExIdx;
   if (allDone) holdFinished(ex);
   if (allDone) {
@@ -3455,7 +3406,6 @@ function askReplaceScope(exIdx, nw) {
     closeReplaceSheet();
     const r = applyExerciseSwap(exIdx, nw, whole);
     if (!r.started) goToEx(exIdx);
-    renderDots();
     showToast(r.started ? nw.name + ' replaces ' + old.name + ' from your next workout'
             : r.changed > 1 ? 'Replaced in ' + r.changed + ' workouts' : 'Replaced with ' + nw.name);
   };
@@ -3512,11 +3462,9 @@ function addExerciseFreeForm(exId) {
   // Show the exercise card if this is the first exercise
   if (exercises.length === 1) {
     document.getElementById('ex-card').style.display = 'block';
-    document.getElementById('ex-dots').style.display  = 'block';
   }
 
   goToEx(exercises.length - 1);
-  renderDots();
   showToast(data.name + ' added');
 }
 
@@ -3741,7 +3689,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 102;
+const VOICE_BUILD = 103;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4798,7 +4746,7 @@ function voiceUnlogLast() {
   voicePending = { exIdx: l.exIdx, setIdx: l.setIdx, kind: l.kind || null, sugWeight: l.bw ? 0 : (parseFloat(set.weight) || 0), bw: l.bw };
   if (currentExIdx !== l.exIdx) goToEx(l.exIdx);   // the app had already moved to the next exercise
   else renderSets(ex, getLastSession(ex.id || ex.name));
-  renderDots(); updateOverallProgress(); checkAllDone(); saveSnapshot();
+  updateOverallProgress(); checkAllDone(); saveSnapshot();
   return l;
 }
 
@@ -5570,7 +5518,6 @@ function removeExerciseFromToday(idx) {
   if (!exercises.length) {
     currentExIdx = 0;
     document.getElementById('ex-card').style.display = 'none';
-    document.getElementById('ex-dots').style.display = 'none';
     if (voice) voiceAskExercise();
     else document.getElementById('free-add-wrap').style.display = 'block';   // nothing left: add one
   } else {
@@ -5579,7 +5526,6 @@ function removeExerciseFromToday(idx) {
     if (next === -1) next = exercises.findIndex((e, i) => open(i));
     if (next === -1) next = Math.min(idx, exercises.length - 1);
     goToEx(next);   // shows it and announces it
-    renderDots();
     if (voiceSayFirst) { speakText(voiceSayFirst, true); voiceSayFirst = ''; }   // nothing was announced
   }
   saveSnapshot();
@@ -5689,7 +5635,6 @@ function voiceStartExercise(data) {
     });
     idx = exercises.length - 1;
     document.getElementById('ex-card').style.display = 'block';
-    document.getElementById('ex-dots').style.display = 'block';
     voiceDbg('exercise added by voice: ' + data.name);
   }
   voicePreAnnounced = -1;

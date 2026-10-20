@@ -38,7 +38,7 @@ const make = (kinds, aiReply = '{"action":"none"}') => new Function('aiReply', '
   const skipRest = () => { calls.push('skipRest'); const cb = restEnd; restEnd = null; if (cb) cb(); }, stopRest = () => { restEnd = null; };
   const getLastSession = () => null, localDateStr = () => '2026-10-12', getSuggestedWeight = () => null, pauseListening = () => {}, startListening = () => {};
   const goToEx = i => { currentExIdx = i; voiceAnnounceExercise(exercises[i]); };
-  const renderSets = () => {}, renderDots = () => {}, updateOverallProgress = () => {}, checkAllDone = () => {}, saveSnapshot = () => {}, finishWorkout = () => calls.push('finishWorkout');
+  const renderSets = () => {}, updateOverallProgress = () => {}, checkAllDone = () => {}, saveSnapshot = () => {}, finishWorkout = () => calls.push('finishWorkout');
   const aiCoachFetch = async () => ({ json: async () => ({ content: [{ text: aiReply }] }) });
   const setTimeout = () => {};
   ${src.slice(src.indexOf('// First un-logged set of an exercise as a voice target'), src.indexOf('function voiceUnit()'))}

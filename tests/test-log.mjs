@@ -32,7 +32,7 @@ const make = (planned, phase = 'confirm_weight', aiReply = '{"ids":[]}') => new 
   const exTypeOf = () => 'strength', lookupMediaUrl = () => null, coachPlanFor = () => null;
   const buildLoggedSets = p => Array.from({ length: p.sets }, () => ({ weight: '', reps: '', logged: false }));
   const goToEx = i => { currentExIdx = i; voicePhase = 'confirm_weight'; voicePending = voiceTargetFor(i) || voicePending; voicePrompt('[announce ' + exercises[i].name + ']'); };
-  const renderSets = () => {}, renderDots = () => {}, updateOverallProgress = () => {}, checkAllDone = () => {}, saveSnapshot = () => {};
+  const renderSets = () => {}, updateOverallProgress = () => {}, checkAllDone = () => {}, saveSnapshot = () => {};
   const finishWorkout = () => calls.push('finishWorkout');
   const aiCoachFetch = async () => ({ json: async () => ({ content: [{ text: aiReply }] }) });
   const nextIncompleteIdx = from => { const n = exercises.length; for (let k = 1; k <= n; k++) { const i = (from + k) % n; if (i !== from && !exercises[i].loggedSets.every(s => s.logged)) return i; } return -1; };

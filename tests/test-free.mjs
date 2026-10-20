@@ -33,7 +33,7 @@ const make = (planned, phase, aiReply = '{"ids":[]}') => new Function('LAROFIT_E
   const exTypeOf = () => 'strength', lookupMediaUrl = () => null, coachPlanFor = () => null;
   const buildLoggedSets = p => Array.from({ length: p.sets }, () => ({ weight: '', reps: '', logged: false }));
   const goToEx = i => { currentExIdx = i; calls.push('goToEx ' + i); voicePhase = 'confirm_weight'; voicePending = voiceTargetFor(i) || voicePending; said.push('[announce ' + exercises[i].name + ']'); };
-  const renderSets = () => {}, renderDots = () => {}, updateOverallProgress = () => {}, checkAllDone = () => {}, saveSnapshot = () => {};
+  const renderSets = () => {}, updateOverallProgress = () => {}, checkAllDone = () => {}, saveSnapshot = () => {};
   const finishWorkout = () => calls.push('finishWorkout');
   const aiCoachFetch = async () => ({ json: async () => ({ content: [{ text: aiReply }] }) });
   const nextIncompleteIdx = from => exercises.findIndex((e, i) => i !== from && !e.loggedSets.every(s => s.logged));

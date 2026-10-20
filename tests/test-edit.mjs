@@ -30,7 +30,7 @@ const make = (aiReply = '{"action":"none"}') => new Function('aiReply', `
   const skipRest = () => calls.push('skipRest'), stopRest = () => calls.push('stopRest'), dismissFMW = () => {}, getFMWStartWeight = () => 20;
   const getFMW = () => ({ active: false, sets: [] }), getLastSession = () => null;
   const goToEx = i => { currentExIdx = i; calls.push('goToEx ' + i); };
-  const renderSets = () => {}, renderDots = () => {}, updateOverallProgress = () => {}, checkAllDone = () => {}, saveSnapshot = () => {};
+  const renderSets = () => {}, updateOverallProgress = () => {}, checkAllDone = () => {}, saveSnapshot = () => {};
   const aiCoachFetch = async () => ({ json: async () => ({ content: [{ text: aiReply }] }) });
   let voicePreAnnounced = -1;
   const nextIncompleteIdx = from => exercises.findIndex((e, i) => i !== from && !e.loggedSets.every(s => s.logged));
