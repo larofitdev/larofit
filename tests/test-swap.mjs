@@ -41,13 +41,14 @@ for (const [phrase, want] of [
   ["I don't want to do this", ''],
   ['Switch this exercise', ''],
   ['change the exercise', ''],
+  ["I really don't like this one", ''],
 ]) {
   const t = api.normalizeSpeech(phrase), is = api.VOICE_SWAP.test(t) && !/\bsets?\b/.test(t), got = is ? api.voiceSwapTarget(t) : null;
   check(phrase.padEnd(58) + ' -> ' + (got === null ? 'not a replace' : got === '' ? '(something similar)' : got), got === want, 'expected ' + JSON.stringify(want));
 }
 
 console.log('Things that are not a request to replace');
-for (const phrase of ['switch to incline dumbbell press', 'ten', '10 at 20', 'ready', 'edit the first set', 'change set one to 20 pounds', 'no that was wrong', 'replace the first set with 20 pounds', 'repeat', 'skip', '12 reps', 'all sets were at 20 pounds', 'change that to 12']) {
+for (const phrase of ["Oh no, I don't want to do that, because I don't want to log it.", "I can't do that right now, I am talking to my trainer about it", 'switch to incline dumbbell press', 'ten', '10 at 20', 'ready', 'edit the first set', 'change set one to 20 pounds', 'no that was wrong', 'replace the first set with 20 pounds', 'repeat', 'skip', '12 reps', 'all sets were at 20 pounds', 'change that to 12']) {
   const t = api.normalizeSpeech(phrase);
   check(phrase, !(api.VOICE_SWAP.test(t) && !/\bsets?\b/.test(t)));
 }

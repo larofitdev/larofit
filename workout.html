@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=113">
+<link rel="stylesheet" href="larofit.css?v=114">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=113"></script>
-<script src="larofit-exercises.js?v=113"></script>
+<script src="supabase-client.js?v=114"></script>
+<script src="larofit-exercises.js?v=114"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=113"></script>
+<script src="larofit-nav.js?v=114"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3741,7 +3741,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 100;
+const VOICE_BUILD = 101;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -3837,6 +3837,7 @@ function initVoice() {
   voiceHadEarbuds = false; voiceEarbudsOut = false; voiceAutoPaused = false; voiceOffEarbudsSince = 0;
   voiceLog = []; voiceDbgLast = ""; voiceDbgRepeats = 0; voiceLogClosed = false;
   voiceEarbudsWorked = false; voiceOnEarbudsSince = 0;
+  voiceFailTimes = []; voiceSorryAt = 0; voiceSlowWarned = false;
   voiceEnsureCtx();
   if (voiceReady) return;
   voiceReady = true;
@@ -4435,6 +4436,10 @@ function voiceOnSignedOut() {
   speakText('You have been signed out, so I can not hear you. Log the rest by hand, then sign in again. Your sets are saved on this phone.', true);
 }
 
+// When transcriptions failed (in the last 3 minutes), when "Sorry, I missed that" was last said,
+// and whether "the connection is slow" has been explained this workout
+let voiceFailTimes = [], voiceSorryAt = 0, voiceSlowWarned = false;
+
 // Send one phrase for transcription and act on the text. Phrases are handled in order.
 function voiceSendPhrase(blob, spokenMs, peak) {
   const phaseAtCapture = voicePhase;
@@ -4445,7 +4450,7 @@ function voiceSendPhrase(blob, spokenMs, peak) {
       const session = await voiceSession();
       if (!session) { voiceOnSignedOut(); return; }
       const attempt = async () => {
-        const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 8000);
+        const abort = new AbortController(), timer = setTimeout(() => abort.abort(), 12000);   // on a poor connection answers have taken 10s
         try {
           const res = await fetch(SUPABASE_TRANSCRIBE_URL, {
             method: 'POST',
@@ -4482,10 +4487,22 @@ function voiceSendPhrase(blob, spokenMs, peak) {
       voiceDbg('heard ' + JSON.stringify(text) + detail + (understood ? ' -> understood' : ' -> asking coach'));
       if (!understood) await voiceInterpret(text);
     } catch (e) {
-      voiceDbg('transcribe failed: ' + e.message);
-      voiceHudNote('Voice service problem');
-      // Say so, rather than leave the user wondering whether they were heard
-      if (voicePhase === phaseAtCapture && voicePhase !== 'idle' && voicePhase !== 'resting') speakText('Sorry, I missed that. Say it again.', true);
+      voiceDbg('transcribe failed: ' + e.message + ' (' + spokenMs + 'ms, peak ' + peak.toFixed(2) + ')');
+      voiceHudNote('Slow connection — if I miss you, say it again or tap Log');
+      // Say so, rather than leave the user wondering whether they were heard. On a bad
+      // connection that was every ten seconds, mostly for clanks and coughs (the 2026-10-19
+      // tester: 25 times in 45 minutes), so: once, an explanation; after that only for a
+      // phrase long enough to be speech, and not more than once a minute.
+      const now = Date.now();
+      voiceFailTimes = voiceFailTimes.filter(at => now - at < 180000).concat(now);
+      if (voicePhase !== phaseAtCapture || voicePhase === 'idle' || voicePhase === 'resting') return;
+      if (voiceFailTimes.length >= 3 && !voiceSlowWarned) {
+        voiceSlowWarned = true; voiceSorryAt = now;
+        speakText('The connection is slow, so I may miss some of what you say. If I do not answer, say it again, or tap Log.', true);
+      } else if (spokenMs >= 400 && now - voiceSorryAt > 60000) {
+        voiceSorryAt = now;
+        speakText('Sorry, I missed that. Say it again.', true);
+      }
     }
   });
 }
@@ -4915,7 +4932,10 @@ const VOICE_SWAP = new RegExp([
   '\\b(different|another|other|alternative|new|similar|like) (exercise|movement)\\b',
   '\\bsomething (else|different|similar)\\b',
   '\\bchange (this|the|that|my)? ?(exercise|movement)\\b',
-  '\\b(can t|cannot|can not|don t want to|do not want to|don t like|hate) (do |doing )?(this|that|it)\\b',
+  // "I don't want to do this one": only as a short request of its own. Buried in a longer
+  // sentence to someone else ("oh no, I don't want to do that, because I don't want to log it")
+  // it isn't asking for a replacement.
+  '^([a-z0-9]+ ){0,3}(can t|cannot|can not|don t want to|do not want to|don t like|hate) (do |doing )?(this|that|it)( [a-z0-9]+){0,4}$',
   '\\binstead\\b'
 ].join('|'));
 // Words that ask for "something like it" rather than naming an exercise
@@ -5762,6 +5782,11 @@ async function voiceInterpret(text) {
 
   if (out.action === 'finish') { voiceFinishAsk(); return; }
   if (out.action === 'pause')  { voicePause(); return; }
+  // The coach model has read chatter as "skip" ("Let's not take it."): only when the words say so
+  if (out.action === 'skip' && !/\b(skip|next|move on|moving on|pass|later|come back|done with|not doing|don t want|leave it|forget)\b/.test(normalizeSpeech(text))) {
+    voiceDbg('coach said skip, but nothing in "' + text + '" asks to skip: ignored');
+    return;
+  }
   if (out.action === 'skip')   { voiceSkipExercise(); return; }
   if (out.action === 'remove') { voiceRemoveExercise(); return; }
   if (out.action === 'exercise') { if (typeof out.exercise === 'string') voiceTryExercise('doing ' + normalizeSpeech(out.exercise)); return; }
