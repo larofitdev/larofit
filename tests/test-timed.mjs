@@ -153,7 +153,18 @@ console.log('In a superset the coach says less once the drill is known');
   w.hear('ten');
   check('and the reps still log: ' + w.sets(0), w.sets(0) === 'L100x10 L100x10 -100x');
   w.go(2);
-  check('an exercise outside the superset: the full line "' + last(w) + '"', /Say your reps when finished\.$/.test(last(w)));
+  check('an exercise outside the superset: its line, without the instruction a second time "' + last(w) + '"', last(w) === 'Bench Press, 100 pounds, 10 reps.');
+}
+
+console.log('After the rest, an exercise already announced is just "Set 1."');
+{
+  const w = make(['strength', 'strength']); w.begin();
+  w.hear('ten'); w.endRest(); w.hear('ten'); w.endRest(); w.hear('ten');
+  check('the next exercise is announced during the rest: "' + last(w) + '"', /^Next, Bench Press, 100 pounds, 10 reps\.$/.test(last(w)));
+  w.endRest();
+  check('when the rest ends: "' + last(w) + '"', last(w) === 'Set 1.' && w.phase() === 'confirm_weight');
+  w.hear('ten');
+  check('and "ten" logs its first set: ' + w.sets(1), w.sets(1) === 'L100x10 -100x -100x');
 }
 
 console.log('Weight and reps are unaffected');

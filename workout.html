@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=122">
+<link rel="stylesheet" href="larofit.css?v=123">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=122"></script>
-<script src="larofit-exercises.js?v=122"></script>
+<script src="supabase-client.js?v=123"></script>
+<script src="larofit-exercises.js?v=123"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=122"></script>
+<script src="larofit-nav.js?v=123"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3773,7 +3773,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 109;
+const VOICE_BUILD = 110;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -3879,7 +3879,7 @@ function initVoice() {
   voiceHadEarbuds = false; voiceEarbudsOut = false; voiceAutoPaused = false; voiceOffEarbudsSince = 0;
   voiceLog = []; voiceDbgLast = ""; voiceDbgRepeats = 0; voiceLogClosed = false;
   voiceEarbudsWorked = false; voiceOnEarbudsSince = 0;
-  voiceFailTimes = []; voiceSorryAt = 0; voiceSlowWarned = false;
+  voiceFailTimes = []; voiceSorryAt = 0; voiceSlowWarned = false; voiceCueGiven = false;
   voiceEnsureCtx();
   if (voiceReady) return;
   voiceReady = true;
@@ -4589,7 +4589,13 @@ function voiceAnnounceExercise(ex) {
   // ("Round 2. Dumbbell Curl." / "Tricep Kickback."). The full line every switch was too much.
   const grp = groupOf(currentExIdx);
   const brief = grp && (target.setIdx > 0 || grp.members.indexOf(currentExIdx) > 0) && !target.kind;
-  const say = full => voicePrompt(brief ? (target.setIdx > 0 ? ex.name : voiceExerciseLine(ex, target)) + '.' : full, true);
+  // Announced during the rest before it ("Rest 2 minutes. Next, Machine Chest Press, 75 pounds"):
+  // the user has heard it and got ready, so now it is just "Set 1."
+  const introduced = voicePreAnnounced === currentExIdx && !target.kind;
+  // "Say your reps when finished" is only needed with the workout's first exercise
+  const cue = () => { if (voiceCueGiven) return ''; voiceCueGiven = true; return ' Say your reps when finished.'; };
+  const say = full => voicePrompt(introduced ? 'Set ' + (target.setIdx + 1) + '.'
+    : brief ? (target.setIdx > 0 ? ex.name : voiceExerciseLine(ex, target)) + '.' : full(), true);
   if (target.kind) {
     voicePhase = target.kind === 'timed' ? 'log_time' : 'log_cardio';
     voicePreAnnounced = -1;
@@ -4603,7 +4609,7 @@ function voiceAnnounceExercise(ex) {
   if (target.bw) {
     voicePhase = 'count_reps';
     voicePreAnnounced = -1;
-    say(voiceExerciseLine(ex, target) + '. Say your reps when finished.');
+    say(() => voiceExerciseLine(ex, target) + '.' + cue());
     return;
   }
   const sug = target.sugWeight || getSuggestedWeight(ex);
@@ -4611,14 +4617,13 @@ function voiceAnnounceExercise(ex) {
     voicePending.sugWeight = sug;
     prefillWeight(target.exIdx, target.setIdx, sug);
     voicePhase = 'confirm_weight';
-    const introduced = voicePreAnnounced === currentExIdx;
     voicePreAnnounced = -1;
-    // Already introduced during the rest before it: only the cue is needed now
-    say((introduced ? ex.name : voiceExerciseLine(ex, target)) + '. Say your reps when finished.');
+    say(() => voiceExerciseLine(ex, target) + '.' + cue());
   } else {
+    // No weight to go on: the user has to say it, so this one always says so
     voicePhase = 'count_reps';
     voicePreAnnounced = -1;
-    say(voiceExerciseLine(ex, target) + '. Say weight and reps when finished.');
+    say(() => voiceExerciseLine(ex, target) + '. Say weight and reps when finished.');
   }
 }
 
@@ -4665,7 +4670,7 @@ function voicePrefetchForExercise(exIdx) {
   const ni = nextIncompleteIdx(exIdx);
   if (ni !== -1) {
     voicePrefetch(voiceNextExerciseLine(ni, exIdx));
-    voicePrefetch(exercises[ni].name + '. Say your reps when finished.');
+    voicePrefetch('Set 1.');
   }
 }
 
@@ -4722,7 +4727,8 @@ function voiceLogSet(reps, saidWeight) {
 // In a rep group the next exercise follows straight away and the group's rest comes after
 // each round. In a timed circuit every exercise is a station worked for workSec with moveSec
 // to get to the next, and the timer runs the round by itself.
-let groupAutoStart = -1;   // a timed station the circuit is starting itself (the coach just says go)
+let groupAutoStart = -1;
+let voiceCueGiven = false;   // "Say your reps when finished" has been said this workout   // a timed station the circuit is starting itself (the coach just says go)
 
 // The group this exercise is in today, with the positions of its exercises; null if none
 function groupOf(exIdx) {
