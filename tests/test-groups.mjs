@@ -29,11 +29,11 @@ const make = (list, mode = 'manual') => new Function('list', 'mode', `
   const startHold = (i, setIdx) => log.push('timer ' + exercises[i].name + ' round ' + (setIdx + 1));
   const checkAllDone = () => log.push('all done');
   const renderSets = () => {}, voiceNextSet = i => log.push('set ' + exercises[i].name), getLastSession = () => null, isStrength = () => true;
-  const weightUnit = () => 'lbs', voiceSpeakChain = Promise.resolve();
+  const weightUnit = () => 'lbs', voiceUnit = () => 'pounds', voiceSpeakChain = Promise.resolve();
   const restAfter = ex => parseInt(ex.restAfterSec) >= 0 ? parseInt(ex.restAfterSec) : 120;
   ${flow}
   return {
-    log, exercises, sayFirst: () => voiceSayFirst, restAfterAt,
+    log, exercises, sayFirst: () => voiceSayFirst, restAfterAt, note: i => voiceProgressNote(i),
     endRest: () => { const cb = restCb; restCb = null; if (cb) cb(); },
     // log the next open set of an exercise, as the LOG button or the voice coach does
     done: name => { const i = exercises.findIndex(e => e.name === name), s = exercises[i].loggedSets.findIndex(x => !x.logged); exercises[i].loggedSets[s].logged = true; afterSetLogged(i, s); },
@@ -121,6 +121,25 @@ console.log('Voice workouts');
     const w = make([['Curl', 3, { id: 'g7', rounds: 3, roundRestSec: 60 }], ['Row', 3]]);
     w.done('Curl');
     check('a group left with one exercise works as a normal exercise: ' + w.log.join(' | '), w.log.join('|') === 'rest 60 (Set 2 of 3 up next)');
+  }
+
+  console.log('What changes next time: said once, when the whole group is done');
+  {
+    const S = { id: 'n1', rounds: 1, roundRestSec: 60 };
+    const confirm = w => ({ nextWeight: w, nextReps: 15, stage: 'confirm', note: '15 on every set. Do that once more next time and you go up to ' + (w + 2.5) + ' pounds.' });
+    const w = make([['Curl', 1, S], ['Kickback', 1, S]]);
+    w.exercises[0].coachNext = confirm(20); w.exercises[0].loggedSets[0].logged = true;
+    check('after the first exercise of the superset: nothing yet', w.note(0) === '');
+    w.exercises[1].coachNext = confirm(20); w.exercises[1].loggedSets[0].logged = true;
+    check('after the last: one sentence for both: "' + w.note(1) + '"', w.note(1) === '15 on every set on both. Do that once more next time and the weights go up.');
+    w.exercises[0].coachNext = { nextWeight: 22.5, nextReps: 10, stage: 'up', note: 'Next time, go up to 22.5 pounds.' };
+    w.exercises[1].coachNext = { nextWeight: 25, nextReps: 10, stage: 'up', note: 'Next time, go up to 25 pounds.' };
+    check('both going up: "' + w.note(1) + '"', w.note(1) === 'Next time, go up on both: Curl to 22.5, Kickback to 25 pounds.');
+    w.exercises[1].coachNext = { nextWeight: 20, nextReps: 10, stage: 'same', note: '' };
+    check('only one with news: "' + w.note(1) + '"', w.note(1) === 'Curl: Next time, go up to 22.5 pounds.');
+    const solo = make([['Row', 1]]);
+    solo.exercises[0].coachNext = { note: 'Next time, aim for 12 reps on every set.' }; solo.exercises[0].loggedSets[0].logged = true;
+    check('an exercise on its own: its note as before', solo.note(0) === 'Next time, aim for 12 reps on every set.');
   }
 
   console.log('Loading a planned group');

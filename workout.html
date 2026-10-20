@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=120">
+<link rel="stylesheet" href="larofit.css?v=121">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=120"></script>
-<script src="larofit-exercises.js?v=120"></script>
+<script src="supabase-client.js?v=121"></script>
+<script src="larofit-exercises.js?v=121"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=120"></script>
+<script src="larofit-nav.js?v=121"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3740,7 +3740,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 107;
+const VOICE_BUILD = 108;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4670,7 +4670,8 @@ function voiceLogSet(reps, saidWeight) {
   if (p.bw) logBWSet(p.exIdx, p.setIdx); else logSet(p.exIdx, p.setIdx);
   const exDone = exercises[p.exIdx].loggedSets.every(st => st.logged);
   // Exercise finished: anything that changes for it next time is said once, here
-  if (exDone && exercises[p.exIdx].coachNext && exercises[p.exIdx].coachNext.note) speakText(exercises[p.exIdx].coachNext.note);
+  // (in a superset or circuit, once for the whole group when it is finished)
+  if (exDone) { const note = voiceProgressNote(p.exIdx); if (note) speakText(note); }
   const allDone = exercises.every(ex => ex.loggedSets.every(s => s.logged));
   if (allDone) return;   // still listening, so the last set can be corrected before tapping Finish
   // Then what's next and at what weight, straight away (in a superset the next exercise comes straight after)
@@ -4725,6 +4726,30 @@ function groupNextStep(exIdx) {
   if (next !== undefined) { groupMove(g, next, g.timed ? (parseInt(g.moveSec) || 0) : 0, nextExerciseLabel(next)); return; }
   const first = g.members.find(i => !exAllLogged(i)), nextRound = Math.min(...g.members.map(done)) + 1;
   groupMove(g, first, parseInt(g.roundRestSec) || 0, 'Round ' + nextRound + ' of ' + g.rounds + ' · ' + exercises[first].name, nextRound);
+}
+
+// What changes next time, said once an exercise is finished. In a superset or circuit nothing
+// is said until the whole group is done (a note between its exercises held the switch up),
+// and then the exercises' notes are put together:
+//   "15 on every set on both. Do that once more next time and the weights go up."
+function voiceProgressNote(exIdx) {
+  const g = groupOf(exIdx), own = exercises[exIdx].coachNext;
+  if (!g) return own && own.note || '';
+  if (!g.members.every(exAllLogged)) return '';
+  const items = g.members.map(i => ({ ex: exercises[i], c: exercises[i].coachNext })).filter(x => x.c && x.c.note);
+  if (!items.length) return '';
+  if (items.length === 1) return items[0].ex.name + ': ' + items[0].c.note;
+  const all = g.members.length === 2 ? 'both' : 'all of them', st = items[0].c.stage;
+  if (items.length === g.members.length && items.every(x => x.c.stage === st)) {
+    const each = items.map(x => x.ex.name + ' to ' + x.c.nextWeight).join(', ');
+    if (st === 'up') return 'Next time, go up on ' + all + ': ' + each + ' ' + voiceUnit() + '.';
+    if (st === 'down') return 'Next time, drop back on ' + all + ': ' + each + ' ' + voiceUnit() + '.';
+    if (items.every(x => x.c.nextReps === items[0].c.nextReps)) {
+      if (st === 'confirm') return items[0].c.nextReps + ' on every set on ' + all + '. Do that once more next time and the weights go up.';
+      if (st === 'stretch') return 'Next time, aim for ' + items[0].c.nextReps + ' reps on every set on ' + all + '.';
+    }
+  }
+  return items.map(x => x.ex.name + ': ' + x.c.note).join(' ');
 }
 
 // Go to an exercise of the group after secs of rest; with none, straight away (in a Voice
@@ -5485,7 +5510,7 @@ function voiceAfterLog(exIdx, msg) {
   voicePhase = 'resting';
   voicePrompt(msg, true);
   if (!exercises[exIdx].loggedSets.every(st => st.logged)) return;
-  if (exercises[exIdx].coachNext && exercises[exIdx].coachNext.note) speakText(exercises[exIdx].coachNext.note);
+  { const note = voiceProgressNote(exIdx); if (note) speakText(note); }
   if (exercises.every(ex => ex.loggedSets.every(st => st.logged))) return;
   if (groupContinues(exIdx)) return;   // the circuit's next station is announced as it starts
   const ni = nextIncompleteIdx(exIdx);
