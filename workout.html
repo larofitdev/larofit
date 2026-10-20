@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=116">
+<link rel="stylesheet" href="larofit.css?v=117">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -747,10 +747,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=116"></script>
-<script src="larofit-exercises.js?v=116"></script>
+<script src="supabase-client.js?v=117"></script>
+<script src="larofit-exercises.js?v=117"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=116"></script>
+<script src="larofit-nav.js?v=117"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1948,8 +1948,7 @@ function renderExercise() {
     prevEl.style.display = 'flex';
     const coachPlan = coachPlanFor(ex);
     const today = coachPlan
-      ? ' · Today: ' + coachPlan.weight + ' ' + weightUnit() + ' × ' + coachPlan.reps +
-        ({ up: ' (weight up)', down: ' (dropped back)', stretch: ' (hit these on every set and the weight goes up)' }[coachPlan.stage] || '')
+      ? ' · Today: ' + coachPlan.weight + ' ' + weightUnit() + ' × ' + coachPlan.reps + progressionHint(coachPlan)
       : '';
     document.getElementById('prev-best-text').textContent = 'Last: ' + lastSession.bestWeight + ' ' + weightUnit() + ' × ' + lastSession.bestReps + ' reps' + today;
     const tipEl = document.getElementById('coach-tip');
@@ -3493,7 +3492,15 @@ function setMode(mode) {
 // The weight moves by 2.5 lbs under 25 lbs and by 5 lbs from 25 up. For someone
 // working in kilograms it moves by 1 kg under 10 kg and by 2.5 kg from 10 up, which
 // are the steps gym dumbbells and plates actually come in.
-const PROG_STRETCH = 2;
+//
+// Gradual pace (Profile → Progression pace), for anyone who wants longer at each weight:
+//   every planned set hit the target         → aim for target + 2
+//   every planned set hit target + 2         → aim for target + 5 (10 → 12 → 15)
+//   every planned set hit target + 5         → once more at the same weight
+//   ...and again, the next session           → weight goes up, back to the target
+// Dropping back works the same in both.
+const PROG_STRETCH = 2, PROG_GRADUAL_TOP = 5;
+function progPace() { return (store.get('settings', {}) || {}).progression === 'gradual' ? 'gradual' : 'standard'; }
 function progSteps() {
   return typeof weightUnit === 'function' && weightUnit() === 'kg' ? { heavyFrom: 10, light: 1, heavy: 2.5 } : { heavyFrom: 25, light: 2.5, heavy: 5 };
 }
@@ -3534,15 +3541,28 @@ function progStruggled(sets, needReps) {
 }
 
 // What to use next time, given the latest session's sets and the one before it.
-// Returns { weight, reps, stage: 'up' | 'stretch' | 'same' | 'down', change, top, needSets, needReps } or null.
+// Returns { weight, reps, stage: 'up' | 'stretch' | 'confirm' | 'same' | 'down', change, top, needSets, needReps, pace,
+// next (for 'confirm': the weight it goes up to after one more) } or null.
 function progressionFor(ex, latestSets, earlierSets) {
   const top = progTopWeight(latestSets);
   if (!top) return null;
-  const needSets = parseInt(ex.sets) || 3, needReps = parseInt(ex.reps) || 10;
-  const base = { top, needSets, needReps };
-  if (progCleared(latestSets, needSets, needReps + PROG_STRETCH)) {
-    const up = progSteps();
-    return { ...base, weight: top + (top < up.heavyFrom ? up.light : up.heavy), reps: needReps, stage: 'up', change: 'up' };
+  const needSets = parseInt(ex.sets) || 3, needReps = parseInt(ex.reps) || 10, pace = progPace();
+  const base = { top, needSets, needReps, pace };
+  const up = progSteps(), heavier = top + (top < up.heavyFrom ? up.light : up.heavy);
+  if (pace === 'gradual') {
+    const peak = needReps + PROG_GRADUAL_TOP;
+    if (progCleared(latestSets, needSets, peak)) {
+      // The top step two sessions running at this weight: up it goes
+      if (progTopWeight(earlierSets) === top && progCleared(earlierSets, needSets, peak)) {
+        return { ...base, weight: heavier, reps: needReps, stage: 'up', change: 'up' };
+      }
+      return { ...base, weight: top, reps: peak, stage: 'confirm', change: 'same', next: heavier };
+    }
+    if (progCleared(latestSets, needSets, needReps + PROG_STRETCH)) {
+      return { ...base, weight: top, reps: peak, stage: 'stretch', change: 'same' };
+    }
+  } else if (progCleared(latestSets, needSets, needReps + PROG_STRETCH)) {
+    return { ...base, weight: heavier, reps: needReps, stage: 'up', change: 'up' };
   }
   if (progCleared(latestSets, needSets, needReps)) {
     return { ...base, weight: top, reps: needReps + PROG_STRETCH, stage: 'stretch', change: 'same' };
@@ -3561,6 +3581,7 @@ function progressionNote(ex, p) {
   if (!p) return '';
   if (p.stage === 'up')   return 'Next time, go up to ' + p.weight + ' ' + voiceUnit() + '.';
   if (p.stage === 'down') return 'Next time, drop back to ' + p.weight + ' ' + voiceUnit() + '.';
+  if (p.stage === 'confirm') return p.reps + ' on every set. Do that once more next time and you go up to ' + p.next + ' ' + voiceUnit() + '.';
   if (p.stage === 'stretch' && (parseInt(ex.targetReps) || p.needReps) < p.reps) return 'Next time, aim for ' + p.reps + ' reps on every set.';
   return '';
 }
@@ -3574,9 +3595,20 @@ function coachPlanFor(ex) {
   if (!p) return null;
   const atTop = hist[0].sets.filter(st => (parseFloat(st.weight) || 0) === p.top);
   return {
-    weight: p.weight, reps: p.reps, stage: p.stage, change: p.change, needSets: p.needSets, needReps: p.needReps,
+    weight: p.weight, reps: p.reps, stage: p.stage, change: p.change, needSets: p.needSets, needReps: p.needReps, pace: p.pace,
     lastWeight: p.top, lastReps: parseFloat(atTop[atTop.length - 1].reps) || 0
   };
+}
+
+// The note beside today's target on the exercise card: " (weight up)", " (on the way to 15)"...
+function progressionHint(plan) {
+  if (plan.stage === 'up') return ' (weight up)';
+  if (plan.stage === 'down') return ' (dropped back)';
+  if (plan.stage === 'confirm') return ' (once more on every set and the weight goes up)';
+  if (plan.stage !== 'stretch') return '';
+  if (plan.pace !== 'gradual') return ' (hit these on every set and the weight goes up)';
+  const peak = plan.needReps + PROG_GRADUAL_TOP;
+  return plan.reps < peak ? ' (on the way to ' + peak + ')' : ' (hit these on every set, two sessions running, and the weight goes up)';
 }
 
 // ── Holds ──
@@ -3689,7 +3721,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 103;
+const VOICE_BUILD = 104;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.

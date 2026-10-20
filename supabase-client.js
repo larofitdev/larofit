@@ -649,7 +649,7 @@ window.LF = {
 // Units, the coach's voice and timer sounds are kept on the device (lf_settings) so
 // pages can read them instantly, and copied to the account so a new phone or a
 // reinstall picks them up. Whichever copy was changed most recently wins.
-const LF_SYNCED_SETTINGS = ['units', 'voiceName', 'sound', 'equipment'];
+const LF_SYNCED_SETTINGS = ['units', 'voiceName', 'sound', 'equipment', 'progression'];
 
 // ── EQUIPMENT I USE ───────────────────────────────────────────
 // Ticked once on Profile. The AI builder, the exercise pickers and "replace" then

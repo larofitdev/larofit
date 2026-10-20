@@ -9,7 +9,7 @@
 <title>LaroFit — Profile</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=116">
+<link rel="stylesheet" href="larofit.css?v=117">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="text"], input[type="email"], input[type="number"],
@@ -280,10 +280,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=116"></script>
-<script src="larofit-exercises.js?v=116"></script>
+<script src="supabase-client.js?v=117"></script>
+<script src="larofit-exercises.js?v=117"></script>
 <script>window.LF_PAGE = 'profile';</script>
-<script src="larofit-nav.js?v=116"></script>
+<script src="larofit-nav.js?v=117"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -600,6 +600,13 @@ button, input, select, a, textarea { touch-action: manipulation; }
         <input type="checkbox" id="tog-sound" checked onchange="saveSetting('sound', this.checked)">
         <span class="lf-toggle-slider"></span>
       </label>
+    </div>
+    <!-- Progression pace -->
+    <div class="toggle-row" style="display:block;">
+      <div class="toggle-label">Progression pace</div>
+      <div class="toggle-sub">How the coach moves you up to a heavier weight</div>
+      <div id="prog-pace" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+      <div class="toggle-sub" id="prog-pace-about" style="margin-top:8px;"></div>
     </div>
   </div>
 
@@ -986,6 +993,30 @@ function coachVoiceName() {
   return COACH_VOICES.some(c => c[0] === v) ? v : 'marin';
 }
 
+// ── PROGRESSION PACE ─────────────────────────────────────────
+// The rule itself is in workout.html (progressionFor)
+const PROG_PACES = [
+  ['standard', 'Standard', 'Hit your reps on every set (say 10), then 2 more (12), and the weight goes up.'],
+  ['gradual',  'Gradual',  'Hit your reps on every set (say 10), then 12, then 15 in two sessions running, and the weight goes up. Longer at each weight: easier on joints and light dumbbells.']
+];
+function renderProgPace() {
+  const box = document.getElementById('prog-pace');
+  if (!box) return;
+  const st = JSON.parse(localStorage.getItem('lf_settings') || '{}');
+  const current = st.progression === 'gradual' ? 'gradual' : 'standard';
+  box.innerHTML = PROG_PACES.map(([id, label]) => {
+    const on = id === current;
+    return `<button onclick="pickProgPace('${id}')" aria-pressed="${on}"
+      style="min-height:44px;padding:0 14px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;
+             border:1px solid ${on ? 'var(--volt)' : 'var(--border-md)'};background:${on ? 'var(--volt)' : 'transparent'};color:${on ? '#1a1a1a' : 'var(--text-2)'};">${label}</button>`;
+  }).join('');
+  document.getElementById('prog-pace-about').textContent = PROG_PACES.find(p => p[0] === current)[2];
+}
+function pickProgPace(id) {
+  saveSetting('progression', id);
+  renderProgPace();
+}
+
 function renderCoachVoices() {
   const box = document.getElementById('coach-voices');
   if (!box) return;
@@ -1030,7 +1061,7 @@ async function pickCoachVoice(id) {
     if (typeof showToast === 'function') showToast('Saved. The sample could not be played right now.');
   }
 }
-if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderCoachVoices); else renderCoachVoices();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { renderCoachVoices(); renderProgPace(); }); else { renderCoachVoices(); renderProgPace(); }
 
 // ── SETTINGS SAVE ──────────────────────────────────────────────────────────
 function saveSetting(key, val) {

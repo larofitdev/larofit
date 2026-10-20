@@ -6,17 +6,17 @@ if (a < 0 || b < a) throw new Error('markers');
 
 const S = (...pairs) => pairs.map(([weight, reps]) => ({ weight, reps }));
 const three = (w, r = 10) => S([w, r], [w, r], [w, r]);
-const make = (history, unit = 'lbs') => new Function('store', 'todayKey', 'aiProgressionOn', 'voiceUnit', 'weightUnit', src.slice(a, b) + '; return { coachPlanFor, progressionFor, progressionNote, holdTargetFor, holdProgression };')({ get: () => history }, '2026-10-10', () => true, () => unit === 'kg' ? 'kilos' : 'pounds', () => unit);
+const make = (history, unit = 'lbs', pace = 'standard') => new Function('store', 'todayKey', 'aiProgressionOn', 'voiceUnit', 'weightUnit', src.slice(a, b) + '; return { coachPlanFor, progressionFor, progressionNote, holdTargetFor, holdProgression };')({ get: k => k === 'settings' ? { progression: pace } : history }, '2026-10-10', () => true, () => unit === 'kg' ? 'kilos' : 'pounds', () => unit);
 const EX = { id: 'x', name: 'x', sets: 3, reps: 10 };
 // sessions: newest first
-const plan = (sessions, ex = EX) => {
+const plan = (sessions, ex = EX, pace) => {
   const history = {}; sessions.forEach((sets, i) => { history['2026-10-0' + (9 - i)] = { exercises: [{ id: 'x', name: 'x', sets }] }; });
-  return make(history).coachPlanFor(ex);
+  return make(history, 'lbs', pace).coachPlanFor(ex);
 };
 
 let fail = 0;
-const check = (name, sessions, want, ex) => {
-  const p = plan(sessions, ex), got = p ? p.weight + ' x ' + p.reps + ' ' + p.stage : null;
+const check = (name, sessions, want, ex, pace) => {
+  const p = plan(sessions, ex, pace), got = p ? p.weight + ' x ' + p.reps + ' ' + p.stage : null;
   const ok = got === want; if (!ok) fail++;
   console.log((ok ? 'ok   ' : 'FAIL ') + name.padEnd(64) + '-> ' + got + (ok ? '' : '   expected ' + want));
 };
@@ -138,6 +138,32 @@ console.log('What the coach says after the last set');
   says('3x9 at 20', EX, three(20, 9), null, '');
   says('3x7 at 30, first time', EX, three(30, 7), three(30), '');
   says('3x7 at 30, second time running', EX, three(30, 7), three(30, 7), 'Next time, drop back to 25 pounds.');
+}
+
+console.log('Gradual pace: 10, then 12, then 15 two sessions running, then the weight goes up');
+{
+  const G = 'gradual';
+  check('3x10 at 20', [three(20)], '20 x 12 stretch', EX, G);
+  check('3x12 at 20: on to 15, not up', [three(20, 12)], '20 x 15 stretch', EX, G);
+  check('15, 13, 12 at 20 (part way to 15)', [S([20, 15], [20, 13], [20, 12])], '20 x 15 stretch', EX, G);
+  check('3x15 at 20, the first time: once more', [three(20, 15), three(20, 12)], '20 x 15 confirm', EX, G);
+  check('3x15 at 20, two sessions running: up', [three(20, 15), three(20, 15)], '22.5 x 10 up', EX, G);
+  check('3x15 at 30, two sessions running: up by 5', [three(30, 15), three(30, 15)], '35 x 10 up', EX, G);
+  check('3x15 at 20, then 15, 14, 15: back to aiming for 15', [S([20, 15], [20, 14], [20, 15]), three(20, 15)], '20 x 15 stretch', EX, G);
+  check('3x15 at 22.5 today, 3x15 at 20 before: once more', [three(22.5, 15), three(20, 15)], '22.5 x 15 confirm', EX, G);
+  check('3x9 at 15', [three(15, 9)], '15 x 10 same', EX, G);
+  check('3x7 at 30, two sessions running: drops back', [three(30, 7), three(30, 7)], '25 x 10 down', EX, G);
+  check('a 3x8 program: 8, then 10, then 13', [three(40, 10)], '40 x 13 stretch', { ...EX, reps: 8 }, G);
+  check('standard is unchanged: 3x12 at 20 goes up', [three(20, 12)], '22.5 x 10 up', EX, 'standard');
+
+  const api = make({}, 'lbs', G);
+  const says = (name, ex, today, earlier, want) => {
+    const got = api.progressionNote(ex, api.progressionFor(ex, today, earlier)), ok = got === want; if (!ok) fail++;
+    console.log((ok ? 'ok   ' : 'FAIL ') + name.padEnd(64) + '-> ' + JSON.stringify(got) + (ok ? '' : '   expected ' + JSON.stringify(want)));
+  };
+  says('3x12 at 20, was aiming for 12', { ...EX, targetReps: 12 }, three(20, 12), null, 'Next time, aim for 15 reps on every set.');
+  says('3x15 at 20, the first time', { ...EX, targetReps: 15 }, three(20, 15), three(20, 12), '15 on every set. Do that once more next time and you go up to 22.5 pounds.');
+  says('3x15 at 20, second time running', { ...EX, targetReps: 15 }, three(20, 15), three(20, 15), 'Next time, go up to 22.5 pounds.');
 }
 
 console.log(fail ? '\n' + fail + ' FAILED' : '\nall passed');
