@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=117">
+<link rel="stylesheet" href="larofit.css?v=118">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -819,10 +819,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=117"></script>
-<script src="larofit-exercises.js?v=117"></script>
+<script src="supabase-client.js?v=118"></script>
+<script src="larofit-exercises.js?v=118"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=117"></script>
+<script src="larofit-nav.js?v=118"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -1846,7 +1846,7 @@ function buildExParams(ex, ei) {
     <div class="bldr-param">
       <div class="bldr-param-label">${label}</div>
       <input class="bldr-param-input" type="${inputType}"
-        value="${ex[key] ?? ''}" min="${min}" max="${max}" step="${step}"
+        value="${key === 'restAfterSec' ? (ex.restAfterSec ?? exerciseRestAfterDefault(ex)) : (ex[key] ?? '')}" min="${min}" max="${max}" step="${step}"
         onchange="updateExParam(${ei},'${key}',this.value)">
       <div class="bldr-param-unit">${unit}</div>
     </div>`;
@@ -1855,33 +1855,39 @@ function buildExParams(ex, ei) {
     ${p('Sets',   'sets',        'sets', 1, 20)}
     ${p('Weight', 'weight',      weightUnitLabel(),   0, 999, '0.5')}
     ${p('Reps',   'reps',        'reps', 1, 100)}
-    ${p('Rest',   'restSec',     'sec',  0, 600, '15')}`;
+    ${p('Set rest', 'restSec',   'sec',  0, 600, '15')}
+    ${p('Rest after', 'restAfterSec', 'sec', 0, 900, '15')}`;
 
   if (rt === 'reps' || rt === 'reps_only') return `
     ${p('Sets',   'sets',        'sets', 1, 20)}
     ${p('Reps',   'reps',        'reps', 1, 100)}
-    ${p('Rest',   'restSec',     'sec',  0, 600, '15')}`;
+    ${p('Set rest', 'restSec',   'sec',  0, 600, '15')}
+    ${p('Rest after', 'restAfterSec', 'sec', 0, 900, '15')}`;
 
   if (rt === 'duration') return `
     ${p('Sets',   'sets',        'sets', 1, 20)}
     ${p('Duration','durationSec','sec',  5, 3600, '5')}
-    ${p('Rest',   'restSec',     'sec',  0, 600,  '15')}`;
+    ${p('Set rest', 'restSec',   'sec',  0, 600,  '15')}
+    ${p('Rest after', 'restAfterSec', 'sec', 0, 900, '15')}`;
 
   if (rt === 'cardio') return `
     ${p('Duration','durationMin','min',  1, 300)}
-    ${p('Speed',   'speed',      'mph',  0, 30,   '0.1')}`;
+    ${p('Speed',   'speed',      'mph',  0, 30,   '0.1')}
+    ${p('Rest after', 'restAfterSec', 'sec', 0, 900, '15')}`;
 
   if (rt === 'reps_duration') return `
     ${p('Sets',     'sets',        'sets', 1, 20)}
     ${p('Reps',     'reps',        'reps', 1, 100)}
     ${p('Duration', 'durationSec', 'sec',  5, 3600, '5')}
-    ${p('Rest',     'restSec',     'sec',  0, 600,  '15')}`;
+    ${p('Set rest', 'restSec',   'sec',  0, 600,  '15')}
+    ${p('Rest after', 'restAfterSec', 'sec', 0, 900, '15')}`;
 
   // fallback
   return `
     ${p('Sets', 'sets',    'sets', 1, 20)}
     ${p('Reps', 'reps',    'reps', 1, 100)}
-    ${p('Rest', 'restSec', 'sec',  0, 600, '15')}`;
+    ${p('Set rest', 'restSec', 'sec',  0, 600, '15')}
+    ${p('Rest after', 'restAfterSec', 'sec', 0, 900, '15')}`;
 }
 
 function renderExList(noAnim) {
@@ -1923,6 +1929,7 @@ function updateExParam(ei, key, val) {
   const session = currentSession();
   if (!session || !session.exercises[ei]) return;
   const floatKeys = ['weight', 'distance', 'speed'];
+  if (key === 'restAfterSec' && String(val).trim() === '') { delete session.exercises[ei].restAfterSec; renderExList(true); return; }
   session.exercises[ei][key] = floatKeys.includes(key) ? (parseFloat(val) || 0) : (parseInt(val) || 0);
 }
 

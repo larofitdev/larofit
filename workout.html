@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=117">
+<link rel="stylesheet" href="larofit.css?v=118">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -747,10 +747,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=117"></script>
-<script src="larofit-exercises.js?v=117"></script>
+<script src="supabase-client.js?v=118"></script>
+<script src="larofit-exercises.js?v=118"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=117"></script>
+<script src="larofit-nav.js?v=118"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1737,6 +1737,7 @@ function workoutExerciseFrom(ex) {
     durationSec: timed ? holdTargetFor({ id: exN.id, name: exN.name, planHold }) : (exN.durationSec || null),   // today's hold
     planHold,
     restSec:    exN.restSec || 90,
+    restAfterSec: exN.restAfterSec ?? null,   // rest before the next exercise, when the program set one
     type,
     mediaUrl:   lookupMediaUrl(exN.id) || exN.mediaUrl,
     planWeight: parseFloat(exN.weight) || 0,   // weight set in the program builder
@@ -2452,7 +2453,7 @@ function logSet(exIdx, setIdx) {
 
   if (allDone) {
     const nextIdx = nextIncompleteIdx(exIdx);
-    if (nextIdx !== -1) startRest(ex.restSec, () => goToEx(nextIdx), nextExerciseLabel(nextIdx));
+    if (nextIdx !== -1) startRest(restAfter(ex), () => goToEx(nextIdx), nextExerciseLabel(nextIdx));
     else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
     fetchSetCoaching(ex, setIdx, weight, reps);
   } else {
@@ -2478,7 +2479,7 @@ function logBWSet(exIdx, setIdx) {
   saveSnapshot();
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); updateOverallProgress();
-  if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
+  if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
   else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
 }
 
@@ -2501,7 +2502,7 @@ function logTimedSet(exIdx, setIdx) {
   const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); updateOverallProgress();
   if (allDone) holdFinished(ex);
-  if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
+  if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
   else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
 }
 
@@ -2524,7 +2525,7 @@ function logCardioSet(exIdx, saidDistance) {
   saveSnapshot();
   renderSets(ex, null); updateOverallProgress();
   const ni = nextIncompleteIdx(exIdx);
-  if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: '+exercises[ni].name);
+  if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: '+exercises[ni].name);
   else { checkAllDone(); }
 }
 
@@ -2702,7 +2703,7 @@ function finishHold(actualSecs) {
   if (allDone) holdFinished(ex);
   if (allDone) {
     const ni = nextIncompleteIdx(exIdx);
-    if (ni !== -1) startRest(ex.restSec, () => goToEx(ni), 'Next: ' + exercises[ni].name);
+    if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: ' + exercises[ni].name);
     else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
   } else {
     startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set ' + (holdSetIdx + 2) + ' of ' + ex.sets + ' up next');
@@ -3721,7 +3722,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 104;
+const VOICE_BUILD = 105;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4600,7 +4601,7 @@ function voicePrefetchForExercise(exIdx) {
   for (let n = 2; n <= Math.min(parseInt(ex.sets) || 1, 6); n++) voicePrefetch('Set ' + n + '.');
   const ni = nextIncompleteIdx(exIdx);
   if (ni !== -1) {
-    voicePrefetch(voiceNextExerciseLine(ni));
+    voicePrefetch(voiceNextExerciseLine(ni, exIdx));
     voicePrefetch(exercises[ni].name + '. Say your reps when finished.');
   }
 }
@@ -4645,14 +4646,21 @@ function voiceLogSet(reps, saidWeight) {
   // Then what's next and at what weight, straight away
   if (exDone) {
     const ni = nextIncompleteIdx(p.exIdx);
-    if (ni !== -1) { speakText(voiceNextExerciseLine(ni)); voicePreAnnounced = ni; }
+    if (ni !== -1) { speakText(voiceNextExerciseLine(ni, p.exIdx)); voicePreAnnounced = ni; }
     return;
   }
 }
 
 // "Next, Dumbbell Chest Fly. Go up to 45 pounds." — the weight is what its sets are pre-filled with
-function voiceNextExerciseLine(exIdx) {
-  return 'Next, ' + voiceExerciseLine(exercises[exIdx], voiceTargetFor(exIdx)) + '.';
+// Rest before the next exercise (the rule is in larofit-exercises.js); the set rest without it
+function restAfter(ex) { return typeof exerciseRestAfter === 'function' ? exerciseRestAfter(ex) : (parseInt(ex.restSec) || 90); }
+
+// "Rest 2 minutes. Next, Machine Chest Press, 75 pounds, 10 reps." The rest is said when it is longer
+// than the rest between sets, so the longer gap isn't a surprise.
+function voiceNextExerciseLine(exIdx, fromIdx) {
+  const from = exercises[fromIdx], rest = from ? restAfter(from) : 0;
+  const lead = from && rest > (parseInt(from.restSec) || 90) ? 'Rest ' + voiceSayTime(rest) + '. ' : '';
+  return lead + 'Next, ' + voiceExerciseLine(exercises[exIdx], voiceTargetFor(exIdx)) + '.';
 }
 
 // "Dumbbell Chest Fly, 40 pounds, 10 reps" — an exercise with the weight its sets are filled with
@@ -5388,7 +5396,7 @@ function voiceAfterLog(exIdx, msg) {
   if (exercises[exIdx].coachNext && exercises[exIdx].coachNext.note) speakText(exercises[exIdx].coachNext.note);
   if (exercises.every(ex => ex.loggedSets.every(st => st.logged))) return;
   const ni = nextIncompleteIdx(exIdx);
-  if (ni !== -1) { speakText(voiceNextExerciseLine(ni)); voicePreAnnounced = ni; }
+  if (ni !== -1) { speakText(voiceNextExerciseLine(ni, exIdx)); voicePreAnnounced = ni; }
 }
 
 // "No, that was wrong" after a hold or cardio log: take it back and hear it again

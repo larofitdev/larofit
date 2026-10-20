@@ -27257,3 +27257,29 @@ const EXERCISE_LIBRARY = LAROFIT_EXERCISES.reduce((lib, ex) => {
   lib[key].push(ex);
   return lib;
 }, {});
+
+// ── REST BEFORE THE NEXT EXERCISE ─────────────────────────────
+// After an exercise's last set the rest is longer than between its sets, and how much
+// longer depends on the kind of exercise (seconds):
+//   barbell squats and hinges (deadlifts)                         180
+//   weighted compound lifts for chest, back, legs, glutes and
+//   shoulders (presses, rows, pulldowns, leg press, lunges)        120
+//   isolation, bodyweight, core, lighter pulls for the shoulders   90
+//   cardio, stretching, mobility                                   60
+// A program can set its own for any exercise (Builder → Rest after).
+function exerciseRestAfterDefault(ex) {
+  const e = (ex && typeof LAROFIT_EXERCISES !== 'undefined' && LAROFIT_EXERCISES.find(x => x.id === ex.id)) || ex || {};
+  const rt = e.recordType || (ex && ex.type === 'cardio' ? 'cardio' : '');
+  if (rt === 'cardio' || e.movement === 'Stretch' || e.movement === 'Mobility') return 60;
+  const loaded = ['barbell', 'dumbbells', 'machine_cable', 'kettlebells', 'ez_bar'].includes(e.equipment);
+  const compound = ['Squat', 'Hinge', 'Lunge', 'Push', 'Pull', 'Compound'].includes(e.movement);
+  const big = ['chest', 'back', 'upper_legs', 'glutes', 'shoulders'].includes(e.primaryMuscle);
+  if (!(compound && loaded && big && rt === 'weight_reps')) return 90;
+  if (e.movement === 'Pull' && e.primaryMuscle === 'shoulders') return 90;   // face pulls, rear delt rows
+  if (e.equipment === 'barbell' && (e.movement === 'Squat' || e.movement === 'Hinge')) return 180;
+  return 120;
+}
+function exerciseRestAfter(ex) {
+  const own = ex && parseInt(ex.restAfterSec);
+  return own >= 0 ? own : exerciseRestAfterDefault(ex);
+}
