@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=125">
+<link rel="stylesheet" href="larofit.css?v=126">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -539,11 +539,14 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .lib-eq-chip.active {
   background: var(--volt-bg); color: var(--volt-dark); border-color: var(--volt-border);
 }
-.lib-ex-list {
-  flex: 1; overflow-y: auto;
+.lib-scroll {
+  flex: 1; min-height: 0; overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
+.lib-sheet-more { padding: 0 16px; border-bottom: 0.5px solid var(--border); }
+.lib-sheet-more .lib-group-hint { margin: 8px 0; }
+.lib-ex-list { }
 .lib-ex-row {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 16px; border-bottom: 0.5px solid var(--border);
@@ -591,7 +594,8 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .lib-seg-btn.on { background: var(--volt); border-color: var(--volt); color: #1a1a1a; }
 .lib-rounds { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-2); }
 .lib-rounds input { width: 52px; padding: 6px 4px; text-align: center; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); border: 1px solid var(--border-md); background: var(--bg); color: var(--text); }
-.lib-group-hint { font-size: 11px; color: var(--text-3); margin-top: 8px; line-height: 1.4; }
+.lib-group-hint { font-size: 11px; color: var(--text-3); line-height: 1.4; }
+.lib-group-setup { margin-bottom: 10px; }
 .lib-ex-row.already-added .lib-ex-add {
   background: var(--success-bg); color: var(--success); font-size: 14px;
 }
@@ -864,10 +868,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=125"></script>
-<script src="larofit-exercises.js?v=125"></script>
+<script src="supabase-client.js?v=126"></script>
+<script src="larofit-exercises.js?v=126"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=125"></script>
+<script src="larofit-nav.js?v=126"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -1050,17 +1054,23 @@ button, input, select, a, textarea { touch-action: manipulation; }
         autocomplete="off" autocorrect="off" spellcheck="false"
       >
     </div>
-    <div class="lib-filter-row" id="lib-muscle-row"></div>
-    <div class="lib-eq-row" id="lib-eq-row"></div>
-    <div class="lib-create-row" onclick="goCreateCustom()">
-      <div class="lib-create-icon">+</div>
-      <div>
-        <div class="lib-create-label">Create custom exercise</div>
-        <div class="lib-create-sub">Can't find it? Add your own</div>
+  </div>
+  <!-- Scrolls as one: the filters move out of the way so more of the list shows -->
+  <div class="lib-scroll" id="lib-scroll">
+    <div class="lib-sheet-more">
+      <div class="lib-group-hint" id="lib-group-hint" style="display:none;"></div>
+      <div class="lib-filter-row" id="lib-muscle-row"></div>
+      <div class="lib-eq-row" id="lib-eq-row"></div>
+      <div class="lib-create-row" onclick="goCreateCustom()">
+        <div class="lib-create-icon">+</div>
+        <div>
+          <div class="lib-create-label">Create custom exercise</div>
+          <div class="lib-create-sub">Can't find it? Add your own</div>
+        </div>
       </div>
     </div>
+    <div class="lib-ex-list" id="lib-results"></div>
   </div>
-  <div class="lib-ex-list" id="lib-results"></div>
   <div class="lib-pick-bar" id="lib-pick-bar">
     <button class="btn btn-volt btn-full" id="lib-pick-btn" onclick="addPicked()">Add</button>
   </div>
@@ -2273,6 +2283,7 @@ function openLibrary(mode) {
   document.getElementById('lib-group-setup').style.display = libMode === 'group' ? '' : 'none';
   renderGroupSetup();
   updatePickBar();
+  document.getElementById('lib-scroll').scrollTop = 0;
   document.getElementById('lib-sheet').classList.add('open');
   document.getElementById('lib-backdrop').classList.add('open');
   document.getElementById('lib-search').value = '';
@@ -2377,11 +2388,13 @@ function renderGroupSetup() {
       <button class="lib-seg-btn${libGroupTimed ? '' : ' on'}" onclick="setLibGroupTimed(false)" aria-pressed="${!libGroupTimed}">Reps</button>
       <button class="lib-seg-btn${libGroupTimed ? ' on' : ''}" onclick="setLibGroupTimed(true)" aria-pressed="${libGroupTimed}"><i class="ti ti-clock" aria-hidden="true"></i> Timed</button>
       <label class="lib-rounds">Rounds <input type="number" inputmode="numeric" min="1" max="20" value="${libGroupRounds}" onchange="libGroupRounds = Math.max(1, parseInt(this.value) || 3); this.value = libGroupRounds;"></label>
-    </div>
-    <div class="lib-group-hint">${libGroupTimed
-      ? 'Each exercise is worked for 40 seconds, with 20 seconds to move to the next. You can change the times after.'
-      : 'One set of each in turn, no rest between them, then a rest before the next round.'}
-      Tick 2 for a superset, 3 or more for a circuit, in the order you'll do them.</div>`;
+    </div>`;
+  const hint = document.getElementById('lib-group-hint');
+  hint.style.display = libMode === 'group' ? '' : 'none';
+  hint.textContent = (libGroupTimed
+    ? 'Each exercise is worked for 40 seconds, with 20 seconds to move to the next. You can change the times after. '
+    : 'One set of each in turn, no rest between them, then a rest before the next round. ')
+    + "Tick 2 for a superset, 3 or more for a circuit, in the order you'll do them.";
 }
 function setLibGroupTimed(on) { libGroupTimed = on; renderGroupSetup(); }
 
