@@ -826,6 +826,8 @@ LF.sendKeptVoiceLog = async function () {
   try {
     const kept = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
     if (!kept || !kept.text || kept.sent || !isOnline()) return;
+    // The workout page was sending it a moment ago: leave it, unless that was over 2 minutes back
+    if (kept.sendingAt && Date.now() - kept.sendingAt < 120000) return;
     const sb = await lfReady();
     const user = await LF.auth.user();
     if (!user) return;

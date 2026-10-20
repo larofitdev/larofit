@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=114">
+<link rel="stylesheet" href="larofit.css?v=115">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -769,10 +769,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=114"></script>
-<script src="larofit-exercises.js?v=114"></script>
+<script src="supabase-client.js?v=115"></script>
+<script src="larofit-exercises.js?v=115"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=114"></script>
+<script src="larofit-nav.js?v=115"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3741,7 +3741,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 101;
+const VOICE_BUILD = 102;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -3783,6 +3783,12 @@ async function voiceSendLog(reason, text) {
   // The same log a moment ago (several taps on LOG) is not sent again
   if (text === voiceLastSent.text && Date.now() - voiceLastSent.at < 10000) return true;
   voiceLastSent = { text, at: Date.now() };
+  // Note on the phone's copy that it is on its way: if the next page opens before the answer
+  // comes back, that page doesn't send it again (it tries later if it is still unsent)
+  try {
+    const kept = JSON.parse(localStorage.getItem('lf_voice_log') || 'null');
+    if (kept && !kept.sent) { kept.sendingAt = Date.now(); localStorage.setItem('lf_voice_log', JSON.stringify(kept)); }
+  } catch (e) {}
   try {
     const sb = await LF.ready();
     const user = await LF.auth.user();
