@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=118">
+<link rel="stylesheet" href="larofit.css?v=119">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -313,6 +313,29 @@ button, input, select, a, textarea { touch-action: manipulation; }
   user-select: none; -webkit-user-select: none;
 }
 .bldr-ex-card.no-anim { animation: none; }
+/* Superset / circuit: a bar down the left joins the cards, the settings sit on the first one */
+.bldr-ex-card.grouped { border-left: 3px solid var(--volt); }
+.bldr-ex-card.grouped-next { margin-bottom: -6px; }
+.bldr-group-head { background: var(--volt-bg); border-bottom: 0.5px solid var(--border); }
+.bldr-group-title {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px 0;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--volt-dark);
+}
+.bldr-group-timed {
+  margin-left: auto; min-height: 32px; padding: 0 12px; border-radius: 16px; cursor: pointer;
+  border: 1px solid var(--border-md); background: transparent; color: var(--text-2);
+  font-size: 12px; font-weight: 700; text-transform: none; letter-spacing: 0;
+  display: inline-flex; align-items: center; gap: 4px; -webkit-tap-highlight-color: transparent;
+}
+.bldr-group-timed.on { background: var(--volt); border-color: var(--volt); color: #1a1a1a; }
+.bldr-group-note { padding: 0 14px 10px; font-size: 11px; color: var(--text-3); }
+.bldr-link-row { border-top: 0.5px solid var(--border); display: flex; justify-content: center; }
+.bldr-link-btn {
+  min-height: 36px; padding: 0 12px; background: none; border: none; cursor: pointer;
+  color: var(--text-3); font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;
+  -webkit-tap-highlight-color: transparent;
+}
+.bldr-link-btn i { font-size: 15px; }
 .bldr-ex-card.dragging {
   animation: none;
   position: relative; z-index: 10;
@@ -819,10 +842,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=118"></script>
-<script src="larofit-exercises.js?v=118"></script>
+<script src="supabase-client.js?v=119"></script>
+<script src="larofit-exercises.js?v=119"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=118"></script>
+<script src="larofit-nav.js?v=119"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -1851,6 +1874,17 @@ function buildExParams(ex, ei) {
       <div class="bldr-param-unit">${unit}</div>
     </div>`;
 
+  // In a superset or circuit the rounds and rests belong to the group (its settings are on
+  // the first card); a timed circuit's stations are worked for the circuit's time
+  if (ex.group && ex.group.id) {
+    if (ex.group.timed) return rt === 'weight_reps' ? p('Weight', 'weight', weightUnitLabel(), 0, 999, '0.5')
+      : `<div class="bldr-param" style="grid-column:1/-1;"><div class="bldr-param-unit">Worked for ${parseInt(ex.group.workSec) || 40} seconds a round</div></div>`;
+    if (rt === 'weight_reps') return p('Weight', 'weight', weightUnitLabel(), 0, 999, '0.5') + p('Reps', 'reps', 'reps', 1, 100);
+    if (rt === 'duration') return p('Duration', 'durationSec', 'sec', 5, 3600, '5');
+    if (rt === 'cardio') return p('Duration', 'durationMin', 'min', 1, 300) + p('Speed', 'speed', 'mph', 0, 30, '0.1');
+    return p('Reps', 'reps', 'reps', 1, 100);
+  }
+
   if (rt === 'weight_reps') return `
     ${p('Sets',   'sets',        'sets', 1, 20)}
     ${p('Weight', 'weight',      weightUnitLabel(),   0, 999, '0.5')}
@@ -1904,9 +1938,12 @@ function renderExList(noAnim) {
     return;
   }
 
-  const count = session.exercises.length;
-  list.innerHTML = session.exercises.map((ex, ei) => `
-    <div class="bldr-ex-card${noAnim ? ' no-anim' : ''}" id="ex-card-${ei}" data-idx="${ei}">
+  normalizeGroups(session.exercises);
+  const exs = session.exercises, count = exs.length;
+  const sameGroup = (a, b) => !!(a && b && a.group && b.group && a.group.id === b.group.id);
+  list.innerHTML = exs.map((ex, ei) => `
+    <div class="bldr-ex-card${noAnim ? ' no-anim' : ''}${ex.group ? ' grouped' : ''}${sameGroup(ex, exs[ei + 1]) ? ' grouped-next' : ''}" id="ex-card-${ei}" data-idx="${ei}">
+      ${ex.group && !sameGroup(exs[ei - 1], ex) ? buildGroupHead(ei) : ''}
       <div class="bldr-ex-card-header">
         <span class="bldr-ex-drag" title="Drag to reorder" aria-hidden="true">⠿</span>
         <div style="flex:1;min-width:0;">
@@ -1920,9 +1957,129 @@ function renderExList(noAnim) {
       <div class="bldr-ex-params">
         ${buildExParams(ex, ei)}
       </div>
+      ${ei < count - 1 ? `<div class="bldr-link-row"><button class="bldr-link-btn" onclick="toggleLink(${ei})">${
+        sameGroup(ex, exs[ei + 1]) ? '<i class="ti ti-unlink" aria-hidden="true"></i> Unlink from the next exercise'
+        : ex.group || exs[ei + 1].group ? '<i class="ti ti-link" aria-hidden="true"></i> Link with the next exercise'
+        : '<i class="ti ti-link" aria-hidden="true"></i> Superset with the next exercise'}</button></div>` : ''}
     </div>`).join('');
 
   initDrag();
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SUPERSETS AND CIRCUITS
+// ══════════════════════════════════════════════════════════════════════
+// Exercises next to each other can be linked: two make a superset, three or more a circuit.
+// Every exercise in the group carries the same settings (the workout reads them from it):
+//   group = { id, rounds, roundRestSec, restAfterSec (optional), timed, workSec, moveSec }
+// The rounds are the sets. In the workout the next exercise follows straight away, the
+// round rest comes after each round, and "rest after" after the last. In a timed circuit
+// each exercise is a station worked for workSec with moveSec to get to the next.
+function newGroupId() { return 'g' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// After any change: a group's exercises sit together (one that has been moved away
+// leaves it), a group of one is no group, and every exercise has the group's settings
+function normalizeGroups(exs) {
+  const seen = new Set();
+  for (let i = 0; i < exs.length;) {
+    const g = exs[i].group;
+    if (!g || !g.id) { delete exs[i].group; i++; continue; }
+    let j = i;
+    while (j + 1 < exs.length && exs[j + 1].group && exs[j + 1].group.id === g.id) j++;
+    if (j === i) delete exs[i].group;
+    else {
+      const id = seen.has(g.id) ? newGroupId() : g.id;
+      seen.add(id);
+      for (let k = i; k <= j; k++) { exs[k].group = { ...g, id }; exs[k].sets = parseInt(g.rounds) || 3; }
+    }
+    i = j + 1;
+  }
+}
+
+// The positions of the exercises in the group the exercise at ei is in
+function groupMembersAt(ei) {
+  const exs = currentSession().exercises, id = exs[ei].group && exs[ei].group.id;
+  return id ? exs.map((e, i) => (e.group && e.group.id === id ? i : -1)).filter(i => i !== -1) : [ei];
+}
+
+// Rest after the group: its own, or the longest of its exercises'
+function groupRestAfterDefault(ei) {
+  const exs = currentSession().exercises;
+  return Math.max(...groupMembersAt(ei).map(i => exerciseRestAfter(exs[i])));
+}
+
+function buildGroupHead(ei) {
+  const exs = currentSession().exercises, g = exs[ei].group, n = groupMembersAt(ei).length;
+  const q = (label, key, unit, min, max, step) => `
+    <div class="bldr-param">
+      <div class="bldr-param-label">${label}</div>
+      <input class="bldr-param-input" type="number" min="${min}" max="${max}" step="${step}"
+        value="${key === 'restAfterSec' ? (g.restAfterSec ?? groupRestAfterDefault(ei)) : (g[key] ?? '')}"
+        onchange="updateGroupParam(${ei},'${key}',this.value)">
+      <div class="bldr-param-unit">${unit}</div>
+    </div>`;
+  return `
+    <div class="bldr-group-head">
+      <div class="bldr-group-title"><i class="ti ti-link" aria-hidden="true"></i> ${n === 2 ? 'Superset' : 'Circuit'} · ${n} exercises
+        <button class="bldr-group-timed${g.timed ? ' on' : ''}" onclick="setGroupTimed(${ei}, ${!g.timed})" aria-pressed="${!!g.timed}"><i class="ti ti-clock" aria-hidden="true"></i> Timed</button>
+      </div>
+      <div class="bldr-ex-params">
+        ${q('Rounds', 'rounds', 'rounds', 1, 20, '1')}
+        ${g.timed ? q('Work', 'workSec', 'sec', 5, 600, '5') + q('Move', 'moveSec', 'sec', 0, 120, '5') : ''}
+        ${q('Round rest', 'roundRestSec', 'sec', 0, 600, '15')}
+        ${q('Rest after', 'restAfterSec', 'sec', 0, 900, '15')}
+      </div>
+      <div class="bldr-group-note">${g.timed
+        ? 'Each exercise is worked for the time set, then the timer moves you to the next.'
+        : 'One set of each exercise in turn, with no rest between them, then the round rest.'}</div>
+    </div>`;
+}
+
+// The link between the exercise at ei and the next: join them, or split the group there
+function toggleLink(ei) {
+  const session = currentSession();
+  if (!session) return;
+  const exs = session.exercises, a = exs[ei], b = exs[ei + 1];
+  if (!b) return;
+  if (a.group && b.group && a.group.id === b.group.id) {
+    const id = newGroupId();   // the exercises after the link become a group of their own (alone: none)
+    for (let k = ei + 1; k < exs.length && exs[k].group && exs[k].group.id === a.group.id; k++) exs[k].group = { ...exs[k].group, id };
+  } else if (a.group || b.group) {
+    const g = a.group || b.group, other = a.group ? b : a;
+    // b's whole group joins a's (or b joins it, or a joins b's)
+    if (a.group && b.group) { const old = b.group.id; exs.forEach(e => { if (e.group && e.group.id === old) e.group = { ...g }; }); }
+    else other.group = { ...g };
+  } else {
+    const g = { id: newGroupId(), rounds: Math.max(parseInt(a.sets) || 3, parseInt(b.sets) || 3), roundRestSec: Math.max(parseInt(a.restSec) || 60, parseInt(b.restSec) || 60),
+                timed: false, workSec: 40, moveSec: 20 };
+    a.group = { ...g }; b.group = { ...g };
+  }
+  renderExList(true);
+}
+
+// A setting of a group: changed on every exercise in it
+function updateGroupParam(ei, key, val) {
+  const exs = currentSession().exercises;
+  groupMembersAt(ei).forEach(i => {
+    const g = exs[i].group;
+    if (key === 'restAfterSec' && String(val).trim() === '') delete g.restAfterSec;   // back to the automatic one
+    else g[key] = Math.max(0, parseInt(val) || 0);
+    if (key === 'rounds') { g.rounds = Math.max(1, g.rounds); exs[i].sets = g.rounds; }
+  });
+  renderExList(true);
+}
+
+// Timed on or off: a timed circuit usually wants a longer rest between rounds
+function setGroupTimed(ei, on) {
+  const exs = currentSession().exercises;
+  groupMembersAt(ei).forEach(i => {
+    const g = exs[i].group;
+    g.timed = on;
+    g.workSec = parseInt(g.workSec) || 40; g.moveSec = g.moveSec ?? 20;
+    if (on && g.roundRestSec === 60) g.roundRestSec = 90;
+    else if (!on && g.roundRestSec === 90) g.roundRestSec = 60;
+  });
+  renderExList(true);
 }
 
 function updateExParam(ei, key, val) {

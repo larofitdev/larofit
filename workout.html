@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=118">
+<link rel="stylesheet" href="larofit.css?v=119">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -546,6 +546,11 @@ body.workout-active .lf-main-desktop { padding-top: 0 !important; }
 }
 .ex-name-bar-skip:active { background: var(--border); }
 .ex-name-bar-skip i { font-size: 14px; }
+/* "Superset · Round 2 of 3 · Curls → Triceps" above the exercise name */
+.ex-group-bar {
+  padding: 8px 16px 0; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--volt-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 #ex-replace-btn, #ex-remove-btn { min-width: 36px; min-height: 30px; justify-content: center; padding: 4px 8px; }
 #ex-replace-btn i, #ex-remove-btn i { font-size: 16px; }
 
@@ -747,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=118"></script>
-<script src="larofit-exercises.js?v=118"></script>
+<script src="supabase-client.js?v=119"></script>
+<script src="larofit-exercises.js?v=119"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=118"></script>
+<script src="larofit-nav.js?v=119"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -849,6 +854,9 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
           <i class="ti ti-player-play"></i> Show animation
         </div>
       </div>
+
+      <!-- Superset / circuit: which round, and the exercises in it -->
+      <div class="ex-group-bar" id="ex-group-bar" style="display:none;"></div>
 
       <!-- Exercise name + 1RM bar -->
       <div class="ex-name-bar">
@@ -1726,7 +1734,12 @@ function libRecordType(id) {
 function workoutExerciseFrom(ex) {
   // Normalize built-in record types from the library before building the row
   const lib = libRecordType(ex.id);
-  const exN = (lib && lib !== ex.recordType) ? { ...ex, recordType: lib } : ex;
+  let exN = (lib && lib !== ex.recordType) ? { ...ex, recordType: lib } : ex;
+  // In a superset or circuit the rounds are the sets; in a timed circuit every exercise is a
+  // station worked for the circuit's time, whatever kind of exercise it is
+  const g = exN.group && exN.group.id ? exN.group : null, station = !!(g && g.timed);
+  if (g) exN = { ...exN, sets: parseInt(g.rounds) || exN.sets };
+  if (station) exN = { ...exN, recordType: 'duration', type: 'timed_bodyweight', durationSec: parseInt(g.workSec) || 40 };
   const type = exTypeOf(exN), timed = type === 'timed_bodyweight' || type === 'hiit';
   const planHold = timed ? (parseInt(exN.durationSec) || parseInt(exN.reps) || 30) : null;   // what the program asks for
   return {
@@ -1734,10 +1747,11 @@ function workoutExerciseFrom(ex) {
     name:       exN.name || lookupExName(exN.id),
     sets:       exN.sets    || 3,
     reps:       exN.reps    || 10,
-    durationSec: timed ? holdTargetFor({ id: exN.id, name: exN.name, planHold }) : (exN.durationSec || null),   // today's hold
+    durationSec: station ? exN.durationSec : timed ? holdTargetFor({ id: exN.id, name: exN.name, planHold }) : (exN.durationSec || null),   // today's hold
     planHold,
     restSec:    exN.restSec || 90,
     restAfterSec: exN.restAfterSec ?? null,   // rest before the next exercise, when the program set one
+    group:      g,   // superset or circuit (see groupOf)
     type,
     mediaUrl:   lookupMediaUrl(exN.id) || exN.mediaUrl,
     planWeight: parseFloat(exN.weight) || 0,   // weight set in the program builder
@@ -1924,6 +1938,12 @@ function renderExercise() {
 
   // Name bar
   document.getElementById('ex-name').textContent = ex.name;
+  const grp = groupOf(currentExIdx), grpBar = document.getElementById('ex-group-bar');
+  grpBar.style.display = grp ? '' : 'none';
+  if (grp) {
+    const round = Math.min(ex.loggedSets.filter(st => st.logged).length + 1, ex.loggedSets.length);
+    grpBar.textContent = groupLabel(grp) + ' · Round ' + round + ' of ' + ex.loggedSets.length + ' · ' + grp.members.map(i => exercises[i].name).join(' → ');
+  }
 
   // Skip button — only meaningful when there's more than one exercise
   const skipBtn = document.getElementById('ex-skip-btn');
@@ -2451,18 +2471,23 @@ function logSet(exIdx, setIdx) {
 
   if (workoutMode === 'voice' && !allDone) voicePending = { exIdx, setIdx: setIdx+1, sugWeight: parseFloat(weight)||0 };
 
-  if (allDone) {
-    const nextIdx = nextIncompleteIdx(exIdx);
-    if (nextIdx !== -1) startRest(restAfter(ex), () => goToEx(nextIdx), nextExerciseLabel(nextIdx));
+  fetchSetCoaching(ex, setIdx, weight, reps);
+  afterSetLogged(exIdx, setIdx);
+}
+
+// After a set is logged: the rest, then the next set; after an exercise's last set, the
+// longer rest and the next exercise. A superset or circuit goes round its exercises
+// instead (groupNextStep).
+function afterSetLogged(exIdx, setIdx) {
+  const ex = exercises[exIdx];
+  if (groupOf(exIdx)) { groupNextStep(exIdx); return; }
+  if (ex.loggedSets.every(s => s.logged)) {
+    const ni = nextIncompleteIdx(exIdx);
+    if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), nextExerciseLabel(ni));
     else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
-    fetchSetCoaching(ex, setIdx, weight, reps);
   } else {
-    const nextSetNum = setIdx + 2;
-    fetchSetCoaching(ex, setIdx, weight, reps);
-    startRest(ex.restSec, async () => {
-      renderSets(ex, getLastSession(ex.id || ex.name));
-      voiceNextSet(exIdx);
-    }, 'Set ' + nextSetNum + ' of ' + ex.sets + ' up next');
+    startRest(ex.restSec, () => { renderSets(ex, isStrength(ex) ? getLastSession(ex.id || ex.name) : null); voiceNextSet(exIdx); },
+              'Set ' + (setIdx + 2) + ' of ' + ex.sets + ' up next');
   }
 }
 
@@ -2477,10 +2502,8 @@ function logBWSet(exIdx, setIdx) {
   if (_nxtBW && !_nxtBW.logged && reps) _nxtBW.reps = reps;
   checkPR(ex);
   saveSnapshot();
-  const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); updateOverallProgress();
-  if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
-  else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
+  afterSetLogged(exIdx, setIdx);
 }
 
 function fillBWSet(exIdx, setIdx, reps) {
@@ -2499,11 +2522,9 @@ function logTimedSet(exIdx, setIdx) {
   if (_nxtT && !_nxtT.logged && t) _nxtT.holdTime = t;
   checkPR(ex);
   saveSnapshot();
-  const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); updateOverallProgress();
-  if (allDone) holdFinished(ex);
-  if (allDone) { const ni = nextIncompleteIdx(exIdx); if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: '+exercises[ni].name); else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); } }
-  else { startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set '+(setIdx+2)+' of '+ex.sets+' up next'); }
+  if (ex.loggedSets.every(s => s.logged)) holdFinished(ex);
+  afterSetLogged(exIdx, setIdx);
 }
 
 // Cardio is logged as time and speed; the distance is worked out from them (speed × time),
@@ -2524,6 +2545,7 @@ function logCardioSet(exIdx, saidDistance) {
   checkPR(ex);
   saveSnapshot();
   renderSets(ex, null); updateOverallProgress();
+  if (groupOf(exIdx)) { groupNextStep(exIdx); return; }
   const ni = nextIncompleteIdx(exIdx);
   if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: '+exercises[ni].name);
   else { checkAllDone(); }
@@ -2650,8 +2672,10 @@ function startHold(exIdx, setIdx) {
   holdRemaining = secs;
   holdElapsed   = 0;
 
-  document.getElementById('hold-set-label').textContent =
-    'Set ' + (setIdx + 1) + ' of ' + ex.loggedSets.length + ' · ' + secs + 's target';
+  const grp = groupOf(exIdx);
+  document.getElementById('hold-set-label').textContent = grp
+    ? groupLabel(grp) + ' · Round ' + (setIdx + 1) + ' of ' + ex.loggedSets.length + ' · ' + secs + 's'
+    : 'Set ' + (setIdx + 1) + ' of ' + ex.loggedSets.length + ' · ' + secs + 's target';
   updateHoldDisplay();
   document.getElementById('hold-overlay').classList.add('show');
 
@@ -2697,18 +2721,11 @@ function finishHold(actualSecs) {
   set.logged   = true;
   checkPR(ex);
   saveSnapshot();
-  const allDone = ex.loggedSets.every(s => s.logged);
   renderSets(ex, null); updateOverallProgress();
-  const exIdx = holdExIdx;
-  if (allDone) holdFinished(ex);
-  if (allDone) {
-    const ni = nextIncompleteIdx(exIdx);
-    if (ni !== -1) startRest(restAfter(ex), () => goToEx(ni), 'Next: ' + exercises[ni].name);
-    else { startRest(ex.restSec, null, 'Last exercise done!'); checkAllDone(); }
-  } else {
-    startRest(ex.restSec, () => { renderSets(ex, null); voiceNextSet(exIdx); }, 'Set ' + (holdSetIdx + 2) + ' of ' + ex.sets + ' up next');
-  }
-  voiceTimedLogged(exIdx, holdSetIdx, actualSecs);   // in a Voice workout: read it back
+  const exIdx = holdExIdx, setIdx = holdSetIdx;   // (a circuit can start the next station's timer straight away)
+  if (ex.loggedSets.every(s => s.logged)) holdFinished(ex);
+  afterSetLogged(exIdx, setIdx);
+  voiceTimedLogged(exIdx, setIdx, actualSecs);   // in a Voice workout: read it back
 }
 
 // ── REST TIMER ────────────────────────────────────────────────
@@ -3590,7 +3607,7 @@ function progressionNote(ex, p) {
 // The plan for today, from the last one or two sessions of this exercise
 function coachPlanFor(ex) {
   if (!aiProgressionOn()) return null;
-  const hist = getExerciseHistory(ex.id || ex.name, 2);
+  const hist = getExerciseHistory(ex.id || ex.name, 8).filter(h => progTopWeight(h.sets) > 0).slice(0, 2);
   if (!hist.length) return null;
   const p = progressionFor(ex, hist[0].sets, hist[1] ? hist[1].sets : null);
   if (!p) return null;
@@ -3648,6 +3665,7 @@ function holdProgression(ex, sets, earlier) {
 // The last set of a hold exercise is in: keep next time's target with the workout
 function holdFinished(ex) {
   if (!isTimed(ex) || !ex.loggedSets.every(st => st.logged)) return;
+  if (ex.group && ex.group.timed) return;   // a circuit station: its time is the circuit's, not a hold to build up
   const before = getExerciseHistory(ex.id || ex.name, 1)[0];
   const p = holdProgression(ex, ex.loggedSets, before);
   if (!p) return;
@@ -3687,7 +3705,7 @@ function fetchSetCoaching(ex, setIdx, weight, reps) {
   if (restAiSection) restAiSection.style.display = 'none';
   if (!aiProgressionOn()) return;
   if (!ex.loggedSets.every(st => st.logged) || !(parseFloat(weight) > 0)) return;
-  const before = getExerciseHistory(ex.id || ex.name, 1)[0];
+  const before = getExerciseHistory(ex.id || ex.name, 8).find(h => progTopWeight(h.sets) > 0);
   const p = progressionFor(ex, ex.loggedSets, before ? before.sets : null);
   if (!p) return;
   const note = progressionNote(ex, p);
@@ -3722,7 +3740,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 105;
+const VOICE_BUILD = 106;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4532,6 +4550,8 @@ function voiceAnnounceExercise(ex) {
   if (target.kind) {
     voicePhase = target.kind === 'timed' ? 'log_time' : 'log_cardio';
     voicePreAnnounced = -1;
+    // A circuit station the circuit is starting itself: its timer is already running
+    if (target.kind === 'timed' && groupAutoStart === currentExIdx) { groupAutoStart = -1; voicePrompt(ex.name + '. Go.', true); return; }
     voicePrompt(target.kind === 'timed'
       ? voiceExerciseLine(ex, target) + '. Say start and I will time you, or say your time when finished.'
       : ex.name + '. ' + voiceLastCardio(ex), true);
@@ -4643,12 +4663,73 @@ function voiceLogSet(reps, saidWeight) {
   if (exDone && exercises[p.exIdx].coachNext && exercises[p.exIdx].coachNext.note) speakText(exercises[p.exIdx].coachNext.note);
   const allDone = exercises.every(ex => ex.loggedSets.every(s => s.logged));
   if (allDone) return;   // still listening, so the last set can be corrected before tapping Finish
-  // Then what's next and at what weight, straight away
-  if (exDone) {
+  // Then what's next and at what weight, straight away (in a superset the next exercise comes straight after)
+  if (exDone && !groupContinues(p.exIdx)) {
     const ni = nextIncompleteIdx(p.exIdx);
     if (ni !== -1) { speakText(voiceNextExerciseLine(ni, p.exIdx)); voicePreAnnounced = ni; }
     return;
   }
+}
+
+// ── SUPERSETS AND CIRCUITS ─────────────────────────────────────
+// Exercises next to each other can be grouped in Builder: two make a superset, three or more
+// a circuit. Each round is one set of every exercise in turn, so the rounds are the sets.
+//   ex.group = { id, rounds, roundRestSec, restAfterSec (optional), timed, workSec, moveSec }
+// In a rep group the next exercise follows straight away and the group's rest comes after
+// each round. In a timed circuit every exercise is a station worked for workSec with moveSec
+// to get to the next, and the timer runs the round by itself.
+let groupAutoStart = -1;   // a timed station the circuit is starting itself (the coach just says go)
+
+// The group this exercise is in today, with the positions of its exercises; null if none
+function groupOf(exIdx) {
+  const ex = exercises[exIdx], id = ex && ex.group && ex.group.id;
+  if (!id) return null;
+  const members = exercises.map((e, i) => (e.group && e.group.id === id ? i : -1)).filter(i => i !== -1);
+  return members.length >= 2 ? { ...ex.group, members } : null;
+}
+function exAllLogged(i) { return exercises[i].loggedSets.every(st => st.logged); }
+function groupLabel(g) { return g.members.length === 2 ? 'Superset' : 'Circuit'; }
+// Is there more of this exercise's superset or circuit still to do?
+function groupContinues(exIdx) { const g = groupOf(exIdx); return !!g && !g.members.every(exAllLogged); }
+
+// The rest before the next exercise; for a group, after its last round
+function restAfterAt(exIdx) {
+  const g = groupOf(exIdx);
+  if (!g) return restAfter(exercises[exIdx]);
+  const own = parseInt(g.restAfterSec);
+  return own >= 0 ? own : Math.max(...g.members.map(i => restAfter(exercises[i])));
+}
+
+// A set of a grouped exercise is in: on to the next exercise of the round; at the end of a
+// round, the group's rest and back to the first; after the last round, the longer rest.
+function groupNextStep(exIdx) {
+  const g = groupOf(exIdx), done = i => exercises[i].loggedSets.filter(st => st.logged).length;
+  if (g.members.every(exAllLogged)) {
+    const ni = nextIncompleteIdx(g.members[g.members.length - 1]);
+    if (ni !== -1) startRest(restAfterAt(exIdx), () => goToEx(ni), nextExerciseLabel(ni));
+    else { startRest(parseInt(g.roundRestSec) || 60, null, 'Last exercise done!'); checkAllDone(); }
+    return;
+  }
+  const round = done(exIdx), pos = g.members.indexOf(exIdx);
+  const next = g.members.slice(pos + 1).find(i => !exAllLogged(i) && done(i) < round);
+  if (next !== undefined) { groupMove(g, next, g.timed ? (parseInt(g.moveSec) || 0) : 0, nextExerciseLabel(next)); return; }
+  const first = g.members.find(i => !exAllLogged(i)), nextRound = Math.min(...g.members.map(done)) + 1;
+  groupMove(g, first, parseInt(g.roundRestSec) || 0, 'Round ' + nextRound + ' of ' + g.rounds + ' · ' + exercises[first].name, nextRound);
+}
+
+// Go to an exercise of the group after secs of rest; with none, straight away (in a Voice
+// workout once the coach has read back the set). A timed station starts its own timer.
+function groupMove(g, idx, secs, label, round) {
+  const go = () => {
+    if (round && workoutMode === 'voice') voiceSayFirst = 'Round ' + round + ' of ' + g.rounds + '.';
+    if (g.timed) groupAutoStart = idx;
+    goToEx(idx);
+    const setIdx = exercises[idx].loggedSets.findIndex(st => !st.logged);
+    if (g.timed && setIdx !== -1) startHold(idx, setIdx);
+  };
+  if (secs > 0) startRest(secs, go, label);
+  else if (workoutMode === 'voice') setTimeout(() => voiceSpeakChain.then(go), 0);
+  else go();
 }
 
 // "Next, Dumbbell Chest Fly. Go up to 45 pounds." — the weight is what its sets are pre-filled with
@@ -4658,8 +4739,9 @@ function restAfter(ex) { return typeof exerciseRestAfter === 'function' ? exerci
 // "Rest 2 minutes. Next, Machine Chest Press, 75 pounds, 10 reps." The rest is said when it is longer
 // than the rest between sets, so the longer gap isn't a surprise.
 function voiceNextExerciseLine(exIdx, fromIdx) {
-  const from = exercises[fromIdx], rest = from ? restAfter(from) : 0;
-  const lead = from && rest > (parseInt(from.restSec) || 90) ? 'Rest ' + voiceSayTime(rest) + '. ' : '';
+  const from = exercises[fromIdx], grp = from ? groupOf(fromIdx) : null, rest = from ? restAfterAt(fromIdx) : 0;
+  const between = grp ? (parseInt(grp.roundRestSec) || 0) : (parseInt(from && from.restSec) || 90);
+  const lead = from && rest > between ? 'Rest ' + voiceSayTime(rest) + '. ' : '';
   return lead + 'Next, ' + voiceExerciseLine(exercises[exIdx], voiceTargetFor(exIdx)) + '.';
 }
 
@@ -5218,7 +5300,7 @@ function applyExerciseSwap(exIdx, nw, wholeProgram) {
   if (!started) {
     // Today's workout: same sets, reps and rest, with the new exercise's own weights
     exercises[exIdx] = workoutExerciseFrom({ id: nw.id, name: nw.name, recordType: nw.recordType, sets: old.sets, reps: old.reps, restSec: old.restSec,
-                                             durationSec: old.planHold || old.durationSec || null, mediaUrl: nw.mediaUrl });
+                                             durationSec: old.planHold || old.durationSec || null, mediaUrl: nw.mediaUrl, group: old.group });
     stopRest();
   }
   saveSnapshot();
@@ -5395,6 +5477,7 @@ function voiceAfterLog(exIdx, msg) {
   if (!exercises[exIdx].loggedSets.every(st => st.logged)) return;
   if (exercises[exIdx].coachNext && exercises[exIdx].coachNext.note) speakText(exercises[exIdx].coachNext.note);
   if (exercises.every(ex => ex.loggedSets.every(st => st.logged))) return;
+  if (groupContinues(exIdx)) return;   // the circuit's next station is announced as it starts
   const ni = nextIncompleteIdx(exIdx);
   if (ni !== -1) { speakText(voiceNextExerciseLine(ni, exIdx)); voicePreAnnounced = ni; }
 }
