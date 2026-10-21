@@ -93,7 +93,7 @@ console.log('In the middle of a planned workout');
   const w3 = make(['Barbell Bench Press'], 'resting'); w3.hear('next');
   check('during a rest, "next" still just ends the rest', w3.calls.includes('skipRest') && w3.names().length === 1);
 }
-for (const phrase of ['ten', '10 at 20', 'twelve reps', 'yes', 'ready', 'press', 'that was hard', 'good set', 'one more', 'leg day', 'wait a second', 'heavy']) {
+for (const phrase of ['ten', '10 at 20', 'twelve reps', 'yes', 'ready', 'press', 'that was hard', 'good set', 'one more', 'leg day', 'wait a second', 'heavy', "Let's do this.", "Let's do it again", 'do this one']) {
   const w = make(['Barbell Bench Press'], 'confirm_weight'); w.hear(phrase); await w.settle();
   check(('"' + phrase + '"').padEnd(20) + ' does not change the exercise', w.names().length === 1 && w.current() === 'Barbell Bench Press' && !/Did you say/.test(last(w) || ''));
 }

@@ -57,6 +57,16 @@ const check = (name, ok, extra = '') => { console.log((ok ? 'ok   ' : 'FAIL ') +
   w.hear('12.5 for 10');
   check('saying it again logs the right numbers', w.sets(0).startsWith('L12.5x10'), w.sets(0));
 }
+{ // Talk that starts with "no" isn't a correction (2026-10-20: "No power off next." took set 2 back)
+  const w = make('');
+  w.hear('10 for 12');
+  w.hear('No power off next.');
+  check('"No power off next." leaves the set logged', w.sets(0).startsWith('L10x12'), w.sets(0));
+  w.hear('no, 12 for 10');
+  check('"no" with the right numbers still corrects it', w.sets(0).startsWith('L12x10'), w.sets(0));
+  w.hear('no');
+  check('"no" on its own still takes it back', w.sets(0).startsWith('-12x10'), w.sets(0));
+}
 { // Correction with the numbers in the same breath
   const w = make('');
   w.hear('20 for 20');
