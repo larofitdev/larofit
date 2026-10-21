@@ -858,6 +858,25 @@ LF.workoutsOn = function (programs, dateKey) {
   return out;
 };
 
+// ── SUPERSETS AND CIRCUITS IN A LIST ──────────────────────────
+// For showing a workout's exercises: whether a group starts at an exercise, the heading over
+// it ("Superset · 3 rounds", "Timed circuit · 4 exercises · 3 rounds"), and a summary of a
+// workout's groups ("1 superset, 1 circuit"). Groups are made in Builder (ex.group).
+LF.groups = {
+  size(exs, i) { const id = exs[i] && exs[i].group && exs[i].group.id; return id ? exs.filter(e => e.group && e.group.id === id).length : 0; },
+  inOne(exs, i) { return this.size(exs, i) >= 2; },
+  startsAt(exs, i) { return this.inOne(exs, i) && !(i > 0 && exs[i - 1].group && exs[i - 1].group.id === exs[i].group.id); },
+  heading(exs, i) {
+    const g = exs[i].group, n = this.size(exs, i);
+    return (g.timed ? 'Timed circuit' : n === 2 ? 'Superset' : 'Circuit') + (n > 2 ? ' · ' + n + ' exercises' : '') + ' · ' + (parseInt(g.rounds) || 3) + ' rounds';
+  },
+  summary(exs) {
+    let s = 0, c = 0;
+    (exs || []).forEach((e, i) => { if (this.startsAt(exs, i)) { if (this.size(exs, i) === 2 && !e.group.timed) s++; else c++; } });
+    return [s ? s + (s === 1 ? ' superset' : ' supersets') : '', c ? c + (c === 1 ? ' circuit' : ' circuits') : ''].filter(Boolean).join(', ');
+  }
+};
+
 // On every page, once signed-in state is known: bring settings up to date and check the terms
 (function wireAccountChecks() {
   const run = () => { LF.settings.pull(); LF.terms.check(); LF.sendKeptVoiceLog(); };

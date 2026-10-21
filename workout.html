@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=126">
+<link rel="stylesheet" href="larofit.css?v=127">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=126"></script>
-<script src="larofit-exercises.js?v=126"></script>
+<script src="supabase-client.js?v=127"></script>
+<script src="larofit-exercises.js?v=127"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=126"></script>
+<script src="larofit-nav.js?v=127"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1670,13 +1670,17 @@ function showPrestart(exArr, name, wholeThing) {
   // Quick exercise preview (up to 5)
   const preview = exArr.slice(0, 5);
   const more    = exArr.length > 5 ? exArr.length - 5 : 0;
+  // A superset or circuit gets a heading and a bar down its exercises
   document.getElementById('prestart-exercises').innerHTML =
-    preview.map(ex => `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);">
+    preview.map((ex, i) => {
+      const grouped = LF.groups.inOne(exArr, i), timed = grouped && ex.group.timed;
+      return (LF.groups.startsAt(exArr, i) ? `<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--volt-dark);padding:10px 0 2px;">${escHtml(LF.groups.heading(exArr, i))}</div>` : '') + `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border);${grouped ? 'border-left:3px solid var(--volt);padding-left:8px;' : ''}">
         <i class="ti ti-barbell" style="font-size:16px;color:var(--text-3);flex-shrink:0;width:20px;text-align:center;"></i>
         <div style="font-size:14px;font-weight:600;color:var(--text);">${escHtml(ex.name)}</div>
-        <div style="font-size:11px;color:var(--text-3);margin-left:auto;font-family:var(--font-mono);">${ex.sets || 3}×${ex.reps || 10}</div>
-      </div>`).join('') +
+        <div style="font-size:11px;color:var(--text-3);margin-left:auto;font-family:var(--font-mono);">${timed ? (parseInt(ex.group.workSec) || 40) + 's' : (ex.sets || 3) + '×' + (ex.reps || 10)}</div>
+      </div>`;
+    }).join('') +
     (more ? `<div style="font-size:12px;color:var(--text-3);padding:10px 0;text-align:center;">+${more} more</div>` : '');
 
   show('prestart-state');
@@ -3764,7 +3768,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 111;
+const VOICE_BUILD = 112;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -5072,6 +5076,7 @@ const VOICE_SWAP = new RegExp([
   '\\bswitch (this|that|it|the|my|out)\\b',   // "switch to X" is today's exercise, not a change to the program
   '\\b(different|another|other|alternative|new|similar|like) (exercise|movement)\\b',
   '\\bsomething (else|different|similar)\\b',
+  '\\b(give me|i need|i want|can i have|let me do) (something|another one|a different one) (with|on|using)\\b',   // "...give me something with dumbbells"
   '\\bchange (this|the|that|my)? ?(exercise|movement)\\b',
   // "I don't want to do this one": only as a short request of its own. Buried in a longer
   // sentence to someone else ("oh no, I don't want to do that, because I don't want to log it")
@@ -5102,6 +5107,9 @@ function voiceSwapTarget(t) {
   const words = target.split(' ').filter(Boolean);
   if (words.length && !words.every(w => VOICE_SWAP_VAGUE.has(w))) return target;
   if (target) return '';
+  // "I can't do this, my shoulder hurts": what follows "can't do this" is the reason, not an
+  // exercise to look for, so it's something similar
+  if (/\b(can t|cannot|can not|don t want to|do not want to|don t like|hate) (do |doing )?(this|that|it)\b/.test(t)) return '';
   // No "with" or "for" was heard ("replace those fishing chest press"): whatever is left
   // after the asking words may still be the exercise
   const left = t.replace(/\b(replace|swap|switch|substitute|sub out|trade|exchange|change|place|give|need|want|get|can|could|would|you|i|we|to|do|doing|don|t|cannot|like|hate|out|instead|let|s|have|try|those|these|1|and)\b/g, ' ')

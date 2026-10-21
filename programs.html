@@ -9,7 +9,7 @@
 <title>LaroFit — Programs</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=126">
+<link rel="stylesheet" href="larofit.css?v=127">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -240,6 +240,13 @@ button, a { touch-action: manipulation; }
   border-radius: var(--radius-sm);
 }
 
+/* Superset / circuit: a heading over the group, a bar down its exercises */
+.sheet-group-head {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--volt-dark); padding: 6px 2px 2px;
+}
+.sheet-ex-row.grouped { border-left: 3px solid var(--volt); }
+
 .sheet-ex-name {
   font-size: 13px;
   font-weight: 500;
@@ -389,9 +396,9 @@ button, a { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=126"></script>
+<script src="supabase-client.js?v=127"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=126"></script>
+<script src="larofit-nav.js?v=127"></script>
 
 <main class="lf-main-desktop">
 
@@ -777,10 +784,13 @@ function openDetail(id) {
     }
     return sessions.map(session => {
       const sessionLabel = session._slot ? `${label} · ${session._slot}` : label;
-      const exRows = (session.exercises || []).map(ex => {
+      const exs = session.exercises || [];
+      const exRows = exs.map((ex, i) => {
         const name = lookupName(ex.id) || ex.name || ex.id || '—';
-        const meta = `${ex.sets || 3} × ${ex.reps || 10}`;
-        return `<div class="sheet-ex-row">
+        const grouped = LF.groups.inOne(exs, i);
+        // In a timed circuit each exercise is worked for the circuit's time
+        const meta = grouped && ex.group.timed ? (parseInt(ex.group.workSec) || 40) + 's' : `${ex.sets || 3} × ${ex.reps || 10}`;
+        return (LF.groups.startsAt(exs, i) ? `<div class="sheet-group-head">${esc(LF.groups.heading(exs, i))}</div>` : '') + `<div class="sheet-ex-row${grouped ? ' grouped' : ''}">
           <div class="sheet-ex-name">${esc(name)}</div>
           <div class="sheet-ex-meta">${meta}</div>
         </div>`;
@@ -992,7 +1002,7 @@ function showToast(msg) {
 </script>
 
 <!-- Exercise data for name lookups -->
-<script src="larofit-exercises.js?v=126"></script>
+<script src="larofit-exercises.js?v=127"></script>
 
 </body>
 </html>

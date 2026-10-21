@@ -42,6 +42,9 @@ for (const [phrase, want] of [
   ['Switch this exercise', ''],
   ['change the exercise', ''],
   ["I really don't like this one", ''],
+  ["I can't do this, my shoulder hurts", ''],
+  ["I hate this, my knee is sore", ''],
+  ["I can't do this, give me something with dumbbells", 'dumbbells'],
 ]) {
   const t = api.normalizeSpeech(phrase), is = api.VOICE_SWAP.test(t) && !/\bsets?\b/.test(t), got = is ? api.voiceSwapTarget(t) : null;
   check(phrase.padEnd(58) + ' -> ' + (got === null ? 'not a replace' : got === '' ? '(something similar)' : got), got === want, 'expected ' + JSON.stringify(want));

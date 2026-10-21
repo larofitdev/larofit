@@ -10,7 +10,7 @@
 <title>LaroFit</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=126">
+<link rel="stylesheet" href="larofit.css?v=127">
 <style>
 /* ── BUILD POPUP ── */
 .build-overlay {
@@ -198,10 +198,10 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- Nav injected by larofit-nav.js -->
-<script src="supabase-client.js?v=126"></script>
-<script src="larofit-exercises.js?v=126"></script>
+<script src="supabase-client.js?v=127"></script>
+<script src="larofit-exercises.js?v=127"></script>
 <script>window.LF_PAGE = 'home';</script>
-<script src="larofit-nav.js?v=126"></script>
+<script src="larofit-nav.js?v=127"></script>
 
 <!-- ── MAIN CONTENT ── -->
 <main class="lf-main-desktop" id="main">
@@ -526,7 +526,8 @@ async function loadTodayCard() {
   }, 0));
 
   document.getElementById('today-duration').textContent = estMins + ' min';
-  document.getElementById('today-excount').textContent  = exCount + ' exercise' + (exCount !== 1 ? 's' : '');
+  const groups = LF.groups.summary(allExercises);
+  document.getElementById('today-excount').textContent  = exCount + ' exercise' + (exCount !== 1 ? 's' : '') + (groups ? ' · ' + groups : '');
   document.getElementById('today-cal').textContent      = '~' + Math.round(estMins * 7) + ' cal';
 
   // If today's workout is already logged, show a completed state
@@ -552,13 +553,13 @@ async function renderTodayList(todays) {
   const list = document.getElementById('today-list');
   list.style.display = '';
   list.innerHTML = todays.map(w => {
-    const n = w.exercises.length, done = doneNames.includes(w.name);
+    const n = w.exercises.length, done = doneNames.includes(w.name), groups = LF.groups.summary(w.exercises);
     return `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,0.08);">
         <div style="flex:1;min-width:0;">
           <div style="font-size:15px;font-weight:700;color:var(--text-inv);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(w.name)}</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-            ${done ? '<i class="ti ti-circle-check" style="color:var(--volt);" aria-hidden="true"></i> Done · ' : ''}${escHtml(w.program.name || 'Program')} · ${n} exercise${n !== 1 ? 's' : ''}</div>
+            ${done ? '<i class="ti ti-circle-check" style="color:var(--volt);" aria-hidden="true"></i> Done · ' : ''}${escHtml(w.program.name || 'Program')} · ${n} exercise${n !== 1 ? 's' : ''}${groups ? ' · ' + groups : ''}</div>
         </div>
         <button class="btn btn-volt btn-sm" onclick="location.href='${startHrefFor(w.program.id)}'" style="flex-shrink:0;">Start</button>
       </div>`;
