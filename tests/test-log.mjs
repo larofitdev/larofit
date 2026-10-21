@@ -135,7 +135,9 @@ console.log('Pausing: while paused, nothing is acted on');
   const w = make(PLAN); w.hear('pause'); const n = w.said.length;
   for (const phrase of ['ten', '12 reps', '10 at 20', 'skip this exercise', 'remove this exercise', 'finish workout', 'replace this with push ups', 'how you doing bro', 'that is cool how you do that by the way', "I'm doing leg press", 'yes', 'edit the first set']) w.hear(phrase);
   await w.settle();
-  check('sets, skips, removals, replacements and finishing are all ignored', w.paused() && w.sets(0) === '---' && w.names().length === 3 && w.current() === 'Dumbbell Incline Bench Press' && !w.calls.includes('finishWorkout') && w.said.length === n && w.offered() == null);
+  check('sets, skips, removals, replacements and finishing are all ignored', w.paused() && w.sets(0) === '---' && w.names().length === 3 && w.current() === 'Dumbbell Incline Bench Press' && !w.calls.includes('finishWorkout') && w.offered() == null);
+  // Reps said while paused get one reminder (not one per number), and nothing else is said
+  check('reps said while paused: one "You\'re paused" ' + JSON.stringify(w.said.slice(n)), JSON.stringify(w.said.slice(n)) === JSON.stringify(["You're paused. Say resume, then your reps."]));
 }
 console.log('Pausing: phrases that resume');
 for (const phrase of ['Resume.', 'resume workout', 'Continue', "I'm back", "Okay, I'm back", "Let's go", 'keep going', 'carry on', 'unpause', 'back to it', 'Ready.', 'go']) {

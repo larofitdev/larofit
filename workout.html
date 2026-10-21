@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=131">
+<link rel="stylesheet" href="larofit.css?v=132">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=131"></script>
-<script src="larofit-exercises.js?v=131"></script>
+<script src="supabase-client.js?v=132"></script>
+<script src="larofit-exercises.js?v=132"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=131"></script>
+<script src="larofit-nav.js?v=132"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1454,8 +1454,10 @@ function pauseWorkout() {
   if (workoutMode === 'voice') voicePause();
 }
 
+let resumedAt = 0;
 function resumeWorkout() {
   if (!isPaused || !workoutStarted) return;
+  resumedAt = Date.now();
   startTime = Date.now();
   isPaused  = false;
   pausedAt  = null;
@@ -1468,6 +1470,8 @@ function resumeWorkout() {
 
 function togglePause() {
   if (isPaused) resumeWorkout();
+  // Saying "resume" while tapping RESUME: the voice got there first, and the tap would pause it again
+  else if (Date.now() - resumedAt < 2500) return;
   else          pauseWorkout();
 }
 
@@ -3767,7 +3771,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 114;
+const VOICE_BUILD = 115;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4479,6 +4483,9 @@ let voiceFailTimes = [], voiceSorryAt = 0, voiceSlowWarned = false;
 // Send one phrase for transcription and act on the text. Phrases are handled in order.
 function voiceSendPhrase(blob, spokenMs, peak) {
   const phaseAtCapture = voicePhase;
+  // The set being logged when the phrase was said: "17.5 pounds" then "8 reps" on a slow
+  // connection moves confirm_weight on to count_reps before "8 reps" comes back, but it's the same set
+  const setAtCapture = voicePending ? voicePending.exIdx + ':' + voicePending.setIdx : '';
   voiceHudNote('…');
   voiceSendChain = voiceSendChain.then(async () => {
     const t0 = Date.now();
@@ -4515,7 +4522,9 @@ function voiceSendPhrase(blob, spokenMs, peak) {
       if (!text) { voiceDbg('heard nothing' + detail); return; }
       if (!/[a-z0-9]/i.test(text)) { voiceHudNote(''); voiceDbg('heard ' + JSON.stringify(text) + detail + ' -> not words, ignored'); return; }
       // The workout moved on while this was being transcribed — don't apply it to the wrong step
-      if (voicePhase !== phaseAtCapture) { voiceDbg('heard ' + JSON.stringify(text) + detail + ' -> too late, ignored'); return; }
+      const sameSet = /^(confirm_weight|count_reps)$/.test(phaseAtCapture) && /^(confirm_weight|count_reps)$/.test(voicePhase)
+        && voicePending && setAtCapture === voicePending.exIdx + ':' + voicePending.setIdx;
+      if (voicePhase !== phaseAtCapture && !sameSet) { voiceDbg('heard ' + JSON.stringify(text) + detail + ' -> too late, ignored'); return; }
       voiceHeardPeak = peak;
       const understood = handleVoiceResult(text);
       if (understood && !voiceSkipPeak) voiceNoteOwnPeak(peak);
@@ -4827,7 +4836,17 @@ function handleVoiceResult(raw) {
   let t = normalizeSpeech(raw);
   if (!t) return false;
   // Paused: nothing is acted on except "resume" (and nothing is passed to the coach model)
-  if (voicePaused) { if (voiceSaidResume(t)) voiceResume(); else voiceSkipPeak = true; return true; }
+  if (voicePaused) {
+    if (voiceSaidResume(t)) { voiceResume(); return true; }
+    voiceSkipPeak = true;
+    // Reps said while paused (a tester said "Fifteen" five times, unheard): say why nothing happens
+    const said = parseSetSpeech(t);
+    if (said && said.reps !== null && t.split(' ').length <= 4 && Date.now() - voicePausedToldAt > 30000) {
+      voicePausedToldAt = Date.now();
+      speakText("You're paused. Say resume, then your reps.", true);
+    }
+    return true;
+  }
   if (/\b(repeat|say that again|say again)\b/.test(t)) { speakText(voiceLastPrompt, true); return true; }
   // While a hold is being timed, the only thing listened for is "stop"
   if (voicePhase === 'log_time' && voiceHoldRunning()) return voiceHearTimed(t, raw);
@@ -5594,6 +5613,7 @@ function voiceSaidResume(t) {
   return /\b(resume|unpause|continue|carry on|keep going|start again|back to it|back at it|let s go|i m back|i am back|we re back|im back|okay go|ready)\b/.test(t) || /^(go|start|back)$/.test(t);
 }
 
+let voicePausedToldAt = 0;   // when "You're paused" was last said
 function voicePause(silent) {
   if (voicePaused) return;
   voicePaused = true;
