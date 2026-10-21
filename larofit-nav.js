@@ -26,7 +26,7 @@
     },
     {
       id: 'build',
-      label: 'Build',
+      label: 'Programs',
       icon: 'ti-layout-grid',
       href: 'programs.html',
     },
