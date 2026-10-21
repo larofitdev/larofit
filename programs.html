@@ -9,7 +9,7 @@
 <title>LaroFit — Programs</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=129">
+<link rel="stylesheet" href="larofit.css?v=130">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -213,6 +213,8 @@ button, a { touch-action: manipulation; }
 
 .sheet-day-name.rest-day { color: var(--text-3); }
 
+.sheet-day-sub { font-size: 11px; color: var(--text-3); margin-top: 3px; }
+
 .sheet-day-count {
   font-size: 11px;
   color: var(--text-3);
@@ -396,9 +398,9 @@ button, a { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=129"></script>
+<script src="supabase-client.js?v=130"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=129"></script>
+<script src="larofit-nav.js?v=130"></script>
 
 <main class="lf-main-desktop">
 
@@ -755,58 +757,73 @@ function openDetail(id) {
 
   document.getElementById('detail-title').textContent = p.name || 'My Program';
 
-  // Build day list — works with both date-keyed and legacy array formats
+  // The program as its workouts: dates with the same workout (its name and exercises) go
+  // together, each listing its exercises, the weekdays it falls on, when it's next and how many
+  // are left. One with only past dates goes last. (Every date used to be its own row, closed.)
+  const today = localToday(), WD = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], WEEK = [1, 2, 3, 4, 5, 6, 0];
+  const named = n => (n && String(n).trim() && String(n).trim() !== 'Workout') ? String(n).trim() : '';
   const days = p.days || {};
-  const dayEntries = Array.isArray(days)
-    ? days.map((d, i) => ({ label: d.name || 'Day ' + (i + 1), sessions: d.rest ? [] : [d] }))
-    : Object.entries(days).sort(([a],[b]) => a.localeCompare(b)).map(([dateStr, day]) => {
-        const label = new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-        const sessions = [];
-        if (day && Array.isArray(day.exercises)) {
-          // Flat format
-          if (day.exercises.length) sessions.push({ ...day });
-        } else {
-          // Legacy AM/PM format
-          if (day && day.am && (day.am.exercises||[]).length) sessions.push({ ...day.am, _slot: 'AM' });
-          if (day && day.pm && (day.pm.exercises||[]).length) sessions.push({ ...day.pm, _slot: 'PM' });
-        }
-        return { label, sessions };
+  let workouts = [];
+  if (Array.isArray(days)) {
+    // An old weekly plan: Monday first
+    days.forEach((d, i) => {
+      if (d && !d.rest && (d.exercises || []).length) workouts.push({ name: named(d.name) || p.name, exercises: d.exercises, sub: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i] || '' });
+    });
+  } else {
+    const byKey = new Map();
+    Object.keys(days).sort().forEach(dateStr => {
+      const day = days[dateStr];
+      if (!day) return;
+      const sessions = Array.isArray(day.exercises) ? [day] : [day.am, day.pm].filter(Boolean);
+      sessions.forEach(sess => {
+        const exs = sess.exercises || [];
+        if (!exs.length) return;
+        const key = named(sess.name) + '|' + exs.map(e => e.id + (e.group && e.group.id ? ':' + e.group.id : '')).join(',');
+        let w = byKey.get(key);
+        if (!w) byKey.set(key, w = { name: named(sess.name) || p.name, exercises: exs, weekdays: new Set(), next: null, left: 0 });
+        w.weekdays.add(new Date(dateStr + 'T00:00:00').getDay());
+        if (dateStr >= today) { w.left++; if (!w.next) { w.next = dateStr; w.exercises = exs; } }   // as it will be done next
       });
+    });
+    workouts = [...byKey.values()].sort((x, y) => (x.next ? 0 : 1) - (y.next ? 0 : 1) || String(x.next).localeCompare(String(y.next)));
+    workouts.forEach(w => {
+      const when = WEEK.filter(d => w.weekdays.has(d)).map(d => WD[d]).join(' · ');
+      const next = w.next === today ? 'today' : w.next ? new Date(w.next + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '';
+      w.sub = when + (w.next ? ' — next ' + next + ' · ' + w.left + ' to go' : ' — done');
+    });
+  }
 
-  const daysHtml = dayEntries.map(({ label, sessions }) => {
-    if (!sessions.length) {
-      return `<div class="sheet-day-block">
-        <div class="sheet-day-header">
-          <div class="sheet-day-name rest-day">${esc(label)}</div>
-          <div class="sheet-day-count">REST</div>
-        </div>
-      </div>`;
-    }
-    return sessions.map(session => {
-      const sessionLabel = session._slot ? `${label} · ${session._slot}` : label;
-      const exs = session.exercises || [];
-      const exRows = exs.map((ex, i) => {
-        const name = lookupName(ex.id) || ex.name || ex.id || '—';
-        const grouped = LF.groups.inOne(exs, i);
-        // In a timed circuit each exercise is worked for the circuit's time
-        const meta = grouped && ex.group.timed ? (parseInt(ex.group.workSec) || 40) + 's' : `${ex.sets || 3} × ${ex.reps || 10}`;
-        return (LF.groups.startsAt(exs, i) ? `<div class="sheet-group-head">${esc(LF.groups.heading(exs, i))}</div>` : '') + `<div class="sheet-ex-row${grouped ? ' grouped' : ''}">
-          <div class="sheet-ex-name">${esc(name)}</div>
-          <div class="sheet-ex-meta">${meta}</div>
-        </div>`;
-      }).join('');
-      return `<div class="sheet-day-block">
-        <div class="sheet-day-header" onclick="toggleDay(this)">
-          <div class="sheet-day-name">${esc(session.name || sessionLabel)}</div>
-          <div class="sheet-day-count">
-            ${session.exercises?.length || 0} exercises
-            <i class="ti ti-chevron-down" style="font-size:13px;transition:transform 0.2s;" aria-hidden="true"></i>
-          </div>
-        </div>
-        <div class="sheet-day-exercises">${exRows || '<div style="font-size:12px;color:var(--text-3);padding:4px 0;">No exercises added</div>'}</div>
-      </div>`;
-    }).join('');
+  // A workout's exercises, with any superset or circuit headed and marked
+  const rowsFor = exs => exs.map((ex, i) => {
+    const name = lookupName(ex.id) || ex.name || ex.id || '—';
+    const grouped = LF.groups.inOne(exs, i);
+    // What a set is: a timed circuit's seconds, cardio's minutes, a hold's seconds, or sets × reps
+    const rt = ex.recordType || '';
+    const meta = grouped && ex.group.timed ? (parseInt(ex.group.workSec) || 40) + 's'
+      : rt === 'cardio' ? (parseInt(ex.durationMin) || 20) + ' min' + (parseFloat(ex.speed) ? ' at ' + ex.speed + ' mph' : '')
+      : rt === 'duration' ? `${ex.sets || 3} × ${parseInt(ex.durationSec) || 30}s`
+      : `${ex.sets || 3} × ${ex.reps || 10}`;
+    return (LF.groups.startsAt(exs, i) ? `<div class="sheet-group-head">${esc(LF.groups.heading(exs, i))}</div>` : '') + `<div class="sheet-ex-row${grouped ? ' grouped' : ''}">
+      <div class="sheet-ex-name">${esc(name)}</div>
+      <div class="sheet-ex-meta">${meta}</div>
+    </div>`;
   }).join('');
+
+  const daysHtml = workouts.length ? workouts.map(w => `
+    <div class="sheet-day-block">
+      <div class="sheet-day-header" onclick="toggleDay(this)">
+        <div style="min-width:0;">
+          <div class="sheet-day-name">${esc(w.name || 'Workout')}</div>
+          ${w.sub ? `<div class="sheet-day-sub">${esc(w.sub)}</div>` : ''}
+        </div>
+        <div class="sheet-day-count">
+          ${w.exercises.length} exercise${w.exercises.length !== 1 ? 's' : ''}
+          <i class="ti ti-chevron-down" style="font-size:13px;transition:transform 0.2s;transform:rotate(180deg);" aria-hidden="true"></i>
+        </div>
+      </div>
+      <div class="sheet-day-exercises open">${rowsFor(w.exercises)}</div>
+    </div>`).join('')
+    : '<div style="font-size:13px;color:var(--text-3);padding:16px;">No workouts in this program yet.</div>';
 
   document.getElementById('detail-body').innerHTML = daysHtml;
 
@@ -1002,7 +1019,7 @@ function showToast(msg) {
 </script>
 
 <!-- Exercise data for name lookups -->
-<script src="larofit-exercises.js?v=129"></script>
+<script src="larofit-exercises.js?v=130"></script>
 
 </body>
 </html>
