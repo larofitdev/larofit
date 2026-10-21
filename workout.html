@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=130">
+<link rel="stylesheet" href="larofit.css?v=131">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=130"></script>
-<script src="larofit-exercises.js?v=130"></script>
+<script src="supabase-client.js?v=131"></script>
+<script src="larofit-exercises.js?v=131"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=130"></script>
+<script src="larofit-nav.js?v=131"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -1151,7 +1151,6 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 ══════════════════════════════════════ -->
 <div class="custom-ex-backdrop" id="custom-ex-backdrop" onclick="closeCustomExSheet()"></div>
 <div class="custom-ex-sheet" id="custom-ex-sheet">
-  <div class="custom-ex-handle"></div>
   <div class="custom-ex-header">
     <div class="custom-ex-header-title">Create Custom Exercise</div>
     <button class="custom-ex-close" onclick="closeCustomExSheet()">✕</button>
@@ -3768,7 +3767,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 113;
+const VOICE_BUILD = 114;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.

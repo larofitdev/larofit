@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=130">
+<link rel="stylesheet" href="larofit.css?v=131">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -484,11 +484,11 @@ button, input, select, a, textarea { touch-action: manipulation; }
   flex-shrink: 0;
 }
 .lib-sheet-top {
-  padding: 10px 16px 0;
+  padding: 12px 16px 0;
   flex-shrink: 0;
   border-bottom: 0.5px solid var(--border);
 }
-.lib-sheet-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.lib-sheet-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 10px; padding-right: 44px; min-height: 26px; display: flex; align-items: center; }
 .lib-search-wrap { position: relative; margin-bottom: 10px; }
 .lib-search-icon {
   position: absolute; left: 12px; top: 50%;
@@ -868,10 +868,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=130"></script>
-<script src="larofit-exercises.js?v=130"></script>
+<script src="supabase-client.js?v=131"></script>
+<script src="larofit-exercises.js?v=131"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=130"></script>
+<script src="larofit-nav.js?v=131"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -1015,7 +1015,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 ══════════════════════════════════════ -->
 <div class="day-action-overlay" id="day-action-overlay" onclick="closeDayAction()"></div>
 <div class="day-action-sheet" id="day-action-sheet">
-  <div class="day-action-handle"></div>
+  <div class="sheet-x-row"><button class="sheet-x" onclick="closeDayAction()" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button></div>
   <div class="day-action-date" id="day-action-date"></div>
   <div class="day-action-title" id="day-action-title">Edit day</div>
   <!-- Buttons injected dynamically based on what sessions exist -->
@@ -1025,7 +1025,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 <!-- REPEAT SHEET — which weekdays a workout goes on, across the whole program -->
 <div class="day-action-overlay" id="repeat-overlay" onclick="closeRepeat()"></div>
 <div class="day-action-sheet" id="repeat-sheet" role="dialog" aria-labelledby="repeat-title">
-  <div class="day-action-handle"></div>
+  <div class="sheet-x-row"><button class="sheet-x" onclick="closeRepeat()" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button></div>
   <div class="day-action-date" id="repeat-name"></div>
   <div class="day-action-title" id="repeat-title">Which days is this workout on?</div>
   <div class="repeat-days" id="repeat-days" role="group" aria-label="Days of the week"></div>
@@ -1041,7 +1041,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
 ══════════════════════════════════════ -->
 <div class="lib-backdrop" id="lib-backdrop" onclick="closeLibrary()"></div>
 <div class="lib-sheet" id="lib-sheet">
-  <div class="lib-sheet-handle"></div>
+  <button class="sheet-x abs" onclick="closeLibrary()" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>
   <div class="lib-sheet-top">
     <div class="lib-sheet-title" id="lib-sheet-title">Add exercises</div>
     <div class="lib-group-setup" id="lib-group-setup" style="display:none;"></div>
@@ -1081,7 +1081,6 @@ button, input, select, a, textarea { touch-action: manipulation; }
 ══════════════════════════════════════ -->
 <div class="custom-ex-backdrop" id="custom-ex-backdrop" onclick="closeCustomExSheet()"></div>
 <div class="custom-ex-sheet" id="custom-ex-sheet">
-  <div class="custom-ex-handle"></div>
   <div class="custom-ex-header">
     <div class="custom-ex-header-title">Create Custom Exercise</div>
     <button class="custom-ex-close" onclick="closeCustomExSheet()">✕</button>

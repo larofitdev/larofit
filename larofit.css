@@ -601,6 +601,16 @@ input, select, textarea {
   transform: translateY(0);
 }
 
+/* Close (✕) at the top right of a pop-up sheet. Sheets used to have a drag bar that didn't drag. */
+.sheet-x-row { display: flex; justify-content: flex-end; padding: 8px 10px 0; flex-shrink: 0; }
+.sheet-x {
+  width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer; flex-shrink: 0;
+  background: var(--bg-card2); color: var(--text-2); font-size: 18px;
+  display: inline-flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent;
+}
+.sheet-x:active { background: var(--border); }
+.sheet-x.abs { position: absolute; top: 8px; right: 10px; z-index: 2; }
+
 .lf-sheet-handle {
   width: 36px;
   height: 4px;
