@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=132">
+<link rel="stylesheet" href="larofit.css?v=133">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=132"></script>
-<script src="larofit-exercises.js?v=132"></script>
+<script src="supabase-client.js?v=133"></script>
+<script src="larofit-exercises.js?v=133"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=132"></script>
+<script src="larofit-nav.js?v=133"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3771,7 +3771,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 115;
+const VOICE_BUILD = 116;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -5454,6 +5454,7 @@ function parseTimeSpeech(t, bareUnit, raw) {
 // The distance can be said instead ("30 minutes, 2 miles"); whichever of speed and distance
 // is missing is worked out from the other and the time. Any may be null.
 function parseCardioSpeech(t, raw) {
+  t = t.replace(/(\d)\s*x\s*(\d)/g, '$1 at $2');   // "30 at 3.7" can come back written as "30x3.7"
   let distance = null, speed = null, m, s = ' ' + t + ' ';
   const KM = '(?:kilometers?|kilometres?|km|k)', MI = '(?:miles?|mi)', N = '(\\d+(?:\\.\\d+)?)';
   const UNIT = '(?:hours?|hrs?|minutes?|mins?|seconds?|secs?|miles?|mi|kilometers?|kilometres?|km|k|mph|kph)';

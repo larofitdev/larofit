@@ -78,7 +78,7 @@ for (const [phrase, min, speed, dist] of [['30 minutes at 3.5', 30, 3.5, 1.75], 
   ['30 minutes at 3.5 miles an hour', 30, 3.5, 1.75], ['30 minutes 3.5 miles per hour', 30, 3.5, 1.75], ['30 minutes, 3.5', 30, 3.5, 1.75], ['3.5 for 30 minutes', 30, 3.5, 1.75],
   ['at 3.5 for 30 minutes', 30, 3.5, 1.75], ['twenty five minutes at 4', 25, 4, 1.67], ['20 at 3', 20, 3, 1], ['speed 3.5 for 40 minutes', 40, 3.5, 2.33],
   ['30 minutes at three and a half', 30, 3.5, 1.75], ['an hour at 3', 60, 3, 3], ['20 minutes at 10 kilometers an hour', 20, 6.2, 2.07], ['30 minutes, 2 miles', 30, 4, 2],
-  ['at 3.5', null, 3.5, null], ['30 minutes', 30, null, null]]) {
+  ['at 3.5', null, 3.5, null], ['30 minutes', 30, null, null], ['30x3.7', 30, 3.7, 1.85], ['30 x 3.7', 30, 3.7, 1.85]]) {
   const got = P.cardio(phrase);
   check(('"' + phrase + '"').padEnd(40) + ' -> ' + got.minutes + ' min at ' + got.speed + ', ' + got.distance + ' mi', got.minutes === min && got.speed === speed && got.distance === dist, 'expected ' + min + ' / ' + speed + ' / ' + dist);
 }
