@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=142">
+<link rel="stylesheet" href="larofit.css?v=143">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -876,10 +876,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=142"></script>
-<script src="larofit-exercises.js?v=142"></script>
+<script src="supabase-client.js?v=143"></script>
+<script src="larofit-exercises.js?v=143"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=142"></script>
+<script src="larofit-nav.js?v=143"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -1033,7 +1033,7 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div class="repeat-mode" id="repeat-mode" style="display:none;">
     <div class="repeat-mode-text" id="repeat-mode-text"></div>
     <div class="repeat-mode-btns" role="group" aria-label="The other workout on those days">
-      <button class="repeat-day" id="repeat-keep" onclick="setRepeatReplace(false)">Keep it, add this too</button>
+      <button class="repeat-day" id="repeat-keep" onclick="setRepeatReplace(false)">Keep it</button>
       <button class="repeat-day" id="repeat-replace" onclick="setRepeatReplace(true)">Replace it</button>
     </div>
   </div>
@@ -1181,6 +1181,7 @@ LF.ready().then(() => LF.guard());
 let program          = null;   // program object being built
 let editingDate      = null;   // 'YYYY-MM-DD' of day being edited
 let editingSlot      = 0;      // which of that day's workouts (0 the first, then its "more")
+let editingName      = '';     // its name when opened (renamed: its copies on other days go by this)
 let pasteMode        = false;
 let copiedDate       = null;
 let libMuscle         = 'all';
@@ -1790,6 +1791,8 @@ function dayActionClear() {
 // ══════════════════════════════════════════════════════════════════════
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 let repeatDate = null, repeatSlot = 0, repeatPicked = [], repeatReplace = false;
+let repeatNames = [];   // the workout's name, and its name before an edit (a renamed workout's copies are still it)
+const repeatIsSame = x => repeatNames.includes(x.name);
 
 // Every date in the program, start date to the end of its last week
 function programDates() {
@@ -1804,13 +1807,14 @@ function programDates() {
 function weekdayOf(dateStr) { return WEEKDAYS[(new Date(dateStr + 'T00:00:00').getDay() + 6) % 7]; }
 function repeatTargets() { return programDates().filter(k => repeatPicked.includes(weekdayOf(k))); }
 
-function openRepeat(dateStr, slot) {
+function openRepeat(dateStr, slot, wasName) {
   const w = workoutAt(dateStr, slot);
   if (!w || !(w.exercises || []).length) return;
   flushSetupToProgram();   // use the weeks and start date as they are set now
   repeatDate = dateStr; repeatSlot = slot || 0; repeatReplace = false;
-  // Start with this day's weekday, plus any weekday that already has a workout of the same name
-  const sameName = programDates().filter(k => k !== dateStr && dayList(k).some(x => x.name === w.name)).map(weekdayOf);
+  repeatNames = [...new Set([w.name, wasName].filter(Boolean))];
+  // Start with this day's weekday, plus any weekday that already has this workout (by either name)
+  const sameName = programDates().filter(k => k !== dateStr && dayList(k).some(repeatIsSame)).map(weekdayOf);
   repeatPicked = [...new Set([weekdayOf(dateStr), ...sameName])];
   document.getElementById('repeat-name').textContent = w.name || 'Workout';
   renderRepeat();
@@ -1818,10 +1822,18 @@ function openRepeat(dateStr, slot) {
   document.getElementById('repeat-sheet').classList.add('open');
 }
 
-// Target days with some other workout on them (not one of the same name, which is just updated)
+// Target days where it would be added next to some other workout (a day that already has this
+// workout just has it updated, and nothing else there is asked about): { days, names }
 function repeatOthers() {
-  const w = workoutAt(repeatDate, repeatSlot);
-  return repeatTargets().filter(k => k !== repeatDate && dayList(k).some(x => workoutUsed(x) && x.name !== w.name)).length;
+  const names = new Set();
+  const days = repeatTargets().filter(k => {
+    if (k === repeatDate) return false;
+    const list = dayList(k).filter(workoutUsed);
+    if (list.some(repeatIsSame) || !list.length) return false;
+    list.forEach(x => names.add(x.name || 'Workout'));
+    return true;
+  }).length;
+  return { days, names: [...names] };
 }
 
 function renderRepeat() {
@@ -1840,8 +1852,13 @@ function renderRepeat() {
     : 'Puts it on ' + targets.length + ' day' + (targets.length === 1 ? '' : 's') + ' across all ' + weeks + ' weeks.';
   // Another workout on some of those days: keep it (two workouts that day) or replace it
   const mode = document.getElementById('repeat-mode');
-  mode.style.display = others ? '' : 'none';
-  document.getElementById('repeat-mode-text').textContent = (others === 1 ? 'One of those days has' : others + ' of those days have') + ' another workout.';
+  mode.style.display = others.days ? '' : 'none';
+  // Say which workout: "Replace" takes it off those days
+  const which = others.names.length === 1 ? others.names[0] : 'them';
+  document.getElementById('repeat-mode-text').textContent = (others.names.length === 1 ? others.names[0] + ' is' : others.names.join(', ').replace(/, ([^,]*)$/, ' and $1') + ' are') +
+    ' already on ' + (others.days === 1 ? 'one of those days.' : others.days + ' of those days.');
+  document.getElementById('repeat-keep').textContent = 'Keep ' + which;
+  document.getElementById('repeat-replace').textContent = 'Replace ' + which;
   document.getElementById('repeat-keep').setAttribute('aria-pressed', String(!repeatReplace));
   document.getElementById('repeat-replace').setAttribute('aria-pressed', String(repeatReplace));
   document.getElementById('repeat-go').disabled = !targets.length;
@@ -1860,8 +1877,8 @@ function applyRepeat() {
   const targets = repeatTargets(), copy = () => { const c = JSON.parse(JSON.stringify(src)); delete c.more; return c; };
   targets.forEach(k => {
     if (k === repeatDate) return;
-    const list = dayList(k).filter(workoutUsed), same = list.findIndex(x => x.name === src.name);
-    if (same !== -1) list[same] = copy();          // the same workout there: updated
+    const list = dayList(k).filter(workoutUsed), same = list.findIndex(repeatIsSame);
+    if (same !== -1) list[same] = copy();          // the same workout there (renamed too): updated
     else if (repeatReplace) list.splice(0, list.length, copy());
     else list.push(copy());                        // a workout of its own, next to what's there
     setDayList(k, list);
@@ -1910,6 +1927,7 @@ function openDayEditor(dateStr, slot) {
   editingSlot = workoutAt(dateStr, slot) ? (slot || 0) : 0;
 
   const dayData = currentSession(), count = dayList(dateStr).length;
+  editingName = dayData.name || '';
   document.getElementById('day-title-input').value = dayData.name || '';
   document.getElementById('day-title-input').placeholder = count > 1 ? 'e.g. Morning Rehab, Evening Chest' : 'e.g. Push Day, Leg Day';
 
@@ -1939,7 +1957,7 @@ function saveDayAndBack() {
   showScreen('main');
   renderCalendar();
   // A workout was built or changed: ask which weekdays it goes on, and fill every week of the program
-  if (slot !== -1 && (workoutAt(finished, slot).exercises || []).length) openRepeat(finished, slot);
+  if (slot !== -1 && (workoutAt(finished, slot).exercises || []).length) openRepeat(finished, slot, editingName);
 }
 
 function backToCalendar() {

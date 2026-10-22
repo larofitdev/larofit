@@ -91,7 +91,8 @@ console.log('Builder: repeating one workout of a day');
   });
   b.openRepeat('2026-11-02', 1);   // Chest
   b.pick(['Mon', 'Wed']);
-  check('another workout on some of those days: asked (' + b.repeatOthers() + ')', b.repeatOthers() === 2);
+  const o = b.repeatOthers();
+  check('another workout on some of those days: asked, naming them (' + o.days + ': ' + o.names.join(', ') + ')', o.days === 2 && o.names.join() === 'Legs,Rehab');
   b.applyRepeat();
   const D = b.program.days, w = k => b.dayList(k).map(x => x.name + ':' + x.exercises.length).join(' + ');
   check('kept, Chest added beside them: 4 Nov ' + w('2026-11-04') + ', 9 Nov ' + w('2026-11-09'), w('2026-11-04') === 'Legs:1 + Chest:1' && w('2026-11-09') === 'Rehab:1 + Chest:1');
@@ -108,6 +109,22 @@ console.log('Builder: repeating one workout of a day');
   b.setRepeatReplace(true);
   b.applyRepeat();
   check('"Replace it": 4 Nov is just Rehab now: ' + w('2026-11-04'), w('2026-11-04') === 'Rehab:2');
+}
+
+console.log('Builder: renaming a workout that is on other days too');
+{
+  // Fridays: Rehab + an unnamed chest workout ("Workout"). Renamed to Chest on one Friday:
+  // the other Fridays' copies are renamed, nothing added, Rehab untouched, nothing asked
+  const fri = ['2026-11-06', '2026-11-13'];
+  const days = {};
+  fri.forEach(k => { days[k] = { name: 'Rehab', exercises: ex('a'), more: [{ name: 'Workout', exercises: ex('c', 'd') }] }; });
+  const b = makeBuilder(days);
+  b.dayList(fri[0])[1].name = 'Chest';
+  b.openRepeat(fri[0], 1, 'Workout');
+  check('Fridays picked, and no keep / replace question', b.repeatOthers().days === 0);
+  b.applyRepeat();
+  const w = k => b.dayList(k).map(x => x.name).join(' + ');
+  check('the other Friday: ' + w(fri[1]), w(fri[1]) === 'Rehab + Chest');
 }
 
 console.log(fail ? '\n' + fail + ' FAILED' : '\nall passed');
