@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=138">
+<link rel="stylesheet" href="larofit.css?v=139">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -602,6 +602,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 .completion-stat-label { font-size: 10px; color: var(--text-3); margin-top: 3px; }
 
 /* AI analysis */
+.save-routine-panel { background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 14px; }
+.save-days { display: flex; gap: 6px; flex-wrap: wrap; }
+.save-day { flex: 1; min-width: 40px; min-height: 40px; border-radius: 10px; border: 1px solid var(--border-md); background: transparent; color: var(--text-2); font-size: 13px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.save-day.on { background: var(--volt); border-color: var(--volt); color: #1a1a1a; }
 .completion-wins { background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 6px 14px; display: flex; flex-direction: column; }
 .completion-win { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; font-size: 14px; line-height: 1.4; color: var(--text); border-bottom: 0.5px solid var(--border); }
 .completion-win:last-child { border-bottom: none; }
@@ -757,10 +761,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=138"></script>
-<script src="larofit-exercises.js?v=138"></script>
+<script src="supabase-client.js?v=139"></script>
+<script src="larofit-exercises.js?v=139"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=138"></script>
+<script src="larofit-nav.js?v=139"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -958,6 +962,16 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
         <div class="ai-loading" id="ai-loading"><div class="ai-spinner"></div>Analyzing your session...</div>
         <div id="ai-analysis-text" style="display:none;"></div>
       </div>
+    </div>
+    <!-- A workout built as it went (or by the coach) can be kept to do again -->
+    <button class="btn btn-outline btn-full" id="save-routine-btn" onclick="openSaveRoutine()" style="display:none;">
+      <i class="ti ti-repeat" aria-hidden="true"></i> Save as a routine
+    </button>
+    <div class="save-routine-panel" id="save-routine-panel" style="display:none;">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;">Which days do you want it on?</div>
+      <div class="save-days" id="save-routine-days"></div>
+      <div style="font-size:12px;color:var(--text-3);margin:8px 0 12px;">A new program with this workout on those days for 8 weeks, from tomorrow.</div>
+      <button class="btn btn-volt btn-full" id="save-routine-go" onclick="saveRoutineFromScreen()" disabled>Save routine</button>
     </div>
     <button class="btn btn-dark btn-full btn-lg" onclick="location.href='index.html'">Back to home <i class="ti ti-home" aria-hidden="true"></i></button>
   </div>
@@ -3095,6 +3109,7 @@ function finishWorkout() {
   const setsLogged = exercises.reduce((a,ex) => a + ex.loggedSets.filter(s=>s.logged).length, 0);
   document.getElementById('completion-sub').textContent = setsLogged + ' sets logged · ' + exercises.length + ' exercises';
   renderWins(wins);
+  document.getElementById('save-routine-btn').style.display = !workoutProgramId && exercises.length ? '' : 'none';
   fetchAIAnalysis(durationMin, totalVolume, totalPRs, exercises, wins);
 }
 
@@ -3867,7 +3882,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 121;
+const VOICE_BUILD = 122;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4972,6 +4987,10 @@ function handleVoiceResult(raw) {
   if (voiceRemoveAsk && Date.now() - voiceRemoveAsk.at < 25000) { if (voiceRemoveAnswer(t)) return true; }
   else voiceRemoveAsk = null;
   voiceFinishAt = 0;
+  // "Save this as a routine", "add this to my program", and the days when asked for them
+  if (voiceSaveAsk && Date.now() - voiceSaveAsk.at < 30000) { if (voiceSaveAnswer(t)) return true; }
+  else voiceSaveAsk = null;
+  if (VOICE_SAVE_ROUTINE.test(t)) { voiceSaveRoutine(t); return true; }
   if (VOICE_FINISH.test(t) && !/\d/.test(t) && !/\b(sets?|reps?|exercise)\b/.test(t)) { voiceFinishAsk(); return true; }
   // "Give me a six-exercise chest routine", "make me a 20 minute dumbbell circuit"
   if (VOICE_ROUTINE.test(t)) { voiceBuildRoutine(raw); return true; }
@@ -6078,6 +6097,120 @@ function routineAdd(json) {
     saveSnapshot();
   }
   return added;
+}
+
+// ── "SAVE THIS AS A ROUTINE" ──────────────────────────────────
+// Today's workout (one built as it went, or by the coach) kept to do again: a new program
+// on the weekdays chosen, 8 weeks from tomorrow, or with "add this to my program" into the
+// program today's workout came from (or the latest), after what's planned on those days.
+// Supersets and circuits go as they are; weights come from history, as for any exercise.
+// It has to point at this workout: "make THIS a routine" (not "make me a chest routine", which asks for one)
+const VOICE_SAVE_ROUTINE = /\b(save|keep|store|make|turn) (this|it|that|today s workout)\b.*\b(routine|template)\b|\b(add|put|save)\b (this|it|that)( workout)? (to|in|into|onto) (my |the |a )?program\b|\b(save|add|repeat|do) (this|it|that)( workout)? (every|on|for) (monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekday|weekend)/;
+const ROUTINE_WEEKDAYS = [['Mon', /\bmon(day)?s?\b/], ['Tue', /\btue(s|sday)?s?\b/], ['Wed', /\bwed(nesday)?s?\b/], ['Thu', /\bthu(rs|rsday)?s?\b/],
+  ['Fri', /\bfri(day)?s?\b/], ['Sat', /\bsat(urday)?s?\b/], ['Sun', /\bsun(day)?s?\b/]];
+const WEEKDAY_NAMES = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
+let voiceSaveAsk = null;   // { at, into } while "Which days?" waits for an answer
+
+// The weekdays in a phrase: ['Mon', 'Thu'], "weekdays", "weekends", "every day"
+function routineDaysFrom(t) {
+  if (/\b(every ?day|daily|all week)\b/.test(t)) return Object.keys(WEEKDAY_NAMES);
+  const out = [];
+  if (/\bweekdays?\b/.test(t)) out.push('Mon', 'Tue', 'Wed', 'Thu', 'Fri');
+  if (/\bweekends?\b/.test(t)) out.push('Sat', 'Sun');
+  ROUTINE_WEEKDAYS.forEach(([d, re]) => { if (re.test(t) && !out.includes(d)) out.push(d); });
+  return Object.keys(WEEKDAY_NAMES).filter(d => out.includes(d));   // Monday first
+}
+const daysSaid = days => days.length === 7 ? 'every day' : days.map(d => WEEKDAY_NAMES[d] + 's').join(days.length === 2 ? ' and ' : ', ').replace(/, ([^,]+)$/, ', and $1');
+
+function voiceSaveRoutine(t) {
+  if (!exercises.length) { voicePrompt('There is nothing in this workout to save yet.', true); return; }
+  const into = /\bprogram\b/.test(t) && !/\bnew program\b/.test(t);
+  const days = routineDaysFrom(t);
+  if (!days.length) { voiceSaveAsk = { at: Date.now(), into }; voicePrompt('Which days do you want it on? Say like Monday and Thursday.', true); return; }
+  voicePrompt(routineSavedLine(saveRoutine(days, into)), true);
+}
+
+function voiceSaveAnswer(t) {
+  if (/^(no|nope|cancel|never ?mind|forget it)\b/.test(t)) { voiceSaveAsk = null; voicePrompt('Okay, not saved.', true); return true; }
+  const days = routineDaysFrom(t);
+  if (!days.length) return false;
+  const into = voiceSaveAsk.into;
+  voiceSaveAsk = null;
+  voicePrompt(routineSavedLine(saveRoutine(days, into)), true);
+  return true;
+}
+
+function routineSavedLine(r) {
+  return r.into
+    ? 'Added to ' + r.program.name + ' on ' + daysSaid(r.days) + ', ' + r.count + ' workouts. It is in Programs.'
+    : 'Saved ' + r.program.name + ' as a routine on ' + daysSaid(r.days) + ', for 8 weeks. It is in Programs.';
+}
+
+// Today's workout as a routine's exercises (what was done, or all of it if nothing was)
+function routineFromToday() {
+  const all = exAllExercises(), done = exercises.filter(ex => ex.loggedSets.some(st => st.logged));
+  return (done.length ? done : exercises).map(ex => {
+    const lib = all.find(e => e.id === ex.id) || {};
+    const top = Math.max(0, ...ex.loggedSets.filter(st => st.logged).map(st => parseFloat(st.weight) || 0));
+    const out = { id: ex.id, name: ex.name, primaryMuscle: lib.primaryMuscle || ex.primaryMuscle || '', secondaryMuscles: lib.secondaryMuscles || [],
+                  recordType: lib.recordType || ex.recordType || 'weight_reps', sets: ex.loggedSets.length || 3,
+                  reps: parseInt(ex.planReps) || parseInt(ex.reps) || 10, restSec: ex.restSec || 60 };
+    if (top) out.weight = top;
+    if (ex.restAfterSec != null) out.restAfterSec = ex.restAfterSec;
+    if (out.recordType === 'duration') out.durationSec = parseInt(ex.planHold) || parseInt(ex.durationSec) || 30;
+    if (ex.group && ex.group.id) out.group = { ...ex.group };
+    return out;
+  });
+}
+
+// Put it on the chosen weekdays from tomorrow: a new 8-week program, or into an existing one
+function saveRoutine(days, into) {
+  const name = ((document.getElementById('free-workout-name') || {}).value || '').trim() || (document.getElementById('header-title').textContent || '').trim() || 'My routine';
+  const exs = routineFromToday(), byWeekday = d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+  const programs = store.get('programs', []) || [];
+  const target = into ? (workoutProgram() || [...programs].sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')))[0]) : null;
+  const program = target ? JSON.parse(JSON.stringify(target))
+    : { id: crypto.randomUUID(), name, goal: 'hypertrophy', weeks: 8, startDate: localDateStr(), savedAt: new Date().toISOString(), days: {} };
+  if (Array.isArray(program.days)) program.days = {};   // an old weekly plan can't take dates
+  const end = target ? Object.keys(program.days).sort().pop() : null;
+  let count = 0;
+  for (let i = 1; i <= 7 * 8 * (target ? 3 : 1); i++) {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i);
+    const key = localDateStr(d);
+    if (target ? (end && key > end) || (!end && i > 56) : false) break;
+    if (!days.includes(byWeekday(d))) continue;
+    const day = program.days[key];
+    if (day && Array.isArray(day.exercises) && day.exercises.length) day.exercises = day.exercises.concat(JSON.parse(JSON.stringify(exs)));   // after what's planned
+    else program.days[key] = { name, exercises: JSON.parse(JSON.stringify(exs)) };
+    count++;
+  }
+  program.savedAt = new Date().toISOString();
+  LF.ready().then(() => LF.db.saveProgram(program)).catch(() => {});
+  voiceDbg('routine saved: ' + program.name + ', ' + days.join(' ') + ', ' + count + ' days' + (target ? ' (into the program)' : ''));
+  return { program, days, count, into: !!target };
+}
+
+// The completion screen's "Save as a routine": pick the days, then save
+let saveSheetDays = [];
+function openSaveRoutine() {
+  saveSheetDays = [];
+  document.getElementById('save-routine-panel').style.display = '';
+  document.getElementById('save-routine-btn').style.display = 'none';
+  renderSaveRoutineDays();
+}
+function renderSaveRoutineDays() {
+  document.getElementById('save-routine-days').innerHTML = Object.keys(WEEKDAY_NAMES).map(d =>
+    '<button class="save-day' + (saveSheetDays.includes(d) ? ' on' : '') + '" onclick="toggleSaveRoutineDay(\'' + d + '\')" aria-pressed="' + saveSheetDays.includes(d) + '">' + d + '</button>').join('');
+  document.getElementById('save-routine-go').disabled = !saveSheetDays.length;
+}
+function toggleSaveRoutineDay(d) {
+  saveSheetDays = saveSheetDays.includes(d) ? saveSheetDays.filter(x => x !== d) : [...saveSheetDays, d];
+  renderSaveRoutineDays();
+}
+function saveRoutineFromScreen() {
+  if (!saveSheetDays.length) return;
+  const r = saveRoutine(Object.keys(WEEKDAY_NAMES).filter(d => saveSheetDays.includes(d)), false);
+  document.getElementById('save-routine-panel').innerHTML = '<div style="font-size:14px;font-weight:600;color:var(--text);"><i class="ti ti-circle-check" style="color:var(--volt-dark);" aria-hidden="true"></i> ' + escHtml(routineSavedLine(r)) + '</div>';
 }
 
 // Nothing on the card to do: ask
