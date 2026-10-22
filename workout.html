@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=135">
+<link rel="stylesheet" href="larofit.css?v=136">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=135"></script>
-<script src="larofit-exercises.js?v=135"></script>
+<script src="supabase-client.js?v=136"></script>
+<script src="larofit-exercises.js?v=136"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=135"></script>
+<script src="larofit-nav.js?v=136"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3093,11 +3093,34 @@ async function fetchAIAnalysis(durationMin, totalVolume, prs, exList) {
     if (!sets.length) return null;
     if (isCardio(ex)) return `${ex.name}: ${sets[0].duration||'?'} min${sets[0].speed ? ' at ' + sets[0].speed + ' mph' : ''}, ${sets[0].distance||'0'} mi`;
     if (isTimed(ex))  return `${ex.name}: ${sets.length} sets, best hold ${Math.max(...sets.map(s=>parseFloat(s.holdTime)||0))}s`;
-    const best = sets.reduce((b,s) => (parseFloat(s.weight)||0) > (parseFloat(b.weight)||0) ? s : b, sets[0]);
-    return `${ex.name}: ${sets.length} sets, best ${best.weight||'—'} lbs × ${best.reps||'—'} reps`;
+    // Every set, and what the app's own progression has set for next time
+    const u = weightUnit(), c = ex.coachNext;
+    const done = sets.map(s => (parseFloat(s.weight) ? s.weight + ' ' + u + ' × ' : '') + (s.reps || '—')).join(', ');
+    const next = !c || !c.nextWeight ? '' : ' · next time (app\'s plan): ' + (
+      c.stage === 'up' ? 'go up to ' + c.nextWeight + ' ' + u + ', back to ' + c.nextReps + ' reps'
+      : c.stage === 'down' ? 'drop back to ' + c.nextWeight + ' ' + u + ' for ' + c.nextReps + ' reps'
+      : c.stage === 'confirm' ? 'same weight, ' + c.nextReps + ' reps on every set once more, then the weight goes up'
+      : c.stage === 'stretch' ? 'same weight, aim for ' + c.nextReps + ' reps on every set'
+      : 'same weight and reps');
+    return `${ex.name}: ${done}${next}`;
   }).filter(Boolean).join('\n');
 
-  const prompt = `You are a supportive, expert fitness coach. Analyze this workout and give brief, personalized feedback in 3-4 sentences. Be specific, encouraging, and practical.\n\nWorkout:\n- Duration: ${durationMin} minutes\n- Total volume: ${Math.round(totalVolume)} lbs\n- PRs: ${prs}\n- Exercises:\n${summary}\n\nUnder 80 words. Be direct and coach-like.`;
+  // The summary used to give its own advice ("hitting 12, so go heavier for 6-8 reps"), which isn't
+  // how the app progresses. It's told the rule and the plan, and not to suggest anything else.
+  const rule = progPace() === 'gradual'
+    ? 'Gradual: hit the planned reps on every set, then 2 more, then 5 more (10, 12, 15); 15 on every set two sessions running and the weight goes up, back to the planned reps.'
+    : 'Standard: hit the planned reps on every set, then aim for 2 more (10 then 12); 12 on every set and the weight goes up, back to the planned reps.';
+  const prompt = `You are LaroFit's coach, summing up a workout in 3-4 sentences, under 80 words: encouraging, specific and direct.
+
+The app sets every weight and rep target itself, with this progression rule: ${rule}
+Each exercise below shows the app's plan for next time. Never suggest different weights, reps, sets, rep ranges or rest, and never tell them to change their program. If you mention what's next, use the app's plan exactly. Otherwise talk about how the session went: effort, consistency, form, recovery.
+
+Workout:
+- Duration: ${durationMin} minutes
+- Total volume: ${Math.round(totalVolume)} ${weightUnit()}
+- PRs: ${prs}
+- Exercises:
+${summary}`;
 
   try {
     const res  = await aiCoachFetch({ model:'claude-haiku-4-5', max_tokens:200, messages:[{role:'user',content:prompt}] });
@@ -3779,7 +3802,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 118;
+const VOICE_BUILD = 119;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
