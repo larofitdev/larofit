@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=134">
+<link rel="stylesheet" href="larofit.css?v=135">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=134"></script>
-<script src="larofit-exercises.js?v=134"></script>
+<script src="supabase-client.js?v=135"></script>
+<script src="larofit-exercises.js?v=135"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=134"></script>
+<script src="larofit-nav.js?v=135"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3779,7 +3779,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 117;
+const VOICE_BUILD = 118;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -5950,7 +5950,7 @@ async function voiceInterpret(text) {
     '"skip" - they want to move on to the next exercise and leave this one (skip it, pass, come back to it later, done with this exercise)\n' +
     '"remove" - they want this exercise taken out of today\'s workout (remove, delete, drop it)\n' +
     '"finish" - they are done with the whole workout and want to end it\n' +
-    '"pause" - they want the app to stop listening for a while (someone is talking to them, they need a break)\n' +
+    '"pause" - they ask the app to pause or wait (pause, hold on, give me a minute). Talk with someone else is "none", not "pause"\n' +
     '"none" - anything else, including talk that is not meant for the app\n' +
     'Reply exactly: {"action":"...","weight":number or null,"reps":number or null,"set":number or "all" or null,"exercise":string or null}. Only give numbers the phrase itself states. ' +
     '"set" is which set they named for a correction (first set = 1, "all the sets" = "all"), or null if they did not name one.';
@@ -5975,6 +5975,13 @@ async function voiceInterpret(text) {
   } else voiceNoneAt = 0;
 
   if (out.action === 'finish') { voiceFinishAsk(); return; }
+  // The coach model paused for conversation ("How are you doing?", "You are out of water?"): five
+  // times in one tester's workout, each needing "resume". Talk is ignored anyway, so it pauses
+  // only when the words ask for it.
+  if (out.action === 'pause' && !/\b(pause|hold on|hang on|wait|minute|second|moment|break|brb|be right back|stop listening|time ?out)\b/.test(normalizeSpeech(text))) {
+    voiceDbg('coach said pause, but nothing in "' + text + '" asks for it: ignored');
+    return;
+  }
   if (out.action === 'pause')  { voicePause(); return; }
   // The coach model has read chatter as "skip" ("Let's not take it."): only when the words say so
   if (out.action === 'skip' && !/\b(skip|next|move on|moving on|pass|later|come back|done with|not doing|don t want|leave it|forget)\b/.test(normalizeSpeech(text))) {

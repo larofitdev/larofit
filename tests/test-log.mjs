@@ -79,6 +79,13 @@ for (const phrase of ['Remove this exercise', 'Delete this exercise.', 'drop thi
   check('removing the only one asks what to do: "' + last(w3) + '"', w3.names().length === 0 && /What exercise are you doing/.test(last(w3)) && w3.phase() === 'pick_exercise');
   const w4 = make(PLAN, 'confirm_weight', '{"action":"remove","weight":null,"reps":null}'); await w4.interpret('Renew this exercise.');
   check('"Renew this exercise" (as it was heard) read by the coach model as remove -> ' + w4.names().length + ' left', w4.names().length === 2);
+  // The coach model reading talk as "pause" (2026-10-21 tester): only words that ask for it pause
+  for (const talk of ['How are you doing?', 'You are out of water?', 'Sorry, I apologize.']) {
+    const wp = make(PLAN, 'confirm_weight', '{"action":"pause","weight":null,"reps":null}'); await wp.interpret(talk);
+    check('"' + talk + '" read as pause by the coach model: not paused', !wp.paused());
+  }
+  const wq = make(PLAN, 'confirm_weight', '{"action":"pause","weight":null,"reps":null}'); await wq.interpret('can you wait while I grab my water');
+  check('"can you wait while I grab my water": paused', wq.paused());
   const w5 = make(PLAN, 'confirm_weight', '{"action":"skip","weight":null,"reps":null}'); await w5.interpret('leave that for later');
   check('the coach model can skip too -> on ' + w5.current(), w5.current() === 'Dumbbell Chest Fly' && w5.names().length === 3);
 }
