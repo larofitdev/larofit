@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=136">
+<link rel="stylesheet" href="larofit.css?v=137">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -602,6 +602,11 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 .completion-stat-label { font-size: 10px; color: var(--text-3); margin-top: 3px; }
 
 /* AI analysis */
+.completion-wins { background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 6px 14px; display: flex; flex-direction: column; }
+.completion-win { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; font-size: 14px; line-height: 1.4; color: var(--text); border-bottom: 0.5px solid var(--border); }
+.completion-win:last-child { border-bottom: none; }
+.completion-win i { font-size: 18px; color: var(--volt-dark); flex-shrink: 0; margin-top: 1px; }
+.completion-wins:empty { display: none; }
 .ai-analysis { background: var(--bg-card); border-radius: var(--radius); border: 0.5px solid var(--border); overflow: hidden; }
 .ai-analysis-header { padding: 12px 16px; background: var(--bg-dark); display: flex; align-items: center; gap: 8px; }
 .ai-analysis-title  { font-size: 12px; font-weight: 700; color: var(--volt); letter-spacing: 0.08em; text-transform: uppercase; font-family: var(--font-mono); }
@@ -752,10 +757,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=136"></script>
-<script src="larofit-exercises.js?v=136"></script>
+<script src="supabase-client.js?v=137"></script>
+<script src="larofit-exercises.js?v=137"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=136"></script>
+<script src="larofit-nav.js?v=137"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -942,6 +947,8 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       <div class="completion-stat"><div class="completion-stat-val" id="c-volume">—</div><div class="completion-stat-label">Lbs lifted</div></div>
       <div class="completion-stat"><div class="completion-stat-val" id="c-prs">—</div><div class="completion-stat-label">PRs</div></div>
     </div>
+    <!-- What went well, counted by the app -->
+    <div class="completion-wins" id="completion-wins"></div>
     <div class="ai-analysis">
       <div class="ai-analysis-header">
         <i class="ti ti-sparkles" style="color:var(--volt);font-size:16px;" aria-hidden="true"></i>
@@ -1268,6 +1275,7 @@ let restInterval   = null;
 let restRemaining  = 0;
 let totalPRs       = 0;
 let _prCredited    = new Set(); // exercise id/name credited a PR this session (1 max per exercise)
+let _prFirst       = new Set(); // ...of which the first time the exercise was done (not a record beaten)
 let exNotes        = {};   // { exIdx: noteText }
 // ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
 function localDateStr(d) {
@@ -1769,7 +1777,7 @@ function workoutExerciseFrom(ex) {
 }
 
 function buildExerciseList(exArr, workoutName) {
-  totalPRs = 0; _prCredited = new Set();
+  totalPRs = 0; _prCredited = new Set(); _prFirst = new Set();
   exercises = exArr.map(workoutExerciseFrom);
 
   if (!exercises.length && !isFreeForm) { show('no-program-state'); return; }
@@ -1866,7 +1874,7 @@ function startWorkout(workoutName) {
 function startFreeForm() {
   isFreeForm = true;
   exercises  = [];
-  totalPRs = 0; _prCredited = new Set();
+  totalPRs = 0; _prCredited = new Set(); _prFirst = new Set();
   buildExPicker();
   startWorkout('Free Workout');
   if (workoutMode === 'voice') voiceAskExercise();
@@ -2940,6 +2948,7 @@ function checkPR(ex) {
 
   if (isPR) {
     _prCredited.add(key);
+    if (!prev.exists) _prFirst.add(key);
     totalPRs++;
     showToast(prev.exists ? '🏆 New personal record!' : '🏆 First-time PR!');
   }
@@ -3040,6 +3049,8 @@ function finishWorkout() {
       return { id: ex.id, name: ex.name, type: exTypeOf(ex), sets: loggedSets, best1RM: best1RM||null, note: exNotes[exercises.indexOf(ex)] || '', coach: ex.coachNext || null, session: sessionNo };
     })
   };
+  const wins = workoutWins(wName, totalVolume, history);
+
   // History holds one record per day. A second workout today (say morning and
   // evening) is appended to it; writing over it would lose the first one.
   const loggedAny = thisWorkout.exercises.some(e => e.sets.length);
@@ -3083,11 +3094,60 @@ function finishWorkout() {
   document.getElementById('c-prs').textContent      = totalPRs || '0';
   const setsLogged = exercises.reduce((a,ex) => a + ex.loggedSets.filter(s=>s.logged).length, 0);
   document.getElementById('completion-sub').textContent = setsLogged + ' sets logged · ' + exercises.length + ' exercises';
-  fetchAIAnalysis(durationMin, totalVolume, totalPRs, exercises);
+  renderWins(wins);
+  fetchAIAnalysis(durationMin, totalVolume, totalPRs, exercises, wins);
+}
+
+// ── WHAT WENT WELL ────────────────────────────────────────────
+// Counted by the app from what was logged and what its progression set for next time; shown
+// as a list on the completion screen, and handed to the summary to put into words (the
+// summary is never left to work out progress itself: it once advised 6-8 reps).
+function workoutWins(wName, totalVolume, history) {
+  const key = ex => ex.id || ex.name, done = ex => ex.loggedSets.length > 0 && ex.loggedSets.every(st => st.logged);
+  const plan = ex => ex.coachNext || {}, target = ex => parseInt(ex.targetReps) || parseInt(ex.reps) || 10;
+  const strength = exercises.filter(ex => isStrength(ex) && done(ex));
+  // The weight lifted against the last time this workout was done
+  let lastVolume = 0;
+  for (const date of Object.keys(history || {}).filter(d => d < todayKey).sort().reverse()) {
+    const e = history[date], list = (e && (e.sessionList || [{ name: e.name, totalVolume: e.totalVolume }])) || [];
+    const same = list.find(x => x.name === wName);
+    if (same) { lastVolume = same.totalVolume || 0; break; }
+  }
+  return {
+    prs:      exercises.filter(ex => _prCredited.has(key(ex)) && !_prFirst.has(key(ex))).map(ex => ex.name),
+    hit:      strength.filter(ex => ex.loggedSets.every(st => (parseFloat(st.reps) || 0) >= target(ex))).length,
+    of:       strength.length,
+    weightUp: exercises.filter(ex => plan(ex).stage === 'up' && plan(ex).nextWeight).map(ex => ex.name + ' to ' + plan(ex).nextWeight + ' ' + weightUnit()),
+    holdUp:   exercises.filter(ex => isTimed(ex) && plan(ex).stage === 'up' && plan(ex).nextHold).map(ex => ex.name + ' to ' + plan(ex).nextHold + ' seconds'),
+    repsUp:   exercises.filter(ex => plan(ex).stage === 'stretch' && plan(ex).nextReps > target(ex)).map(ex => ex.name + ' to ' + plan(ex).nextReps + ' reps'),
+    oneMore:  exercises.filter(ex => plan(ex).stage === 'confirm').map(ex => ex.name),
+    moreVolume: lastVolume && totalVolume > lastVolume ? Math.round(totalVolume - lastVolume) : 0,   // never a "less than last time"
+    done:     exercises.filter(done).length,
+    total:    exercises.length
+  };
+}
+
+// The wins as lines: [icon, text]
+function winsLines(w) {
+  const L = [], n = (k, one, many) => k + ' ' + (k === 1 ? one : many);
+  if (w.prs.length) L.push(['ti-trophy', (w.prs.length === 1 ? 'Personal record' : w.prs.length + ' personal records') + ': ' + w.prs.join(', ')]);
+  if (w.hit) L.push(['ti-target-arrow', 'Target reps hit on ' + w.hit + ' of ' + n(w.of, 'exercise', 'exercises')]);
+  if (w.weightUp.length) L.push(['ti-arrow-big-up-lines', 'Weight goes up next time: ' + w.weightUp.join(', ')]);
+  if (w.holdUp.length) L.push(['ti-clock-up', 'Longer holds next time: ' + w.holdUp.join(', ')]);
+  if (w.repsUp.length) L.push(['ti-trending-up', 'More reps next time: ' + w.repsUp.join(', ')]);
+  if (w.oneMore.length) L.push(['ti-flag', 'One more session like this and the weight goes up: ' + w.oneMore.join(', ')]);
+  if (w.moreVolume) L.push(['ti-barbell', w.moreVolume.toLocaleString() + ' ' + weightUnit() + ' more lifted than last time']);
+  L.push(['ti-circle-check', w.done === w.total ? (w.total === 1 ? 'Exercise done' : 'All ' + w.total + ' exercises done') : w.done + ' of ' + n(w.total, 'exercise', 'exercises') + ' done']);
+  return L;
+}
+
+function renderWins(w) {
+  document.getElementById('completion-wins').innerHTML = winsLines(w).map(([icon, text]) =>
+    '<div class="completion-win"><i class="ti ' + icon + '" aria-hidden="true"></i><span>' + escHtml(text) + '</span></div>').join('');
 }
 
 // ── AI ANALYSIS ───────────────────────────────────────────────
-async function fetchAIAnalysis(durationMin, totalVolume, prs, exList) {
+async function fetchAIAnalysis(durationMin, totalVolume, prs, exList, wins) {
   const summary = exList.map(ex => {
     const sets = ex.loggedSets.filter(s => s.logged);
     if (!sets.length) return null;
@@ -3113,7 +3173,12 @@ async function fetchAIAnalysis(durationMin, totalVolume, prs, exList) {
   const prompt = `You are LaroFit's coach, summing up a workout in 3-4 sentences, under 80 words: encouraging, specific and direct.
 
 The app sets every weight and rep target itself, with this progression rule: ${rule}
-Each exercise below shows the app's plan for next time. Never suggest different weights, reps, sets, rep ranges or rest, and never tell them to change their program. If you mention what's next, use the app's plan exactly. Otherwise talk about how the session went: effort, consistency, form, recovery.
+Each exercise below shows the app's plan for next time. Never suggest different weights, reps, sets, rep ranges or rest, and never tell them to change their program. If you mention what's next, use the app's plan exactly.
+
+Lead with what went well, from the list the app counted below (use its numbers; don't count anything yourself): name any personal records, say how many targets were hit, and what goes up next time. Be warm, upbeat and motivating, like a coach who's proud of them. Never scold for anything missed.
+
+What went well (counted by the app):
+${wins ? winsLines(wins).map(([, t]) => '- ' + t).join('\n') : '- (not available)'}
 
 Workout:
 - Duration: ${durationMin} minutes
@@ -3802,7 +3867,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 119;
+const VOICE_BUILD = 120;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
