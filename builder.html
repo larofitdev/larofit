@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=140">
+<link rel="stylesheet" href="larofit.css?v=141">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -96,46 +96,32 @@ button, input, select, a, textarea { touch-action: manipulation; }
   color: var(--text);
 }
 
-/* Day-of-week header */
-.cal-dow-row {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  padding: 0 var(--page-pad);
-  margin-bottom: 4px;
-}
-.cal-dow {
-  text-align: center;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-3);
-  letter-spacing: 0.08em;
-  padding: 4px 0;
-  font-family: var(--font-mono);
-}
+.cal-week-label { font-size: 11px; font-weight: 700; color: var(--text-3); font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; min-height: 16px; margin-top: 2px; }
+.cal-today-btn { background: none; border: none; color: var(--volt-dark); font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; padding: 0 0 0 8px; }
 
-/* Calendar grid */
+/* Calendar grid: a week, Mon-Wed and Thu-Sat across, Sunday the full width below */
 .cal-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
   padding: 0 var(--page-pad);
 }
 
 .cal-cell {
-  aspect-ratio: 1 / 1.25;
+  min-height: 128px;
   border-radius: var(--radius-sm);
   border: 0.5px solid var(--border);
   background: var(--bg-card);
   display: flex;
   flex-direction: column;
-  padding: 4px 4px 3px;
+  padding: 8px 8px 6px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
   transition: border-color 0.15s, background 0.15s;
-  min-height: 56px;
 }
+.cal-cell.sunday { grid-column: 1 / -1; min-height: 84px; }
 .cal-cell:active { background: var(--bg-card2); }
 .cal-cell.empty {
   background: transparent;
@@ -156,6 +142,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
   background: var(--bg-dark);
   border-color: var(--bg-dark);
 }
+.cal-session-name { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.cal-session-count { display: block; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.5); margin-top: 1px; }
+.cal-session-more { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.6); padding-left: 2px; }
+.cal-empty-hint { margin-top: auto; font-size: 12px; font-weight: 600; color: var(--text-3); opacity: 0.7; }
 .cal-cell.paste-target {
   border-color: var(--volt);
   border-width: 1.5px;
@@ -166,8 +156,16 @@ button, input, select, a, textarea { touch-action: manipulation; }
   50%       { border-color: var(--volt-dark); }
 }
 
+.cal-cell-head { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; flex-shrink: 0; }
+.cal-dow-name {
+  font-size: 11px; font-weight: 700; color: var(--text-3);
+  font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase;
+}
+.cal-cell.has-workout .cal-dow-name { color: rgba(255,255,255,0.55); }
+.cal-cell.is-today .cal-dow-name    { color: var(--volt-dark); }
+.cal-cell.has-workout.is-today .cal-dow-name { color: var(--volt); }
 .cal-date-num {
-  font-size: 11px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-3);
   line-height: 1;
@@ -181,21 +179,20 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .cal-session-labels {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-top: 3px;
+  gap: 4px;
+  margin-top: 8px;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
+.cal-cell.sunday .cal-session-labels { flex-direction: row; flex-wrap: wrap; }
 .cal-session-label {
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
-  line-height: 1.2;
-  white-space: nowrap;
+  line-height: 1.25;
   overflow: hidden;
-  text-overflow: ellipsis;
-  border-radius: 3px;
-  padding: 1px 3px;
+  border-radius: 5px;
+  padding: 4px 6px;
   color: var(--volt);
   background: rgba(198,241,53,0.12);
 }
@@ -879,10 +876,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=140"></script>
-<script src="larofit-exercises.js?v=140"></script>
+<script src="supabase-client.js?v=141"></script>
+<script src="larofit-exercises.js?v=141"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=140"></script>
+<script src="larofit-nav.js?v=141"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -947,26 +944,18 @@ button, input, select, a, textarea { touch-action: manipulation; }
     <button class="paste-cancel-btn" onclick="cancelPaste()">Cancel</button>
   </div>
 
-  <!-- Month nav -->
+  <!-- Week nav: one week at a time -->
   <div class="cal-nav">
-    <button class="cal-nav-btn" id="cal-prev" onclick="prevMonth()">
+    <button class="cal-nav-btn" id="cal-prev" onclick="prevWeek()" aria-label="Previous week">
       <i class="ti ti-chevron-left"></i>
     </button>
-    <div class="cal-month-label" id="cal-month-label">—</div>
-    <button class="cal-nav-btn" id="cal-next" onclick="nextMonth()">
+    <div style="text-align:center;">
+      <div class="cal-month-label" id="cal-month-label">—</div>
+      <div class="cal-week-label"><span id="cal-week-label"></span><button class="cal-today-btn" id="cal-today" onclick="goThisWeek()" style="display:none;">Back to this week</button></div>
+    </div>
+    <button class="cal-nav-btn" id="cal-next" onclick="nextWeek()" aria-label="Next week">
       <i class="ti ti-chevron-right"></i>
     </button>
-  </div>
-
-  <!-- Day-of-week headers -->
-  <div class="cal-dow-row">
-    <div class="cal-dow">Sun</div>
-    <div class="cal-dow">Mon</div>
-    <div class="cal-dow">Tue</div>
-    <div class="cal-dow">Wed</div>
-    <div class="cal-dow">Thu</div>
-    <div class="cal-dow">Fri</div>
-    <div class="cal-dow">Sat</div>
   </div>
 
   <!-- Calendar grid injected by JS -->
@@ -1199,11 +1188,7 @@ let libEq             = (typeof LF !== 'undefined' && LF.equipment && LF.equipme
 let cxSelectedMuscles = [];
 let _customsCache     = [];  // seeded from localStorage in init(), updated by Supabase in background
 
-let calYear  = 0;
-let calMonth = 0;
-
-const MONTH_NAMES = ['January','February','March','April','May','June',
-                     'July','August','September','October','November','December'];
+let calWeekStart = '';   // the Monday of the week shown
 // ── LOCAL DATE HELPER — avoids UTC offset shifting the date ──
 function localDateStr(d) {
   d = d || new Date();
@@ -1211,7 +1196,7 @@ function localDateStr(d) {
     String(d.getMonth() + 1).padStart(2, '0') + '-' +
     String(d.getDate()).padStart(2, '0');
 }
-const todayStr = localDateStr();
+let todayStr = localDateStr();   // moves on at midnight (see initCalendarView)
 
 // ══════════════════════════════════════════════════════════════════════
 // INIT
@@ -1558,16 +1543,24 @@ function programDateRange() {
   end.setDate(end.getDate() + program.weeks * 7 - 1);
   return {
     startStr: program.startDate,
-    endStr:   end.toISOString().slice(0,10),
+    endStr:   localDateStr(end),
     start,
     end,
   };
 }
 
+// Dates as 'YYYY-MM-DD': n days on, and the Monday of a date's week
+function addDays(dateStr, n) { const d = new Date(dateStr + 'T00:00:00'); d.setDate(d.getDate() + n); return localDateStr(d); }
+function weekStartOf(dateStr) { const d = new Date(dateStr + 'T00:00:00'); return addDays(dateStr, -((d.getDay() + 6) % 7)); }
+
+// The week to show: this week while the program is running, else its first week
+function homeWeek() {
+  const r = programDateRange();
+  return weekStartOf(todayStr >= r.startStr && todayStr <= r.endStr ? todayStr : r.startStr);
+}
+
 function initCalendarView() {
-  const { start } = programDateRange();
-  calYear  = start.getFullYear();
-  calMonth = start.getMonth();
+  calWeekStart = homeWeek();
   document.getElementById('cal-header-title').textContent =
     (program.name || 'NEW PROGRAM').toUpperCase();
   renderCalendar();
@@ -1582,58 +1575,67 @@ function initCalendarView() {
     if (Date.now() - lastTap < 400) return;
     calGridTap(e);
   });
+
+  // After midnight (their time) "today" moves on, and so does the week if it was showing this one
+  const tick = () => {
+    const now = localDateStr();
+    if (now === todayStr) return;
+    const wasThisWeek = calWeekStart === weekStartOf(todayStr);
+    todayStr = now;
+    if (wasThisWeek) calWeekStart = homeWeek();
+    renderCalendar();
+  };
+  setInterval(tick, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
 }
 
 function renderCalendar() {
   const range = programDateRange();
-  document.getElementById('cal-month-label').textContent = MONTH_NAMES[calMonth] + ' ' + calYear;
+  const first = weekStartOf(range.startStr), last = weekStartOf(range.endStr);
+  if (!calWeekStart || calWeekStart < first) calWeekStart = first;   // start date or weeks changed
+  if (calWeekStart > last) calWeekStart = last;
 
-  const startM    = new Date(range.startStr + 'T00:00:00');
-  const endM      = new Date(range.endStr   + 'T00:00:00');
-  const thisFirst = new Date(calYear, calMonth, 1);
+  const week = [0, 1, 2, 3, 4, 5, 6].map(i => addDays(calWeekStart, i));
+  const short = d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  document.getElementById('cal-month-label').textContent = short(week[0]) + ' – ' + short(week[6]);
+  const thisWeek = weekStartOf(todayStr);
+  document.getElementById('cal-week-label').textContent =
+    calWeekStart === thisWeek ? 'This week' : calWeekStart === addDays(thisWeek, 7) ? 'Next week' : calWeekStart === addDays(thisWeek, -7) ? 'Last week' : '';
+  document.getElementById('cal-prev').disabled = calWeekStart <= first;
+  document.getElementById('cal-next').disabled = calWeekStart >= last;
+  document.getElementById('cal-today').style.display = calWeekStart !== homeWeek() ? '' : 'none';
 
-  document.getElementById('cal-prev').disabled =
-    thisFirst <= new Date(startM.getFullYear(), startM.getMonth(), 1);
-  document.getElementById('cal-next').disabled =
-    thisFirst >= new Date(endM.getFullYear(), endM.getMonth(), 1);
-
-  const firstDow    = new Date(calYear, calMonth, 1).getDay();
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-
-  let html = '';
-
-  for (let i = 0; i < firstDow; i++) {
-    html += `<div class="cal-cell empty"></div>`;
-  }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  document.getElementById('cal-grid').innerHTML = week.map((dateStr, i) => {
     const inRange = dateStr >= range.startStr && dateStr <= range.endStr;
-    const isToday = dateStr === todayStr;
-    const day     = program.days[dateStr]; // { name, exercises[] } | undefined
-    const hasDay  = !!day;
+    const day     = program.days[dateStr];
+    const d       = new Date(dateStr + 'T00:00:00');
 
     let cls = 'cal-cell';
+    if (i === 6)  cls += ' sunday';
     if (!inRange) cls += ' out-of-range';
-    if (isToday)  cls += ' is-today';
-    if (hasDay)   cls += ' has-workout';
+    if (dateStr === todayStr) cls += ' is-today';
+    if (day)      cls += ' has-workout';
     if (pasteMode && inRange) cls += ' paste-target';
 
-    let sessionsHtml = '';
-    if (hasDay) {
-      const names = dayList(dateStr).filter(workoutUsed).map(w => w.name || 'Workout');
-      const shown = names.length > 2 ? [names[0], '+' + (names.length - 1) + ' more'] : names;
-      sessionsHtml = `<div class="cal-session-labels">${shown.map(n => `<div class="cal-session-label">${escHtml(n)}</div>`).join('')}</div>`;
-    }
+    // Each workout's name and size; an empty day in the program says it can take one
+    const workouts = day ? dayList(dateStr).filter(workoutUsed) : [];
+    const shown = workouts.length > 3 ? workouts.slice(0, 2) : workouts;
+    const body = workouts.length
+      ? '<div class="cal-session-labels">' + shown.map(w => {
+          const n = (w.exercises || []).length;
+          return `<div class="cal-session-label"><span class="cal-session-name">${escHtml(w.name || 'Workout')}</span><span class="cal-session-count">${n} exercise${n === 1 ? '' : 's'}</span></div>`;
+        }).join('') + (workouts.length > shown.length ? `<div class="cal-session-more">+${workouts.length - shown.length} more</div>` : '') + '</div>'
+      : inRange ? '<div class="cal-empty-hint"><i class="ti ti-plus" aria-hidden="true"></i> Add</div>' : '';
 
-    html += `
+    return `
       <div class="${cls}" ${inRange ? `data-date="${dateStr}"` : ''}>
-        <div class="cal-date-num">${d}</div>
-        ${sessionsHtml}
+        <div class="cal-cell-head">
+          <span class="cal-dow-name">${d.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+          <span class="cal-date-num">${d.getDate()}</span>
+        </div>
+        ${body}
       </div>`;
-  }
-
-  document.getElementById('cal-grid').innerHTML = html;
+  }).join('');
 }
 
 function calGridTap(e) {
@@ -1643,17 +1645,9 @@ function calGridTap(e) {
   if (dateStr) handleDayTap(dateStr);
 }
 
-function prevMonth() {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  renderCalendar();
-}
-
-function nextMonth() {
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  renderCalendar();
-}
+function prevWeek() { calWeekStart = addDays(calWeekStart, -7); renderCalendar(); }
+function nextWeek() { calWeekStart = addDays(calWeekStart, 7); renderCalendar(); }
+function goThisWeek() { calWeekStart = homeWeek(); renderCalendar(); }
 
 // ══════════════════════════════════════════════════════════════════════
 // DAY TAP LOGIC
