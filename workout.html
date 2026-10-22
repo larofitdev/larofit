@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=137">
+<link rel="stylesheet" href="larofit.css?v=138">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -757,10 +757,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=137"></script>
-<script src="larofit-exercises.js?v=137"></script>
+<script src="supabase-client.js?v=138"></script>
+<script src="larofit-exercises.js?v=138"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=137"></script>
+<script src="larofit-nav.js?v=138"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3867,7 +3867,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 120;
+const VOICE_BUILD = 121;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4973,6 +4973,8 @@ function handleVoiceResult(raw) {
   else voiceRemoveAsk = null;
   voiceFinishAt = 0;
   if (VOICE_FINISH.test(t) && !/\d/.test(t) && !/\b(sets?|reps?|exercise)\b/.test(t)) { voiceFinishAsk(); return true; }
+  // "Give me a six-exercise chest routine", "make me a 20 minute dumbbell circuit"
+  if (VOICE_ROUTINE.test(t)) { voiceBuildRoutine(raw); return true; }
   if (VOICE_REMOVE.test(t)) { voiceRemoveExercise(); return true; }
   if (voiceSaidSkip(t)) { voiceSkipExercise(); return true; }
   // "Replace this exercise with machine flys" (not "replace the first set...")
@@ -5964,6 +5966,118 @@ function voiceStartExercise(data) {
   voicePreAnnounced = -1;
   goToEx(idx);   // shows it and announces it
   saveSnapshot();
+}
+
+// ── "GIVE ME A CHEST ROUTINE" ─────────────────────────────────
+// Asked for in the gym: the coach builds a workout on the spot from the library, reads it out
+// and starts it. Only exercises for the equipment they use are sent (or the equipment the
+// request names), which also keeps the request small. It's added to today's workout: an empty
+// one becomes it; after a plan it goes on the end ("give me an ab finisher"). Weights come
+// from history and the progression, like any exercise. (Building whole programs by voice at
+// home was left out on purpose: the AI builder does that, and it would cost far more.)
+// It has to be a request for one: "give me A chest routine", "can I get A QUICK finisher". Talk
+// that only mentions the workout ("I need water, this workout is brutal") isn't.
+const VOICE_ROUTINE = new RegExp(
+  '\\b(give me|build me|make me|make up|create|put together|design|plan me|set me up with|i want|i need|can i get|can you give me|can you make|let s do|how about)' +
+  '(?: me)? (a|an|another|some|one more|new|quick|different|good|short|full)\\b(?: [\\w-]+){0,6}? (workout|routine|circuit|superset|finisher|session)s?\\b' +
+  '|\\bwhat should i (do|train|work on)( for| today| now| next| this| tonight)');
+const ROUTINE_EQUIP = [[/\bdumbbells?\b/, 'dumbbells'], [/\bbarbells?\b/, 'barbell'], [/\bez ?bar\b/, 'ez_bar'], [/\b(machines?|cables?)\b/, 'machine_cable'],
+  [/\bsmith\b/, 'smith'], [/\bkettlebells?\b/, 'kettlebells'], [/\bbands?\b/, 'bands'], [/\b(exercise|stability|swiss) ball\b/, 'exercise_ball'],
+  [/\b(bodyweight|body weight|no equipment|calisthenics)\b/, 'bodyweight'], [/\b(treadmill|bike|rower|elliptical|cardio machines?)\b/, 'cardio_machine']];
+let voiceRoutineBusy = false;
+
+const ROUTINE_MUSCLES = [[/\b(chest|pecs?)\b/, ['chest']], [/\b(back|lats?)\b/, ['back']], [/\b(shoulders?|delts?)\b/, ['shoulders']],
+  [/\bbiceps?\b/, ['biceps']], [/\btriceps?\b/, ['triceps']], [/\b(arms?|guns)\b/, ['biceps', 'triceps', 'forearms']], [/\bforearms?\b/, ['forearms']],
+  [/\b(legs?|lower body)\b/, ['upper_legs', 'lower_legs', 'glutes']], [/\b(glutes?|butt|booty)\b/, ['glutes']], [/\b(quads?|hamstrings?|thighs?)\b/, ['upper_legs']],
+  [/\b(calf|calves)\b/, ['lower_legs']], [/\b(abs?|core|stomach)\b/, ['abs']], [/\b(cardio|conditioning)\b/, ['cardio']],
+  [/\bpush\b/, ['chest', 'shoulders', 'triceps']], [/\bpull\b/, ['back', 'biceps']], [/\bupper body\b/, ['chest', 'back', 'shoulders', 'biceps', 'triceps']]];
+
+// The library the coach may build from: the equipment the request names, or else the
+// equipment they use (Profile); and the muscles it names ("chest" sends ~30, not ~150), which
+// keeps the request cheap. A full-body or unspecified request gets every muscle.
+function routineLibrary(request) {
+  const t = normalizeSpeech(request);
+  const named = ROUTINE_EQUIP.filter(([re]) => re.test(t)).map(([, kind]) => kind);
+  const muscles = /\bfull body\b/.test(t) ? [] : ROUTINE_MUSCLES.filter(([re]) => re.test(t)).flatMap(([, m]) => m);
+  return exAllExercises().filter(e => e && e.id && e.name && (named.length ? named.includes(LF.equipment.kindOf(e)) : LF.equipment.allows(e))
+    && (!muscles.length || muscles.includes(e.primaryMuscle)));
+}
+
+async function voiceBuildRoutine(request) {
+  if (voiceRoutineBusy) return;
+  voiceRoutineBusy = true;
+  voiceSwap = null; voiceEdit = null; voiceAskName = null;
+  stopRest(); restCallback = null;
+  const phase = voicePhase;
+  voicePrompt('Putting that together.', true);
+  voiceDbg('routine asked for: "' + request + '"');
+  try {
+    const lib = routineLibrary(request);
+    const kind = e => e.recordType === 'cardio' ? 'cardio' : e.recordType === 'duration' ? 'timed' : e.recordType === 'weight_reps' ? 'weights' : 'reps';
+    const system = `You are LaroFit's coach. In the gym, the member has just asked out loud for a workout. Build it from this library only.
+
+LIBRARY, one per line: Name [id] (equipment, main muscle, how it is counted)
+${lib.map(e => e.name + ' [' + e.id + '] (' + (e.equipment || 'any') + ', ' + (e.primaryMuscle || 'general') + ', ' + kind(e) + ')').join('\n')}
+
+RULES
+- 4 to 7 exercises unless they ask for a number. With a time limit, about 7 minutes per strength exercise; a timed circuit fits its rounds into the time.
+- Supersets (2 exercises) and circuits (3 or more) only when they ask for one, or for a "circuit" or "finisher".
+- Defaults: 3 sets of 10; timed exercises 30 seconds; a timed circuit is 40 seconds work, 20 seconds to move, 3 rounds.
+- Order big compound lifts before smaller isolation work. Use only ids from the library, exactly as written.
+
+Reply with one JSON object and nothing else:
+{"name":"Chest","exercises":[{"id":"b88","sets":3,"reps":10}],"groups":[{"ids":["b88","b90"],"timed":false,"rounds":3}]}
+- "groups" is optional. A timed circuit: {"ids":[...],"timed":true,"rounds":3,"workSec":40,"moveSec":20}.
+- Timed exercises take "durationSec" instead of "reps".`;
+    const res = await aiCoachFetch({ model: 'claude-haiku-4-5', max_tokens: 700, system, messages: [{ role: 'user', content: request }] });
+    const data = await res.json();
+    const text = String((data.content && data.content[0] && data.content[0].text) || '');
+    const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+    const added = routineAdd(json);
+    if (!added.length) throw new Error('nothing in it');
+    voiceDbg('routine built: ' + added.map(i => exercises[i].name).join(', '));
+    // Read it out, then the first exercise (its own line follows, as for any exercise)
+    const names = added.map(i => exercises[i].name);
+    const what = (json.name ? json.name + ' workout' : 'workout').replace(/\b(workout workout|routine workout)\b/i, 'workout');
+    voiceSayFirst = 'Here is your ' + what + ', ' + names.length + ' exercises: ' + names.slice(0, -1).join(', ') + (names.length > 1 ? ', and ' : '') + names[names.length - 1] + '.';
+    voicePreAnnounced = -1;
+    goToEx(added[0]);
+  } catch (e) {
+    voiceDbg('routine failed: ' + (e && e.message));
+    voicePhase = phase === 'idle' ? 'pick_exercise' : phase;
+    voicePrompt('I could not put that together. Ask again, or name an exercise.', true);
+  } finally {
+    voiceRoutineBusy = false;
+  }
+}
+
+// The coach's routine into today's workout. Returns the positions of what was added.
+function routineAdd(json) {
+  const all = exAllExercises(), groups = {};
+  (Array.isArray(json.groups) ? json.groups : []).forEach((g, gi) => {
+    const id = 'g' + Date.now().toString(36) + gi, timed = !!g.timed;
+    const settings = { id, rounds: Math.min(Math.max(parseInt(g.rounds) || 3, 1), 10), roundRestSec: timed ? 90 : 60, timed,
+                       workSec: parseInt(g.workSec) || 40, moveSec: g.moveSec != null ? parseInt(g.moveSec) || 0 : 20 };
+    (g.ids || []).forEach(exId => { groups[exId] = settings; });
+  });
+  const added = [];
+  (Array.isArray(json.exercises) ? json.exercises : []).slice(0, 10).forEach(x => {
+    const e = all.find(a => a.id === x.id);
+    if (!e) return;   // not an id in the library: left out
+    const group = groups[e.id] ? { ...groups[e.id] } : null;
+    exercises.push(workoutExerciseFrom({ id: e.id, name: e.name, recordType: e.recordType, sets: Math.min(Math.max(parseInt(x.sets) || 3, 1), 8),
+      reps: parseInt(x.reps) || 10, durationSec: parseInt(x.durationSec) || null, restSec: 60, group }));
+    added.push(exercises.length - 1);
+  });
+  // A group of one (the rest left out) is no group
+  added.forEach(i => { const g = exercises[i].group; if (g && added.filter(j => exercises[j].group && exercises[j].group.id === g.id).length < 2) exercises[i].group = null; });
+  if (added.length) {
+    document.getElementById('ex-card').style.display = 'block';
+    const nameEl = document.getElementById('free-workout-name');
+    if (isFreeForm && nameEl && !nameEl.value.trim() && json.name) nameEl.value = json.name;
+    saveSnapshot();
+  }
+  return added;
 }
 
 // Nothing on the card to do: ask
