@@ -9,7 +9,7 @@
 <title>LaroFit — Builder</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=139">
+<link rel="stylesheet" href="larofit.css?v=140">
 <style>
 input, select, textarea { font-size: 16px !important; }
 button, input, select, a, textarea { touch-action: manipulation; }
@@ -736,6 +736,17 @@ button, input, select, a, textarea { touch-action: manipulation; }
 .repeat-day[aria-pressed="true"] { background: var(--volt); border-color: var(--volt); color: #1a1a1a; }
 .repeat-count { font-size: 13px; color: var(--text-2); text-align: center; margin-top: 12px; min-height: 36px; line-height: 1.4; }
 .repeat-actions { display: flex; gap: 8px; margin-top: 14px; }
+.repeat-mode { margin-top: 4px; }
+.repeat-mode-text { font-size: 13px; color: var(--text-2); text-align: center; margin-bottom: 8px; }
+.repeat-mode-btns { display: flex; gap: 6px; }
+.repeat-mode-btns .repeat-day { min-height: 42px; padding: 0 8px; }
+/* Day sheet: a workout row with its own repeat and remove */
+.day-action-row { display: flex; align-items: center; gap: 6px; border-bottom: 0.5px solid var(--border); }
+.day-action-row .day-action-btn { border-bottom: none; flex: 1; min-width: 0; }
+.day-action-mini { min-width: 44px; height: 44px; border-radius: var(--radius-sm); border: 1px solid var(--border-md); background: transparent;
+  color: var(--text-2); font-size: 18px; font-family: inherit; font-weight: 700; cursor: pointer; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+.day-action-mini.danger { color: var(--danger); }
+.day-action-mini[data-confirming="true"] { font-size: 12px; padding: 0 8px; background: var(--danger-bg); }
 .repeat-actions .btn { min-height: 50px; }
 .day-action-btn:active { opacity: 0.6; }
 .day-action-icon {
@@ -868,10 +879,10 @@ button, input, select, a, textarea { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=139"></script>
-<script src="larofit-exercises.js?v=139"></script>
+<script src="supabase-client.js?v=140"></script>
+<script src="larofit-exercises.js?v=140"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=139"></script>
+<script src="larofit-nav.js?v=140"></script>
 
 <!-- ══════════════════════════════════════
      SCREEN 1 — SETUP + CALENDAR (combined)
@@ -1030,6 +1041,13 @@ button, input, select, a, textarea { touch-action: manipulation; }
   <div class="day-action-title" id="repeat-title">Which days is this workout on?</div>
   <div class="repeat-days" id="repeat-days" role="group" aria-label="Days of the week"></div>
   <div class="repeat-count" id="repeat-count"></div>
+  <div class="repeat-mode" id="repeat-mode" style="display:none;">
+    <div class="repeat-mode-text" id="repeat-mode-text"></div>
+    <div class="repeat-mode-btns" role="group" aria-label="The other workout on those days">
+      <button class="repeat-day" id="repeat-keep" onclick="setRepeatReplace(false)">Keep it, add this too</button>
+      <button class="repeat-day" id="repeat-replace" onclick="setRepeatReplace(true)">Replace it</button>
+    </div>
+  </div>
   <div class="repeat-actions">
     <button class="btn btn-outline" onclick="closeRepeat()">Just this day</button>
     <button class="btn btn-volt btn-full" id="repeat-go" onclick="applyRepeat()">Fill the program</button>
@@ -1173,6 +1191,7 @@ LF.ready().then(() => LF.guard());
 // ══════════════════════════════════════════════════════════════════════
 let program          = null;   // program object being built
 let editingDate      = null;   // 'YYYY-MM-DD' of day being edited
+let editingSlot      = 0;      // which of that day's workouts (0 the first, then its "more")
 let pasteMode        = false;
 let copiedDate       = null;
 let libMuscle         = 'all';
@@ -1215,10 +1234,9 @@ function programHasUnsavedChanges() {
   if (!program) return false;
   flushSetupToProgram();
   // Commit any pending day-title edit so the comparison is accurate
-  if (editingDate && program.days[editingDate]) {
+  if (currentSession()) {
     const t = document.getElementById('day-title-input');
-    if (t) program.days[editingDate].name = t.value.trim() ||
-      program.days[editingDate].name || '';
+    if (t) currentSession().name = t.value.trim() || currentSession().name || '';
   }
 
   let saved = null;
@@ -1308,6 +1326,7 @@ function init() {
   if (_draft) {
     program     = _draft.program;
     editingDate = _draft.editingDate;
+    editingSlot = _draft.editingSlot || 0;
     migrateLegacyDays();
     loadProgramIntoSetup();
 
@@ -1318,7 +1337,7 @@ function init() {
     // Re-enter the exact day editor and open the library so the new
     // exercise (pinned at top) is one tap away.
     if (editingDate) {
-      openDayEditor(editingDate);
+      openDayEditor(editingDate, editingSlot);
       setTimeout(openLibrary, 250);
     }
 
@@ -1425,7 +1444,8 @@ function goCreateCustom() {
   try {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({
       program:     program,
-      editingDate: editingDate
+      editingDate: editingDate,
+      editingSlot: editingSlot
     }));
   } catch (e) {
     showToast('Could not save your draft — please save the program first');
@@ -1470,15 +1490,31 @@ function libRecordType(id) {
   return e ? (e.recordType || null) : null;
 }
 
+// ── A DAY'S WORKOUTS ──
+// A day is one workout ({ name, exercises }) and may hold more after it, each its own:
+// { name, exercises, more: [{ name, exercises }, ...] }. Slot 0 is the day itself.
+function dayList(dateStr) {
+  const day = program.days[dateStr];
+  if (!day) return [];
+  return [day, ...(Array.isArray(day.more) ? day.more : [])];
+}
+function workoutAt(dateStr, slot) { return dayList(dateStr)[slot || 0] || null; }
+const workoutUsed = w => w && ((w.exercises || []).length || (w.name || '').trim());
+// A day put back together from its workouts (empty ones dropped); none left removes the day
+function setDayList(dateStr, list) {
+  const keep = list.filter(workoutUsed).map(w => { const c = { ...w }; delete c.more; return c; });
+  if (!keep.length) { delete program.days[dateStr]; return; }
+  const [first, ...more] = keep;
+  program.days[dateStr] = more.length ? { ...first, more } : first;
+}
+
 function normalizeProgramRecordTypes() {
   if (!program || !program.days) return;
   Object.keys(program.days).forEach(dateStr => {
-    const day = program.days[dateStr];
-    if (!day || !Array.isArray(day.exercises)) return;
-    day.exercises.forEach(ex => {
+    dayList(dateStr).forEach(w => (Array.isArray(w.exercises) ? w.exercises : []).forEach(ex => {
       const lib = libRecordType(ex.id);
       if (lib && lib !== ex.recordType) ex.recordType = lib;
-    });
+    }));
   });
 }
 
@@ -1487,19 +1523,13 @@ function migrateLegacyDays() {
   Object.keys(program.days).forEach(dateStr => {
     const d = program.days[dateStr];
     if (!d) { delete program.days[dateStr]; return; }
-    // v2 AM/PM format → flatten: merge exercises, prefer am name
+    // v2 AM/PM format: two workouts of their own on the day
     if ('am' in d || 'pm' in d) {
-      const amEx = (d.am && Array.isArray(d.am.exercises)) ? d.am.exercises : [];
-      const pmEx = (d.pm && Array.isArray(d.pm.exercises)) ? d.pm.exercises : [];
-      const name = (d.am && d.am.name) || (d.pm && d.pm.name) || 'Workout';
-      const allEx = [...amEx, ...pmEx];
-      if (allEx.length === 0 && !name.trim()) {
-        delete program.days[dateStr];
-      } else {
-        program.days[dateStr] = { name, exercises: allEx };
-      }
+      setDayList(dateStr, [d.am, d.pm].filter(Boolean).map(w => ({ name: w.name || ((w.exercises || []).length ? 'Workout' : ''), exercises: Array.isArray(w.exercises) ? w.exercises : [] })));
+      return;
     }
-    // Legacy v1 flat {name, exercises[]} is already the new format — no change needed
+    // { name, exercises[] } (with any "more") is the current format
+    if (Array.isArray(d.more)) setDayList(dateStr, dayList(dateStr));
   });
   // Refresh built-in exercise record types from the library
   normalizeProgramRecordTypes();
@@ -1591,8 +1621,9 @@ function renderCalendar() {
 
     let sessionsHtml = '';
     if (hasDay) {
-      const wName = day.name || 'Workout';
-      sessionsHtml = `<div class="cal-session-labels"><div class="cal-session-label">${escHtml(wName)}</div></div>`;
+      const names = dayList(dateStr).filter(workoutUsed).map(w => w.name || 'Workout');
+      const shown = names.length > 2 ? [names[0], '+' + (names.length - 1) + ' more'] : names;
+      sessionsHtml = `<div class="cal-session-labels">${shown.map(n => `<div class="cal-session-label">${escHtml(n)}</div>`).join('')}</div>`;
     }
 
     html += `
@@ -1651,51 +1682,38 @@ let actionDate = null;
 
 function openDayAction(dateStr) {
   actionDate = dateStr;
-  const day  = program.days[dateStr];
+  const list = dayList(dateStr), many = list.length > 1;
 
   const d = new Date(dateStr + 'T00:00:00');
   const label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   document.getElementById('day-action-date').textContent = label;
-  document.getElementById('day-action-title').textContent = (day && day.name) || 'Edit workout';
+  document.getElementById('day-action-title').textContent = many ? list.length + ' workouts on this day' : (list[0] && list[0].name) || 'Edit workout';
 
-  const exCount = day ? (day.exercises || []).length : 0;
-  const btns = `
-    <button class="day-action-btn" onclick="dayActionEdit()">
-      <div class="day-action-icon" style="background:var(--volt-bg);">
-        <i class="ti ti-edit" style="color:var(--volt-dark);font-size:18px;"></i>
+  const btn = (onclick, icon, bg, color, title, sub, extra = '') => `
+    <button class="day-action-btn" onclick="${onclick}" ${extra}>
+      <div class="day-action-icon" style="background:${bg};">
+        <i class="ti ${icon}" style="color:${color};font-size:18px;"></i>
       </div>
-      <div>
-        <div class="day-action-label">${escHtml((day && day.name) || 'Workout')}</div>
-        <div class="day-action-sub">${exCount} exercise${exCount !== 1 ? 's' : ''} · tap to edit</div>
-      </div>
-    </button>
-    <button class="day-action-btn" onclick="dayActionRepeat()">
-      <div class="day-action-icon" style="background:var(--volt-bg);">
-        <i class="ti ti-repeat" style="color:var(--volt-dark);font-size:18px;"></i>
-      </div>
-      <div>
-        <div class="day-action-label">Repeat every week</div>
-        <div class="day-action-sub">Choose weekdays and fill the whole program</div>
-      </div>
-    </button>
-    <button class="day-action-btn" onclick="dayActionCopy()">
-      <div class="day-action-icon" style="background:var(--blue-bg);">
-        <i class="ti ti-copy" style="color:var(--blue);font-size:18px;"></i>
-      </div>
-      <div>
-        <div class="day-action-label">Copy to another date</div>
-        <div class="day-action-sub">Paste this workout on another day</div>
-      </div>
-    </button>
-    <button class="day-action-btn" id="clear-btn" onclick="dayActionClear()">
-      <div class="day-action-icon" style="background:var(--danger-bg);">
-        <i class="ti ti-trash" style="color:var(--danger);font-size:18px;"></i>
-      </div>
-      <div>
-        <div class="day-action-label">Clear this day</div>
-        <div class="day-action-sub">Remove workout from this date</div>
+      <div style="flex:1;min-width:0;text-align:left;">
+        <div class="day-action-label">${title}</div>
+        <div class="day-action-sub">${sub}</div>
       </div>
     </button>`;
+  // Each workout: tap to edit; with more than one, its own repeat and remove
+  const workouts = list.map((w, slot) => {
+    const n = (w.exercises || []).length;
+    const edit = btn('dayActionEdit(' + slot + ')', 'ti-edit', 'var(--volt-bg)', 'var(--volt-dark)', escHtml(w.name || 'Workout'), n + ' exercise' + (n !== 1 ? 's' : '') + ' · tap to edit');
+    if (!many) return edit;
+    return `<div class="day-action-row">${edit}
+      <button class="day-action-mini" onclick="dayActionRepeat(${slot})" aria-label="Repeat ${escHtml(w.name || 'Workout')} every week"><i class="ti ti-repeat" aria-hidden="true"></i></button>
+      <button class="day-action-mini danger" onclick="dayActionRemove(${slot}, this)" aria-label="Remove ${escHtml(w.name || 'Workout')} from this day"><i class="ti ti-trash" aria-hidden="true"></i></button>
+    </div>`;
+  }).join('');
+  const btns = workouts +
+    (many ? '' : btn('dayActionRepeat(0)', 'ti-repeat', 'var(--volt-bg)', 'var(--volt-dark)', 'Repeat every week', 'Choose weekdays and fill the whole program')) +
+    btn('dayActionAdd()', 'ti-plus', 'var(--volt-bg)', 'var(--volt-dark)', 'Add another workout to this day', 'A workout of its own, like a morning and an evening one') +
+    btn('dayActionCopy()', 'ti-copy', 'var(--blue-bg)', 'var(--blue)', 'Copy to another date', 'Paste ' + (many ? 'these workouts' : 'this workout') + ' on another day') +
+    btn('dayActionClear()', 'ti-trash', 'var(--danger-bg)', 'var(--danger)', 'Clear this day', 'Remove ' + (many ? 'every workout' : 'workout') + ' from this date', 'id="clear-btn"');
 
   document.getElementById('day-action-btns').innerHTML = btns;
   document.getElementById('day-action-overlay').classList.add('open');
@@ -1708,22 +1726,42 @@ function closeDayAction() {
   actionDate = null;
 }
 
-function dayActionEdit() {
+function dayActionEdit(slot) {
   const date = actionDate;
   closeDayAction();
-  openDayEditor(date);
+  openDayEditor(date, slot);
 }
 
-function dayActionRepeat() {
+function dayActionAdd() {
   const date = actionDate;
   closeDayAction();
-  openRepeat(date);
+  openDayEditor(date, 'new');
+}
+
+function dayActionRepeat(slot) {
+  const date = actionDate;
+  closeDayAction();
+  openRepeat(date, slot);
+}
+
+// One workout off this day (the others stay); tap twice
+function dayActionRemove(slot, btn) {
+  if (btn.dataset.confirming !== 'true') {
+    btn.dataset.confirming = 'true';
+    btn.innerHTML = 'Remove?';
+    setTimeout(() => { if (btn.isConnected && btn.dataset.confirming) { btn.dataset.confirming = ''; btn.innerHTML = '<i class="ti ti-trash" aria-hidden="true"></i>'; } }, 3000);
+    return;
+  }
+  const date = actionDate, list = dayList(date), name = (list[slot] && list[slot].name) || 'Workout';
+  setDayList(date, list.filter((w, i) => i !== slot));
+  renderCalendar();
+  if (program.days[date]) openDayAction(date); else closeDayAction();
+  showToast(name + ' removed from this day');
 }
 
 function dayActionCopy() {
   copiedDate = actionDate;
-  const day  = program.days[copiedDate];
-  document.getElementById('paste-banner-name').textContent = (day && day.name) || 'workout';
+  document.getElementById('paste-banner-name').textContent = dayList(copiedDate).map(w => w.name || 'Workout').join(' + ') || 'workout';
   document.getElementById('paste-banner').style.display = 'flex';
   pasteMode = true;
   closeDayAction();
@@ -1757,7 +1795,7 @@ function dayActionClear() {
 // REPEAT — put one day's workout on chosen weekdays for every week of the program
 // ══════════════════════════════════════════════════════════════════════
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-let repeatDate = null, repeatPicked = [];
+let repeatDate = null, repeatSlot = 0, repeatPicked = [], repeatReplace = false;
 
 // Every date in the program, start date to the end of its last week
 function programDates() {
@@ -1772,18 +1810,24 @@ function programDates() {
 function weekdayOf(dateStr) { return WEEKDAYS[(new Date(dateStr + 'T00:00:00').getDay() + 6) % 7]; }
 function repeatTargets() { return programDates().filter(k => repeatPicked.includes(weekdayOf(k))); }
 
-function openRepeat(dateStr) {
-  const day = program.days[dateStr];
-  if (!day || !(day.exercises || []).length) return;
+function openRepeat(dateStr, slot) {
+  const w = workoutAt(dateStr, slot);
+  if (!w || !(w.exercises || []).length) return;
   flushSetupToProgram();   // use the weeks and start date as they are set now
-  repeatDate = dateStr;
+  repeatDate = dateStr; repeatSlot = slot || 0; repeatReplace = false;
   // Start with this day's weekday, plus any weekday that already has a workout of the same name
-  const sameName = programDates().filter(k => k !== dateStr && program.days[k] && program.days[k].name === day.name).map(weekdayOf);
+  const sameName = programDates().filter(k => k !== dateStr && dayList(k).some(x => x.name === w.name)).map(weekdayOf);
   repeatPicked = [...new Set([weekdayOf(dateStr), ...sameName])];
-  document.getElementById('repeat-name').textContent = day.name || 'Workout';
+  document.getElementById('repeat-name').textContent = w.name || 'Workout';
   renderRepeat();
   document.getElementById('repeat-overlay').classList.add('open');
   document.getElementById('repeat-sheet').classList.add('open');
+}
+
+// Target days with some other workout on them (not one of the same name, which is just updated)
+function repeatOthers() {
+  const w = workoutAt(repeatDate, repeatSlot);
+  return repeatTargets().filter(k => k !== repeatDate && dayList(k).some(x => workoutUsed(x) && x.name !== w.name)).length;
 }
 
 function renderRepeat() {
@@ -1796,15 +1840,19 @@ function renderRepeat() {
     b.onclick = () => { repeatPicked = repeatPicked.includes(d) ? repeatPicked.filter(x => x !== d) : [...repeatPicked, d]; renderRepeat(); };
     box.appendChild(b);
   });
-  const src = JSON.stringify(program.days[repeatDate]);
-  const targets = repeatTargets();
-  const replaced = targets.filter(k => k !== repeatDate && program.days[k] && JSON.stringify(program.days[k]) !== src).length;
+  const targets = repeatTargets(), others = repeatOthers();
   const weeks = parseInt(program.weeks) || 8;
   document.getElementById('repeat-count').textContent = !targets.length ? 'Pick at least one day.'
-    : 'Puts it on ' + targets.length + ' day' + (targets.length === 1 ? '' : 's') + ' across all ' + weeks + ' weeks.' +
-      (replaced ? ' Replaces ' + replaced + ' other workout' + (replaced === 1 ? '' : 's') + ' already on those days.' : '');
+    : 'Puts it on ' + targets.length + ' day' + (targets.length === 1 ? '' : 's') + ' across all ' + weeks + ' weeks.';
+  // Another workout on some of those days: keep it (two workouts that day) or replace it
+  const mode = document.getElementById('repeat-mode');
+  mode.style.display = others ? '' : 'none';
+  document.getElementById('repeat-mode-text').textContent = (others === 1 ? 'One of those days has' : others + ' of those days have') + ' another workout.';
+  document.getElementById('repeat-keep').setAttribute('aria-pressed', String(!repeatReplace));
+  document.getElementById('repeat-replace').setAttribute('aria-pressed', String(repeatReplace));
   document.getElementById('repeat-go').disabled = !targets.length;
 }
+function setRepeatReplace(on) { repeatReplace = on; renderRepeat(); }
 
 function closeRepeat() {
   document.getElementById('repeat-overlay').classList.remove('open');
@@ -1813,10 +1861,17 @@ function closeRepeat() {
 }
 
 function applyRepeat() {
-  const src = program.days[repeatDate];
+  const src = workoutAt(repeatDate, repeatSlot);
   if (!src) { closeRepeat(); return; }
-  const targets = repeatTargets();
-  targets.forEach(k => { if (k !== repeatDate) program.days[k] = JSON.parse(JSON.stringify(src)); });
+  const targets = repeatTargets(), copy = () => { const c = JSON.parse(JSON.stringify(src)); delete c.more; return c; };
+  targets.forEach(k => {
+    if (k === repeatDate) return;
+    const list = dayList(k).filter(workoutUsed), same = list.findIndex(x => x.name === src.name);
+    if (same !== -1) list[same] = copy();          // the same workout there: updated
+    else if (repeatReplace) list.splice(0, list.length, copy());
+    else list.push(copy());                        // a workout of its own, next to what's there
+    setDayList(k, list);
+  });
   const name = src.name || 'Workout';
   closeRepeat();
   renderCalendar();
@@ -1845,21 +1900,29 @@ function cancelPaste() {
 // ══════════════════════════════════════════════════════════════════════
 // SCREEN 3 — DAY EDITOR
 // ══════════════════════════════════════════════════════════════════════
-function openDayEditor(dateStr) {
+// slot: which of the day's workouts (0 the first), or 'new' for another on the same day
+function openDayEditor(dateStr, slot) {
   editingDate = dateStr;
 
   // Ensure the day object exists
   if (!program.days[dateStr]) {
     program.days[dateStr] = { name: '', exercises: [] };
   }
+  if (slot === 'new') {
+    const day = program.days[dateStr];
+    day.more = [...(Array.isArray(day.more) ? day.more : []), { name: '', exercises: [] }];
+    slot = day.more.length;
+  }
+  editingSlot = workoutAt(dateStr, slot) ? (slot || 0) : 0;
 
-  const dayData = program.days[dateStr];
+  const dayData = currentSession(), count = dayList(dateStr).length;
   document.getElementById('day-title-input').value = dayData.name || '';
-  document.getElementById('day-title-input').placeholder = 'e.g. Push Day, Leg Day';
+  document.getElementById('day-title-input').placeholder = count > 1 ? 'e.g. Morning Rehab, Evening Chest' : 'e.g. Push Day, Leg Day';
 
   const d = new Date(dateStr + 'T00:00:00');
   document.getElementById('day-date-label').textContent =
-    d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) +
+    (count > 1 ? ' · workout ' + (editingSlot + 1) + ' of ' + count : '');
 
   showScreen('day');
   buildLibraryFilters();
@@ -1867,26 +1930,22 @@ function openDayEditor(dateStr) {
 }
 
 function saveDayAndBack() {
-  if (editingDate) {
+  const finished = editingDate, w = currentSession();
+  let slot = -1;
+  if (finished && w) {
     const nameVal = document.getElementById('day-title-input').value.trim();
-    const day     = program.days[editingDate];
-
-    if (day) {
-      if (!nameVal && (day.exercises || []).length === 0) {
-        // Empty day — remove it
-        delete program.days[editingDate];
-      } else {
-        day.name = nameVal || 'Workout';
-      }
-    }
+    if (nameVal || (w.exercises || []).length) w.name = nameVal || 'Workout';
+    else w.name = '';   // empty: dropped below
+    setDayList(finished, dayList(finished));
+    slot = dayList(finished).findIndex(x => x.exercises === w.exercises);
   }
 
-  const finished = editingDate;
   editingDate = null;
+  editingSlot = 0;
   showScreen('main');
   renderCalendar();
   // A workout was built or changed: ask which weekdays it goes on, and fill every week of the program
-  if (finished && program.days[finished] && (program.days[finished].exercises || []).length) openRepeat(finished);
+  if (slot !== -1 && (workoutAt(finished, slot).exercises || []).length) openRepeat(finished, slot);
 }
 
 function backToCalendar() {
@@ -1898,7 +1957,7 @@ function backToCalendar() {
 // ══════════════════════════════════════════════════════════════════════
 function currentSession() {
   if (!editingDate) return null;
-  return program.days[editingDate] || null;
+  return workoutAt(editingDate, editingSlot);
 }
 
 function buildExParams(ex, ei) {

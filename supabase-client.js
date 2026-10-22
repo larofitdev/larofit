@@ -839,21 +839,40 @@ LF.sendKeptVoiceLog = async function () {
   } catch {}
 };
 
+// ── A DAY'S WORKOUTS ──────────────────────────────────────────
+// A program's day holds one workout ({ name, exercises }) and may hold more after it, as
+// separate workouts ({ ..., more: [{ name, exercises }, ...] }): a morning rehab and an evening
+// lift, say. Older days split into am / pm count as two. Every page lists a day's workouts
+// through this: [{ workout (the object itself), slot (0 the first, then 1, 2...) }].
+LF.dayWorkouts = function (day) {
+  if (!day || day.rest) return [];
+  const has = w => w && Array.isArray(w.exercises) && w.exercises.length;
+  if (day.am || day.pm) return [day.am, day.pm].map((workout, slot) => ({ workout, slot })).filter(x => has(x.workout));
+  return [day, ...(Array.isArray(day.more) ? day.more : [])].map((workout, slot) => ({ workout, slot })).filter(x => has(x.workout));
+};
+// A day with one more workout of its own on it (never merged into what's there). The same
+// workout added again isn't doubled up. Returns the new day.
+LF.withWorkout = function (day, w) {
+  const copy = x => { const c = JSON.parse(JSON.stringify(x)); delete c.more; return c; };
+  const list = LF.dayWorkouts(day).map(x => copy(x.workout));
+  const ids = x => (x.exercises || []).map(e => e.id).join();
+  if (list.some(x => (x.name || '') === (w.name || '') && ids(x) === ids(w))) return day;
+  const [first, ...more] = [...list, copy(w)];
+  return more.length ? { ...first, more } : first;
+};
+
 // ── TODAY'S WORKOUTS ──────────────────────────────────────────
 // Programs aren't "activated": whatever is scheduled on a date, in any program, can be done.
-// Every program's workout for that date: [{ program, name, exercises }]. A day left unnamed
-// in Builder is saved as "Workout", so the program's name is used for it.
+// Every workout for that date, each on its own (a day can hold more than one):
+// [{ program, slot, name, exercises }]. A day left unnamed in Builder is saved as "Workout",
+// so the program's name is used for it.
 LF.workoutsOn = function (programs, dateKey) {
   const named = n => (n && String(n).trim() && String(n).trim() !== 'Workout') ? String(n).trim() : '';
   const out = [];
   (programs || []).forEach(p => {
     let day = p.days && !Array.isArray(p.days) ? p.days[dateKey] : null;
     if (!day && Array.isArray(p.days)) day = p.days[(new Date(dateKey + 'T00:00:00').getDay() + 6) % 7];   // old weekly plans
-    if (!day || day.rest) return;
-    const sessions = (day.am || day.pm) ? [day.am, day.pm].filter(s => s && (s.exercises || []).length) : [day];
-    const exercises = sessions.flatMap(s => s.exercises || []);
-    if (!exercises.length) return;
-    out.push({ program: p, name: sessions.map(s => named(s.name)).filter(Boolean).join(' + ') || p.name || 'Workout', exercises });
+    LF.dayWorkouts(day).forEach(({ workout, slot }) => out.push({ program: p, slot, name: named(workout.name) || p.name || 'Workout', exercises: workout.exercises }));
   });
   return out;
 };

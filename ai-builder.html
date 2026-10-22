@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css">
-<link rel="stylesheet" href="larofit.css?v=139">
+<link rel="stylesheet" href="larofit.css?v=140">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -178,8 +178,8 @@ body { display: flex; flex-direction: column; background: var(--bg); padding-bot
 
 <div class="aib-toast" id="toast" role="status"></div>
 
-<script src="supabase-client.js?v=139"></script>
-<script src="larofit-exercises.js?v=139"></script>
+<script src="supabase-client.js?v=140"></script>
+<script src="larofit-exercises.js?v=140"></script>
 <script>
 LF.ready().then(() => LF.guard());
 
@@ -524,7 +524,7 @@ function renderSaveMode() {
   };
   // One choice per program offered, then a program of its own
   activeProgram = savePrograms.find(p => 'add:' + p.id === saveMode) || null;
-  savePrograms.forEach(p => option('add:' + p.id, 'Add to ' + (p.name || 'My Program'), 'Goes after what is already planned on the days you pick'));
+  savePrograms.forEach(p => option('add:' + p.id, 'Add to ' + (p.name || 'My Program'), 'A workout of its own on the days you pick, next to anything already planned'));
   option('new', 'Save as a new program', savePrograms.length ? 'Kept separately; your other programs are not changed' : 'A program of its own');
   box.style.display = savePrograms.length ? '' : 'none';
 
@@ -561,21 +561,10 @@ function updateSaveCount() {
     (alone ? ' On ' + alone + ' of them nothing else is planned yet, so it will be the only workout that day.' : '');
 }
 
-// One day's plan with a workout's exercises added after whatever is already there
+// A day with the routine's workout added as a workout of its own (never merged into what's
+// planned there: a morning and an evening workout can share a day)
 function dayWithWorkout(day, w) {
-  const extra = w.exercises.map(toProgramExercise);
-  if (day && ('am' in day || 'pm' in day)) {   // older two-session days: goes on the end of the later session
-    const pm = day.pm || { name: w.name, exercises: [] };
-    const have = new Set([...((day.am && day.am.exercises) || []), ...(pm.exercises || [])].map(e => e.id));
-    return { ...day, pm: { ...pm, exercises: [...(pm.exercises || []), ...extra.filter(e => !have.has(e.id))] } };
-  }
-  const existing = day && Array.isArray(day.exercises) ? day.exercises : [];
-  if (!existing.length) return { ...(day || {}), rest: false, name: w.name, exercises: extra };
-  const have = new Set(existing.map(e => e.id));
-  const fresh = extra.filter(e => !have.has(e.id));   // adding the same workout twice doesn't double it up
-  if (!fresh.length) return day;
-  const name = day.name && !day.name.includes(w.name) ? day.name + ' + ' + w.name : (day.name || w.name);
-  return { ...day, rest: false, name, exercises: [...existing, ...fresh] };
+  return LF.withWorkout(Array.isArray(day) ? null : day, { name: w.name, exercises: w.exercises.map(toProgramExercise) });
 }
 
 // The last day of a calendar program's schedule: its start date plus its number of weeks.

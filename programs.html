@@ -9,7 +9,7 @@
 <title>LaroFit — Programs</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=139">
+<link rel="stylesheet" href="larofit.css?v=140">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -398,9 +398,9 @@ button, a { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=139"></script>
+<script src="supabase-client.js?v=140"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=139"></script>
+<script src="larofit-nav.js?v=140"></script>
 
 <main class="lf-main-desktop">
 
@@ -561,17 +561,8 @@ function allSessions(p) {
   // Date-keyed object format
   if (!Array.isArray(days)) {
     const sessions = [];
-    Object.values(days).forEach(day => {
-      if (!day) return;
-      // Flat format: { name, exercises[] }
-      if (Array.isArray(day.exercises)) {
-        if (day.exercises.length) sessions.push(day);
-        return;
-      }
-      // Legacy AM/PM format
-      if (day.am && (day.am.exercises || []).length) sessions.push(day.am);
-      if (day.pm && (day.pm.exercises || []).length) sessions.push(day.pm);
-    });
+    // Each workout of a day ({ name, exercises[], more: [...] }, or legacy am / pm)
+    Object.values(days).forEach(day => { LF.dayWorkouts(day).forEach(x => sessions.push(x.workout)); });
     return sessions;
   }
   // Old format: array of { name, exercises[], rest }
@@ -675,6 +666,8 @@ function buildCard(p, idx) {
   const isToday      = LF.workoutsOn([p], localToday()).length > 0;
   const exList       = allExercises(p);
   const trainingDays = trainingDayCount(p);
+  // A dated program counts every date it has: per week is that over its weeks
+  const perWeek      = Array.isArray(p.days) || !trainingDays ? trainingDays : Math.max(1, Math.round(trainingDays / (parseInt(p.weeks) || 1)));
   const totalEx      = exList.length;
   const totalSets    = exList.reduce((s, ex) => s + (ex.sets || 3), 0);
 
@@ -710,7 +703,7 @@ function buildCard(p, idx) {
       <div class="prog-day-bar">${daySegs}</div>
       <div class="prog-stats">
         <div class="prog-stat">
-          <div class="prog-stat-val">${trainingDays}</div>
+          <div class="prog-stat-val">${perWeek}</div>
           <div class="prog-stat-label">Days/wk</div>
         </div>
         <div class="prog-stat">
@@ -774,7 +767,7 @@ function openDetail(id) {
     Object.keys(days).sort().forEach(dateStr => {
       const day = days[dateStr];
       if (!day) return;
-      const sessions = Array.isArray(day.exercises) ? [day] : [day.am, day.pm].filter(Boolean);
+      const sessions = LF.dayWorkouts(day).map(x => x.workout);
       sessions.forEach(sess => {
         const exs = sess.exercises || [];
         if (!exs.length) return;
@@ -1019,7 +1012,7 @@ function showToast(msg) {
 </script>
 
 <!-- Exercise data for name lookups -->
-<script src="larofit-exercises.js?v=139"></script>
+<script src="larofit-exercises.js?v=140"></script>
 
 </body>
 </html>

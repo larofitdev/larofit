@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=139">
+<link rel="stylesheet" href="larofit.css?v=140">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -761,10 +761,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=139"></script>
-<script src="larofit-exercises.js?v=139"></script>
+<script src="supabase-client.js?v=140"></script>
+<script src="larofit-exercises.js?v=140"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=139"></script>
+<script src="larofit-nav.js?v=140"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -968,9 +968,11 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
       <i class="ti ti-repeat" aria-hidden="true"></i> Save as a routine
     </button>
     <div class="save-routine-panel" id="save-routine-panel" style="display:none;">
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px;">Which days do you want it on?</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;" id="save-routine-title">Keep this workout for other days</div>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:10px;">Leave it and it was just for today. Which days?</div>
       <div class="save-days" id="save-routine-days"></div>
-      <div style="font-size:12px;color:var(--text-3);margin:8px 0 12px;">A new program with this workout on those days for 8 weeks, from tomorrow.</div>
+      <select class="lf-input" id="save-routine-into" style="width:100%;margin:10px 0 6px;"></select>
+      <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Its own routine runs 8 weeks from tomorrow. Added to a program, it's a workout of its own on those days, next to anything already planned.</div>
       <button class="btn btn-volt btn-full" id="save-routine-go" onclick="saveRoutineFromScreen()" disabled>Save routine</button>
     </div>
     <button class="btn btn-dark btn-full btn-lg" onclick="location.href='index.html'">Back to home <i class="ti ti-home" aria-hidden="true"></i></button>
@@ -1616,12 +1618,16 @@ function init() {
 
   // Today's workout, from whichever program it is in. Home's Start says which (?program=);
   // with only one today it's that one; with several the user picks.
-  const wanted = new URLSearchParams(location.search).get('program');
+  const params = new URLSearchParams(location.search), wanted = params.get('program'), slot = parseInt(params.get('w')) || 0;
   const choose = programs => {
     if (!programs.length) { show('no-program-state'); setHeader('Workout'); return; }
     const todays = LF.workoutsOn(programs, localDateStr());
-    const picked = (wanted && todays.find(w => w.program.id === wanted)) || (todays.length === 1 ? todays[0] : null);
+    // A program with two workouts today and no slot said (Start on the Programs page): which one?
+    const ofProgram = wanted ? todays.filter(w => w.program.id === wanted) : [];
+    const picked = (wanted && params.has('w') && todays.find(w => w.program.id === wanted && w.slot === slot))
+      || (ofProgram.length === 1 ? ofProgram[0] : null) || (!wanted && todays.length === 1 ? todays[0] : null);
     if (picked) startPlanned(picked);
+    else if (ofProgram.length) showWorkoutChoice(ofProgram);
     else if (todays.length) showWorkoutChoice(todays);
     else { show('rest-day-state'); setHeader('Rest day'); }
   };
@@ -1646,7 +1652,7 @@ function showWorkoutChoice(todays) {
   document.getElementById('choose-workout-list').innerHTML = todays.map((w, i) => `
     <button class="btn btn-outline btn-full" onclick="pickWorkout(${i})" style="justify-content:space-between;text-align:left;min-height:56px;">
       <span><span style="display:block;font-weight:700;color:var(--text);">${escHtml(w.name)}</span>
-      <span style="display:block;font-size:12px;color:var(--text-3);font-weight:500;">${escHtml(w.program.name || 'Program')} · ${w.exercises.length} exercises</span></span>
+      <span style="display:block;font-size:12px;color:var(--text-3);font-weight:500;">${escHtml(w.program.name || 'Program')} · ${w.exercises.length} exercise${w.exercises.length === 1 ? '' : 's'}</span></span>
       <i class="ti ti-arrow-right" aria-hidden="true"></i>
     </button>`).join('');
   show('choose-workout-state'); setHeader("Today's workouts");
@@ -3109,7 +3115,7 @@ function finishWorkout() {
   const setsLogged = exercises.reduce((a,ex) => a + ex.loggedSets.filter(s=>s.logged).length, 0);
   document.getElementById('completion-sub').textContent = setsLogged + ' sets logged · ' + exercises.length + ' exercises';
   renderWins(wins);
-  document.getElementById('save-routine-btn').style.display = !workoutProgramId && exercises.length ? '' : 'none';
+  document.getElementById('save-routine-btn').style.display = routineCanBeSaved() ? '' : 'none';
   fetchAIAnalysis(durationMin, totalVolume, totalPRs, exercises, wins);
 }
 
@@ -3882,7 +3888,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 122;
+const VOICE_BUILD = 123;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -5335,7 +5341,7 @@ function programDayLists(program, fromDate) {
   if (!days) return lists;
   for (const [key, day] of Object.entries(days)) {
     if (!day || (/^\d{4}-\d\d-\d\d$/.test(key) && key < fromDate)) continue;   // days already gone stay as they were
-    const here = [day.exercises, day.am && day.am.exercises, day.pm && day.pm.exercises].filter(Array.isArray);
+    const here = [day.exercises, day.am && day.am.exercises, day.pm && day.pm.exercises, ...(Array.isArray(day.more) ? day.more.map(w => w && w.exercises) : [])].filter(Array.isArray);
     if (here.length) lists.push(here);
   }
   return lists;
@@ -6052,13 +6058,29 @@ Reply with one JSON object and nothing else:
     const data = await res.json();
     const text = String((data.content && data.content[0] && data.content[0].text) || '');
     const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+    const all = exAllExercises();
+    if (!(Array.isArray(json.exercises) && json.exercises.some(x => all.some(e => e.id === x.id)))) throw new Error('nothing in it');
+    // A workout of its own, done instead of what's left of today's plan ("I don't feel like
+    // dumbbell arms: give me an arm routine using cables"): the plan's untouched exercises leave
+    // this session, but the program isn't changed and the scheduled workout stays on Home for
+    // today. Something extra ("an ab finisher", "add...") or after the plan is done goes on the end.
+    const extra = /\b(finisher|add|also|after|extra|more|on top|to finish|as well)\b/.test(normalizeSpeech(request));
+    const untouched = exercises.filter(ex => !ex.loggedSets.some(st => st.logged)).length;
+    const swapped = !extra && untouched ? routineDropUntouched() : 0;
+    const allSwapped = swapped && !exercises.length;
     const added = routineAdd(json);
-    if (!added.length) throw new Error('nothing in it');
-    voiceDbg('routine built: ' + added.map(i => exercises[i].name).join(', '));
+    if (allSwapped) {
+      workoutProgramId = null;   // nothing of the plan is left: it's a workout of its own (and can be saved as a routine)
+      if (json.name) setHeader(json.name);
+    }
+    voiceDbg('routine built: ' + added.map(i => exercises[i].name).join(', ') + (swapped ? ' (in place of ' + swapped + ' planned)' : ''));
     // Read it out, then the first exercise (its own line follows, as for any exercise)
     const names = added.map(i => exercises[i].name);
     const what = (json.name ? json.name + ' workout' : 'workout').replace(/\b(workout workout|routine workout)\b/i, 'workout');
-    voiceSayFirst = 'Here is your ' + what + ', ' + names.length + ' exercises: ' + names.slice(0, -1).join(', ') + (names.length > 1 ? ', and ' : '') + names[names.length - 1] + '.';
+    const list = names.length + ' exercises: ' + names.slice(0, -1).join(', ') + (names.length > 1 ? ', and ' : '') + names[names.length - 1] + '.';
+    voiceSayFirst = allSwapped ? 'Here is your ' + what + ' instead, ' + list + ' Your scheduled workout stays on Home for today.'
+      : swapped ? 'Here is your ' + what + ' for the rest of today, ' + list
+      : 'Here is your ' + what + ', ' + list;
     voicePreAnnounced = -1;
     goToEx(added[0]);
   } catch (e) {
@@ -6068,6 +6090,19 @@ Reply with one JSON object and nothing else:
   } finally {
     voiceRoutineBusy = false;
   }
+}
+
+// Today's planned exercises not yet started are taken out (for a routine asked for instead).
+// Notes and the last voice log are kept by position, so they move with the rest. Returns how many went.
+function routineDropUntouched() {
+  const keep = exercises.map((ex, i) => (ex.loggedSets.some(st => st.logged) ? i : -1)).filter(i => i !== -1);
+  const dropped = exercises.length - keep.length;
+  const notes = {};
+  keep.forEach((oldIdx, newIdx) => { if (exNotes[oldIdx]) notes[newIdx] = exNotes[oldIdx]; });
+  exNotes = notes;
+  if (voiceLastLog) { const at = keep.indexOf(voiceLastLog.exIdx); if (at === -1) voiceLastLog = null; else voiceLastLog.exIdx = at; }
+  exercises.splice(0, exercises.length, ...keep.map(i => exercises[i]));
+  return dropped;
 }
 
 // The coach's routine into today's workout. Returns the positions of what was added.
@@ -6080,12 +6115,15 @@ function routineAdd(json) {
     (g.ids || []).forEach(exId => { groups[exId] = settings; });
   });
   const added = [];
+  // The routine these exercises are (saving it later takes just these, not the rest of the session)
+  const routine = { id: 'r' + Date.now().toString(36), name: String(json.name || '').trim() || 'My routine' };
   (Array.isArray(json.exercises) ? json.exercises : []).slice(0, 10).forEach(x => {
     const e = all.find(a => a.id === x.id);
     if (!e) return;   // not an id in the library: left out
     const group = groups[e.id] ? { ...groups[e.id] } : null;
     exercises.push(workoutExerciseFrom({ id: e.id, name: e.name, recordType: e.recordType, sets: Math.min(Math.max(parseInt(x.sets) || 3, 1), 8),
       reps: parseInt(x.reps) || 10, durationSec: parseInt(x.durationSec) || null, restSec: 60, group }));
+    exercises[exercises.length - 1].routine = routine;
     added.push(exercises.length - 1);
   });
   // A group of one (the rest left out) is no group
@@ -6100,12 +6138,12 @@ function routineAdd(json) {
 }
 
 // ── "SAVE THIS AS A ROUTINE" ──────────────────────────────────
-// Today's workout (one built as it went, or by the coach) kept to do again: a new program
-// on the weekdays chosen, 8 weeks from tomorrow, or with "add this to my program" into the
-// program today's workout came from (or the latest), after what's planned on those days.
-// Supersets and circuits go as they are; weights come from history, as for any exercise.
-// It has to point at this workout: "make THIS a routine" (not "make me a chest routine", which asks for one)
-const VOICE_SAVE_ROUTINE = /\b(save|keep|store|make|turn) (this|it|that|today s workout)\b.*\b(routine|template)\b|\b(add|put|save)\b (this|it|that)( workout)? (to|in|into|onto) (my |the |a )?program\b|\b(save|add|repeat|do) (this|it|that)( workout)? (every|on|for) (monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekday|weekend)/;
+// A routine asked for in the gym (or a workout built as it went) is a workout of its own. Left
+// alone, it was just for today (it's in the history). Saved, it becomes its own routine: a new
+// program on the weekdays chosen, 8 weeks from tomorrow; or added to an existing program on
+// those weekdays, as a workout of its own alongside whatever is planned there (a morning rehab
+// and an evening lift on the same day). Nothing already scheduled is changed.
+const VOICE_SAVE_ROUTINE = /\b(save|keep|store|make|turn|schedule) (this|it|that|today s workout)\b.*\b(routine|template)\b|\b(add|put|save) (this|it|that)( workout| routine)? (to|in|into|onto) (my |the |a )?program\b|\b(save|add|repeat|do|schedule) (this|it|that)( workout| routine)? (every|on|for) (monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekday|weekend)/;
 const ROUTINE_WEEKDAYS = [['Mon', /\bmon(day)?s?\b/], ['Tue', /\btue(s|sday)?s?\b/], ['Wed', /\bwed(nesday)?s?\b/], ['Thu', /\bthu(rs|rsday)?s?\b/],
   ['Fri', /\bfri(day)?s?\b/], ['Sat', /\bsat(urday)?s?\b/], ['Sun', /\bsun(day)?s?\b/]];
 const WEEKDAY_NAMES = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
@@ -6122,16 +6160,21 @@ function routineDaysFrom(t) {
 }
 const daysSaid = days => days.length === 7 ? 'every day' : days.map(d => WEEKDAY_NAMES[d] + 's').join(days.length === 2 ? ' and ' : ', ').replace(/, ([^,]+)$/, ', and $1');
 
+// The programs it can be added to: the latest saved first
+function routinePrograms() {
+  return [...(store.get('programs', []) || [])].filter(p => p && !Array.isArray(p.days)).sort((x, y) => String(y.savedAt || '').localeCompare(String(x.savedAt || '')));
+}
+
 function voiceSaveRoutine(t) {
-  if (!exercises.length) { voicePrompt('There is nothing in this workout to save yet.', true); return; }
-  const into = /\bprogram\b/.test(t) && !/\bnew program\b/.test(t);
+  if (!routineToSave().exercises.length) { voicePrompt('There is nothing in this workout to save yet.', true); return; }
+  const into = /\bprogram\b/.test(t) && !/\bnew program\b/.test(t) ? (routinePrograms()[0] || null) : null;
   const days = routineDaysFrom(t);
   if (!days.length) { voiceSaveAsk = { at: Date.now(), into }; voicePrompt('Which days do you want it on? Say like Monday and Thursday.', true); return; }
   voicePrompt(routineSavedLine(saveRoutine(days, into)), true);
 }
 
 function voiceSaveAnswer(t) {
-  if (/^(no|nope|cancel|never ?mind|forget it)\b/.test(t)) { voiceSaveAsk = null; voicePrompt('Okay, not saved.', true); return true; }
+  if (/^(no|nope|cancel|never ?mind|forget it|just today)\b/.test(t)) { voiceSaveAsk = null; voicePrompt('Okay, just for today.', true); return true; }
   const days = routineDaysFrom(t);
   if (!days.length) return false;
   const into = voiceSaveAsk.into;
@@ -6142,19 +6185,34 @@ function voiceSaveAnswer(t) {
 
 function routineSavedLine(r) {
   return r.into
-    ? 'Added to ' + r.program.name + ' on ' + daysSaid(r.days) + ', ' + r.count + ' workouts. It is in Programs.'
-    : 'Saved ' + r.program.name + ' as a routine on ' + daysSaid(r.days) + ', for 8 weeks. It is in Programs.';
+    ? 'Added ' + r.name + ' to ' + r.program.name + ' on ' + daysSaid(r.days) + ', ' + r.count + ' workout' + (r.count === 1 ? '' : 's') + '. It is in Programs.'
+    : 'Saved ' + r.name + ' as a routine on ' + daysSaid(r.days) + ', for 8 weeks. It is in Programs.';
 }
 
-// Today's workout as a routine's exercises (what was done, or all of it if nothing was)
-function routineFromToday() {
-  const all = exAllExercises(), done = exercises.filter(ex => ex.loggedSets.some(st => st.logged));
-  return (done.length ? done : exercises).map(ex => {
+// What gets saved: the routine asked for last (just its exercises), or else today's workout
+// when it was built as it went (one from a program is saved already)
+function routineToSave() {
+  const tagged = exercises.filter(ex => ex.routine);
+  if (tagged.length) {
+    const r = tagged[tagged.length - 1].routine, mine = exercises.filter(ex => ex.routine && ex.routine.id === r.id);
+    const done = mine.filter(ex => ex.loggedSets.some(st => st.logged));
+    return { name: r.name, exercises: done.length ? done : mine };
+  }
+  if (workoutProgramId) return { name: '', exercises: [] };
+  const done = exercises.filter(ex => ex.loggedSets.some(st => st.logged));
+  const name = ((document.getElementById('free-workout-name') || {}).value || '').trim() || (document.getElementById('header-title').textContent || '').trim() || 'My routine';
+  return { name, exercises: done.length ? done : exercises };
+}
+
+// A workout's exercises as a program's
+function routineExercises(list) {
+  const all = exAllExercises();
+  return list.map(ex => {
     const lib = all.find(e => e.id === ex.id) || {};
     const top = Math.max(0, ...ex.loggedSets.filter(st => st.logged).map(st => parseFloat(st.weight) || 0));
     const out = { id: ex.id, name: ex.name, primaryMuscle: lib.primaryMuscle || ex.primaryMuscle || '', secondaryMuscles: lib.secondaryMuscles || [],
                   recordType: lib.recordType || ex.recordType || 'weight_reps', sets: ex.loggedSets.length || 3,
-                  reps: parseInt(ex.planReps) || parseInt(ex.reps) || 10, restSec: ex.restSec || 60 };
+                  reps: parseInt(ex.reps) || 10, restSec: ex.restSec || 60 };
     if (top) out.weight = top;
     if (ex.restAfterSec != null) out.restAfterSec = ex.restAfterSec;
     if (out.recordType === 'duration') out.durationSec = parseInt(ex.planHold) || parseInt(ex.durationSec) || 30;
@@ -6163,37 +6221,39 @@ function routineFromToday() {
   });
 }
 
-// Put it on the chosen weekdays from tomorrow: a new 8-week program, or into an existing one
+// Put it on the chosen weekdays from tomorrow: a new 8-week program, or into an existing one up
+// to its end, as a workout of its own next to whatever is planned on those days
 function saveRoutine(days, into) {
-  const name = ((document.getElementById('free-workout-name') || {}).value || '').trim() || (document.getElementById('header-title').textContent || '').trim() || 'My routine';
-  const exs = routineFromToday(), byWeekday = d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
-  const programs = store.get('programs', []) || [];
-  const target = into ? (workoutProgram() || [...programs].sort((a, b) => String(b.savedAt || '').localeCompare(String(a.savedAt || '')))[0]) : null;
-  const program = target ? JSON.parse(JSON.stringify(target))
+  const what = routineToSave(), name = what.name || 'My routine', workout = { name, exercises: routineExercises(what.exercises) };
+  const byWeekday = d => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+  const program = into ? JSON.parse(JSON.stringify(into))
     : { id: crypto.randomUUID(), name, goal: 'hypertrophy', weeks: 8, startDate: localDateStr(), savedAt: new Date().toISOString(), days: {} };
-  if (Array.isArray(program.days)) program.days = {};   // an old weekly plan can't take dates
-  const end = target ? Object.keys(program.days).sort().pop() : null;
+  program.days = program.days || {};
+  const end = into ? Object.keys(program.days).sort().pop() : null;
   let count = 0;
-  for (let i = 1; i <= 7 * 8 * (target ? 3 : 1); i++) {
+  for (let i = 1; i <= 7 * 8 * (into ? 3 : 1); i++) {
     const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i);
     const key = localDateStr(d);
-    if (target ? (end && key > end) || (!end && i > 56) : false) break;
+    if (into && (end ? key > end : i > 56)) break;
     if (!days.includes(byWeekday(d))) continue;
-    const day = program.days[key];
-    if (day && Array.isArray(day.exercises) && day.exercises.length) day.exercises = day.exercises.concat(JSON.parse(JSON.stringify(exs)));   // after what's planned
-    else program.days[key] = { name, exercises: JSON.parse(JSON.stringify(exs)) };
+    program.days[key] = LF.withWorkout(program.days[key], workout);
     count++;
   }
   program.savedAt = new Date().toISOString();
-  LF.ready().then(() => LF.db.saveProgram(program)).catch(() => {});
-  voiceDbg('routine saved: ' + program.name + ', ' + days.join(' ') + ', ' + count + ' days' + (target ? ' (into the program)' : ''));
-  return { program, days, count, into: !!target };
+  if (count) LF.ready().then(() => LF.db.saveProgram(program)).catch(() => {});
+  voiceDbg('routine saved: ' + name + ', ' + days.join(' ') + ', ' + count + ' days' + (into ? ' in ' + program.name : ''));
+  return { program, name, days, count, into: !!into };
 }
 
-// The completion screen's "Save as a routine": pick the days, then save
+// The completion screen: keep it for today (nothing to do), its own routine, or into a program
 let saveSheetDays = [];
+function routineCanBeSaved() { return routineToSave().exercises.length > 0; }
 function openSaveRoutine() {
   saveSheetDays = [];
+  const what = routineToSave();
+  document.getElementById('save-routine-title').textContent = 'Keep ' + (what.name || 'this workout') + ' for other days';
+  document.getElementById('save-routine-into').innerHTML = '<option value="">As a routine of its own</option>' +
+    routinePrograms().map(p => '<option value="' + escHtml(p.id) + '">Add to ' + escHtml(p.name || 'My Program') + '</option>').join('');
   document.getElementById('save-routine-panel').style.display = '';
   document.getElementById('save-routine-btn').style.display = 'none';
   renderSaveRoutineDays();
@@ -6209,7 +6269,8 @@ function toggleSaveRoutineDay(d) {
 }
 function saveRoutineFromScreen() {
   if (!saveSheetDays.length) return;
-  const r = saveRoutine(Object.keys(WEEKDAY_NAMES).filter(d => saveSheetDays.includes(d)), false);
+  const intoId = document.getElementById('save-routine-into').value;
+  const r = saveRoutine(Object.keys(WEEKDAY_NAMES).filter(d => saveSheetDays.includes(d)), intoId ? routinePrograms().find(p => p.id === intoId) : null);
   document.getElementById('save-routine-panel').innerHTML = '<div style="font-size:14px;font-weight:600;color:var(--text);"><i class="ti ti-circle-check" style="color:var(--volt-dark);" aria-hidden="true"></i> ' + escHtml(routineSavedLine(r)) + '</div>';
 }
 

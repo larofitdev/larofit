@@ -10,7 +10,7 @@
 <title>LaroFit</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=139">
+<link rel="stylesheet" href="larofit.css?v=140">
 <style>
 /* ── BUILD POPUP ── */
 .build-overlay {
@@ -198,10 +198,10 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <!-- Nav injected by larofit-nav.js -->
-<script src="supabase-client.js?v=139"></script>
-<script src="larofit-exercises.js?v=139"></script>
+<script src="supabase-client.js?v=140"></script>
+<script src="larofit-exercises.js?v=140"></script>
 <script>window.LF_PAGE = 'home';</script>
-<script src="larofit-nav.js?v=139"></script>
+<script src="larofit-nav.js?v=140"></script>
 
 <!-- ── MAIN CONTENT ── -->
 <main class="lf-main-desktop" id="main">
@@ -500,7 +500,7 @@ async function loadUser() {
 // ── TODAY'S WORKOUT ──────────────────────────────────────────
 // Where "Start workout" goes: today's workout of the program it belongs to
 let todayStartHref = 'workout.html?start=1';
-const startHrefFor = programId => 'workout.html?start=1&program=' + encodeURIComponent(programId);
+const startHrefFor = (programId, slot) => 'workout.html?start=1&program=' + encodeURIComponent(programId) + (slot != null ? '&w=' + slot : '');
 
 async function loadTodayCard() {
   const programs = await LF.db.getPrograms();
@@ -516,7 +516,7 @@ async function loadTodayCard() {
   if (todays.length > 1) { renderTodayList(todays); return; }
 
   const w = todays[0], allExercises = w.exercises;
-  todayStartHref = startHrefFor(w.program.id);
+  todayStartHref = startHrefFor(w.program.id, w.slot);
   document.getElementById('today-name').textContent = w.name;
 
   const exCount = allExercises.length;
@@ -539,7 +539,7 @@ async function loadTodayCard() {
   }
 }
 
-// Two or more workouts today (from different programs): a row each, with its own Start.
+// Two or more workouts today (from different programs, or two in one): a row each, with its own Start.
 // One already done today says so (it can still be done again).
 async function renderTodayList(todays) {
   document.getElementById('today-eyebrow').textContent = "Today's workouts";
@@ -560,7 +560,7 @@ async function renderTodayList(todays) {
           <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
             ${done ? '<i class="ti ti-circle-check" style="color:var(--volt);" aria-hidden="true"></i> Done · ' : ''}${escHtml(w.program.name || 'Program')} · ${n} exercise${n !== 1 ? 's' : ''}${groups ? ' · ' + groups : ''}</div>
         </div>
-        <button class="btn btn-volt btn-sm" onclick="location.href='${startHrefFor(w.program.id)}'" style="flex-shrink:0;">Start</button>
+        <button class="btn btn-volt btn-sm" onclick="location.href='${startHrefFor(w.program.id, w.slot)}'" style="flex-shrink:0;">Start</button>
       </div>`;
   }).join('');
   // A paused workout comes first: Resume, above the list
