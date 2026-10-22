@@ -9,7 +9,7 @@
 <title>LaroFit — Programs</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=141">
+<link rel="stylesheet" href="larofit.css?v=142">
 <style>
 /* ── PREVENT iOS DOUBLE-TAP ZOOM ── */
 button, a { touch-action: manipulation; }
@@ -97,6 +97,7 @@ button, a { touch-action: manipulation; }
   border-bottom: 0.5px solid var(--border);
 }
 
+.prog-card-today { font-size: 12px; font-weight: 700; color: var(--volt-dark); margin-top: 5px; }
 .prog-card-name {
   font-size: 16px;
   font-weight: 700;
@@ -398,9 +399,9 @@ button, a { touch-action: manipulation; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=141"></script>
+<script src="supabase-client.js?v=142"></script>
 <script>window.LF_PAGE = 'build';</script>
-<script src="larofit-nav.js?v=141"></script>
+<script src="larofit-nav.js?v=142"></script>
 
 <main class="lf-main-desktop">
 
@@ -663,7 +664,7 @@ function localToday() { const d = new Date(); return d.getFullYear() + '-' + Str
 function startHref(id) { return 'workout.html?start=1&program=' + encodeURIComponent(id); }
 
 function buildCard(p, idx) {
-  const isToday      = LF.workoutsOn([p], localToday()).length > 0;
+  const todays       = LF.workoutsOn([p], localToday()), isToday = todays.length > 0;
   const exList       = allExercises(p);
   const trainingDays = trainingDayCount(p);
   // A dated program counts every date it has: per week is that over its weeks
@@ -697,6 +698,7 @@ function buildCard(p, idx) {
           <div style="font-size:11px;color:var(--text-3);margin-top:3px;">
             ${p.weeks || 6} weeks · saved ${formatDate(p.savedAt)}
           </div>
+          ${isToday ? `<div class="prog-card-today">Today: ${todays.map(w => esc(w.name)).join(' · ')}</div>` : ''}
         </div>
         ${badge}
       </div>
@@ -1012,7 +1014,7 @@ function showToast(msg) {
 </script>
 
 <!-- Exercise data for name lookups -->
-<script src="larofit-exercises.js?v=141"></script>
+<script src="larofit-exercises.js?v=142"></script>
 
 </body>
 </html>

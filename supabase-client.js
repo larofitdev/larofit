@@ -865,14 +865,14 @@ LF.withWorkout = function (day, w) {
 // Programs aren't "activated": whatever is scheduled on a date, in any program, can be done.
 // Every workout for that date, each on its own (a day can hold more than one):
 // [{ program, slot, name, exercises }]. A day left unnamed in Builder is saved as "Workout",
-// so the program's name is used for it.
+// so the program's name is used for it ("Workout 2" for a later one, so two don't share a name).
 LF.workoutsOn = function (programs, dateKey) {
   const named = n => (n && String(n).trim() && String(n).trim() !== 'Workout') ? String(n).trim() : '';
   const out = [];
   (programs || []).forEach(p => {
     let day = p.days && !Array.isArray(p.days) ? p.days[dateKey] : null;
     if (!day && Array.isArray(p.days)) day = p.days[(new Date(dateKey + 'T00:00:00').getDay() + 6) % 7];   // old weekly plans
-    LF.dayWorkouts(day).forEach(({ workout, slot }) => out.push({ program: p, slot, name: named(workout.name) || p.name || 'Workout', exercises: workout.exercises }));
+    LF.dayWorkouts(day).forEach(({ workout, slot }) => out.push({ program: p, slot, name: named(workout.name) || (slot ? 'Workout ' + (slot + 1) : p.name || 'Workout'), exercises: workout.exercises }));
   });
   return out;
 };
