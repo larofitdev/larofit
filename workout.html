@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=133">
+<link rel="stylesheet" href="larofit.css?v=134">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -752,10 +752,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=133"></script>
-<script src="larofit-exercises.js?v=133"></script>
+<script src="supabase-client.js?v=134"></script>
+<script src="larofit-exercises.js?v=134"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=133"></script>
+<script src="larofit-nav.js?v=134"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -2510,7 +2510,11 @@ function workoutComplete() {
   checkAllDone();
   if (isFreeForm) return;
   showToast('All exercises complete');
-  setTimeout(() => speakText('All exercises complete. Say finish to save your workout.'), 0);   // after the set is read back
+  setTimeout(() => {   // after the set is read back
+    speakText('All exercises complete. Say finish to save it, or name another exercise.');
+    // Naming one now adds it and starts it (it was heard as "replace" or "did you say")
+    if (workoutMode === 'voice' && exercises.every(ex => ex.loggedSets.every(st => st.logged))) voicePhase = 'pick_exercise';
+  }, 0);
   clearTimeout(autoFinishTimer);
   autoFinishTimer = setTimeout(autoFinish, AUTO_FINISH_SEC * 1000);
 }
@@ -2519,6 +2523,10 @@ function autoFinish() {
   autoFinishTimer = null;
   if (!exercises.length || !exercises.every(ex => ex.loggedSets.every(st => st.logged))) return;
   if (workoutMode === 'voice' && voicePaused) { autoFinishTimer = setTimeout(autoFinish, 60000); return; }   // talking to someone
+  // Still talking to the coach (adding an exercise, say): two minutes from the last thing heard.
+  // It once saved the workout in the middle of "machine rear deltoid".
+  const quietFor = Date.now() - voiceHeardAt;
+  if (workoutMode === 'voice' && quietFor < AUTO_FINISH_SEC * 1000) { autoFinishTimer = setTimeout(autoFinish, AUTO_FINISH_SEC * 1000 - quietFor); return; }
   if (workoutMode === 'voice') {
     speakText('Workout saved. Nice work.', true);
     voicePhase = 'idle';
@@ -3771,7 +3779,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 116;
+const VOICE_BUILD = 117;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -4479,6 +4487,7 @@ function voiceOnSignedOut() {
 // When transcriptions failed (in the last 3 minutes), when "Sorry, I missed that" was last said,
 // and whether "the connection is slow" has been explained this workout
 let voiceFailTimes = [], voiceSorryAt = 0, voiceSlowWarned = false;
+let voiceHeardAt = 0;   // when words were last heard (the automatic save waits for quiet)
 
 // Send one phrase for transcription and act on the text. Phrases are handled in order.
 function voiceSendPhrase(blob, spokenMs, peak) {
@@ -4521,6 +4530,7 @@ function voiceSendPhrase(blob, spokenMs, peak) {
       voiceHudNote(text ? '"' + text + '"' : '');
       if (!text) { voiceDbg('heard nothing' + detail); return; }
       if (!/[a-z0-9]/i.test(text)) { voiceHudNote(''); voiceDbg('heard ' + JSON.stringify(text) + detail + ' -> not words, ignored'); return; }
+      voiceHeardAt = Date.now();
       // The workout moved on while this was being transcribed — don't apply it to the wrong step
       const sameSet = /^(confirm_weight|count_reps)$/.test(phaseAtCapture) && /^(confirm_weight|count_reps)$/.test(voicePhase)
         && voicePending && setAtCapture === voicePending.exIdx + ':' + voicePending.setIdx;
@@ -4897,7 +4907,9 @@ function handleVoiceResult(raw) {
     // A "no" just after a set is a correction when it brings numbers ("no, 12") or is short
     // ("no", "no not that"). Talk that happens to start with "no" isn't ("No power off next"
     // had taken set 2 back).
-    const saysNo = /^(no|nope|nah)\b/.test(t) && (/\d/.test(t) || t.split(' ').length <= 3);
+    // A bare "no" also has to sound like the user: a "No." at a third of their loudness took set 2 back
+    const ownVoice = typeof voiceHeardPeak !== 'number' || !voiceHeardPeak || voiceHeardPeak >= Math.max(0.15, voiceMinPeak());
+    const saysNo = /^(no|nope|nah)\b/.test(t) && (/\d/.test(t) || (t.split(' ').length <= 3 && ownVoice));
     if (VOICE_CORRECTION.test(t) || (justLogged && saysNo)) {
       if (voiceLastLog && voiceLastLog.kind) voiceCorrectTimed(t, raw);   // a hold or cardio entry
       else voiceCorrectLast(parseSetSpeech(t.replace(/^(no|nope|nah)\b/, '').replace(/\b(last|the) set\b/g, ' ').trim()));
@@ -5790,7 +5802,7 @@ function voiceTryExercise(t) {
   const said = voiceExerciseSaid(t), words = exWords(said.name);
   if (!words.length || words.length > 6) return false;
   // "Let's do this", "do it again": not an exercise's name ("this" was found as Treadmill)
-  if (/^(this|that|it|one|this one|that one|again|it again|this again|that again|something|them|these|those|now|here|there|the thing)$/.test(said.name.trim())) return false;
+  if (/^(this|that|it|one|this one|that one|again|it again|this again|that again|something|them|these|those|now|here|there|the thing|go|let s go|keep going|on|it on|that on)$/.test(said.name.trim())) return false;
   const all = exAllExercises(), found = exFindByName(said.name, null, all, voiceKnownIds()), top = found.sure[0];
   if (top && (picking || said.led)) { voiceStartExercise(top); return true; }
   // Just a name, mid-workout, with nothing leading into it ("bench press"): it has to be a

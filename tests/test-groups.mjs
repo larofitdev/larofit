@@ -28,7 +28,7 @@ const make = (list, mode = 'manual') => new Function('list', 'mode', `
   const goToEx = i => log.push('go ' + exercises[i].name);
   const startHold = (i, setIdx) => log.push('timer ' + exercises[i].name + ' round ' + (setIdx + 1));
   const checkAllDone = () => log.push('all done');
-  let restCallback = null, isFreeForm = list.freeForm || false, voicePaused = false, voicePhase = 'resting';
+  let restCallback = null, isFreeForm = list.freeForm || false, voicePaused = false, voicePhase = 'resting', voiceHeardAt = 0;
   const stopRest = () => {}, showToast = m => log.push('toast ' + m), speakText = m => log.push('say ' + m), finishWorkout = () => log.push('finished');
   const renderSets = () => {}, voiceNextSet = i => log.push('set ' + exercises[i].name), getLastSession = () => null, isStrength = () => true;
   const weightUnit = () => 'lbs', voiceUnit = () => 'pounds', voiceSpeakChain = Promise.resolve();
@@ -36,6 +36,7 @@ const make = (list, mode = 'manual') => new Function('list', 'mode', `
   ${flow}
   return {
     log, exercises, sayFirst: () => voiceSayFirst, restAfterAt, note: i => voiceProgressNote(i), autoFinish: () => autoFinish(),
+    phase: () => voicePhase, heard: at => { voiceHeardAt = at; },
     endRest: () => { const cb = restCb; restCb = null; if (cb) cb(); },
     // log the next open set of an exercise, as the LOG button or the voice coach does
     done: name => { const i = exercises.findIndex(e => e.name === name), s = exercises[i].loggedSets.findIndex(x => !x.logged); exercises[i].loggedSets[s].logged = true; afterSetLogged(i, s); },
@@ -150,7 +151,7 @@ console.log('Voice workouts');
     w.done('Row'); w.endRest(); const n = w.log.length; w.done('Row');
     check('after the last set: no rest timer, all complete: ' + steps(w, n).join(' | '), steps(w, n).join('|') === 'all done|toast All exercises complete');
     await tick();
-    check('the coach says so (Voice workouts): ' + w.log[w.log.length - 1], w.log[w.log.length - 1] === 'say All exercises complete. Say finish to save your workout.');
+    check('the coach says so (Voice workouts): ' + w.log[w.log.length - 1], w.log[w.log.length - 1] === 'say All exercises complete. Say finish to save it, or name another exercise.');
     w.autoFinish();
     check('two minutes on with nothing more: it saves itself', w.log[w.log.length - 1] === 'finished');
     w.exercises[0].loggedSets[1].logged = false; const m = w.log.length; w.autoFinish();
@@ -158,6 +159,16 @@ console.log('Voice workouts');
     const list = [['Row', 1]]; list.freeForm = true;
     const f = make(list); f.done('Row');
     check('a workout built as it goes: no announcement: ' + f.log.join(' | '), f.log.join('|') === 'all done');
+  }
+  {
+    // A Voice workout (2026-10-21: it saved itself in the middle of adding "machine rear deltoid")
+    const v = make([['Row', 1]], 'voice');
+    v.done('Row'); await tick();
+    check('after the last set, an exercise named is listened for: ' + v.phase(), v.phase() === 'pick_exercise');
+    v.heard(Date.now() - 30000); const n = v.log.length; v.autoFinish();
+    check('two minutes after the last set, but something was said 30 seconds ago: not saved yet', v.log.length === n);
+    v.heard(Date.now() - 125000); v.autoFinish(); await tick();
+    check('two minutes of quiet: saved', v.log[v.log.length - 1] === 'finished');
   }
 
   console.log('Loading a planned group');
