@@ -32,6 +32,7 @@ const phone = owner => ({ lf_sb_session: 'tok', lf_install_banner_dismissed: '1'
   // A phone from before this: whose it is comes from the account last signed in
   const store = phone(null), p = make(store, 'main');
   check('not recorded yet, same account: kept and recorded', await p.check() === true && store.lf_programs && store.lf_owner === 'main');
+  check('but only as a guess (old workouts aren't uploaded on it)', store.lf_owner_guessed === '1');
   const other = phone(null), q = make(other, 'support');
   check('not recorded yet, a different account: cleared', await q.check() === false && !other.lf_programs);
 }

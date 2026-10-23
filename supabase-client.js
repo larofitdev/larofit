@@ -80,7 +80,7 @@ function _unqueuePending(dateStr) {
 // offline use. They belong to one account, lf_owner. Signing out clears them, and finding a
 // different account signed in clears them before anything is shown or uploaded, so one
 // account's data never appears in (or is synced into) another.
-const LF_DEVICE_KEYS = ['lf_sb_session', 'lf_owner', 'lf_install_banner_dismissed'];   // the phone's, not an account's
+const LF_DEVICE_KEYS = ['lf_sb_session', 'lf_owner', 'lf_owner_guessed', 'lf_install_banner_dismissed'];   // the phone's, not an account's
 function lfClearAccountData() {
   try {
     Object.keys(localStorage).filter(k => k.startsWith('lf_') && !LF_DEVICE_KEYS.includes(k) && !k.startsWith('lf_sb_'))
@@ -96,8 +96,14 @@ function lfCheckOwner() {
     if (!user) return true;
     let owner = null;
     try { owner = localStorage.getItem('lf_owner'); } catch {}
-    // Not recorded yet (phones from before this): the account last signed in here
-    if (!owner) { const cached = LS.get('user'); owner = cached && cached.id ? cached.id : user.id; }
+    // Not recorded yet (phones from before this): the account last signed in here. Only a
+    // guess (the data may be an earlier account's), so old workouts aren't uploaded on it
+    // (see flushWorkoutSync) until the next sign-in says whose they are.
+    if (!owner) {
+      const cached = LS.get('user');
+      owner = cached && cached.id ? cached.id : user.id;
+      try { localStorage.setItem('lf_owner_guessed', '1'); } catch {}
+    }
     if (owner === user.id) { try { localStorage.setItem('lf_owner', user.id); } catch {} return true; }
     lfClearAccountData();
     try { localStorage.setItem('lf_owner', user.id); } catch {}
@@ -156,8 +162,9 @@ window.LF = {
         // Another account's data on this phone: cleared before this one's is loaded
         let owner = null;
         try { owner = localStorage.getItem('lf_owner'); } catch {}
-        if (owner && owner !== data.user.id) lfClearAccountData();
-        try { localStorage.setItem('lf_owner', data.user.id); } catch {}
+        // Not known whose (a phone from before this): cleared too, so nothing of another account's stays
+        if (owner !== data.user.id || localStorage.getItem('lf_owner_guessed')) lfClearAccountData();
+        try { localStorage.setItem('lf_owner', data.user.id); localStorage.removeItem('lf_owner_guessed'); } catch {}
         // Cache user basics in localStorage for offline use
         await LF.auth._cacheUser(data.user);
       }
@@ -175,7 +182,7 @@ window.LF = {
       const { error } = await sb.auth.signOut();
       // This account's data off the phone: the next one to sign in starts from its own
       lfClearAccountData();
-      try { localStorage.removeItem('lf_owner'); } catch {}
+      try { localStorage.removeItem('lf_owner'); localStorage.removeItem('lf_owner_guessed'); } catch {}
       return { error };
     },
 
@@ -578,10 +585,13 @@ window.LF = {
         if (error) return;
         const remoteDates = new Set((data || []).map(r => r.workout_date));
 
-        // Candidates: explicitly-queued dates + any local date missing remotely.
+        // Candidates: explicitly-queued dates + any local date missing remotely (only when
+        // the phone's data is known to be this account's, not guessed)
         const pending  = LS.get('pending_sync', []);
         const toPush    = new Set(pending);
-        Object.keys(local).forEach(d => { if (!remoteDates.has(d)) toPush.add(d); });
+        let guessed = false;
+        try { guessed = !!localStorage.getItem('lf_owner_guessed'); } catch {}
+        if (!guessed) Object.keys(local).forEach(d => { if (!remoteDates.has(d)) toPush.add(d); });
 
         const stillPending = [];
         for (const dateStr of toPush) {
