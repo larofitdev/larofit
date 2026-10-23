@@ -9,7 +9,7 @@
 <title>LaroFit — Create Account</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=145">
+<link rel="stylesheet" href="larofit.css?v=146">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.49.0/dist/tabler-icons.min.css">
 <style>
 html, body {
@@ -223,7 +223,7 @@ input, select { font-size: 16px !important; }
 </style>
 </head>
 <body>
-<script src="supabase-client.js?v=145"></script>
+<script src="supabase-client.js?v=146"></script>
 
 <div class="su-wrap">
 
@@ -377,7 +377,7 @@ async function handleSignup() {
   btn.classList.add('loading');
 
   await LF.ready();
-  const { data, error } = await LF.auth.signUp(email, pass, name, { terms_accepted_at: new Date().toISOString(), terms_version: '2026-10-13' });
+  const { data, error } = await LF.auth.signUp(email, pass, name, { terms_accepted_at: new Date().toISOString(), terms_version: LF.terms.version });
 
   btn.disabled = false;
   btn.classList.remove('loading');

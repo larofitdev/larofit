@@ -789,7 +789,7 @@ LF.settings = {
 // ── TERMS ─────────────────────────────────────────────────────
 // New accounts agree at sign-up. An account from before the terms existed, or from
 // before they last changed, is asked once, the next time the app is opened.
-const LF_TERMS_VERSION = '2026-10-13';
+const LF_TERMS_VERSION = '2026-10-22';   // the agreement is now with LARO Fit LLC
 LF.terms = {
   version: LF_TERMS_VERSION,
   async check() {

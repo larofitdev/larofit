@@ -2,9 +2,9 @@
 // Edit the text here, then from the project folder run:  node tools/make-legal.mjs
 import fs from 'fs';
 
-const UPDATED = 'October 13, 2026';
+const UPDATED = 'October 22, 2026';
 const T = s => `<span class="todo">${s}</span>`;   // something only the owner can fill in
-const NAME = 'LARO Farms Inc., doing business as LaroFit';
+const NAME = 'LARO Fit LLC';
 const EMAIL = '<a href="mailto:support@larofit.com">support@larofit.com</a>';
 const ADDRESS = 'PO Box 4391, Kingman, AZ 86402, USA';
 const LAW = 'the State of Arizona, USA';
