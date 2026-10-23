@@ -75,6 +75,37 @@ function _unqueuePending(dateStr) {
   if (next.length !== q.length) LS.set('pending_sync', next);
 }
 
+// ── WHOSE DATA THIS PHONE HOLDS ───────────────────────────────
+// Programs, history, settings and the rest are kept on the phone (lf_*) for speed and
+// offline use. They belong to one account, lf_owner. Signing out clears them, and finding a
+// different account signed in clears them before anything is shown or uploaded, so one
+// account's data never appears in (or is synced into) another.
+const LF_DEVICE_KEYS = ['lf_sb_session', 'lf_owner', 'lf_install_banner_dismissed'];   // the phone's, not an account's
+function lfClearAccountData() {
+  try {
+    Object.keys(localStorage).filter(k => k.startsWith('lf_') && !LF_DEVICE_KEYS.includes(k) && !k.startsWith('lf_sb_'))
+      .forEach(k => localStorage.removeItem(k));
+  } catch {}
+}
+// Once per page: true when the phone's data is the signed-in account's. When it was someone
+// else's it is cleared and the page reloaded (pages read it as they open).
+let _lfOwnerCheck = null;
+function lfCheckOwner() {
+  return _lfOwnerCheck = _lfOwnerCheck || (async () => {
+    const user = await LF.auth.user();
+    if (!user) return true;
+    let owner = null;
+    try { owner = localStorage.getItem('lf_owner'); } catch {}
+    // Not recorded yet (phones from before this): the account last signed in here
+    if (!owner) { const cached = LS.get('user'); owner = cached && cached.id ? cached.id : user.id; }
+    if (owner === user.id) { try { localStorage.setItem('lf_owner', user.id); } catch {} return true; }
+    lfClearAccountData();
+    try { localStorage.setItem('lf_owner', user.id); } catch {}
+    location.reload();
+    return false;
+  })();
+}
+
 // ── MAIN LF NAMESPACE ─────────────────────────────────────────
 window.LF = {
 
@@ -122,6 +153,11 @@ window.LF = {
       const sb = await lfReady();
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
       if (data?.user && !error) {
+        // Another account's data on this phone: cleared before this one's is loaded
+        let owner = null;
+        try { owner = localStorage.getItem('lf_owner'); } catch {}
+        if (owner && owner !== data.user.id) lfClearAccountData();
+        try { localStorage.setItem('lf_owner', data.user.id); } catch {}
         // Cache user basics in localStorage for offline use
         await LF.auth._cacheUser(data.user);
       }
@@ -131,11 +167,15 @@ window.LF = {
     // Sign out
     async signOut() {
       const sb = await lfReady();
+      // Anything logged offline goes up first (to this account, while it's still signed in)
+      try {
+        const user = await LF.auth.user();
+        if (user && localStorage.getItem('lf_owner') === user.id) await Promise.race([LF.db.flushWorkoutSync(), new Promise(r => setTimeout(r, 4000))]);
+      } catch {}
       const { error } = await sb.auth.signOut();
-      // Clear local cache
-      LS.remove('user');
-      LS.remove('profile');
-      LS.remove('seeded');
+      // This account's data off the phone: the next one to sign in starts from its own
+      lfClearAccountData();
+      try { localStorage.removeItem('lf_owner'); } catch {}
       return { error };
     },
 
@@ -182,7 +222,7 @@ window.LF = {
       window.location.href = 'login.html';
       return false;
     }
-    return true;
+    return await lfCheckOwner();
   },
 
   // ── DATABASE ───────────────────────────────────────────────
@@ -528,6 +568,7 @@ window.LF = {
         const sb   = await lfReady();
         const user = await LF.auth.user();
         if (!user) return;  // not signed in here — leave queue intact, retry later
+        if (!(await lfCheckOwner())) return;   // another account's workouts: never pushed to this one
         const local = LS.get('workout_history', {});
         // Which dates does the cloud already have?
         const { data, error } = await sb
