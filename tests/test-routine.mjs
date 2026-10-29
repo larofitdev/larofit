@@ -117,7 +117,8 @@ const weekday = key => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Dat
   const day = p.days[keys[0]].exercises;
   check('the exercises as done: ' + day.map(e => e.name + ' ' + e.sets + 'x' + e.reps + (e.weight ? ' @' + e.weight : '')).join(', '), day.length === 3 && day[0].sets === 3 && day[0].weight === 25 && day[0].recordType === 'weight_reps');
   check('the superset kept', day[0].group && day[0].group.id === day[1].group.id && !day[2].group);
-  check('from tomorrow, not today', keys[0] > new Date().toISOString().slice(0, 10) || keys[0] !== new Date().toISOString().slice(0, 10));
+  const today = new Date(), todayKey = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  check('from tomorrow, not today', keys.sort()[0] > todayKey);
 }
 const keyOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const fridaysOf = workout => { const days = {}; for (let i = 1; i <= 28; i++) { const d = new Date(); d.setDate(d.getDate() + i); if (weekday(keyOf(d)) === 'Fri') days[keyOf(d)] = JSON.parse(JSON.stringify(workout)); } return days; };

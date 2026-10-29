@@ -9,7 +9,7 @@
 <title>LaroFit — Workout</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="larofit.css?v=146">
+<link rel="stylesheet" href="larofit.css?v=147">
 <style>
 /* ── PREVENT iOS ZOOM ON INPUT FOCUS ── */
 input[type="number"], input[type="text"], select, textarea { font-size: 16px !important; }
@@ -761,10 +761,10 @@ body.rest-open { overflow: hidden; position: fixed; width: 100%; }
 </head>
 <body>
 
-<script src="supabase-client.js?v=146"></script>
-<script src="larofit-exercises.js?v=146"></script>
+<script src="supabase-client.js?v=147"></script>
+<script src="larofit-exercises.js?v=147"></script>
 <script>window.LF_PAGE = 'workout';</script>
-<script src="larofit-nav.js?v=146"></script>
+<script src="larofit-nav.js?v=147"></script>
 
 <main class="lf-main-desktop" id="main">
 
@@ -3888,7 +3888,7 @@ const voiceVad = { floor: 0.005, inSpeech: false, hot: 0, quietMs: 0, pre: [], s
 
 // Rolling record of what the mic and speech did, for diagnosing voice problems
 let voiceLog = [];
-const VOICE_BUILD = 123;
+const VOICE_BUILD = 124;
 // The whole workout is kept (an hour and a half is about 1,500 lines). The same line over and
 // over (the audio engine retried every 5 seconds while stuck) is written once with a count,
 // so it can't push the start of the workout out of the log.
@@ -5024,7 +5024,10 @@ function handleVoiceResult(raw) {
     // had taken set 2 back).
     // A bare "no" also has to sound like the user: a "No." at a third of their loudness took set 2 back
     const ownVoice = typeof voiceHeardPeak !== 'number' || !voiceHeardPeak || voiceHeardPeak >= Math.max(0.15, voiceMinPeak());
-    const saysNo = /^(no|nope|nah)\b/.test(t) && (/\d/.test(t) || (t.split(' ').length <= 3 && ownVoice));
+    // Without numbers, what follows the "no" has to be about the set too: "No, nowhere left"
+    // (said to someone nearby) had taken set 1 back
+    const noRest = t.replace(/^(no|nope|nah)\b/, ' ').replace(/\b(no|nope|not|that|that s|thats|it|it s|its|was|wrong|wait|hold on|go back|back|undo|oops|the|last|one|set|right|what i said)\b/g, ' ').trim();
+    const saysNo = /^(no|nope|nah)\b/.test(t) && (/\d/.test(t) || (t.split(' ').length <= 3 && ownVoice && !noRest));
     if (VOICE_CORRECTION.test(t) || (justLogged && saysNo)) {
       if (voiceLastLog && voiceLastLog.kind) voiceCorrectTimed(t, raw);   // a hold or cardio entry
       else voiceCorrectLast(parseSetSpeech(t.replace(/^(no|nope|nah)\b/, '').replace(/\b(last|the) set\b/g, ' ').trim()));
@@ -6391,7 +6394,11 @@ async function voiceInterpret(text) {
   const named = out.set === 'all' ? 'all' : (Number.isInteger(out.set) && out.set >= 1 && out.set <= 12 ? out.set : null);
   if (out.action === 'correct' && named && voiceEditSets(named, { ...said, unsure: null }, true)) return;
   if (out.action === 'correct') { if (voiceLastLog) { if (voiceLastLog.kind) voiceCorrectTimed(norm, text); else voiceCorrectLast(said); } }
-  else if (out.action === 'ready')  { if (phase === 'resting') skipRest(); }
+  // Only when the words say so: "Move it!" from someone nearby had ended a rest 20 seconds in
+  else if (out.action === 'ready')  {
+    if (phase === 'resting' && /\b(ready|go|start|next|skip|let s|lets|done resting|move on|begin|i m good|im good|good to go|set)\b/.test(normalizeSpeech(text))) skipRest();
+    else voiceDbg('coach said ready, but nothing in "' + text + '" says so: ignored');
+  }
   else if (out.action === 'repeat') speakText(voiceLastPrompt, true);
   else if (out.action === 'log' && (phase === 'confirm_weight' || phase === 'count_reps')) {
     if (said.weight !== null && !p.bw) { p.sugWeight = said.weight; prefillWeight(p.exIdx, p.setIdx, p.sugWeight); }

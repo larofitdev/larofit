@@ -67,6 +67,14 @@ const check = (name, ok, extra = '') => { console.log((ok ? 'ok   ' : 'FAIL ') +
   w.hear('no');
   check('"no" on its own still takes it back', w.sets(0).startsWith('-12x10'), w.sets(0));
 }
+{ // 2026-10-28: "No, nowhere left." (to someone nearby) took set 1 back
+  const w = make('');
+  w.hear('10 for 12');
+  w.hear('No, nowhere left.');
+  check('"No, nowhere left." leaves the set logged', w.sets(0).startsWith('L10x12'), w.sets(0));
+  w.hear('no not that');
+  check('"no not that" still takes it back', w.sets(0).startsWith('-10x12'), w.sets(0));
+}
 { // Correction with the numbers in the same breath
   const w = make('');
   w.hear('20 for 20');
